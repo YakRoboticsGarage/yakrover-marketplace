@@ -253,6 +253,13 @@ header{padding:16px 0;display:flex;align-items:center;justify-content:space-betw
 .op-step{background:var(--bg-subtle);border-radius:var(--radius);padding:16px;text-align:center}
 .op-step h4{font-size:0.875rem;font-weight:600;margin-bottom:4px}
 .op-step p{font-size:0.8rem;color:var(--text-2);line-height:1.5}
+/* Operator CTA strip (under feed) */
+.operator-cta-strip{background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;margin:16px 0}
+.ocs-content{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.ocs-main{font-size:0.8rem;color:var(--text-2);display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.ocs-fleet{font-size:0.8rem;color:var(--text-3)}
+@media(max-width:600px){.ocs-content{flex-direction:column;text-align:center}.ocs-main{justify-content:center}}
+
 .op-cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
 @media(max-width:600px){.op-cta-grid{grid-template-columns:1fr}}
 
@@ -306,6 +313,18 @@ footer a:hover{text-decoration:underline}
   <div class="feed-section">
     <div class="section-label"><div class="live"></div>Live Activity &mdash; <span style="font-weight:400;text-transform:none;letter-spacing:0">14,283 tasks completed this week</span></div>
     <div class="feed-list" id="feedList"></div>
+  </div>
+
+  <div class="operator-cta-strip">
+    <div class="ocs-content">
+      <div class="ocs-main">
+        <strong>Own a robot?</strong> List it on the marketplace and start earning per task.
+        <button class="btn btn-primary" style="padding:7px 18px;font-size:0.8rem;margin-left:12px" onclick="showScreen('s-operator',0)">List Your Robot</button>
+      </div>
+      <div class="ocs-fleet">
+        Have a fleet? <a href="#" onclick="openModal('Fleet Registration','Fleet partnerships for 10+ robots:\n\nContact: fleet@yakrobotics.com\n\nWhat we offer:\n- Dedicated account manager\n- Volume pricing and priority task routing\n- Custom API integration support\n- Fleet health monitoring dashboard\n- Revenue analytics and optimization\n\nInclude in your email:\n- Fleet size and robot types\n- Location(s)\n- Current capabilities\n\nWe respond within 24 hours.');return false" style="color:var(--accent);font-weight:500;text-decoration:none">Register a fleet &rarr;</a>
+      </div>
+    </div>
   </div>
 
   <div class="how-section" id="howSection">
