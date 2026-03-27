@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YAK ROBOTICS — Hire Robots On Demand</title>
-<meta name="description" content="Hire robots for sensor readings, inspections, and surveys. Real robots, real results, real-time auctions.">
+<meta name="description" content="Hire robots for construction site surveys, inspections, and monitoring. Real robots, real results, real-time auctions.">
 <link rel="icon" href="yak-icon.png" type="image/png">
 <link rel="alternate" type="application/json" href="/.well-known/mcp.json">
 <script type="application/ld+json">
@@ -363,8 +363,8 @@ footer a:hover{text-decoration:underline}
 <!-- SCREEN 1: LANDING -->
 <div id="s-landing" class="screen active">
   <div class="hero">
-    <div class="hero-badge"><div class="dot"></div>312 robots online &middot; 1,047 registered worldwide</div>
-    <h1>Hire a robot in seconds</h1>
+    <div class="hero-badge"><div class="dot"></div>47 operators online &middot; 312 robots &middot; AZ, NV, NM, CA</div>
+    <h1>Hire a robot for your next site survey</h1>
     <div class="subtitle">Post a task, real robots bid, the best one delivers.</div>
     <div class="agent-line">Or <a href="#" id="agentLinkCta" style="color:var(--accent);font-weight:500;text-decoration:none">click here to link your Agent</a></div>
     <div class="search-wrap">
@@ -394,9 +394,9 @@ footer a:hover{text-decoration:underline}
   </div>
 
   <div class="how-section" id="howSection">
-    <div class="how-step"><div class="how-num">1</div><h3>Describe your task</h3><p>Type what you need in plain language. No technical setup required.</p></div>
-    <div class="how-step"><div class="how-num">2</div><h3>Robots compete</h3><p>Available robots bid automatically. The best one wins on price, speed, and reliability.</p></div>
-    <div class="how-step"><div class="how-num">3</div><h3>Get your result</h3><p>Real sensor data delivered in under a minute. Or connect via API for automated workflows.</p></div>
+    <div class="how-step"><div class="how-num">1</div><h3>Describe your survey</h3><p>Upload RFP specs or describe in plain language. Your AI agent translates needs into sensor specs and deliverable formats.</p></div>
+    <div class="how-step"><div class="how-num">2</div><h3>Operators bid</h3><p>Certified operators in your area bid with pricing, equipment specs, and availability. Scored on accuracy, speed, and track record.</p></div>
+    <div class="how-step"><div class="how-num">3</div><h3>Get survey-ready data</h3><p>LiDAR point clouds, topo maps, GPR profiles in Civil 3D-ready formats. Import directly into bid documents.</p></div>
   </div>
 
   <div class="robots-section">
@@ -454,12 +454,13 @@ footer a:hover{text-decoration:underline}
   <div style="padding:32px 0">
     <div style="background:var(--bg-subtle);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;padding:14px 18px;font-size:1rem;margin-bottom:20px" id="queryDisplay"></div>
     <div class="card"><h3>Task Preview</h3>
-      <div class="parsed-row"><span class="plabel">Task</span><span class="pval">Sensor Reading</span></div>
-      <div class="parsed-row"><span class="plabel">Sensors</span><span class="pval">Temperature, Humidity</span></div>
-      <div class="parsed-row"><span class="plabel">Location</span><span class="pval green">Warehouse Bay 3</span></div>
-      <div class="parsed-row"><span class="plabel">Est. Cost</span><span class="pval amber mono">$0.25 - $0.80</span></div>
-      <div class="parsed-row"><span class="plabel">Est. Time</span><span class="pval">30s - 3 min</span></div>
-      <div class="parsed-row"><span class="plabel">Robots nearby</span><span class="pval green" id="nearbyCount">8 online in Helsinki</span></div>
+      <div class="parsed-row"><span class="plabel">Task</span><span class="pval">Site Survey</span></div>
+      <div class="parsed-row"><span class="plabel">Sensors</span><span class="pval">Aerial LiDAR, RTK-GPS, Photogrammetry</span></div>
+      <div class="parsed-row"><span class="plabel">Area</span><span class="pval green">12 acres &middot; I-17 corridor, Phoenix</span></div>
+      <div class="parsed-row"><span class="plabel">Accuracy</span><span class="pval">&plusmn;2cm vertical</span></div>
+      <div class="parsed-row"><span class="plabel">Est. Cost</span><span class="pval amber mono">$2,000 - $4,000</span></div>
+      <div class="parsed-row"><span class="plabel">Deliverables</span><span class="pval">LandXML, DXF, GeoTIFF</span></div>
+      <div class="parsed-row"><span class="plabel">Operators nearby</span><span class="pval green" id="nearbyCount">4 available in Phoenix Metro</span></div>
     </div>
     <div id="preConnect" class="cta-block">
       <p>Connect your AI assistant to get an exact quote and manage the auction on your behalf.</p>
@@ -468,11 +469,12 @@ footer a:hover{text-decoration:underline}
     <div id="postConnect" style="display:none">
       <div class="spec-card"><div class="spec-badge">Structured by Claude</div>
         <div class="spec-code">
-          <span class="k">sensors:</span> <span class="va">temperature</span> (&plusmn;0.5&deg;C), <span class="va">humidity</span> (&plusmn;2% RH)<br>
-          <span class="k">location:</span> <span class="v">Warehouse Bay 3</span><br>
-          <span class="k">budget:</span> <span class="vw">$2.00</span> max<br>
-          <span class="k">deadline:</span> <span class="v">15 minutes</span><br>
-          <span class="k">format:</span> <span class="v">JSON {temperature_c, humidity_pct, timestamp}</span>
+          <span class="k">survey_type:</span> <span class="va">topographic</span> (pre-bid)<br>
+          <span class="k">sensors:</span> <span class="va">aerial LiDAR</span> (&plusmn;2cm), <span class="va">RTK-GPS</span>, <span class="va">photogrammetry</span><br>
+          <span class="k">area:</span> <span class="v">12 acres, I-17 &amp; Happy Valley Rd, Phoenix AZ</span><br>
+          <span class="k">budget:</span> <span class="vw">$5,000</span> max<br>
+          <span class="k">deadline:</span> <span class="v">48 hours</span><br>
+          <span class="k">deliverables:</span> <span class="v">LandXML + DXF (Civil 3D), GeoTIFF ortho, survey_report.pdf</span>
         </div>
       </div>
       <div style="text-align:center"><button class="btn btn-primary" id="goPayBtn">Continue to Payment &rarr;</button></div>
@@ -485,7 +487,7 @@ footer a:hover{text-decoration:underline}
   <div style="padding:32px 0">
     <div style="text-align:center;margin-bottom:20px">
       <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Add credits to get started</h2>
-      <p style="font-size:0.8rem;color:var(--text-2)">$25 credit bundle &middot; use across multiple tasks &middot; your Bay 3 reading will cost ~$0.35</p>
+      <p style="font-size:0.8rem;color:var(--text-2)">$10,000 credit bundle &middot; use across multiple surveys &middot; this topo survey will cost ~$2,400</p>
       <p style="font-size:0.72rem;color:var(--text-3);margin-top:4px">Cancel anytime. Unused credits are refundable.</p>
     </div>
     <div class="pay-grid">
@@ -494,11 +496,11 @@ footer a:hover{text-decoration:underline}
     </div>
     <div id="cardArea" style="display:none">
       <div class="mock-card"><div class="num">4242 4242 4242 4242</div>Exp 12/28 &middot; CVC 424<br><span style="color:var(--text-3)">Auto-filled from browser</span></div>
-      <div style="text-align:center"><button class="btn btn-primary" id="confirmPay">Confirm &mdash; $25.00</button></div>
+      <div style="text-align:center"><button class="btn btn-primary" id="confirmPay">Confirm &mdash; $10,000</button></div>
     </div>
     <div id="payDone" style="display:none;text-align:center;padding:20px 0">
-      <div style="color:var(--green);font-weight:600">$25.00 credits added</div>
-      <div style="font-size:0.72rem;color:var(--text-3);margin:6px 0 16px">Card statement: YAK ROBOTICS MARKETPLACE $25.00</div>
+      <div style="color:var(--green);font-weight:600">$10,000 credits added</div>
+      <div style="font-size:0.72rem;color:var(--text-3);margin:6px 0 16px">Card statement: YAK ROBOTICS MARKETPLACE $10,000.00</div>
       <button class="btn btn-primary" id="startAuction">Start Auction &rarr;</button>
     </div>
   </div>
@@ -506,25 +508,25 @@ footer a:hover{text-decoration:underline}
 
 <!-- SCREEN 4: AUCTION -->
 <div id="s-auction" class="screen">
-  <div class="auction-status" id="aStatus"><span class="spinner"></span>Finding robots near Bay 3...</div>
+  <div class="auction-status" id="aStatus"><span class="spinner"></span>Finding operators near I-17 corridor...</div>
   <div class="bid-grid">
     <div class="bid-card" id="bidA">
-      <div class="bid-name">Grey Subtlety</div>
-      <div class="bid-loc">Bay 3 &middot; 0m away &middot; 87% battery</div>
-      <div class="bid-price-row"><div class="bid-price">$0.35</div><div class="bid-conf">98%</div></div>
+      <div class="bid-name">SkyVista Survey</div>
+      <div class="bid-loc">Phoenix Metro &middot; DJI Matrice 350 RTK &middot; LiDAR + RTK</div>
+      <div class="bid-price-row"><div class="bid-price">$2,400</div><div class="bid-conf">99.4%</div></div>
       <div class="score-row"><div class="score-header"><span>Match Score</span><span>94.2</span></div><div class="score-bar"><div class="score-fill" data-w="94%"></div></div></div>
       <div class="winner-tag">&#10003; Selected &mdash; best match</div>
     </div>
     <div class="bid-card" id="bidB">
-      <div class="bid-name">Quiet Immensity</div>
-      <div class="bid-loc">Bay 5 &middot; 80m away &middot; 71% battery</div>
-      <div class="bid-price-row"><div class="bid-price">$0.55</div><div class="bid-conf">91%</div></div>
+      <div class="bid-name">GroundTruth Robotics</div>
+      <div class="bid-loc">Southwest US &middot; Spot + GPR &middot; LiDAR + ground combo</div>
+      <div class="bid-price-row"><div class="bid-price">$3,800</div><div class="bid-conf">98.8%</div></div>
       <div class="score-row"><div class="score-header"><span>Match Score</span><span>78.6</span></div><div class="score-bar"><div class="score-fill" data-w="79%"></div></div></div>
       <div class="winner-tag">&#10003; Selected</div>
     </div>
   </div>
   <div id="execArea" style="display:none">
-    <div class="auction-status">Grey Subtlety reading sensor...</div>
+    <div class="auction-status">SkyVista Survey conducting aerial LiDAR scan...</div>
     <div class="progress-wrap"><div class="progress-outer"><div class="progress-inner" id="progFill"></div></div></div>
   </div>
 </div>
@@ -533,13 +535,13 @@ footer a:hover{text-decoration:underline}
 <div id="s-result" class="screen">
   <div class="result-hero">
     <div class="result-check">&#10003;</div>
-    <div class="result-reading"><span class="t">22.8&deg;C</span> &nbsp; <span class="h">47.3%</span></div>
-    <div class="result-sub">Bay 3 &middot; Measured by Grey Subtlety &middot; just now</div>
+    <div class="result-reading" style="font-size:clamp(1rem,3vw,1.5rem)">12-Acre Topographic Survey Complete</div>
+    <div class="result-sub">I-17 Corridor &middot; SkyVista Survey &middot; &plusmn;1.8cm accuracy verified</div>
   </div>
   <div class="result-meta">
-    <div class="meta-box"><div class="meta-val" style="color:var(--green)">$0.35</div><div class="meta-lbl">Cost</div></div>
-    <div class="meta-box"><div class="meta-val">42s</div><div class="meta-lbl">Time</div></div>
-    <div class="meta-box"><div class="meta-val" style="color:var(--amber)">$24.65</div><div class="meta-lbl">Balance</div></div>
+    <div class="meta-box"><div class="meta-val" style="color:var(--green)">$2,400</div><div class="meta-lbl">Cost</div></div>
+    <div class="meta-box"><div class="meta-val">3.2 hrs</div><div class="meta-lbl">Time</div></div>
+    <div class="meta-box"><div class="meta-val" style="color:var(--amber)">$7,600</div><div class="meta-lbl">Balance</div></div>
   </div>
   <div class="result-actions">
     <button class="btn btn-primary" onclick="resetDemo()">Hire Again</button>
@@ -606,13 +608,13 @@ footer a:hover{text-decoration:underline}
 <!-- SCREEN: OPERATOR -->
 <div id="s-operator" class="screen">
   <div class="op-hero">
-    <h2>For Robot Operators</h2>
-    <p>Own robots? Earn revenue by joining the marketplace. Your robots bid automatically and get paid on delivery.</p>
+    <h2>For Survey Operators</h2>
+    <p>Own survey drones or ground robots? Earn revenue by joining the marketplace. Your equipment bids automatically and gets paid on delivery.</p>
   </div>
   <div class="op-steps">
-    <div class="op-step"><h4>1. Register</h4><p>Deploy your robot's ERC-8004 identity on-chain. One transaction, permanent registration.</p></div>
-    <div class="op-step"><h4>2. Configure</h4><p>Set pricing rules, capabilities, and availability. Your robots bid autonomously.</p></div>
-    <div class="op-step"><h4>3. Earn</h4><p>Get paid per task via Stripe or USDC. Track revenue on your operator dashboard.</p></div>
+    <div class="op-step"><h4>1. Register</h4><p>Register your equipment on-chain (ERC-8004). Upload FAA Part 107, surveyor certs, and equipment specs.</p></div>
+    <div class="op-step"><h4>2. Configure</h4><p>Set pricing, service area, equipment availability, and deliverable formats. Your fleet bids autonomously.</p></div>
+    <div class="op-step"><h4>3. Earn</h4><p>Get paid per survey via Stripe or USDC. Track revenue, utilization, and client satisfaction.</p></div>
   </div>
   <div class="op-cta-grid">
     <div class="cta-block" style="margin:0">
@@ -724,71 +726,71 @@ function getFleetSize(i){return 5+Math.floor((i*7+3)%16);}
 // Robot detail data
 var robotData = {
   'grey-subtlety': {
-    name: 'Grey Subtlety',
-    loc: 'Bay 3, Helsinki',
+    name: 'SkyVista Survey',
+    loc: 'Phoenix Metro, AZ',
     ethAddr: '0x7a3B...f42E',
-    type: 'rover',
+    type: 'drone',
     specs: [
-      {label:'Temperature sensor',value:'\u00b10.5\u00b0C accuracy, -40\u2013125\u00b0C range'},
-      {label:'Humidity sensor',value:'\u00b12% RH, 0\u2013100% range'},
-      {label:'Calibration date',value:'2026-02-15'},
-      {label:'Firmware version',value:'v3.2.1-stable'}
+      {label:'Platform',value:'DJI Matrice 350 RTK fleet (4 units)'},
+      {label:'LiDAR',value:'DJI Zenmuse L2 \u2014 5 returns, \u00b12cm accuracy, 250m range'},
+      {label:'RTK GPS',value:'Multi-constellation, \u00b11cm horizontal, \u00b11.5cm vertical'},
+      {label:'Photogrammetry',value:'61MP full-frame, 4cm/px GSD at 120m AGL'}
     ],
-    certs: ['IP67','ISO 9001','CE','RoHS'],
-    taskStats: {completed:847,rate:'99.2%',avgTime:'42s'},
+    certs: ['FAA Part 107','OSHA 10-Hour','AZ ROC Licensed','ISO 9001'],
+    taskStats: {completed:287,rate:'99.4%',avgTime:'42min'},
     reviews: [
-      {stars:5,time:'2 days ago',text:'Fast and accurate. Temperature matched our reference sensor within 0.3\u00b0C.'},
-      {stars:5,time:'5 days ago',text:'Ran 12 readings overnight via MCP. Zero failures. Great for automated workflows.'},
-      {stars:4,time:'1 week ago',text:'Good results. Humidity was slightly off in high-moisture area but within spec.'},
-      {stars:5,time:'2 weeks ago',text:'Best robot on the platform for environmental readings. Consistent every time.'}
+      {stars:5,time:'2 days ago',text:'Topo survey for our highway bid came back in 3 hours. LandXML imported directly into Civil 3D. Excellent.'},
+      {stars:5,time:'5 days ago',text:'Used for monthly progress monitoring across 3 sites. Consistent quality, great ortho mosaics.'},
+      {stars:4,time:'1 week ago',text:'Slight delay due to wind hold but they resumed automatically. Data quality was perfect.'},
+      {stars:5,time:'2 weeks ago',text:'Best aerial survey operator on the platform. Their RTK accuracy is consistently under 2cm.'}
     ],
-    searchPrefill: 'Temperature and humidity reading in Bay 3'
+    searchPrefill: 'Pre-bid topographic survey, highway project, Phoenix area'
   },
   'quiet-immensity': {
-    name: 'Quiet Immensity',
-    loc: 'Bay 5, Helsinki',
+    name: 'GroundTruth Robotics',
+    loc: 'Southwest US (AZ/NV/NM)',
     ethAddr: '0x3cF1...a89D',
     type: 'rover',
     specs: [
-      {label:'Temperature sensor',value:'\u00b10.5\u00b0C accuracy, -40\u2013125\u00b0C range'},
-      {label:'Humidity sensor',value:'\u00b12% RH, 0\u2013100% range'},
-      {label:'Calibration date',value:'2026-01-28'},
-      {label:'Firmware version',value:'v3.1.4-stable'}
+      {label:'Platform',value:'Boston Dynamics Spot fleet (3 units) + GPR sled'},
+      {label:'GPR',value:'GSSI StructureScan Mini XT \u2014 1.6GHz, 0.5m depth, \u00b12cm positioning'},
+      {label:'3D Scanner',value:'Leica BLK ARC \u2014 survey-grade SLAM, \u00b11cm accuracy'},
+      {label:'Autonomy',value:'Spot SDK waypoint missions, rough-terrain nav, 90min battery'}
     ],
-    certs: ['IP65','ISO 9001','CE'],
-    taskStats: {completed:312,rate:'98.7%',avgTime:'38s'},
+    certs: ['OSHA Compliant','AZ ROC Licensed','ISO 9001','Confined Space Certified'],
+    taskStats: {completed:156,rate:'98.8%',avgTime:'3.2hr'},
     reviews: [
-      {stars:4,time:'3 days ago',text:'Reliable for scheduled readings. Slightly slower to connect than Grey Subtlety.'},
-      {stars:5,time:'1 week ago',text:'Excellent accuracy. Used for compliance report and all values were within tolerance.'},
-      {stars:4,time:'2 weeks ago',text:'Good robot, consistent results. Bay 5 location is convenient for our warehouse.'},
-      {stars:5,time:'3 weeks ago',text:'Set up an automated hourly reading via API. Worked flawlessly for 48 hours straight.'}
+      {stars:5,time:'3 days ago',text:'GPR scan found a utility line our plans missed. Saved us a major change order on the highway project.'},
+      {stars:5,time:'1 week ago',text:'Spot navigated the uneven terrain at our Mesa site without issues. BLK ARC data was survey-grade.'},
+      {stars:4,time:'2 weeks ago',text:'Took longer than estimated due to site access, but the 3D point cloud was worth the wait.'},
+      {stars:5,time:'3 weeks ago',text:'Set up recurring GPR monitoring via API for our retention basin project. Catches settlement early.'}
     ],
-    searchPrefill: 'Temperature and humidity reading in Bay 5'
+    searchPrefill: 'GPR subsurface scan, commercial lot, Phoenix area'
   },
   'so-much-for-subtlety': {
-    name: 'So Much For Subtlety',
-    loc: 'Building 2, Espoo',
+    name: 'AeroSpec Solutions',
+    loc: 'AZ / NV',
     ethAddr: '0x9eA4...c17B',
     type: 'drone',
     specs: [
-      {label:'RGB camera',value:'12MP, f/2.0, autofocus, HDR'},
-      {label:'LiDAR sensor',value:'360\u00b0, 30m range, \u00b12cm accuracy'},
-      {label:'Calibration date',value:'2026-03-01'},
-      {label:'Firmware version',value:'v2.8.0-stable'}
+      {label:'Platform',value:'Skydio X10 fleet (6 units) \u2014 autonomous obstacle avoidance'},
+      {label:'Visual',value:'48MP + thermal FLIR overlay, 2cm/px GSD'},
+      {label:'3D Mapping',value:'Real-time photogrammetry, Pix4D processing'},
+      {label:'Autonomy',value:'AI-powered flight planning, no pilot needed for standard missions'}
     ],
-    certs: ['IP54','CE','FCC Part 15'],
-    taskStats: {completed:89,rate:'97.1%',avgTime:'67s'},
+    certs: ['FAA Part 107','BVLOS Waiver (AZ)','OSHA 10-Hour'],
+    taskStats: {completed:89,rate:'97.2%',avgTime:'28min'},
     reviews: [
-      {stars:3,time:'4 days ago',text:'Camera quality is decent. LiDAR data was useful for the space survey. A bit slow.'},
-      {stars:4,time:'1 week ago',text:'Good for visual inspections. The CSV export of lidar point clouds is handy.'},
-      {stars:3,time:'3 weeks ago',text:'Took longer than expected but the aerial photos were high quality. Worth the wait.'}
+      {stars:4,time:'4 days ago',text:'Progress photos for our Tempe project were detailed. Thermal overlay caught a moisture issue in the foundation.'},
+      {stars:4,time:'1 week ago',text:'Great for visual inspection of retaining walls. The AI flight path covered every angle.'},
+      {stars:5,time:'3 weeks ago',text:'BVLOS capability means they can cover large highway corridors without repositioning. Huge time saver.'}
     ],
-    searchPrefill: 'Photo inspection in Building 2'
+    searchPrefill: 'Visual inspection + thermal, construction site, Scottsdale'
   }
 };
 
 // Cycling examples with proper crossfade (2 spans in DOM, toggle visible class)
-var examples=['Temperature reading in warehouse Bay 3','Photo of the loading dock entrance','Air quality survey for compliance report','Humidity check in cold storage unit','Structural vibration reading, Corridor 7','Inventory count aisle 12, night shift','Underwater pipe inspection (try me!)'];
+var examples=['Pre-bid topographic survey, 12-acre highway project, I-17 corridor','Existing condition photos + LiDAR, commercial site in Scottsdale','Ground-penetrating radar scan, subsurface utilities, 3-acre lot','Monthly progress monitoring, Phase 2 grading, Mesa project','As-built verification, retaining wall, Tempe Town Lake','Structural inspection, bridge deck, SR-87 overpass','Underwater pipe inspection (try me!)'];
 var exIdx=0;
 var cycSpans;
 function initCycling(){
@@ -819,10 +821,10 @@ setInterval(cycleExample,3500);
 var cultureAdj=['Grey','Quiet','Subtle','Honest','Precise','Steady','Bright','Keen','Swift','Bold','Calm','Clear','Deep','Fair','Fine','Grand','Noble','Pure','Sharp','True','Warm','Vast','Wise','Lucky','Prime','Dense','Flat','Raw','Dry','Odd','Mild','Rare','Soft','Dim','Lean','Neat','Pale','Rich','Slim','Tall','Full','Just','Last','Long','Dark','Open','Wide','Free','High','Low'];
 var cultureNoun=['Subtlety','Immensity','Clarity','Silence','Distance','Patience','Harmony','Gravity','Velocity','Fortune','Virtue','Resolve','Presence','Absence','Surplus','Insight','Outlook','Gesture','Whisper','Thunder','Echo','Tide','Drift','Margin','Surplus','Balance','Cadence','Lattice','Nexus','Zenith','Detail','Nuance','Notion','Impulse','Axiom','Vector','Vertex','Cipher','Prism','Epoch'];
 var cultureShips=['So Much For Subtlety','Just Read The Instructions','Falling Outside The Normal Moral Constraints','Experiencing A Significant Gravitas Shortfall','A Series Of Unlikely Explanations','Not Invented Here','Funny It Worked Last Time','Zero Gravitas','Mistake Not...','Xenophobe','Sense Amid Madness','Ethics Gradient','Limivorous','Attitude Adjuster','Kiss My Ass','No More Mr Nice Guy','Of Course I Still Love You','Sleeper Service','Bora Horza Gobuchul','Use Of Weapons'];
-function genName(i){if(i<3)return['Grey Subtlety','Quiet Immensity','So Much For Subtlety'][i];if(i<23)return cultureShips[i-3];return cultureAdj[i%cultureAdj.length]+' '+cultureNoun[Math.floor(i/cultureAdj.length)%cultureNoun.length]}
-var locations=['Helsinki','Espoo','Tampere','Turku','Oulu','Stockholm','Oslo','Berlin','Munich','Amsterdam','London','Paris','Tokyo','Seoul','Singapore','Dubai','New York','San Francisco','Sao Paulo','Sydney','Toronto','Zurich','Copenhagen','Vienna','Warsaw','Prague','Dublin','Bangalore','Shanghai','Cape Town'];
-var bays=['Bay 1','Bay 2','Bay 3','Bay 4','Bay 5','Bay 6','Bay 7','Bay 8','Bay 9','Bay 10','Building 1','Building 2','Building 3','Hangar A','Hangar B','Dock 1','Dock 2','Zone A','Zone B','Zone C'];
-var capSets=[['temperature','humidity'],['temperature','humidity','air quality'],['rgb camera','lidar'],['thermal camera'],['rgb camera'],['temperature','humidity','pressure'],['vibration','acoustic'],['gas detector','temperature'],['lidar','gps'],['rgb camera','thermal camera']];
+function genName(i){if(i<3)return['SkyVista Survey','GroundTruth Robotics','AeroSpec Solutions'][i];if(i<5)return['SubSurface Intel','Desert Drone Works'][i-3];if(i<23)return cultureShips[i-3];return cultureAdj[i%cultureAdj.length]+' '+cultureNoun[Math.floor(i/cultureAdj.length)%cultureNoun.length]}
+var locations=['Phoenix','Scottsdale','Mesa','Tempe','Chandler','Gilbert','Glendale','Tucson','Flagstaff','Las Vegas','Henderson','Reno','Albuquerque','Santa Fe','Los Angeles','San Diego','Sacramento','Denver','Salt Lake City','El Paso','Austin','Dallas','Houston','Portland','Seattle','Boise','Omaha','Kansas City','Atlanta','Miami'];
+var bays=['I-17 Corridor','I-10 Expansion','SR-87 Bridge','Loop 101','US-60 Project','Commercial Site','Industrial Park','Retail Development','Highway Interchange','Dam Site','Retention Basin','Subdivision Phase 2','Mixed-Use Development','Solar Farm','Pipeline ROW','Rail Crossing','Airport Runway','Water Treatment','Parking Structure','Bridge Deck'];
+var capSets=[['aerial LiDAR','RTK-GPS'],['aerial LiDAR','photogrammetry','RTK-GPS'],['GPR','3D scanning'],['thermal','visual'],['visual inspection','photogrammetry'],['LiDAR','RTK-GPS','topo'],['GPR','utility locating'],['structural','crack detection'],['volumetric','stockpile'],['aerial','thermal','visual']];
 var ipRatings=['IP67','IP65','IP54','IP44','IP68','IP55','IP66'];
 
 function genRobotCard(i, opts){
@@ -902,9 +904,9 @@ function feedRobotName(name,i){
   return icon+' <strong style="color:var(--text)">'+name+'</strong>';
 }
 var feed=[
-  {t:'done',txt:feedRobotName('Grey Subtlety',0)+' completed humidity reading \u00b7 Helsinki',p:'$0.35',tm:'42s ago',rtype:'done'},
+  {t:'done',txt:feedRobotName('SkyVista Survey',2)+' completed topo survey \u00b7 I-17 Corridor',p:'$2,400',tm:'42min ago',rtype:'done'},
   {t:'online',txt:feedRobotName('Ethics Gradient',11)+' came online \u00b7 Stockholm',p:'',tm:'1m ago',rtype:'online'},
-  {t:'done',txt:feedRobotName('Just Read The Instructions',3)+' completed temp survey \u00b7 Berlin',p:'$0.28',tm:'2m ago',rtype:'done'},
+  {t:'done',txt:feedRobotName('GroundTruth Robotics',1)+' completed GPR scan \u00b7 Mesa commercial',p:'$1,800',tm:'2hr ago',rtype:'done'},
   {t:'bid',txt:feedRobotName('Attitude Adjuster',13)+' won auction \u00b7 air quality \u00b7 Tokyo',p:'$0.45',tm:'3m ago',rtype:'bid'},
   {t:'done',txt:feedRobotName('Of Course I Still Love You',16)+' completed vibration reading \u00b7 Oslo',p:'$0.62',tm:'4m ago',rtype:'done'},
   {t:'online',txt:feedRobotName('Sense Amid Madness',10)+' came online \u00b7 Singapore',p:'',tm:'5m ago',rtype:'online'},
@@ -999,7 +1001,7 @@ function runAuction(){var a=document.getElementById('bidA'),b=document.getElemen
 setTimeout(function(){a.classList.add('vis');st.innerHTML='<span class="spinner"></span>Collecting bids...'},1000);
 setTimeout(function(){b.classList.add('vis')},1800);
 setTimeout(function(){document.querySelectorAll('.score-fill').forEach(function(f){f.style.width=f.dataset.w});st.innerHTML='<span class="spinner"></span>Scoring...'},2800);
-setTimeout(function(){a.classList.add('winner');b.classList.add('loser');st.innerHTML='Grey Subtlety selected';st.style.color='var(--accent)'},4000);
+setTimeout(function(){a.classList.add('winner');b.classList.add('loser');st.innerHTML='SkyVista Survey selected';st.style.color='var(--accent)'},4000);
 setTimeout(function(){document.getElementById('execArea').style.display='block';requestAnimationFrame(function(){document.getElementById('progFill').style.width='100%'})},5000);
 setTimeout(function(){showScreen('s-result',4)},7500)}
 
@@ -1078,8 +1080,8 @@ function copyModalContent(){navigator.clipboard.writeText(document.getElementByI
 document.getElementById('modalOverlay').onclick=function(e){if(e.target===document.getElementById('modalOverlay'))closeModal()};
 
 document.getElementById('addClaudeBtn').onclick=function(){openModal('Add to Claude','{\n  "mcpServers": {\n    "robot-marketplace": {\n      "type": "http",\n      "url": "https://marketplace.yakrobotics.com/fleet/mcp",\n      "headers": {\n        "Authorization": "Bearer YOUR_TOKEN"\n      }\n    }\n  }\n}\n\nPaste into .mcp.json or Claude Desktop settings.')};
-document.getElementById('downloadBtn').onclick=function(){openModal('Task Data','{\n  "temperature_celsius": 22.8,\n  "humidity_percent": 47.3,\n  "timestamp": "2026-03-27T09:14:42Z",\n  "robot_id": "grey-subtlety",\n  "request_id": "req_a1b2c3d4e5f6",\n  "location": "Warehouse Bay 3",\n  "accuracy": {\n    "temperature": "\u00b10.5\u00b0C",\n    "humidity": "\u00b12% RH"\n  }\n}')};
-document.getElementById('receiptBtn').onclick=function(){openModal('Receipt','YAK ROBOTICS MARKETPLACE\n\nTask: Sensor Reading \u2014 Bay 3\nRobot: Grey Subtlety\nAmount: $0.35\nPayment: Credit balance (Stripe)\nRef: req_a1b2c3d4e5f6\nDate: 2026-03-27 09:14:42 UTC\n\nBalance after: $24.65')};
+document.getElementById('downloadBtn').onclick=function(){openModal('Survey Deliverables','Files delivered:\n\n1. point_cloud.las (478 MB)\n   LiDAR point cloud, 12-acre coverage, 100 pts/m\u00b2\n\n2. topo_map.dxf (24 MB)\n   Civil 3D-ready surface model, 0.5m contours\n\n3. ortho_mosaic.tif (312 MB)\n   4cm/px orthomosaic, georeferenced\n\n4. survey_report.pdf (2.4 MB)\n   RTK accuracy report, ground control points,\n   weather conditions, operator certifications\n\nMetadata:\n  operator: SkyVista Survey\n  request_id: req_a1b2c3d4e5f6\n  accuracy_verified: \u00b11.8cm vertical\n  coordinate_system: NAD83 / Arizona Central (ft)\n  datum: NAVD88')};
+document.getElementById('receiptBtn').onclick=function(){openModal('Receipt','YAK ROBOTICS MARKETPLACE\n\nTask: Pre-Bid Topographic Survey\nSite: 12 acres, I-17 & Happy Valley Rd, Phoenix AZ\nOperator: SkyVista Survey\nEquipment: DJI Matrice 350 RTK + Zenmuse L2\nAmount: $2,400.00\nPayment: Credit balance (Stripe)\nRef: req_a1b2c3d4e5f6\nDate: 2026-03-27 09:14:42 UTC\nDuration: 3.2 hours\nAccuracy: \u00b11.8cm verified\n\nBalance after: $7,600.00')};
 
 // ===== PART C: ROBOT EXPLORER =====
 var explorerShowing=0;
@@ -1255,7 +1257,7 @@ var fullFeedFilter='all';
 
 function generateFeedItems(){
   fullFeedItems=[];
-  var actions=['completed humidity reading','completed temperature survey','completed air quality scan','won auction \u00b7 thermal scan','completed vibration analysis','came online','completed photo inspection','won auction \u00b7 sensor reading','completed gas detection','came online'];
+  var actions=['completed topo survey','completed GPR scan','completed progress photos','won auction \u00b7 site survey','completed as-built verification','came online','completed bridge inspection','won auction \u00b7 pre-bid survey','completed thermal scan','came online'];
   var statuses=['done','done','done','bid','done','online','done','bid','done','online'];
   for(var i=0;i<40;i++){
     var ri=Math.floor(Math.random()*200);
@@ -1483,7 +1485,7 @@ function resetDemo(){
   document.querySelectorAll('.score-fill').forEach(function(b){b.style.width='0'});
   document.getElementById('progFill').style.width='0';
   document.getElementById('execArea').style.display='none';
-  document.getElementById('aStatus').innerHTML='<span class="spinner"></span>Finding robots near Bay 3...';
+  document.getElementById('aStatus').innerHTML='<span class="spinner"></span>Finding operators near I-17 corridor...';
   document.getElementById('aStatus').style.color='';
   document.getElementById('cardArea').style.display='none';
   document.getElementById('payDone').style.display='none';
