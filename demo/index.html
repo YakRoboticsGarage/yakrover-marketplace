@@ -325,6 +325,7 @@ footer a:hover{text-decoration:underline}
 .agent-pick.selected{border-color:var(--accent);background:var(--accent-light)}
 .agent-pick .ap-icon{font-size:1.3rem;margin-bottom:6px}
 .agent-pick .ap-name{font-weight:600;font-size:0.85rem}
+.agent-pick .ap-desc{font-size:0.68rem;color:var(--text-3);margin-top:2px}
 .api-key-display{font-family:'JetBrains Mono',monospace;font-size:0.85rem;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);word-break:break-all;margin:8px 0}
 .config-snippet{font-family:'JetBrains Mono',monospace;font-size:0.72rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;line-height:1.7;overflow-x:auto;white-space:pre-wrap;margin:8px 0}
 .tool-list{list-style:none;padding:0}
@@ -1349,15 +1350,16 @@ function renderAgentStep(){
   html+='<p>Select the AI agent you want to connect to the robot marketplace.</p>';
   html+='<div class="agent-pick-grid">';
   var agents=[
-    {id:'claude-code',name:'Claude Code',icon:'\u{1F4BB}'},
-    {id:'claude-desktop',name:'Claude Desktop',icon:'\u{1F5A5}'},
-    {id:'chatgpt',name:'ChatGPT',icon:'\u{1F4AC}'},
-    {id:'custom',name:'Custom Agent',icon:'\u{2699}'}
+    {id:'claude-code',name:'Claude Code',desc:'One terminal command',icon:'\u{1F4BB}'},
+    {id:'claude-desktop',name:'Claude Desktop',desc:'Settings \u2192 Connectors',icon:'\u{1F5A5}'},
+    {id:'chatgpt',name:'ChatGPT',desc:'MCP endpoint URL',icon:'\u{1F4AC}'},
+    {id:'custom',name:'Custom / API',desc:'JSON config',icon:'\u{2699}'}
   ];
   agents.forEach(function(a){
     html+='<div class="agent-pick'+(s.agent===a.id?' selected':'')+'" data-agent="'+a.id+'">';
     html+='<div class="ap-icon">'+a.icon+'</div>';
     html+='<div class="ap-name">'+a.name+'</div>';
+    html+='<div class="ap-desc">'+a.desc+'</div>';
     html+='</div>';
   });
   html+='</div></div>';
@@ -1373,14 +1375,48 @@ function renderAgentStep(){
   }
 
   if(s.step>=3){
-    // Step 3: Config snippet
-    var agentLabel=s.agent==='claude-code'?'Claude Code':s.agent==='claude-desktop'?'Claude Desktop':s.agent==='chatgpt'?'ChatGPT':'Custom Agent';
-    var configJson='{\n  "mcpServers": {\n    "yak-robotics": {\n      "type": "http",\n      "url": "https://marketplace.yakrobotics.com/fleet/mcp",\n      "headers": {\n        "Authorization": "Bearer '+s.apiKey+'"\n      }\n    }\n  }\n}';
+    // Step 3: Platform-specific install instructions
+    var mcpUrl='https://yakrobot.bid/fleet/mcp';
     html+='<div class="agent-step">';
-    html+='<h3>Step 3: Add to '+agentLabel+'</h3>';
-    html+='<p>Add this to your <code>.mcp.json</code> configuration file:</p>';
-    html+='<div class="config-snippet" id="agentConfigSnippet">'+configJson+'</div>';
-    html+='<button class="btn btn-outline" style="font-size:0.8rem" onclick="navigator.clipboard.writeText(document.getElementById(\'agentConfigSnippet\').textContent);this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy Config\'},1500)">Copy Config</button>';
+
+    if(s.agent==='claude-code'){
+      // Claude Code: one-liner command
+      var addCmd='claude mcp add-json yak-robotics \'{"type":"http","url":"'+mcpUrl+'","headers":{"Authorization":"Bearer '+s.apiKey+'"}}\'';
+      html+='<h3>Step 3: Run this in your terminal</h3>';
+      html+='<p>One command — Claude Code handles the rest. No config files to edit.</p>';
+      html+='<div class="config-snippet" id="agentConfigSnippet">'+addCmd+'</div>';
+      html+='<button class="btn btn-outline" style="font-size:0.8rem" onclick="navigator.clipboard.writeText(document.getElementById(\'agentConfigSnippet\').textContent);this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy Command\'},1500)">Copy Command</button>';
+      html+='<div style="margin-top:10px;font-size:0.72rem;color:var(--text-3)">This adds the marketplace to your current project. Use <code>--scope user</code> to make it available everywhere.</div>';
+
+    } else if(s.agent==='claude-desktop'){
+      // Claude Desktop: Custom Connectors or config file
+      html+='<h3>Step 3: Add via Custom Connectors</h3>';
+      html+='<p>In Claude Desktop: <strong>Settings &rarr; Connectors &rarr; Add custom connector</strong></p>';
+      html+='<div style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:12px 0">';
+      html+='<div style="font-size:0.8rem;color:var(--text-2);margin-bottom:8px">Enter this URL:</div>';
+      html+='<div class="config-snippet" id="agentConfigSnippet" style="font-size:0.95rem">'+mcpUrl+'</div>';
+      html+='<div style="font-size:0.8rem;color:var(--text-2);margin-top:8px">When prompted for authentication, paste your API key:</div>';
+      html+='<div class="config-snippet" style="font-size:0.875rem;margin-top:4px">'+s.apiKey+'</div>';
+      html+='</div>';
+      html+='<button class="btn btn-outline" style="font-size:0.8rem" onclick="navigator.clipboard.writeText(\''+mcpUrl+'\');this.textContent=\'URL Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy URL\'},1500)">Copy URL</button>';
+      html+=' <button class="btn btn-outline" style="font-size:0.8rem;margin-left:6px" onclick="navigator.clipboard.writeText(\''+s.apiKey+'\');this.textContent=\'Key Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy Key\'},1500)">Copy Key</button>';
+
+    } else if(s.agent==='chatgpt'){
+      html+='<h3>Step 3: Connect via MCP</h3>';
+      html+='<p>ChatGPT supports MCP servers via the Connectors API. Add this endpoint:</p>';
+      html+='<div class="config-snippet" id="agentConfigSnippet">'+mcpUrl+'</div>';
+      html+='<div style="font-size:0.72rem;color:var(--text-3);margin-top:8px">Auth header: <code>Authorization: Bearer '+s.apiKey+'</code></div>';
+      html+='<button class="btn btn-outline" style="font-size:0.8rem;margin-top:8px" onclick="navigator.clipboard.writeText(\''+mcpUrl+'\');this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy URL\'},1500)">Copy URL</button>';
+
+    } else {
+      // Custom: show full JSON config
+      var configJson='{\n  "mcpServers": {\n    "yak-robotics": {\n      "type": "http",\n      "url": "'+mcpUrl+'",\n      "headers": {\n        "Authorization": "Bearer '+s.apiKey+'"\n      }\n    }\n  }\n}';
+      html+='<h3>Step 3: MCP Configuration</h3>';
+      html+='<p>Add this to your agent\'s MCP server configuration:</p>';
+      html+='<div class="config-snippet" id="agentConfigSnippet">'+configJson+'</div>';
+      html+='<button class="btn btn-outline" style="font-size:0.8rem" onclick="navigator.clipboard.writeText(document.getElementById(\'agentConfigSnippet\').textContent);this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy Config\'},1500)">Copy Config</button>';
+    }
+
     if(s.step===3){
       html+=' <button class="btn btn-primary" style="font-size:0.8rem;margin-left:8px" onclick="agentLinkState.step=4;renderAgentStep()">Test Connection &rarr;</button>';
     }
