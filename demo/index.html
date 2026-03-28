@@ -357,7 +357,7 @@ footer a:hover{text-decoration:underline}
   <span class="step-chevron">&rsaquo;</span>
   <div class="step" data-step="2">Extract</div>
   <span class="step-chevron">&rsaquo;</span>
-  <div class="step" data-step="3">Fund</div>
+  <div class="step" data-step="3">Verify</div>
   <span class="step-chevron">&rsaquo;</span>
   <div class="step" data-step="4">Award</div>
 </div>
@@ -518,26 +518,47 @@ footer a:hover{text-decoration:underline}
   </div>
 </div>
 
-<!-- SCREEN 3: PAYMENT -->
+<!-- SCREEN 3: PAYMENT VERIFICATION -->
 <div id="s-pay" class="screen">
   <div style="padding:32px 0">
     <div style="text-align:center;margin-bottom:20px">
-      <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Add credits to get started</h2>
-      <p style="font-size:0.8rem;color:var(--text-2)">$250,000 credit bundle &middot; covers the I-94 tunnel survey package</p>
-      <p style="font-size:0.8rem;color:var(--text-3);margin-top:2px">2 robot tasks (~$170K) + 1 specialist vendor (TBD)</p>
-      <p style="font-size:0.72rem;color:var(--text-3);margin-top:4px">Cancel anytime. Unused credits are refundable.</p>
+      <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:4px">Verify Payment Security</h2>
+      <p style="font-size:0.8rem;color:var(--text-2)">Operators need to see verified payment before bidding</p>
+      <p style="font-size:0.8rem;color:var(--text-3);margin-top:2px">I-94 Drainage Tunnel &middot; 2 robot tasks &middot; $205K total</p>
     </div>
     <div class="pay-grid">
-      <div class="pay-opt" id="payStripe"><div class="icon">&#128179;</div><div class="label">Pay with Card</div><div class="sub">Visa, Mastercard, Amex</div></div>
-      <div class="pay-opt" id="payUSDC"><div class="icon">&#9672;</div><div class="label">Pay with USDC</div><div class="sub">Base network</div></div>
+      <div class="pay-opt" id="payStripe" style="border-color:var(--accent)">
+        <div class="icon">&#128203;</div>
+        <div class="label">Upload Payment Bond</div>
+        <div class="sub">MDOT public project &middot; required by Michigan law (MCL 129.201)</div>
+      </div>
+      <div class="pay-opt" id="payUSDC">
+        <div class="icon">&#127974;</div>
+        <div class="label">Fund Escrow</div>
+        <div class="sub">Private projects &middot; ACH or USDC deposit</div>
+      </div>
     </div>
     <div id="cardArea" style="display:none">
-      <div class="mock-card"><div class="num">4242 4242 4242 4242</div>Exp 12/28 &middot; CVC 424<br><span style="color:var(--text-3)">Auto-filled from browser</span></div>
-      <div style="text-align:center"><button class="btn btn-primary" id="confirmPay">Confirm &mdash; $250,000</button></div>
+      <div class="card" style="background:var(--bg-subtle)">
+        <h3 style="margin-bottom:12px">BOND CERTIFICATE UPLOADED</h3>
+        <div class="parsed-row"><span class="plabel">Bond Number</span><span class="pval mono">SUR-2025-MI-4847291</span></div>
+        <div class="parsed-row"><span class="plabel">Surety</span><span class="pval">Travelers Casualty and Surety Company</span></div>
+        <div class="parsed-row"><span class="plabel">Principal</span><span class="pval">Ridgeline Civil Contractors LLC</span></div>
+        <div class="parsed-row"><span class="plabel">Obligee</span><span class="pval">Michigan Dept of Transportation</span></div>
+        <div class="parsed-row"><span class="plabel">Project</span><span class="pval">I-94 Modernization Seg 3 Pkg 1</span></div>
+        <div class="parsed-row"><span class="plabel">Penal Sum</span><span class="pval mono" style="color:var(--green)">$4,200,000</span></div>
+        <div class="parsed-row"><span class="plabel">Effective</span><span class="pval">October 15, 2025</span></div>
+        <div style="margin-top:12px;padding:10px;background:var(--green-bg);border-radius:var(--radius);display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--green)">
+          <span style="font-weight:700">&#10003;</span> Verified against Travelers surety portal &middot; Bond covers $205K in task values
+        </div>
+      </div>
+      <div style="text-align:center"><button class="btn btn-primary" id="confirmPay">Open Auctions &mdash; Payment Bonded</button></div>
     </div>
     <div id="payDone" style="display:none;text-align:center;padding:20px 0">
-      <div style="color:var(--green);font-weight:600">$250,000 credits added</div>
-      <div style="font-size:0.72rem;color:var(--text-3);margin:6px 0 16px">Card statement: YAK ROBOTICS MARKETPLACE $250,000.00</div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:var(--green-bg);border-radius:var(--radius);color:var(--green);font-weight:600;font-size:0.875rem">
+        <span style="font-size:1.1rem">&#128737;</span> PAYMENT BONDED
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-3);margin:10px 0 16px">Surety-guaranteed by Travelers &middot; Operators can bid with confidence</div>
       <button class="btn btn-primary" id="startAuction">Start 2 Auctions &rarr;</button>
     </div>
   </div>
@@ -1108,8 +1129,8 @@ function runRfpExtraction(){
 
 // Payment
 document.getElementById('goPayBtn').onclick=function(){showScreen('s-pay',3)};
-document.getElementById('payStripe').onclick=function(){document.getElementById('cardArea').style.display='block';document.getElementById('payStripe').style.borderColor='var(--accent)'};
-document.getElementById('payUSDC').onclick=function(){document.getElementById('cardArea').style.display='none';document.getElementById('payDone').style.display='block';document.getElementById('payDone').querySelector('div').textContent='$45,000 USDC deposited'};
+document.getElementById('payStripe').onclick=function(){document.getElementById('cardArea').style.display='block';document.getElementById('payStripe').style.borderColor='var(--accent);box-shadow:var(--shadow)'};
+document.getElementById('payUSDC').onclick=function(){document.getElementById('cardArea').style.display='none';document.getElementById('payDone').style.display='block';document.getElementById('payDone').querySelector('div').innerHTML='<span style="font-size:1.1rem">&#127974;</span> ESCROW FUNDED';document.getElementById('payDone').querySelectorAll('div')[1].textContent='$205,000 deposited via ACH \u00b7 Operators can bid with confidence'};
 document.getElementById('confirmPay').onclick=function(){document.getElementById('cardArea').style.display='none';document.getElementById('payDone').style.display='block'};
 
 // Parallel auctions
