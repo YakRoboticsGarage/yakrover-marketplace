@@ -1,0 +1,52 @@
+RIDGELINE CIVIL CONTRACTORS
+INTERNAL SURVEY REQUEST — PRE-BID SITE ASSESSMENT
+
+To: Survey Department
+From: Marco Reyes, Senior Estimator
+Re: Kroger Distribution Center — Romulus, MI
+Bid Due: April 15, 2026
+
+I need a full pre-bid survey package for the Kroger distribution center
+expansion in Romulus. The site is approximately 45 acres — existing
+facility plus the proposed expansion area to the south. We're bidding
+the site grading, utilities, and paving package.
+
+WHAT I NEED:
+
+1. Topographic survey of the full 45 acres including:
+   - Existing building footprints and finished floor elevations
+   - Parking lot grades and drainage patterns
+   - All storm and sanitary sewer inverts
+   - Existing water main locations and depths
+   - Overhead and underground electric
+   - Gas line locations (Miss Dig markings on-site)
+   - Fence lines, signs, light poles, trees >4" caliper
+
+2. Subsurface utility investigation:
+   - GPR scan of proposed expansion area (approximately 20 acres)
+   - Locate and depth all utilities to ASCE 38-22 Quality Level B
+   - Mark-out with paint for field verification
+
+3. Pavement assessment of existing parking lot:
+   - Core samples: 10 locations for pavement section
+   - GPR scan for pavement thickness (supplement cores)
+   - Identify areas of subgrade failure
+
+4. Environmental baseline:
+   - Identify wetland boundaries (if any) for EGLE permitting
+   - Note existing drainage outfalls
+
+DELIVERABLES:
+   - AutoCAD DWG with our standard layer naming
+   - Cross-sections at 50-foot intervals through expansion area
+   - Utility conflict matrix (existing vs proposed)
+   - PDF report with photos
+   - We use Civil 3D — need LandXML surface and alignments
+
+BUDGET: I have $15,000 approved for this bid. Need it done within
+2 weeks of authorization.
+
+NOTES: The site is active — trucks running 24/7. Survey crew needs
+to coordinate with Kroger facility manager for access. Hard hats
+and high-vis required. No drone flights over the active loading
+dock area without prior approval.

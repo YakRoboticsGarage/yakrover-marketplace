@@ -1,0 +1,54 @@
+CITY OF ANN ARBOR — PURCHASING DEPARTMENT
+REQUEST FOR PROPOSAL — CONSTRUCTION PROGRESS DOCUMENTATION
+
+Project: Stadium Boulevard Reconstruction, Phase 2
+RFP No: AA-PW-2026-018
+
+SCOPE:
+
+The City of Ann Arbor seeks proposals for monthly aerial progress
+documentation of the Stadium Boulevard reconstruction project between
+South Main Street and South State Street (approximately 1.2 miles).
+The contractor will provide recurring monthly drone surveys over a
+14-month construction period.
+
+REQUIREMENTS:
+
+1. MONTHLY AERIAL SURVEY (14 visits)
+   - Orthomosaic photography at ≤2-inch GSD
+   - LiDAR point cloud for volumetric earthwork comparison
+   - Comparison overlay with design surface to quantify cut/fill progress
+   - Weather-dependent scheduling with 3-day makeup window
+
+2. VOLUMETRIC ANALYSIS
+   - Earthwork quantity comparison: actual vs. plan
+   - Monthly cut/fill volume report in cubic yards
+   - Stockpile measurement at contractor staging areas
+   - Accuracy: ±3% volumetric at 95% confidence
+
+3. PHOTOGRAPHIC DOCUMENTATION
+   - Minimum 200 oblique photos per visit covering full corridor
+   - Timestamped and geotagged
+   - Before/after comparison views at 10 key locations
+   - Web-accessible photo gallery for stakeholder review
+
+4. DELIVERABLES PER VISIT
+   - GeoTIFF orthomosaic
+   - LAS point cloud
+   - Volumetric report (PDF + CSV)
+   - Photo gallery (web link)
+   - Progress comparison map (design overlay)
+
+5. COORDINATE SYSTEM
+   - Michigan State Plane South Zone
+   - NAD83(2011), NAVD88
+   - Tie to City of Ann Arbor survey monuments
+
+QUALIFICATIONS:
+   - FAA Part 107 certified pilot
+   - 3+ years construction progress monitoring experience
+   - References from 2 municipal or DOT clients
+   - Insurance: $2M general liability, $1M professional
+
+BUDGET: Not to exceed $5,600 per visit ($78,400 total for 14 visits)
+PERIOD: April 2026 through May 2027

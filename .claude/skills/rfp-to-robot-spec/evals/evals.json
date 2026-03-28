@@ -3,20 +3,44 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Process this RFP into robot task specs: [contents of examples/mdot-highway-rfp.txt]",
-      "expected_output": "Should produce 2 task specs: (1) aerial LiDAR topo survey with sensors [aerial_lidar, rtk_gps, photogrammetry], accuracy ±0.05ft, MDOT 104.09 compliance; (2) pavement condition survey with GPR. Budget should total under $45,000. Deliverables should include LandXML, DXF, GeoTIFF, LAS, CSV.",
+      "prompt": "Process this MDOT highway RFP into robot task specs",
+      "expected_output": "Should produce 2 task specs: (1) aerial LiDAR topo with sensors [aerial_lidar, rtk_gps, photogrammetry], MDOT 104.09 compliance, ±0.05ft accuracy; (2) pavement condition with GPR. Michigan State Plane South Zone, NAD83/NAVD88. Budget under $45,000. Deliverables include LandXML, DXF, GeoTIFF, LAS, CSV.",
       "files": ["examples/mdot-highway-rfp.txt"]
     },
     {
       "id": 2,
-      "prompt": "Process this RFP into robot task specs: [contents of examples/bridge-inspection-rfp.txt]",
-      "expected_output": "Should produce 3+ task specs: (1) visual drone inspection for 47 bridges, (2) detailed hands-on inspection for 12 fracture-critical structures, (3) 3D scanning for 8 structures. Should reference NBIS, 23 CFR 650, and FHWA certification requirements.",
+      "prompt": "Process this bridge inspection RFP into robot task specs",
+      "expected_output": "Should produce 3+ task specs: (1) visual drone inspection for 47 bridges, (2) detailed hands-on/crawler inspection for 12 fracture-critical, (3) 3D TLS scanning for 8 structures. Must reference NBIS, 23 CFR 650, FHWA-NHI-130055 cert. e57 and LAS deliverables.",
       "files": ["examples/bridge-inspection-rfp.txt"]
     },
     {
       "id": 3,
-      "prompt": "I need a pre-bid survey for a 20-acre commercial site in Grand Rapids, MI. The site has an existing parking lot that needs to be mapped, plus we need to check for underground utilities before demolition. Letting date is September 2026.",
-      "expected_output": "Should produce 2 task specs: (1) aerial topo survey ~20 acres with photogrammetry, accuracy per MDOT design survey standards; (2) GPR subsurface utility scan. Should use Michigan State Plane coordinates, NAD83/NAVD88. Budget estimate should be $3,000-6,000 for topo + $3,000-6,000 for GPR.",
+      "prompt": "Process this Texas highway survey RFP",
+      "expected_output": "Should produce 1-2 task specs for 16-mile IH-45 corridor. Must use USGS QL1 (not Michigan standards). Texas State Plane South Central Zone. Deliverables in LAS/LAZ, GeoTIFF, DGN/DWG per TxDOT CAD standards. Budget range $750K-1.2M. Should NOT reference MDOT sections.",
+      "files": ["examples/txdot-highway-rfp.txt"]
+    },
+    {
+      "id": 4,
+      "prompt": "Process this USACE dam inspection scope",
+      "expected_output": "Should produce 4+ task specs: (1) deformation monitoring survey (±0.01ft precision), (2) topographic survey of dam (~40 acres), (3) terrestrial LiDAR of spillway (0.05ft point spacing), (4) underwater inspection, (5) UAS thermal/photo inspection. Must reference ER 1110-2-1156, EM 1110-1-1005. ADCI dive cert required. 12-month period with quarterly epochs.",
+      "files": ["examples/usace-dam-inspection.txt"]
+    },
+    {
+      "id": 5,
+      "prompt": "Process this FAA airport survey task order",
+      "expected_output": "Should produce 2-3 task specs: (1) runway profile survey (±0.01ft vertical on pavement), (2) obstruction survey (10,000ft radius), (3) approach terrain survey. Must reference AC 150/5300-18B. Must flag COA requirement (no Part 107 on certificated airports). Night-only restriction on active runways.",
+      "files": ["examples/faa-airport-rfp.txt"]
+    },
+    {
+      "id": 6,
+      "prompt": "Process this commercial pre-bid survey request",
+      "expected_output": "Should produce 3 task specs: (1) topo survey of 45 acres, (2) GPR subsurface utility scan of 20 acres to ASCE 38-22 QL-B, (3) pavement assessment with cores + GPR. Budget under $15,000 total. Active site safety requirements. Civil 3D compatible deliverables (LandXML, DWG). 2-week deadline.",
+      "files": ["examples/commercial-site-survey.txt"]
+    },
+    {
+      "id": 7,
+      "prompt": "I need a pre-bid survey for a 20-acre commercial site in Grand Rapids, MI. The site has an existing parking lot plus adjacent undeveloped land. We need topo and utility locates before we bid the grading package. Letting is September 2026.",
+      "expected_output": "Should produce 2 task specs: (1) aerial topo ~20 acres with MDOT design survey accuracy, (2) GPR subsurface utility scan. Michigan State Plane South, NAD83/NAVD88. Budget $3,000-6,000 for topo + $3,000-6,000 for GPR. Should ask about or assume ASCE 38-22 quality level for utilities.",
       "files": []
     }
   ]

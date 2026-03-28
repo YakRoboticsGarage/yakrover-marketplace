@@ -29,7 +29,12 @@ Scan for these categories. Mark each as FOUND or NOT FOUND:
 
 ### 3. Load applicable standards
 
-For Michigan projects, read `references/michigan-standards.md` and apply MDOT accuracy tables. For other states, use AASHTO defaults. If no accuracy is specified, default to the most restrictive standard referenced in the document.
+Load the right reference for the project's jurisdiction:
+- **Michigan projects** (MDOT, county, municipal): read `references/michigan-standards.md`
+- **Federal projects** (USACE, FAA, FHWA) or **any state without its own reference**: read `references/aashto-federal-standards.md`
+- **Projects with both** (federally-funded state highway): load both files
+
+If no accuracy is specified in the RFP, use the defaults table in `references/aashto-federal-standards.md` (bottom section) based on project type.
 
 ### 4. Map to robots and sensors
 
@@ -95,7 +100,8 @@ Flag any requirements that no current marketplace robot can fulfill.
 
 ## References
 
-- `references/michigan-standards.md` — MDOT accuracy tables, LiDAR specs, survey types, coordinate systems. Load for any Michigan project.
+- `references/michigan-standards.md` — MDOT accuracy tables, LiDAR specs, survey types, coordinate systems. Load for Michigan projects.
+- `references/aashto-federal-standards.md` — AASHTO, USGS QL levels, FHWA bridge, FAA airport, USACE dam standards, OSHA requirements, state plane zones, and default accuracy tables. Load for federal projects or when state-specific standards are unavailable.
 - `references/robot-sensor-mapping.md` — survey need → robot platform → sensor → price range. Load for step 4.
 
 ## Validation
@@ -110,6 +116,11 @@ This checks: required fields, valid categories, known sensors, valid certificati
 
 ## Example inputs
 
-See `examples/` directory:
-- `mdot-highway-rfp.txt` — MDOT US-131 resurfacing, 6.6 miles
-- `bridge-inspection-rfp.txt` — Wayne County 47-bridge NBIS program
+See `examples/` directory for 6 diverse RFP types:
+- `mdot-highway-rfp.txt` — MDOT US-131 resurfacing, Michigan, 6.6 miles
+- `bridge-inspection-rfp.txt` — Wayne County 47-bridge NBIS program, Michigan
+- `txdot-highway-rfp.txt` — TxDOT IH-45 corridor, Houston, 16 miles, $750K-1.2M
+- `usace-dam-inspection.txt` — USACE dam safety, Iowa, deformation monitoring + underwater
+- `faa-airport-rfp.txt` — FAA aeronautical survey, Grand Rapids GRR, restricted airspace
+- `commercial-site-survey.txt` — Private GC pre-bid, Romulus MI, 45-acre Kroger expansion
+- `municipal-progress-monitoring.txt` — City of Ann Arbor, 14-month recurring progress docs

@@ -1,0 +1,50 @@
+TEXAS DEPARTMENT OF TRANSPORTATION
+REQUEST FOR QUALIFICATIONS — AERIAL SURVEY SERVICES
+
+District: Houston
+CSJ: 0912-72-225
+Highway: IH-45 North Freeway Reconstruction (North Houston Highway Improvement Project)
+
+SCOPE OF SERVICES:
+
+TxDOT Houston District requires aerial LiDAR and photogrammetric survey
+services for the IH-45 corridor from IH-610 North Loop to Beltway 8 North,
+approximately 16 miles. This is a design-build project requiring current
+topographic data for preliminary engineering.
+
+SURVEY REQUIREMENTS:
+
+A. AERIAL LIDAR ACQUISITION
+   - USGS Quality Level 1 (QL1): 8 points/m² minimum
+   - NVA ≤ 10.0 cm, VVA ≤ 15.0 cm
+   - Full corridor width: 500 feet each side of centerline (1000 ft total)
+   - Classified point cloud per ASPRS standards
+   - Bare earth and above-ground returns
+
+B. AERIAL PHOTOGRAPHY
+   - 3-inch GSD orthomosaic minimum
+   - True-color (RGB) and color-infrared (CIR) capture
+   - Forward overlap 80%, sidelap 60%
+
+C. GROUND CONTROL
+   - GPS survey of ground control points at 1000-foot intervals
+   - NAD83(2011) Texas State Plane, South Central Zone
+   - NAVD88 vertical datum via GEOID18 model
+   - Minimum 30 ground control panels
+
+D. DELIVERABLES
+   - LAS/LAZ point clouds (ASPRS Class 2, 6, 9 minimum)
+   - 1-foot contour interval DTM/DSM
+   - 3-inch GSD orthomosaic (GeoTIFF, MrSID)
+   - Planimetric feature extraction (roads, buildings, drainage, utilities)
+   - AutoCAD DGN and DWG files per TxDOT CAD Standards
+   - Cross-sections at 100-foot stations
+   - FGDC-compliant metadata
+
+E. ACCURACY
+   - Horizontal: ±0.5 foot (NSSDA 95%)
+   - Vertical: ±0.3 foot hard surface, ±0.5 foot vegetated (NSSDA 95%)
+   - 20 independent QC checkpoints required
+
+ESTIMATED VALUE: $750,000 - $1,200,000
+PERFORMANCE PERIOD: 120 calendar days from NTP

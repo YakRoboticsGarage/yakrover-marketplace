@@ -1,0 +1,64 @@
+U.S. ARMY CORPS OF ENGINEERS — DETROIT DISTRICT
+SOLICITATION — DAM SAFETY INSPECTION AND MONITORING SURVEY
+
+Solicitation No: W911XK-26-R-0047
+Project: Periodic Inspection — Coralville Dam, Iowa City, IA
+
+SCOPE:
+
+The USACE Detroit District requires surveying and inspection services for
+the Coralville Dam as part of the Dam Safety Program per ER 1110-2-1156.
+Work includes deformation monitoring survey, condition inspection, and
+underwater inspection of outlet works.
+
+SURVEY REQUIREMENTS:
+
+1. DEFORMATION MONITORING
+   - Establish monitoring network: minimum 12 monuments on dam crest
+   - Precision: ±0.01 foot horizontal, ±0.005 foot vertical
+   - Baseline survey plus 4 quarterly monitoring epochs
+   - Settlement plates at 6 locations on embankment
+   - Compare results to historical deformation data (2018-2025)
+
+2. TOPOGRAPHIC SURVEY OF DAM AND SPILLWAY
+   - 1-foot contour interval for entire dam footprint (~40 acres)
+   - Include spillway, stilling basin, outlet works, and abutments
+   - Hard surface elevations to ±0.02 foot
+   - Coordinate system: Iowa State Plane South, NAD83(2011), NAVD88
+
+3. 3D LASER SCANNING
+   - Terrestrial LiDAR scan of spillway and outlet portal
+   - Point spacing ≤ 0.05 foot on concrete surfaces
+   - Color point cloud (RGB)
+   - Registration accuracy: ≤ 0.02 foot RMS
+   - Deliverable: e57 and LAS format
+
+4. UNDERWATER INSPECTION
+   - Dive inspection of outlet conduit (8-foot diameter, 800 linear feet)
+   - Video documentation with distance markers
+   - Measure concrete deterioration, joint condition, sediment depth
+   - Ultrasonic thickness gauging of steel liner (if present)
+
+5. UAS INSPECTION
+   - Drone photography of upstream and downstream faces
+   - Thermal imaging for seepage detection
+   - Minimum 1-inch GSD for condition documentation
+   - FAA Part 107 and COA for restricted airspace near dam
+
+DELIVERABLES:
+   - Deformation analysis report with movement vectors
+   - Topographic surface model (LandXML, DXF)
+   - 3D point clouds (e57, LAS)
+   - Underwater inspection video and report
+   - UAS photo documentation and thermal analysis
+   - Periodic Inspection Report per USACE format
+
+PERSONNEL REQUIREMENTS:
+   - Licensed Professional Surveyor
+   - Registered Professional Engineer (dam safety experience)
+   - ADCI-certified commercial divers
+   - FAA Part 107 + COA for restricted airspace
+   - USACE CQM certification for QC manager
+
+PERIOD OF PERFORMANCE: March 2026 - March 2027 (baseline + 4 quarterly epochs)
+ESTIMATED VALUE: $280,000 - $350,000

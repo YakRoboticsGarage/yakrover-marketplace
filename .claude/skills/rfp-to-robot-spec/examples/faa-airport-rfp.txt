@@ -1,0 +1,45 @@
+FEDERAL AVIATION ADMINISTRATION
+TASK ORDER — AERONAUTICAL SURVEY
+
+Airport: Gerald R. Ford International Airport (GRR), Grand Rapids, MI
+Contract: DTFAWA-16-D-00008, Task Order 0042
+
+SCOPE:
+
+FAA requires an aeronautical survey update for GRR to support the Runway
+8R/26L extension project. Survey must comply with AC 150/5300-18B.
+
+SURVEY REQUIREMENTS:
+
+1. RUNWAY SURVEY
+   - Full runway profile: Runway 8R/26L (10,000 ft x 150 ft)
+   - Pavement elevations at 10-foot grid
+   - Accuracy: ±0.05 ft horizontal, ±0.01 ft vertical on pavement
+   - Edge lights, PAPI, and MALSR positions
+
+2. OBSTRUCTION SURVEY
+   - All objects penetrating FAR Part 77 imaginary surfaces
+   - 10,000-foot radius from ARP
+   - Accuracy: ±1.0 ft horizontal, ±0.5 ft vertical
+   - Tree heights, buildings, towers, terrain high points
+
+3. APPROACH SURVEY
+   - ILS critical areas for Runway 26L
+   - Terrain along approach path: 5-mile extended centerline
+   - 1-foot contour interval within approach surface
+
+4. DELIVERABLES
+   - FAA Survey Database (ASCII, NGS format)
+   - AutoCAD DWG per FAA CAD standards
+   - 6-inch GSD orthomosaic of airfield
+   - Obstruction Analysis/FAR Part 77 surface penetration report
+   - NAVD88 vertical datum, NAD83 State Plane Michigan South
+
+RESTRICTIONS:
+   - All airfield operations require airfield driver training
+   - Drone ops require FAA COA (no Part 107 waivers on certificated airports)
+   - Night operations only on active runways
+   - Escort required at all times in AOA
+
+ESTIMATED VALUE: $180,000 - $220,000
+PERIOD: 90 calendar days
