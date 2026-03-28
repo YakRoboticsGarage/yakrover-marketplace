@@ -657,7 +657,7 @@ footer a:hover{text-decoration:underline}
         <div style="font-size:0.72rem;padding:6px 10px;background:var(--green-bg);color:var(--green);border-radius:4px">&#10003; DBE participation: 9.2% (goal: 8%)</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-primary" style="font-size:0.8rem" id="confirmAward1">Confirm Award</button>
+        <button class="btn btn-primary" style="font-size:0.8rem" id="confirmAward1">Agree &amp; Commit</button>
         <button class="btn btn-outline" style="font-size:0.8rem" onclick="openRejectModal(1,'SkyVista Survey','AeroSpec Solutions at $89,000')">Reject</button>
         <a href="#" style="font-size:0.72rem;color:var(--link);text-decoration:none;margin-left:auto" onclick="var el=document.getElementById('profile1');el.style.display=el.style.display==='none'?'block':'none';this.textContent=el.style.display==='none'?'View operator profile \u25BC':'Hide profile \u25B2';return false">View operator profile &#9660;</a>
       </div>
@@ -704,7 +704,7 @@ footer a:hover{text-decoration:underline}
         <div style="font-size:0.72rem;padding:6px 10px;background:var(--amber-bg);color:var(--amber);border-radius:4px">&#9888; Sole bidder (no competition)</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-primary" style="font-size:0.8rem" id="confirmAward2">Confirm Award</button>
+        <button class="btn btn-primary" style="font-size:0.8rem" id="confirmAward2">Agree &amp; Commit</button>
         <button class="btn btn-outline" style="font-size:0.8rem" onclick="openRejectModal(2,'GroundTruth Robotics',null)">Reject</button>
         <a href="#" style="font-size:0.72rem;color:var(--link);text-decoration:none;margin-left:auto" onclick="var el=document.getElementById('profile2');el.style.display=el.style.display==='none'?'block':'none';this.textContent=el.style.display==='none'?'View operator profile \u25BC':'Hide profile \u25B2';return false">View operator profile &#9660;</a>
       </div>
@@ -734,10 +734,30 @@ footer a:hover{text-decoration:underline}
       </div>
     </div>
 
-    <div id="awardsDone" style="display:none;text-align:center;padding:16px 0">
-      <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:var(--green-bg);border-radius:var(--radius);color:var(--green);font-weight:600;font-size:0.875rem">&#10003; All awards confirmed</div>
-      <div style="font-size:0.72rem;color:var(--text-3);margin:10px 0">Agreements generating &middot; Insurance verified &middot; Work authorization pending</div>
-      <button class="btn btn-primary" id="goToResults" style="margin-top:12px">View Results Dashboard &rarr;</button>
+    <div id="awardsDone" style="display:none;padding:20px 0">
+      <div class="card" style="border:2px solid var(--green);text-align:center;padding:28px" id="signingCard">
+        <div id="signingAnim" style="padding:16px 0">
+          <div class="spinner" style="width:24px;height:24px;border-width:3px;margin:0 auto 12px"></div>
+          <div style="font-weight:600;font-size:0.95rem">Recording commitment on-chain...</div>
+          <div style="font-size:0.72rem;color:var(--text-3);margin-top:4px">Anchoring agreement hash to Base network</div>
+        </div>
+        <div id="signingDone" style="display:none">
+          <div style="font-size:2rem;margin-bottom:8px">&#128737;</div>
+          <div style="font-weight:700;font-size:1rem;margin-bottom:4px">Execution Commitment Recorded</div>
+          <div style="font-size:0.72rem;color:var(--text-3);margin-bottom:16px">Cryptographically anchored &middot; Surety-backed &middot; Legally binding</div>
+          <div class="card" style="text-align:left;background:var(--bg-subtle);margin:0 auto;max-width:400px;font-size:0.72rem;padding:14px">
+            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Commitment Hash</span><span class="pval mono" style="font-size:0.68rem">0x7a3f...e41c</span></div>
+            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Bond Reference</span><span class="pval mono" style="font-size:0.68rem">SUR-2025-MI-4847291</span></div>
+            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Network</span><span class="pval">Base (Ethereum L2)</span></div>
+            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Signed By</span><span class="pval">Ridgeline Civil Contractors LLC</span></div>
+            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Timestamp</span><span class="pval mono" style="font-size:0.68rem">2026-03-28T14:22:08Z</span></div>
+            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Operators</span><span class="pval">SkyVista Survey &middot; GroundTruth Robotics</span></div>
+          </div>
+          <div style="margin-top:16px">
+            <button class="btn btn-primary" id="goToResults">View Results Dashboard &rarr;</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1363,20 +1383,27 @@ document.getElementById('confirmRejectBtn').onclick=function(){
 var awards={task1:false,task2:false};
 document.getElementById('confirmAward1').onclick=function(){
   awards.task1=true;
-  this.textContent='\u2713 Confirmed';this.style.background='var(--green)';this.style.pointerEvents='none';
+  this.textContent='\u2713 Committed';this.style.background='var(--green)';this.style.pointerEvents='none';
   this.parentElement.querySelector('.btn-outline').style.display='none';
+  var toggle=this.parentElement.querySelector('a');if(toggle)toggle.style.display='none';
   checkAllAwards();
 };
 document.getElementById('confirmAward2').onclick=function(){
   awards.task2=true;
-  this.textContent='\u2713 Confirmed';this.style.background='var(--green)';this.style.pointerEvents='none';
+  this.textContent='\u2713 Committed';this.style.background='var(--green)';this.style.pointerEvents='none';
   this.parentElement.querySelector('.btn-outline').style.display='none';
+  var toggle=this.parentElement.querySelector('a');if(toggle)toggle.style.display='none';
   checkAllAwards();
 };
 function checkAllAwards(){
   if(awards.task1 && awards.task2){
     document.getElementById('awardsDone').style.display='block';
     document.getElementById('awardsDone').scrollIntoView({behavior:'smooth'});
+    // Animate the signing sequence
+    setTimeout(function(){
+      document.getElementById('signingAnim').style.display='none';
+      document.getElementById('signingDone').style.display='block';
+    },2500);
   }
 }
 document.getElementById('goToResults').onclick=function(){showScreen('s-result',6)};
@@ -1936,10 +1963,13 @@ function resetDemo(){
   // Reset award review
   awards={task1:false,task2:false};
   document.querySelectorAll('#s-review-award .btn-primary').forEach(function(b){
-    b.textContent='Confirm Award';b.style.background='';b.style.pointerEvents='';
+    b.textContent='Agree \x26 Commit';b.style.background='';b.style.pointerEvents='';
   });
   document.querySelectorAll('#s-review-award .btn-outline').forEach(function(b){b.style.display=''});
+  document.querySelectorAll('#s-review-award a').forEach(function(a){a.style.display=''});
   var ad=document.getElementById('awardsDone');if(ad)ad.style.display='none';
+  var sa=document.getElementById('signingAnim');if(sa)sa.style.display='';
+  var sd=document.getElementById('signingDone');if(sd)sd.style.display='none';
   document.getElementById('searchInput').value='';
   showScreen('s-landing',1);
 }
