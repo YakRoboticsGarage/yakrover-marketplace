@@ -1282,8 +1282,8 @@ function runParallelAuctions(){
   setTimeout(function(){
     document.getElementById('bid1a').classList.add('winner');
     document.getElementById('bid1b').classList.add('loser');
-    document.getElementById('a1status').innerHTML='<span style="color:var(--green)">\u2713 AWARDED</span>';
-    document.getElementById('a1status').style.background='var(--green-bg)';
+    document.getElementById('a1status').innerHTML='<span style="color:var(--accent)">\u2713 RECOMMENDED</span>';
+    document.getElementById('a1status').style.background='var(--accent-light)';
   },3800);
 
   // Task 2: single bid comes in later
@@ -1297,8 +1297,8 @@ function runParallelAuctions(){
   },5200);
   setTimeout(function(){
     document.getElementById('bid2a').classList.add('winner');
-    document.getElementById('a2status').innerHTML='<span style="color:var(--green)">\u2713 AWARDED</span>';
-    document.getElementById('a2status').style.background='var(--green-bg)';
+    document.getElementById('a2status').innerHTML='<span style="color:var(--accent)">\u2713 RECOMMENDED</span>';
+    document.getElementById('a2status').style.background='var(--accent-light)';
   },6000);
 
   // Navigate to award review (not directly to results)
