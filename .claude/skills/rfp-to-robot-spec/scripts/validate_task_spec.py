@@ -60,6 +60,32 @@ def validate(spec: dict) -> list[str]:
     except (InvalidOperation, ValueError):
         errors.append(f"budget_ceiling must be a number, got {spec.get('budget_ceiling')!r}")
 
+    # task_decomposition
+    decomp = spec.get("task_decomposition")
+    if decomp is not None:
+        if not isinstance(decomp, dict):
+            errors.append("task_decomposition must be a dict")
+        else:
+            if "rfp_id" not in decomp:
+                errors.append("task_decomposition missing 'rfp_id'")
+            idx = decomp.get("task_index")
+            total = decomp.get("total_tasks")
+            if idx is not None and total is not None:
+                if not isinstance(idx, int) or not isinstance(total, int):
+                    errors.append("task_index and total_tasks must be integers")
+                elif idx < 1 or idx > total:
+                    errors.append(f"task_index {idx} out of range (1-{total})")
+            bundling = decomp.get("bundling", "independent")
+            if bundling not in ("independent", "preferred_bundle", "required_bundle"):
+                errors.append(f"Invalid bundling '{bundling}'. Valid: independent, preferred_bundle, required_bundle")
+            deps = decomp.get("dependencies", [])
+            if not isinstance(deps, list):
+                errors.append("dependencies must be a list of task indices")
+            elif deps and total:
+                for d in deps:
+                    if not isinstance(d, int) or d < 1 or d > total or d == idx:
+                        errors.append(f"Invalid dependency {d} (must be 1-{total}, not self)")
+
     # capability_requirements structure
     cap = spec.get("capability_requirements", {})
     if not isinstance(cap, dict):

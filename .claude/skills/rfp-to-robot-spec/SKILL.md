@@ -42,7 +42,17 @@ Read `references/robot-sensor-mapping.md`. For each survey requirement, identify
 
 ### 5. Generate task spec JSON
 
-Output one JSON block per task. Each must pass validation:
+Output one JSON block per task. Each task is independently biddable — a robot can bid on one task without bidding on any others from the same RFP.
+
+Every task includes a `task_decomposition` block that links it to the parent RFP and sibling tasks:
+
+- **`rfp_id`** — unique identifier for the source RFP (e.g., `rfp_txdot_ih45_2026`). Same across all tasks from this RFP.
+- **`task_index`** — this task's position (1-indexed). For display: "Task 2 of 5."
+- **`total_tasks`** — how many tasks were extracted from this RFP.
+- **`dependencies`** — list of task indices that must complete before this one can start. Empty means no dependencies (most common). Example: a progress monitoring task may depend on the baseline topo being done first: `"dependencies": [1]`.
+- **`bundling`** — `"independent"` (default: any operator can bid on this alone), `"preferred_bundle"` (buyer prefers one operator does this + linked tasks, but will accept separate bids), or `"required_bundle"` (rare: tasks must be awarded together, e.g., baseline + quarterly monitoring epochs).
+
+Each must pass validation:
 
 ```bash
 python scripts/validate_task_spec.py < spec.json
@@ -54,6 +64,13 @@ The spec structure:
 {
   "description": "Clear one-line summary of this specific task",
   "task_category": "site_survey | bridge_inspection | progress_monitoring | as_built | subsurface_scan | environmental_survey | control_survey",
+  "task_decomposition": {
+    "rfp_id": "Unique ID for the source RFP (shared across all tasks from this RFP)",
+    "task_index": 1,
+    "total_tasks": 3,
+    "dependencies": [],
+    "bundling": "independent"
+  },
   "capability_requirements": {
     "hard": {
       "sensors_required": ["aerial_lidar", "rtk_gps"],
