@@ -43,15 +43,15 @@ header{padding:16px 0;display:flex;align-items:center;justify-content:space-betw
 .header-links a:hover{color:var(--text)}
 
 /* Steps indicator */
-.steps{display:flex;justify-content:center;gap:0;padding:16px 0;font-size:0.72rem;color:var(--text-3);align-items:center}
+.steps{display:flex;justify-content:center;gap:0;padding:12px 0;font-size:0.72rem;color:var(--text-3);align-items:center;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap}
 .steps.hidden{display:none}
-.step{padding:4px 12px;border-radius:4px;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.05em;font-size:0.68rem}
+.step{padding:3px 8px;border-radius:4px;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.04em;font-size:0.62rem;white-space:nowrap;flex-shrink:0}
 .step.active{background:var(--accent);color:#fff;font-weight:600}
 .step.done{color:var(--green);font-weight:500;background:var(--green-bg)}
 .step-chevron{width:24px;height:0;border-top:1px solid var(--border);display:inline-block;vertical-align:middle;margin:0 2px;font-size:0}
 
 /* Screens */
-.screen{display:none;animation:fadeIn 0.35s ease-out both}
+.screen{display:none;animation:fadeIn 0.35s ease-out both;min-height:60vh}
 .screen.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
@@ -462,7 +462,7 @@ footer a:hover{text-decoration:underline}
 
   <div class="detail-actions">
     <button class="btn btn-primary detail-hire-btn">Hire this operator</button>
-    <a href="#" target="_blank" class="btn btn-outline detail-chain-link" style="font-size:0.8rem">View on-chain registration &rarr;</a>
+    <a href="#" target="_blank" class="btn btn-outline detail-chain-link" style="font-size:0.8rem">View Registration</a>
   </div>
 </div>
 </template>
@@ -738,20 +738,20 @@ footer a:hover{text-decoration:underline}
       <div class="card" style="border:2px solid var(--green);text-align:center;padding:28px" id="signingCard">
         <div id="signingAnim" style="padding:16px 0">
           <div class="spinner" style="width:24px;height:24px;border-width:3px;margin:0 auto 12px"></div>
-          <div style="font-weight:600;font-size:0.95rem">Recording commitment on-chain...</div>
-          <div style="font-size:0.72rem;color:var(--text-3);margin-top:4px">Anchoring agreement hash to Base network</div>
+          <div style="font-weight:600;font-size:0.95rem">Recording execution commitment...</div>
+          <div style="font-size:0.72rem;color:var(--text-3);margin-top:4px">Creating tamper-proof agreement record</div>
         </div>
         <div id="signingDone" style="display:none">
           <div style="font-size:2rem;margin-bottom:8px">&#128737;</div>
           <div style="font-weight:700;font-size:1rem;margin-bottom:4px">Execution Commitment Recorded</div>
-          <div style="font-size:0.72rem;color:var(--text-3);margin-bottom:16px">Cryptographically anchored &middot; Surety-backed &middot; Legally binding</div>
+          <div style="font-size:0.72rem;color:var(--text-3);margin-bottom:16px">Tamper-proof record &middot; Surety-backed &middot; Legally binding</div>
           <div class="card" style="text-align:left;background:var(--bg-subtle);margin:0 auto;max-width:400px;font-size:0.72rem;padding:14px">
-            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Commitment Hash</span><span class="pval mono" style="font-size:0.68rem">0x7a3f...e41c</span></div>
+            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Agreement ID</span><span class="pval mono" style="font-size:0.68rem">AGR-2026-0328-7A3F</span></div>
             <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Bond Reference</span><span class="pval mono" style="font-size:0.68rem">SUR-2025-MI-4847291</span></div>
-            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Network</span><span class="pval">Base (Ethereum L2)</span></div>
             <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Signed By</span><span class="pval">Ridgeline Civil Contractors LLC</span></div>
-            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Timestamp</span><span class="pval mono" style="font-size:0.68rem">2026-03-28T14:22:08Z</span></div>
+            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Timestamp</span><span class="pval mono" style="font-size:0.68rem">2026-03-28 14:22 UTC</span></div>
             <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Operators</span><span class="pval">SkyVista Survey &middot; GroundTruth Robotics</span></div>
+            <div class="parsed-row" style="font-size:0.72rem"><span class="plabel">Verification</span><span class="pval green">Tamper-proof &middot; independently verifiable</span></div>
           </div>
           <div style="margin-top:16px">
             <button class="btn btn-primary" id="goToResults">View Results Dashboard &rarr;</button>
@@ -835,30 +835,30 @@ footer a:hover{text-decoration:underline}
 <div id="s-buyrobot" class="screen">
   <div style="text-align:center;padding:40px 0 20px">
     <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:8px">Get Started with a Robot</h2>
-    <p style="color:var(--text-2);font-size:0.875rem;margin-bottom:24px;max-width:500px;margin-left:auto;margin-right:auto">Don't have a robot yet? Start earning on the marketplace with a starter kit. Plug in, register on-chain, and begin accepting tasks.</p>
+    <p style="color:var(--text-2);font-size:0.875rem;margin-bottom:24px;max-width:500px;margin-left:auto;margin-right:auto">Don't have a robot yet? Start earning on the marketplace with survey equipment. Register, configure pricing, and begin accepting tasks.</p>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:24px">
     <div class="card" style="text-align:center">
       <div style="font-size:2rem;margin-bottom:8px">&#129302;</div>
-      <h3 style="font-size:0.95rem;font-weight:600;text-transform:none;letter-spacing:0;margin-bottom:4px">YakRover Starter Kit</h3>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent);margin:8px 0">$299</div>
+      <h3 style="font-size:0.95rem;font-weight:600;text-transform:none;letter-spacing:0;margin-bottom:4px">DJI Matrice 350 RTK</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent);margin:8px 0">~$14,800</div>
       <ul style="text-align:left;font-size:0.8rem;color:var(--text-2);line-height:2;list-style:none;padding:0">
-        <li>&#10003; Temperature + humidity sensors</li>
-        <li>&#10003; WiFi + MCP server built-in</li>
-        <li>&#10003; Registered on the network</li>
-        <li>&#10003; Earns back cost in ~2.5 months</li>
+        <li>&#10003; Aerial LiDAR (Zenmuse L2) + RTK-GPS</li>
+        <li>&#10003; 45MP photogrammetry (Zenmuse P1)</li>
+        <li>&#10003; FAA Part 107 required</li>
+        <li>&#10003; Ideal for topo surveys, progress monitoring</li>
       </ul>
       <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="alert('Pre-order coming Q2 2026.\n\nJoin waitlist: hello@yakrobotics.com')">Pre-order</button>
     </div>
     <div class="card" style="text-align:center">
       <div style="font-size:2rem;margin-bottom:8px">&#128640;</div>
-      <h3 style="font-size:0.95rem;font-weight:600;text-transform:none;letter-spacing:0;margin-bottom:4px">YakRover Pro</h3>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent);margin:8px 0">$799</div>
+      <h3 style="font-size:0.95rem;font-weight:600;text-transform:none;letter-spacing:0;margin-bottom:4px">Boston Dynamics Spot</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent);margin:8px 0">~$75,000</div>
       <ul style="text-align:left;font-size:0.8rem;color:var(--text-2);line-height:2;list-style:none;padding:0">
-        <li>&#10003; All Starter sensors + camera + lidar</li>
-        <li>&#10003; Outdoor-rated (IP67)</li>
-        <li>&#10003; 8-hour battery, autonomous charging</li>
-        <li>&#10003; Earns back cost in ~6 months</li>
+        <li>&#10003; Terrestrial LiDAR (Leica BLK ARC)</li>
+        <li>&#10003; GPR sled for subsurface scanning</li>
+        <li>&#10003; Autonomous navigation, IP67</li>
+        <li>&#10003; Ideal for tunnels, confined spaces, GPR</li>
       </ul>
       <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="alert('Pre-order coming Q2 2026.\n\nJoin waitlist: hello@yakrobotics.com')">Pre-order</button>
     </div>
@@ -876,7 +876,7 @@ footer a:hover{text-decoration:underline}
     </div>
   </div>
   <div class="cta-block" style="background:var(--accent-light)">
-    <p style="color:var(--accent-hover)"><strong>Estimated operator earnings:</strong> $120/month per robot for a typical industrial facility with 15+ daily tasks.</p>
+    <p style="color:var(--accent-hover)"><strong>Earnings vary by location and demand.</strong> Operators set their own pricing and bid on tasks that match their equipment.</p>
   </div>
   <div style="text-align:center;padding:20px 0"><button class="btn btn-outline" onclick="resetDemo()">&#8592; Back to marketplace</button></div>
 </div>
@@ -894,7 +894,7 @@ footer a:hover{text-decoration:underline}
   </div>
   <div class="op-cta-grid">
     <div class="cta-block" style="margin:0">
-      <p style="margin-bottom:12px"><strong>Already have a robot?</strong><br>Register it on-chain and start accepting tasks.</p>
+      <p style="margin-bottom:12px"><strong>Already have a robot?</strong><br>Register it on the platform and start accepting tasks.</p>
       <button class="btn btn-primary" onclick="alert('Registration flow coming in v1.5.\n\nFor now, use:\nuv run python scripts/register.py\n\nSee: github.com/YakRoboticsGarage/yakrover-8004-mcp')">Register Your Robot</button>
       <div style="margin-top:10px"><a href="https://github.com/YakRoboticsGarage/yakrover-8004-mcp" target="_blank" style="font-size:0.8rem;color:var(--link)">View docs on GitHub &rarr;</a></div>
     </div>
@@ -1197,7 +1197,7 @@ function genRobotCard(i, opts){
     '<div class="robot-header"><div class="robot-avatar">'+initials+'</div><div><div class="robot-name">'+icon+' '+name+'</div><div class="robot-loc">'+loc+'</div></div></div>'+
     '<div class="robot-caps">'+capsHtml+'</div>'+
     '<div class="robot-specs">'+avgTime+' avg \u00b7 '+uptime+' uptime \u00b7 JSON \u00b7 '+ip+'</div>'+
-    '<div class="robot-meta"><div class="robot-price">'+price+'</div><div class="robot-stars">'+stars+'<em>('+reviews+')</em></div></div>'+
+    '<div class="robot-meta"><div class="robot-stars">'+stars+'<em>('+reviews+')</em></div></div>'+
     onlineHtml+
     '</div>';
 }
@@ -1212,7 +1212,7 @@ function renderLandingGrid(){
   // Row 2: 2 generated + CTA
   html+=genRobotCard(3,{clickable:true});
   html+=genRobotCard(4,{clickable:true});
-  html+='<div class="register-cta" id="registerRobotCta"><div class="plus">+</div><p>List your robot \u2014 start earning</p><span>Operators earn $120/month avg \u00b7 Network-compatible</span></div>';
+  html+='<div class="register-cta" id="registerRobotCta"><div class="plus">+</div><p>List your robot \u2014 start earning</p><span>Join the survey operator network</span></div>';
   robotGridEl.innerHTML=html;
 
   // Attach detail click handlers for named robots
@@ -1493,7 +1493,8 @@ function openRobotDetail(robotId){
   }
   panel.querySelector('.detail-legal').innerHTML=legalHtml;
 
-  panel.querySelector('.detail-chain-link').href='https://basescan.org/address/'+data.ethAddr;
+  panel.querySelector('.detail-chain-link').href='#';
+  panel.querySelector('.detail-chain-link').onclick=function(e){e.preventDefault();openModal('Registration — '+data.name,'OPERATOR REGISTRATION\n\nID: '+data.ethAddr+'\nRegistered: 2025-09-14\nStatus: Active\nVerified: Yes\n\n--- TRANSACTION HISTORY ---\n\nTask completed · 2026-03-27 · $2,400\nTask completed · 2026-03-25 · $1,800\nTask completed · 2026-03-22 · $3,100\nTask completed · 2026-03-18 · $950\nTask completed · 2026-03-15 · $2,200\n... 282 more transactions\n\nView on explorer: basescan.org/address/'+data.ethAddr)};
   panel.querySelector('.close-detail').onclick=function(){closeRobotDetail()};
   panel.querySelector('.detail-hire-btn').onclick=function(){
     closeRobotDetail();
@@ -1647,7 +1648,7 @@ function showRobotProfile(idx, namedId){
     html+='</div>';
 
     html+='<div class="detail-actions"><button class="btn btn-primary" onclick="document.getElementById(\'searchInput\').value=\''+d.searchPrefill.replace(/'/g,"\\'")+'\';resetDemo();document.getElementById(\'searchInput\').focus()">Hire this robot</button>';
-    html+='<a href="https://basescan.org/address/'+d.ethAddr+'" target="_blank" class="btn btn-outline" style="font-size:0.8rem;text-decoration:none">View on-chain registration &rarr;</a></div>';
+    html+='<a href="https://basescan.org/address/'+d.ethAddr+'" target="_blank" class="btn btn-outline" style="font-size:0.8rem;text-decoration:none">View Registration</a></div>';
   } else if(typeof idx==='number'){
     // Generated robot with placeholder data
     var name=genName(idx);
