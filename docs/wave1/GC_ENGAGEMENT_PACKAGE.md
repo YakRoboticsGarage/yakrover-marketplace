@@ -169,6 +169,10 @@ Connection angle:
 
 *Listen for:* This is the money question. If yes, quantify: how many per year, what size contracts?
 
+**Q8b (Value of speed):** "If you could get that survey data back in 48 hours instead of 2-3 weeks — same quality, PLS-stamped, Civil 3D-ready — what would that be worth to your bidding operation? Not the survey cost itself, but the speed."
+
+*Listen for:* Let them name the number. Don't suggest a price. If they say "I'd pay a premium for that" — ask how much. If they say "that'd save me two missed bids a year" — that's $5-20M in potential contracts. The 12% platform fee ($8,600 on a $72K survey) should feel trivial against that number. If it doesn't, the value prop isn't landing.
+
 ### Block 3: Reaction to the Concept (8 min)
 
 **Q9 (Value prop):** "What if you could describe what you need in plain English -- 'I need topo for a 12-acre highway widening, data by Saturday' -- and get competitive bids from certified drone operators within two hours?"
