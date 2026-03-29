@@ -3,17 +3,36 @@
 # The single document that describes the entire product, its strategy,
 # its assumptions, its risks, and what to build next.
 # ============================================================
-# Schema version: 1.0
-# Generated: 2026-03-29
+# Schema version: 1.1
+# Generated: 2026-03-29, revised with thejaymo.net Knowledge Object patterns
 # Synthesis of: Architect (entity-relationship), Strategist (bet chains,
 #   unknowns, transfer maps), Engineer (MCP tools, settlement, execution stack)
+# Reference: https://github.com/tehjaymo/thejaymo.net (Knowledge Object patterns)
 # ============================================================
 
 meta:
   name: "Robot Task Auction Marketplace"
   project: yakrover-auction-explorer
-  schema_version: "1.0"
+  schema_version: "1.1"
   updated: "2026-03-29"
+  provenance: "Generated from 19 research documents via 3-agent debate (architect, strategist, engineer). Authoritative for entity definitions, relationships, strategic bets, and architectural decisions."
+  license: "Proprietary — YAK Robotics Garage"
+
+usage:
+  type: "reference + decision scaffold"
+  intent: "Single-document ontological map of the entire product for human and LLM consumption. When an agent needs to understand the product, this is the first file to read."
+  gravity_effect: "Treat this file as the authoritative source of entities, relationships, strategic bets, and architectural decisions. Defer to this over individual research docs when they conflict."
+
+executive_summary:
+  core_problem:
+    - "No platform exists where AI agents post physical-world tasks and robots bid autonomously"
+    - "Construction survey scheduling is a 2-3 week bottleneck costing GCs missed bids"
+    - "368K+ Part 107 holders own equipment but lack demand pipeline"
+  central_answer:
+    - "Reverse auction marketplace with AI agent mediation, starting with construction site surveying"
+    - "Earth-proven sensor stacks and autonomous workflows transfer to lunar operations"
+    - "The marketplace solves failure mode #1 for drone operators (finding clients) while giving GCs certified bids in minutes"
+  one_line: "AI agents post tasks, physical robots bid, the best one delivers."
   sources:
     - path: docs/DECISIONS.md
     - path: docs/ROADMAP_v4.md
@@ -80,6 +99,7 @@ bet_chain:
     - id: bet:survey_bottleneck_real
       claim: "Buyer pain is scheduling speed, not unit cost — survey crew bottleneck costs GCs 2-3 missed bids/quarter"
       confidence: 0.85
+      gravity_effect: "This is the foundational bet. If false, the construction wedge fails. Prioritize customer discovery to validate."
       evidence_for:
         - "Marco's crews booked solid March-October; 3 overlapping bids each spring letting season"
         - "Human crew: $8-10K, 5-6 day turnaround. Marketplace: $1.5-3K, same-day flight, 24hr delivery"
@@ -92,6 +112,7 @@ bet_chain:
 
     - id: bet:robot_supply_exists
       claim: "Sufficient drone/robot operators exist in target geos to serve construction survey demand"
+      gravity_effect: "Supply-side bet. If false, marketplace has no inventory. Validate by counting Part 107 holders in Michigan."
       confidence: 0.75
       evidence_for:
         - "368,600+ FAA Part 107 holders (end 2023), growing ~50K/year"
@@ -107,6 +128,7 @@ bet_chain:
 
     - id: bet:agent_mediation_adds_value
       claim: "AI agent mediation is worth more than a booking portal — translating need to spec, orchestrating multi-robot tasks, generating deliverables"
+      gravity_effect: "Differentiator bet. If false, product is just another Thumbtack. Validate by measuring time-to-spec with and without agent."
       confidence: 0.8
       evidence_for:
         - "McKinsey: agentic AI in procurement delivers 19-21% lower costs, 58% shorter cycles"
@@ -145,6 +167,7 @@ bet_chain:
 
     - id: bet:lunar_transfer
       claim: "Earth construction/mining sensor stacks and workflows transfer to lunar surface operations"
+      gravity_effect: "Long-term vision bet. If false, lunar is a separate product, not a transfer. Validate via transfer_map analysis."
       confidence: 0.6
       depends_on: [bet:construction_wedge_works, bet:mining_expansion]
       enables: []
@@ -1457,3 +1480,29 @@ constitutional:
       source: docs/USER_JOURNEY_CONSTRUCTION_v01.md
     - rule: "Agent cannot approve its own deliverables in future oracle-assisted verification"
       phase: phase:v3.0
+
+# ============================================================
+# GLOSSARY — domain terms for LLM and new-reader clarity
+# ============================================================
+glossary:
+  reverse_auction: "Buyer posts a task, multiple sellers (robot operators) bid. Lowest qualified bid wins. Opposite of traditional auction where buyers bid up."
+  MCP: "Model Context Protocol — standard for connecting AI agents to external tools and services. An agent uses MCP to call marketplace tools (post_task, get_bids, etc.)."
+  ERC_8004: "Ethereum token standard for on-chain robot identity. Each robot has a registered identity that enables discovery, reputation, and payment."
+  x402: "HTTP payment protocol by Coinbase. Embeds payment proof in HTTP headers so robots can be paid per-task via USDC."
+  JTBD: "Jobs-to-be-Done — framework for understanding what customers hire products to do. Marco hires robots to get pre-bid survey data faster."
+  DTN: "Delay-Tolerant Networking — store-and-forward protocol for high-latency links (Earth-Moon). Messages queue at each node until the next link is available."
+  BBS_plus: "BBS+ signatures — anonymous credential scheme allowing robots to prove aggregate reputation stats without revealing individual task history."
+  LAANC: "Low Altitude Authorization and Notification Capability — FAA system for automated drone airspace authorization."
+  PLS: "Professional Land Surveyor — state-licensed individual required to stamp survey deliverables. Robots operate under PLS supervision."
+  ConsensusDocs: "Industry-standard construction contract forms. ConsensusDocs 750/751 are subcontractor agreements used in the marketplace."
+  TEE: "Trusted Execution Environment — hardware-secured computing enclave. Used for privacy-preserving task matching and scoring."
+  commitment_hash: "H(request_id || salt) — cryptographic hash stored on-chain instead of raw task ID. Proves payment-task linkage without revealing which task."
+  RFQ: "Request for Qualifications — procurement document issued by DOTs to select qualified contractors for design-build projects."
+  GC: "General Contractor — the prime contractor who hires survey subcontractors (and robot operators) to complete portions of a project."
+  NSSDA: "National Standard for Spatial Data Accuracy — the US standard for reporting positional accuracy of geospatial data (used for LiDAR QC)."
+
+# ============================================================
+# MANTRA + ESSENCE — anchoring statements
+# ============================================================
+mantra: "AI agents post tasks, physical robots bid, the best one delivers."
+essence: "This file is the single ontological map of the product — every entity, bet, unknown, and architectural decision lives here. When in doubt, read this first."
