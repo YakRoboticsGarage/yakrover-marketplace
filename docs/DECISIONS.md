@@ -400,3 +400,35 @@ These items are **explicitly not built** in Phases 0–4. Do not implement them 
 | Cross-fleet trust tiers | Phase 4+ |
 | Robot-to-robot sub-contracting | Phase 5+ |
 | Stripe Treasury financial accounts | Phase 3+ (if needed) |
+
+---
+
+## Supersession Notes (v1.0.1 / v1.1.1 Construction Pivot)
+
+> **Added:** 2026-03-29. The decisions above remain the canonical record. This section notes which have been superseded or recontextualized by the construction survey focus (see `ROADMAP_v4.md`).
+
+### AD-3 — Partially Superseded by FD-4 (Commitment Hash)
+
+AD-3 specifies that `request_id` should be embedded in Stripe payment metadata and crypto transaction memos. **FD-4** (Foundational Design Decision, `ROADMAP_v4.md`) replaces the raw `request_id` in on-chain memos with a commitment hash `H(request_id || salt)`. Audit capability is preserved via the platform-side plaintext mapping. AD-3 still applies to Stripe metadata (fiat path), but the crypto memo policy is now governed by FD-4.
+
+### TC-1 — Recontextualized at Construction Scale
+
+TC-1's $0.50 minimum was designed for generic sensor readings ($0.35-$2.00). At construction survey scale ($1,000-$72,000+ per task), the minimum is not a practical constraint. However, TC-1 remains relevant as a floor for the USDC rail and for potential future expansion to smaller task types. See Risk 4 in `ROADMAP_v4.md`.
+
+### TC-2 — Wallet Model Extended for Construction
+
+TC-2's prepaid wallet model was designed for small credit bundles ($5-$25). For construction, three commitment mechanisms now exist: (a) payment bond upload (public projects), (b) ACH-funded milestone escrow via Plaid (private projects), (c) prepaid credit bundles ($5,000 typical). The internal ledger accounting model from TC-2 remains the foundation — the new mechanisms are funding sources, not replacements.
+
+### New Foundational Design Decisions (v1.5+)
+
+The following decisions are defined in `ROADMAP_v4.md` and govern all versions from v1.5 forward:
+
+| ID | Decision | Summary |
+|----|----------|---------|
+| **FD-1** | Settlement Abstraction Layer | 4-mode interface (immediate/batched x transparent/private). Only Mode 1 implemented in v1.5. |
+| **FD-3** | Chain Decision — Base + Horizen L3 | Base is primary. Horizen L3 evaluated in v1.5 for Mode 2 (v3.0). |
+| **FD-4** | On-Chain Memo Policy | Commitment hash `H(request_id \|\| salt)` replaces raw `request_id` in on-chain memos. |
+| **FD-5** | Horizen L3 Evaluation | Deploy test escrow on Horizen L3 testnet in v1.5; decide Mode 2 path. |
+| **PP-2** | Hidden Wallet Addresses | Robot wallet addresses never appear in public API responses. Platform-internal `robot_id` only. |
+
+See `ROADMAP_v4.md` § "Foundational Design Decisions" for full rationale.

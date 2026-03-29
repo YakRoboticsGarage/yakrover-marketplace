@@ -1,5 +1,7 @@
 # User Journey Diagram
 
+> **Note (2026-03-29):** These diagrams reflect the **v1.0 user journey** built around Sarah's warehouse sensor readings ($0.35 tasks). The construction-focused user journey (Marco / pre-bid highway surveys, $3,600 tasks, award confirmation, subcontracts) is in **`USER_JOURNEY_CONSTRUCTION_v01.md`**. The construction-focused product updates are captured in **`research/PRODUCT_DSL_v2.yaml`**. The sequence diagrams and state machine below remain accurate for the auction engine mechanics — the construction pivot changes the personas, task types, and payment scale but not the underlying flow.
+
 ## The Experience — What Sarah Sees
 
 ```mermaid

@@ -1,6 +1,6 @@
-# Getting Started — Robot Task Auction
+# Getting Started — Robot Task Auction Marketplace
 
-A step-by-step guide to running your first robot task auction with real Stripe payments.
+A step-by-step guide to running your first robot task auction with real Stripe payments. The marketplace targets **construction site surveying** as its wedge market — tasks range from $1,000 pre-bid topo surveys to $72,000+ full-project monitoring contracts.
 
 **Time required:** ~15 minutes
 **What you'll need:** A computer with Python 3.13+, a free Stripe account, and a terminal
@@ -10,10 +10,10 @@ A step-by-step guide to running your first robot task auction with real Stripe p
 ## What this does
 
 You'll run a simulated robot marketplace where:
-- You post a task ("measure the temperature in Bay 3")
-- Three robots evaluate the task — one gets filtered out (wrong sensors), two compete
-- The best robot wins based on price, speed, reliability, and confidence — not just cheapest
-- The winning robot reads a real (simulated) temperature sensor
+- You post a task ("pre-bid topographic survey, SR-89A milepost 340-342, 12 acres")
+- Operators evaluate the task — one gets filtered out (insufficient accuracy), two compete
+- The best operator wins based on price, speed, reliability, and confidence — not just cheapest
+- The winning operator executes the survey and delivers processed data (LandXML, DXF, CSV)
 - Your Stripe account processes the payment (test mode — no real money)
 
 By the end, you'll see real PaymentIntents and Transfers in your Stripe dashboard.
@@ -23,8 +23,8 @@ By the end, you'll see real PaymentIntents and Transfers in your Stripe dashboar
 ## Step 1 — Get the code
 
 ```bash
-git clone <this-repo-url>
-cd yakrover-auction-explorer
+git clone https://github.com/YakRoboticsGarage/robot-marketplace.git
+cd robot-marketplace
 ```
 
 Install dependencies (this uses [uv](https://docs.astral.sh/uv/), a fast Python package manager):
@@ -34,7 +34,7 @@ Install dependencies (this uses [uv](https://docs.astral.sh/uv/), a fast Python 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install project dependencies
-uv sync
+uv sync --all-extras
 ```
 
 Verify it worked:
@@ -71,7 +71,7 @@ That's it for Stripe. No credit card, no business verification — test mode is 
 
 ## Step 3 — Start the robot simulator
 
-Open a terminal and start the simulated robot. This pretends to be a small rover with a temperature and humidity sensor:
+Open a terminal and start the simulated robot fleet. In production, these would be real survey drones (DJI Matrice 350 RTK) and ground robots (Boston Dynamics Spot with GPR), but for development the simulator stands in:
 
 ```bash
 cd ../yakrover-8004-mcp
@@ -93,7 +93,7 @@ Leave this running. Open a **second terminal** for the next step.
 In your second terminal:
 
 ```bash
-cd yakrover-auction-explorer
+cd robot-marketplace
 PYTHONPATH=. uv run python auction/demo.py
 ```
 
@@ -111,36 +111,36 @@ If you didn't set up Stripe, you'll see `Stripe mode: stub` — everything still
 
 The demo runs 5 scenarios automatically:
 
-**Scenario 1 — Happy Path**
-Three robots are discovered. A drone is filtered out (no temperature sensor). Two rovers bid — one at $0.35 (closer, more reliable), one at $0.55 (farther, less experienced). The scoring function picks the best value, not just the cheapest. The winner reads the sensor. You see:
+**Scenario 1 — Happy Path (Site Survey)**
+Three operators are discovered. One is filtered out (8 cm accuracy does not meet the 5 cm requirement). Two compete — one at $2,200 (stronger reputation, 47 completed surveys), one at $2,600 (fewer completions). The scoring function picks the best value, not just the cheapest. The winner executes the survey. You see:
 
 ```
-[SCORE   ] fakerover-bay3: 0.8751
-[SCORE   ] fakerover-bay7: 0.7819
-[STATE   ] ... | bidding -> bid_accepted | winner: fakerover-bay3 @ $0.35
-[RESULT  ]   Temperature: 22.1C
-[RESULT  ]   Humidity: 44.9%
+[SCORE   ] skyview-mapping: 0.8751
+[SCORE   ] desert-hawk-geo: 0.7819
+[STATE   ] ... | bidding -> bid_accepted | winner: skyview-mapping @ $2,200
+[RESULT  ]   Survey: 12-acre LiDAR topo complete
+[RESULT  ]   Deliverables: LandXML, DXF, CSV cross-sections
 ```
 
 **Scenario 2 — No Capable Robots**
-A task asks for a welding robot. All three robots are filtered out. No bids, no charge.
+A task asks for subsurface GPR in a region with no registered operators. All operators are filtered out. No bids, no charge.
 
 **Scenario 3 — Cheapest Doesn't Win**
-Two robots bid: one cheap but slow and unreliable ($0.40), one pricier but fast and proven ($0.60). The expensive robot wins because the scoring weights reliability, not just price.
+Two operators bid: one cheap but slow and less experienced ($1,400), one pricier but fast and proven ($2,200). The expensive operator wins because the scoring weights reliability, not just price.
 
-**Scenario 4 — Robot Times Out**
-A faulty robot wins the bid but never delivers. After the SLA deadline, it's automatically abandoned. The reservation fee is refunded. The task re-pools and a good robot completes it.
+**Scenario 4 — Operator Times Out**
+A faulty operator wins the bid but never delivers. After the SLA deadline, it's automatically abandoned. The reservation fee is refunded. The task re-pools and a good operator completes it.
 
 **Scenario 5 — Bad Payload**
-A robot delivers garbage data (null temperature, negative humidity). The verification catches it, rejects the delivery, refunds the buyer, and re-pools to a good robot.
+An operator delivers unusable data (wrong coordinate system, insufficient point density). The verification catches it, rejects the delivery, refunds the buyer, and re-pools to a good operator.
 
 At the end you'll see a summary:
 
 ```
-[WALLET  ] Final buyer balance: $13.80
-[REPUTATION] fakerover-bay3: completed=3, completion_rate=1.00
-[REPUTATION] badpayload-robot: completed=0, rejection_rate=1.00
-[REPUTATION] timeout-robot: completed=0, completion_rate=0.00
+[WALLET  ] Final buyer balance: $4,200.00
+[REPUTATION] skyview-mapping: completed=3, completion_rate=1.00
+[REPUTATION] badpayload-operator: completed=0, rejection_rate=1.00
+[REPUTATION] timeout-operator: completed=0, completion_rate=0.00
 ```
 
 ---
@@ -200,13 +200,13 @@ link = stripe.AccountLink.create(
 print(link.url)  # Open this in a browser to complete onboarding
 ```
 
-**4. Transfer funds to the operator:**
+**4. Transfer funds to the operator (construction-scale example):**
 ```python
 transfer = stripe.Transfer.create(
-    amount=35,             # EUR 0.35 in cents
+    amount=220000,         # EUR 2,200.00 in cents (aerial LiDAR survey)
     currency="eur",
     destination=account.id,
-    metadata={"request_id": "your-task-uuid", "robot_id": "fakerover-bay3"},
+    metadata={"request_id": "your-task-uuid", "robot_id": "skyview-mapping"},
 )
 print(transfer.id)  # e.g. tr_xxx
 ```
@@ -217,7 +217,7 @@ print(transfer.id)  # e.g. tr_xxx
 
 If you ran with a real Stripe test key, go to [dashboard.stripe.com/test/payments](https://dashboard.stripe.com/test/payments). You'll see:
 
-- **A PaymentIntent** for the wallet top-up ($5.00)
+- **A PaymentIntent** for the wallet top-up (e.g., $5,000 credit bundle for construction tasks)
 - **Transfers** for each settled task (each with `request_id` and `robot_id` in the metadata)
 
 Click any transfer to see the metadata — this is the audit trail connecting the Stripe payment back to the specific robot and task.
@@ -247,14 +247,14 @@ sqlite3 auction.db "SELECT request_id, state FROM tasks;"
 
 | Component | Status |
 |-----------|--------|
-| Robot sensor reading | **Real** — the simulator produces drifting temperature/humidity values |
+| Survey data generation | **Real** — the simulator produces synthetic survey deliverables (in production: LiDAR point clouds, GPR data, photogrammetry) |
 | Auction scoring | **Real** — four-factor weighted algorithm, mathematically verified |
 | Bid signing | **Real** — HMAC-SHA256 cryptographic signatures (Ed25519 available via env var) |
 | State machine | **Real** — 11 states with enforced transitions |
 | Wallet tracking | **Real** — every debit, credit, and refund is tracked to the cent |
 | Reputation | **Real** — computed from actual task outcomes |
 | Stripe payments | **Real** (test mode) — actual API calls, visible in Stripe dashboard |
-| Robot hardware | **Simulated** — the fakerover simulator stands in for a physical robot |
+| Robot/operator hardware | **Simulated** — the fakerover simulator stands in for physical survey drones and ground robots |
 | On-chain discovery | **Available** — ERC-8004 discovery bridge exists but the demo uses mock robots |
 
 ---
@@ -265,7 +265,7 @@ sqlite3 auction.db "SELECT request_id, state FROM tasks;"
 Scenario 1 needs the simulator at `localhost:8080`. Start it per Step 3.
 
 **"ModuleNotFoundError: No module named 'auction'"**
-Make sure you're running from the `yakrover-auction-explorer` directory with `PYTHONPATH=.` set.
+Make sure you're running from the `robot-marketplace` directory with `PYTHONPATH=.` set.
 
 **"Stripe mode: stub" even though I set the key**
 The key must be in a `.env` file in the project root, or set as an environment variable:
@@ -300,36 +300,33 @@ The demo script is great for seeing the auction in action, but the real way to u
 **Start the server:**
 
 ```bash
-cd yakrover-8004-mcp
-PYTHONPATH=src:marketplace uv run python marketplace/serve_with_auction.py
+cd robot-marketplace
+PYTHONPATH=. uv run python serve_with_auction.py
 ```
 
 You'll see the fleet endpoint and auction tools listed. Optional flags:
 
 ```bash
 # With Stripe (test mode):
-STRIPE_SECRET_KEY=sk_test_xxx PYTHONPATH=src:marketplace uv run python marketplace/serve_with_auction.py
+STRIPE_SECRET_KEY=sk_test_xxx PYTHONPATH=. uv run python serve_with_auction.py
 
 # With persistent SQLite:
-AUCTION_DB_PATH=./auction.db PYTHONPATH=src:marketplace uv run python marketplace/serve_with_auction.py
-
-# Specific robot plugins only:
-PYTHONPATH=src:marketplace uv run python marketplace/serve_with_auction.py --robots fakerover
+AUCTION_DB_PATH=./auction.db PYTHONPATH=. uv run python serve_with_auction.py
 ```
 
 **Connect Claude Code:**
 
 ```bash
-claude mcp add --transport http fleet http://localhost:8000/fleet/mcp
+claude mcp add-json yak-robotics '{"type":"http","url":"http://localhost:8001/fleet/mcp"}'
 ```
 
 **Then talk naturally:**
 
-- "Check the temperature in Bay 3"
-- "What robots are available?"
-- "Fund my wallet with $5"
+- "I need a pre-bid topo survey for SR-89A milepost 340-342, 12 acres"
+- "What operators are available for aerial LiDAR in Phoenix?"
+- "Fund my wallet with $5,000"
 
-The simplest path is `auction_quick_hire` — it posts a task, collects bids, picks the best robot, executes, and confirms delivery in a single call. The agent will use it automatically for straightforward requests.
+The simplest path is `auction_quick_hire` — it posts a task, collects bids, picks the best operator, executes, and confirms delivery in a single call. The agent will use it automatically for straightforward requests.
 
 For fine-grained control, the individual tools (`auction_post_task`, `auction_get_bids`, `auction_accept_bid`, `auction_execute`, `auction_confirm_delivery`) let you inspect and intervene at each step.
 
@@ -341,19 +338,20 @@ The demo uses mock robots and Stripe test mode. Here is what changes for product
 
 **What stays the same:**
 - The auction engine, scoring, state machine, wallet ledger, and MCP tool interface are identical
-- The 15 MCP tools work the same way whether robots are simulated or real
-- Agent conversations are the same — "Check the temperature in Bay 3" works in demo and production
+- The 15 MCP tools work the same way whether operators are simulated or real
+- Agent conversations are the same — "I need a topo survey for SR-89A" works in demo and production
 
 **What changes:**
 
 | Component | Demo | Production |
 |-----------|------|------------|
-| **Robots** | `mock_fleet.py` — 5 simulated robots | Real robots discovered via ERC-8004 on-chain registry (`discovery_bridge.py`) |
-| **Hosting** | `localhost:8000` | Cloud server with `--ngrok` or a public URL |
-| **Stripe keys** | `sk_test_xxx` — test mode, no real money | `sk_live_xxx` — real charges and payouts |
-| **Card onboarding** | Manual `.env` setup | Stripe Shared Payment Tokens (SPTs) — agent-initiated card linking |
+| **Operators** | `mock_fleet.py` — simulated operators | Real drone/robot operators discovered via ERC-8004 on-chain registry (`discovery_bridge.py`) |
+| **Survey data** | Synthetic deliverables | Real LiDAR point clouds, GPR data, photogrammetry |
+| **Hosting** | `localhost:8001` | Cloud server with a public URL |
+| **Stripe keys** | `sk_test_xxx` — test mode, no real money | `sk_live_xxx` — real charges and payouts ($1K-$72K+ construction tasks) |
+| **Payment method** | Manual `.env` setup | Payment bonds (public projects), escrow (private), or prepaid credits |
 | **Operator payouts** | Stub or test transfers | Stripe Connect Express — operators complete hosted KYB onboarding (~2 min) |
-| **Agent connection** | `claude mcp add ... http://localhost:8000/fleet/mcp` | `claude mcp add ... https://your-public-url/fleet/mcp` |
+| **Agent connection** | `claude mcp add-json yak-robotics '{"type":"http","url":"http://localhost:8001/fleet/mcp"}'` | Same command with public URL |
 
 **Production checklist:**
 1. Register robots on ERC-8004 Sepolia (or mainnet) — each robot gets an on-chain identity
@@ -367,7 +365,8 @@ The demo uses mock robots and Stripe test mode. Here is what changes for product
 
 ## Next steps
 
-- **Connect real robots** — Register a robot on ERC-8004 Sepolia and use the discovery bridge to include it in auctions. See `auction/discovery_bridge.py`.
+- **Connect real operators** — Register a robot on ERC-8004 Sepolia and use the discovery bridge to include it in auctions. See `auction/discovery_bridge.py`.
 - **Use as an MCP server** — Run `serve_with_auction.py` and connect Claude Code. The 15 auction tools are available via natural conversation. See the "Running as an MCP Server" section above.
-- **Add crypto payments** — The x402/USDC path is on the roadmap. See `docs/ROADMAP.md`.
-- **Read the architecture** — `docs/DECISIONS.md` has every design decision. `docs/USER_JOURNEY.md` tells the full product story.
+- **Add crypto payments** — The x402/USDC path is on the roadmap. See `docs/ROADMAP_v4.md`.
+- **Read the architecture** — `docs/DECISIONS.md` has every design decision. `docs/USER_JOURNEY_CONSTRUCTION_v01.md` tells Marco's full story — pre-bid survey for a highway project.
+- **Explore the product** — `docs/research/PRODUCT_DSL_v2.yaml` is the entire product in one file (2,617 lines).

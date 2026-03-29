@@ -1,5 +1,7 @@
 # System & Scoring Diagram
 
+> **Note (2026-03-29):** These diagrams reflect the **v1.0 architecture** built around generic sensor readings (Sarah / warehouse temperature). The construction-focused product updates (Marco / site surveying, $1K-$72K tasks, payment bonds, settlement abstraction) are captured in **`research/PRODUCT_DSL_v2.yaml`** (2,617 lines). The auction engine, scoring, and state machine diagrams below remain accurate — the construction pivot adds domain-specific extensions (survey task specs, deliverable formats, weather constraints) on top of this foundation.
+
 ## How the Auction Works
 
 ```mermaid

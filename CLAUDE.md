@@ -2,19 +2,21 @@
 
 ## Project Overview
 
-A marketplace where AI agents post tasks, physical robots bid autonomously, and winners are paid via Stripe (fiat) or USDC on Base (crypto). This project handles real money — payment code requires extreme care.
+A marketplace where AI agents post construction survey tasks, certified robot operators bid autonomously, and the best one delivers. Starting with construction site surveying ($1K-$200K tasks), scaling to mining, infrastructure, and lunar operations. Winners are paid via Stripe (fiat) or USDC on Base (crypto). This project handles real money — payment code requires extreme care.
 
-**v1.0 status:** Built. 151 tests, 15 MCP tools, ~11,400 LOC.
-**Next:** v1.5 (crypto rail + privacy-aware foundation). See `docs/FEATURE_REQUIREMENTS_v15.md`.
+**Wedge market:** Construction site surveying (pre-bid topo, GPR subsurface, progress monitoring). Typical tasks: $1,000-$10,000. Full project lifecycle: $25,000-$72,000+.
+**v1.0 status:** Built. 147 tests, 15 MCP tools, ~11,400 LOC.
+**Next:** v1.5 (crypto rail + construction task specs + privacy-aware foundation). See `docs/FEATURE_REQUIREMENTS_v15.md`.
+**Live demo:** [yakrobot.bid](https://yakrobot.bid)
 
 ## Architecture
 
-- **Auction engine:** `auction/` — Task, Bid, AuctionResult, score_bids(), state machine
-- **Payment:** Stripe Connect (fiat) + USDC on Base via x402 (crypto, v1.5)
-- **Escrow:** `RobotTaskEscrow.sol` on Base with settlement abstraction (v1.5)
-- **Fleet:** Robot discovery via ERC-8004, MCP tools for agent interaction
+- **Auction engine:** `auction/` — Task, Bid, AuctionResult, score_bids(), state machine, settlement abstraction
+- **Payment:** Stripe Connect (fiat) + USDC on Base via x402 (crypto, v1.5). Construction scale: $10K-$200K per project, not micro-payments.
+- **Escrow:** `RobotTaskEscrow.sol` on Base with 4-mode settlement abstraction (FD-1, v1.5)
+- **Fleet:** Robot/operator discovery via ERC-8004, MCP tools for agent interaction
 - **Persistence:** SQLite via `SyncTaskStore`
-- **Robots:** tumbller (real hardware), tello (drone), fakerover (simulator)
+- **Demo site:** `demo/index.html` — interactive demo at [yakrobot.bid](https://yakrobot.bid)
 
 ## Key Commands
 
@@ -63,39 +65,59 @@ Key decisions for v1.5: FD-1 (settlement abstraction), FD-4 (commitment hash), F
 ## Project Structure
 
 ```
-auction/
-├── core.py              # Task, Bid, AuctionResult, signing
-├── engine.py            # AuctionEngine, state machine, scoring
-├── wallet.py            # WalletLedger
-├── reputation.py        # ReputationTracker
-├── stripe_service.py    # Stripe SDK integration
-├── store.py             # SQLite persistence (SyncTaskStore)
-├── discovery_bridge.py  # ERC-8004 robot discovery
-├── mock_fleet.py        # Simulated robots for testing
-├── demo.py              # Demo script
-└── tests/
-    ├── test_*.py        # Unit tests (mocked, fast)
-    └── integration/     # Integration tests (need real services)
-src/
-├── core/
-│   ├── plugin.py        # RobotPlugin base class
-│   └── server.py        # Fleet MCP server
-└── robots/
-    ├── tumbller/        # Real hardware (ESP32-S3)
-    ├── tello/           # DJI Tello drone
-    └── fakerover/       # Simulator
-docs/
-├── FEATURE_REQUIREMENTS_v15.md  # v1.5 build spec
-├── ROADMAP_v2.md                # 3-track roadmap
-├── DECISIONS.md                 # All decisions (single source of truth)
-├── DEVELOPMENT_STRATEGY.md      # Testing & code safety strategy
-└── research/                    # Research synthesis documents
+robot-marketplace/
+│
+├── auction/                     # Core auction engine (Python)
+│   ├── core.py                  # Task, Bid, scoring, signing, commitment hash
+│   ├── engine.py                # AuctionEngine — state machine, rate limits
+│   ├── api.py                   # HTTP API for web frontend
+│   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
+│   ├── mcp_tools.py             # 15 MCP tool handlers
+│   ├── wallet.py                # WalletLedger with thread-safe mutations
+│   ├── stripe_service.py        # Stripe SDK with idempotency keys
+│   ├── store.py                 # SQLite persistence
+│   ├── reputation.py            # ReputationTracker
+│   ├── discovery_bridge.py      # ERC-8004 robot discovery
+│   ├── mock_fleet.py            # Simulated robots for testing
+│   ├── demo.py                  # Demo script
+│   └── tests/                   # 147 passing + integration stubs
+│
+├── demo/                        # Live website (yakrobot.bid)
+│   └── index.html               # Full interactive demo
+│
+├── docs/                        # Documentation
+│   ├── ROADMAP_v4.md            # Construction → Mining → Infra → Lunar
+│   ├── USER_JOURNEY_CONSTRUCTION_v01.md  # Marco's journey
+│   ├── FEATURE_REQUIREMENTS_v15.md       # v1.5 build spec
+│   ├── DECISIONS.md             # All product/technical decisions
+│   ├── DEVELOPMENT_STRATEGY.md  # Testing & code safety (5-layer strategy)
+│   ├── SCOPE.md                 # Version boundaries
+│   ├── DIAGRAM_SYSTEM.md        # System architecture diagrams
+│   ├── DIAGRAM_USER_JOURNEY.md  # User journey diagrams
+│   ├── research/                # 38 research docs (see research/README.md)
+│   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (2,617 lines)
+│   │   ├── market/              # Wedge analysis, competitive landscape
+│   │   ├── legal/               # Contracts, bonds, payment flows
+│   │   ├── technical/           # Architecture, execution gaps
+│   │   └── operator/            # Onboarding, equipment, sensors
+│   └── feedback/                # Audits, critiques, founder feedback
+│
+├── .claude/
+│   ├── skills/
+│   │   ├── rfp-to-robot-spec/   # RFP → auction task specs
+│   │   └── rfp-to-site-recon/   # RFP → execution context
+│   └── hooks/block-secrets.sh   # Prevents committing API keys
+│
+├── .github/workflows/test.yml   # CI: tests + ruff + mypy
+├── CLAUDE.md                    # Payment safety rules for Claude (this file)
+├── serve_with_auction.py        # MCP gateway server
+└── pyproject.toml               # Dependencies, ruff, mypy config
 ```
 
 ## Environment Variables
 
 ```
-STRIPE_SECRET_KEY=sk_test_...     # Stripe test mode only
+STRIPE_SECRET_KEY=sk_test_...     # Stripe test mode only (DE accounts: use EUR, not USD)
 STRIPE_OPERATOR_ACCOUNT=acct_...  # Connect Express test account
 AUCTION_DB_PATH=:memory:          # SQLite path (:memory: for tests)
 SIGNING_MODE=ed25519              # or hmac for Phase 0
@@ -103,3 +125,17 @@ MCP_BEARER_TOKEN=                 # Fleet server auth
 BASE_SEPOLIA_RPC_URL=             # For on-chain tests (v1.5)
 FAKEROVER_URL=http://localhost:8080
 ```
+
+## Payment Scale Reference
+
+Construction survey tasks operate at significantly higher amounts than generic sensor readings:
+
+| Task Type | Typical Range | Example |
+|-----------|--------------|---------|
+| Aerial LiDAR topo (12 acres) | $1,500-$3,000 | SR-89A pre-bid survey |
+| GPR subsurface scan | $1,000-$2,000 | Utility detection |
+| Monthly progress monitoring | $800-$1,500/flight | Cut/fill volume tracking |
+| Full project lifecycle (14 mo) | $25,000-$72,000+ | Pre-bid + monitoring + as-built |
+| Credit bundle (typical) | $5,000 | Single card charge |
+
+The TC-1 minimum ($0.50) is not a practical constraint for construction tasks. Prepaid credit bundles, payment bonds, and escrow are the primary payment methods at this scale.

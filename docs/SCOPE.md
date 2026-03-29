@@ -1,5 +1,7 @@
 # User Journey Scope — Version Boundaries
 
+> **Scope shift (2026-03-29):** This document was written for the generic sensor-reading framing (Sarah / warehouse temperature readings). The project has since pivoted to **construction site surveying** as the wedge market. The current scope document is **`ROADMAP_v4.md`**, which defines version boundaries from v1.5 onward around Marco's construction survey journey. The user story is in **`USER_JOURNEY_CONSTRUCTION_v01.md`**. The v0.1-v1.0 version definitions below remain accurate as a historical record of what was built.
+
 > **Source:** PM Purist vs Pragmatist debate (2026-03-24).
 > Defines what is real, stubbed, or cut at each version boundary.
 > See `docs/DECISIONS.md` for product decisions referenced by ID.
