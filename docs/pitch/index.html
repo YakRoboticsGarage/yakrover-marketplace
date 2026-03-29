@@ -684,9 +684,23 @@ p, li {
   .yak-mark { top: 16px; left: 20px; font-size: 15px; }
   .slide-number { bottom: 16px; right: 20px; }
 }
+
+/* Print button */
+.print-btn{position:fixed;bottom:20px;right:20px;z-index:100;background:var(--navy);color:#fff;border:none;padding:8px 16px;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;opacity:0.7;transition:opacity 0.15s}
+.print-btn:hover{opacity:1}
+
+/* Print styles */
+@media print{
+  html{scroll-snap-type:none}
+  .slide{min-height:auto;page-break-after:always;scroll-snap-align:none;padding:40px}
+  .print-btn{display:none}
+  .yak-mark{position:static;font-size:12px;margin-bottom:8px}
+  .slide-number{position:static;float:right;font-size:10px}
+}
 </style>
 </head>
 <body>
+<button class="print-btn" onclick="window.print()">Print / PDF</button>
 
 <!-- ============================================================ -->
 <!-- SLIDE 1: TITLE -->
