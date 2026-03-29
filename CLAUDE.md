@@ -102,17 +102,28 @@ robot-marketplace/
 │   │   └── operator/            # Onboarding, equipment, sensors
 │   └── feedback/                # Audits, critiques, founder feedback
 │
+├── docs/wave1/                  # GC + operator engagement packages
+│   ├── docs/pitch/                  # Pitch deck source
+│   ├── docs/site/                   # YAML ontology explorer (yakrobot.bid/yaml)
+│
 ├── .claude/
 │   ├── skills/
 │   │   ├── rfp-to-robot-spec/   # RFP → auction task specs
-│   │   └── rfp-to-site-recon/   # RFP → execution context
+│   │   ├── rfp-to-site-recon/   # RFP → execution context
+│   │   ├── bond-verification/   # Payment bond compliance checks
+│   │   └── legal-terms-compare/ # Survey contract term comparison
 │   └── hooks/block-secrets.sh   # Prevents committing API keys
 │
 ├── .github/workflows/test.yml   # CI: tests + ruff + mypy
 ├── CLAUDE.md                    # Payment safety rules for Claude (this file)
+├── _REPORT-STYLE.md             # Report formatting and tone guide
 ├── serve_with_auction.py        # MCP gateway server
 └── pyproject.toml               # Dependencies, ruff, mypy config
 ```
+
+## Style Guide
+
+All reports, engagement packages, and outreach documents follow the conventions in **`_REPORT-STYLE.md`**. See also [tropes.fyi](https://tropes.fyi) for anti-patterns to avoid in writing.
 
 ## Environment Variables
 

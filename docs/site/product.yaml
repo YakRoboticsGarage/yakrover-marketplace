@@ -53,7 +53,7 @@
 meta:
   name: "Robot Task Auction Marketplace"
   project: yakrover-auction-explorer
-  schema_version: "2.1"
+  schema_version: "2.2"
   updated: "2026-03-29"
   provenance: "Generated from 19 research documents via 3-agent debate (architect, strategist, engineer). Revised by 5-agent competition (strategy, technical, UX, legal, ontology). Authoritative for entity definitions, relationships, strategic bets, and architectural decisions."
   license: "Proprietary — YAK Robotics Garage"
@@ -156,6 +156,21 @@ executive_summary:
     - {path: docs/feedback/CRITIQUE_PRODUCT.md, section: all, synthesis: "Six screens too many concern"}
     - {path: docs/feedback/CRITIQUE_UX_DESIGN.md, section: all, synthesis: "No back navigation"}
     - {path: docs/feedback/FEEDBACK_V4_FOUNDER.md, section: all, synthesis: "8 founder-requested changes"}
+    # [v2.2] Wave 1, financial, legal research, critiques, deployment, style
+    - {path: docs/research/legal/RESEARCH_PLS_AUTOMATION_OPTIONS.md, section: all, synthesis: "5 PLS automation options, MCL 339.2007 electronic seal"}
+    - {path: docs/research/legal/RESEARCH_BOND_VERIFICATION_EXAMPLES.md, section: all, synthesis: "6 real bond examples, Treasury Circular 570, surety portals"}
+    - {path: docs/research/legal/RESEARCH_LEGAL_TERMS_COMPARISON_EXAMPLES.md, section: all, synthesis: "7 contract examples, 12 comparison dimensions, anti-indemnity"}
+    - {path: docs/research/RESEARCH_SKILL_CANDIDATES.md, section: all, synthesis: "55 ranked skill candidates across 4 categories"}
+    - {path: docs/research/FINANCIAL_ANALYSIS_RAISE.md, section: all, synthesis: "$2.5M raise model, 18-month burn, revenue projection"}
+    - {path: docs/research/RESEARCH_TOPO_BACKGROUND_SOURCE.md, section: all, synthesis: "USGS NED contour data for site watermark"}
+    - {path: docs/wave1/GC_ENGAGEMENT_PACKAGE.md, section: all, synthesis: "15 GC targets, 9-step interview process"}
+    - {path: docs/wave1/GC_BRIEFING_PACKETS.md, section: all, synthesis: "15 individual GC profiles, 0/15 in-house survey finding"}
+    - {path: docs/wave1/OPERATOR_BRIEFING_PACKETS.md, section: all, synthesis: "14 operator profiles, Drone Brothers competitive watch, SSI MDOT partner"}
+    - {path: docs/wave1/TECHNICAL_MCP_DEPLOYMENT.md, section: all, synthesis: "Railway deployment plan, $5/mo MVP hosting"}
+    - {path: docs/feedback/critiques/PITCH_CRITIQUE_CONSTRUCTION.md, section: all, synthesis: "GC exec: pitch the deliverable not the platform"}
+    - {path: docs/feedback/critiques/PITCH_CRITIQUE_VC.md, section: all, synthesis: "VC: LOI + operator + co-founder = fundable"}
+    - {path: docs/feedback/critiques/PITCH_CRITIQUE_TECHNICAL.md, section: all, synthesis: "CTO: deliverable QA pipeline is the hardest unsolved piece"}
+    - {path: _REPORT-STYLE.md, section: all, synthesis: "Style guide with tropes.fyi anti-patterns"}
   cross_reference_syntax: "domain:slug (e.g., persona:marco, equipment:dji_m350, phase:v1.5, decision:PD-1, feature:F-1)"
   decision_id_prefixes:
     AD: architectural

@@ -14,6 +14,8 @@ Upload an RFP → the system extracts survey requirements → decomposes into in
 
 **Demo flow:** [yakrobot.bid](https://yakrobot.bid) walks through a real MDOT I-94 Drainage Tunnel RFQ.
 
+**Architecture note:** Performance/Lien/Schedule (PLS) payment bond verification is automatable — the bond-verification skill handles compliance checks against contract requirements, removing a manual bottleneck from construction payment flows.
+
 ## Project Structure
 
 ```
@@ -91,17 +93,31 @@ Start here, in this order:
 | 4 | **[Roadmap v4](docs/ROADMAP_v4.md)** | Construction → Mining → Infrastructure → Lunar |
 | 5 | **[Decisions](docs/DECISIONS.md)** | Every product and technical decision with rationale |
 | 6 | **[Feature Requirements v1.5](docs/FEATURE_REQUIREMENTS_v15.md)** | What's being built next (12 features with acceptance criteria) |
+| 7 | **[Wave 1 Engagement Packages](docs/wave1/)** | GC + operator outreach decks and one-pagers |
+| 8 | **[Financial Analysis](docs/research/financial/)** | Unit economics, pricing model, revenue projections |
+| 9 | **[Style Guide](_REPORT-STYLE.md)** | Report formatting, tone, and tropes.fyi reference |
+| 10 | **[Pitch Deck](https://yakrobot.bid/pitch)** | Investor/partner deck (live at yakrobot.bid/pitch) |
+
+## Live Sites
+
+| URL | What it is |
+|-----|-----------|
+| **[yakrobot.bid](https://yakrobot.bid)** | Interactive demo — MDOT I-94 RFQ walkthrough |
+| **[yakrobot.bid/yaml](https://yakrobot.bid/yaml)** | YAML ontology explorer — browse PRODUCT_DSL_v2 live |
+| **[yakrobot.bid/pitch](https://yakrobot.bid/pitch)** | Pitch deck — investor/partner presentation |
 
 ## Skills
 
-Two Claude Code skills for processing construction RFPs:
+Four Claude Code skills for processing construction RFPs:
 
 | Skill | What it does |
 |-------|-------------|
 | **rfp-to-robot-spec** | Extracts survey requirements from RFPs → structured JSON task specs for the auction engine |
 | **rfp-to-site-recon** | Generates execution context from RFPs + public data → site boundary, airspace, weather, utilities |
+| **bond-verification** | Verifies payment bond compliance against construction contract requirements |
+| **legal-terms-compare** | Compares legal terms across survey contracts, flags deviations from standard |
 
-Both follow the [skill-creator-springett](https://github.com/bglek/skill-creator-springett) framework with validation scripts, reference docs, and eval test cases.
+All four follow the [skill-creator-springett](https://github.com/bglek/skill-creator-springett) framework with validation scripts, reference docs, and eval test cases.
 
 ## Related Repositories
 

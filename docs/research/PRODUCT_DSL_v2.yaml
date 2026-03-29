@@ -53,7 +53,7 @@
 meta:
   name: "Robot Task Auction Marketplace"
   project: yakrover-auction-explorer
-  schema_version: "2.1"
+  schema_version: "2.2"
   updated: "2026-03-29"
   provenance: "Generated from 19 research documents via 3-agent debate (architect, strategist, engineer). Revised by 5-agent competition (strategy, technical, UX, legal, ontology). Authoritative for entity definitions, relationships, strategic bets, and architectural decisions."
   license: "Proprietary — YAK Robotics Garage"
@@ -156,6 +156,21 @@ executive_summary:
     - {path: docs/feedback/CRITIQUE_PRODUCT.md, section: all, synthesis: "Six screens too many concern"}
     - {path: docs/feedback/CRITIQUE_UX_DESIGN.md, section: all, synthesis: "No back navigation"}
     - {path: docs/feedback/FEEDBACK_V4_FOUNDER.md, section: all, synthesis: "8 founder-requested changes"}
+    # [v2.2] Wave 1, financial, legal research, critiques, deployment, style
+    - {path: docs/research/legal/RESEARCH_PLS_AUTOMATION_OPTIONS.md, section: all, synthesis: "5 PLS automation options, MCL 339.2007 electronic seal"}
+    - {path: docs/research/legal/RESEARCH_BOND_VERIFICATION_EXAMPLES.md, section: all, synthesis: "6 real bond examples, Treasury Circular 570, surety portals"}
+    - {path: docs/research/legal/RESEARCH_LEGAL_TERMS_COMPARISON_EXAMPLES.md, section: all, synthesis: "7 contract examples, 12 comparison dimensions, anti-indemnity"}
+    - {path: docs/research/RESEARCH_SKILL_CANDIDATES.md, section: all, synthesis: "55 ranked skill candidates across 4 categories"}
+    - {path: docs/research/FINANCIAL_ANALYSIS_RAISE.md, section: all, synthesis: "$2.5M raise model, 18-month burn, revenue projection"}
+    - {path: docs/research/RESEARCH_TOPO_BACKGROUND_SOURCE.md, section: all, synthesis: "USGS NED contour data for site watermark"}
+    - {path: docs/wave1/GC_ENGAGEMENT_PACKAGE.md, section: all, synthesis: "15 GC targets, 9-step interview process"}
+    - {path: docs/wave1/GC_BRIEFING_PACKETS.md, section: all, synthesis: "15 individual GC profiles, 0/15 in-house survey finding"}
+    - {path: docs/wave1/OPERATOR_BRIEFING_PACKETS.md, section: all, synthesis: "14 operator profiles, Drone Brothers competitive watch, SSI MDOT partner"}
+    - {path: docs/wave1/TECHNICAL_MCP_DEPLOYMENT.md, section: all, synthesis: "Railway deployment plan, $5/mo MVP hosting"}
+    - {path: docs/feedback/critiques/PITCH_CRITIQUE_CONSTRUCTION.md, section: all, synthesis: "GC exec: pitch the deliverable not the platform"}
+    - {path: docs/feedback/critiques/PITCH_CRITIQUE_VC.md, section: all, synthesis: "VC: LOI + operator + co-founder = fundable"}
+    - {path: docs/feedback/critiques/PITCH_CRITIQUE_TECHNICAL.md, section: all, synthesis: "CTO: deliverable QA pipeline is the hardest unsolved piece"}
+    - {path: _REPORT-STYLE.md, section: all, synthesis: "Style guide with tropes.fyi anti-patterns"}
   cross_reference_syntax: "domain:slug (e.g., persona:marco, equipment:dji_m350, phase:v1.5, decision:PD-1, feature:F-1)"
   decision_id_prefixes:
     AD: architectural
@@ -1430,6 +1445,58 @@ legal:
     lien_rights: "MCL 570.1107a-b — surveyors as 'design professionals' since 2018"
     sources: [{path: docs/research/RESEARCH_LEGAL_FRAMEWORK_SURVEY_CONTRACTS.md}]
 
+  # [v2.2] PLS automation options from RESEARCH_PLS_AUTOMATION_OPTIONS.md
+  pls_automation:
+    statute: "MCL 339.2007 — electronic seal and electronic signature explicitly permitted in Michigan"
+    statute_url: "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-339-2007"
+    legal_constraint: "PLS must have professional responsibility for the work product. Judgment cannot be delegated to AI. No state board accepts automated stamping without licensed professional review."
+    minimum_human_time_per_task: "5-15 minutes (with AI pre-screening and electronic seal via API)"
+    options:
+      - id: pls:option_1
+        name: "Operator brings own PLS"
+        description: "Operator has PLS on staff or under contract. Marketplace verifies license only."
+        pls_review_time: "30 min to 2 hours"
+        who_pays: "Operator (baked into bid price)"
+        automation_level: none
+        risk: "Operators without PLS arrangement cannot bid on stamped deliverables"
+      - id: pls:option_2
+        name: "PLS as a service (marketplace PLS network)"
+        description: "Marketplace contracts with PLSs in each state. Routes completed data for review. PLS cost is a line item ($200-$500/review)."
+        pls_review_time: "30 min to 2 hours"
+        who_pays: "Buyer (separate line item)"
+        automation_level: partial
+        advantage: "Any operator can bid, even without their own PLS. Supply grows."
+        risk: "PLS must actually review, not rubber-stamp. Stamp mill arrangements violate licensing law."
+        precedent: "Partner ESI and similar survey coordination firms match field crews with remote PLSs"
+      - id: pls:option_3
+        name: "AI-assisted PLS review (reduce review time)"
+        description: "QA tool pre-screens deliverables (point density, RMSE, CRS, file format, gaps). PLS reviews QA report + spot-checks."
+        pls_review_time: "15-30 minutes"
+        who_pays: "Platform absorbs QA tool cost; PLS review still charged to buyer"
+        automation_level: partial
+        maps_to_skills: [skill:deliverable_validator, skill:capture_qc]
+      - id: pls:option_4
+        name: "Electronic seal via API"
+        description: "PLS reviews dashboard, clicks approve. System applies digital seal via DocuSign/DocuSeal API. PLS never handles file directly."
+        pls_review_time: "5-15 minutes"
+        who_pays: "Platform absorbs seal cost; PLS review charged to buyer"
+        automation_level: partial
+        api_options: ["DocuSign eSignature REST API", "DocuSeal (open source)", "Custom PKI digital seal"]
+        legal_basis: "Valid in Michigan (MCL 339.2007). Valid in most UETA/E-SIGN Act states."
+      - id: pls:option_5
+        name: "Platform employs PLSs directly"
+        description: "Marketplace hires PLSs as W-2 or dedicated contractors. Every deliverable reviewed in-house."
+        pls_review_time: "Same as Option 2"
+        who_pays: "Built into platform take rate"
+        automation_level: partial
+        cost: "$80-120K/yr per PLS"
+        risk: "Need one per state. Platform becomes professional services firm."
+    recommended_phasing:
+      phase_1: "v1.5-v2.0: Option 1 + Option 3 (operator brings PLS, marketplace builds QA tool)"
+      phase_2: "v2.0-v2.5: Option 2 + Option 4 (PLS network + electronic seal API, 3-5 PLSs in MI/OH)"
+      phase_3: "v3.0+: Consider Option 5 only if 50+ reviews/month makes dedicated staff cheaper"
+    sources: [{path: docs/research/legal/RESEARCH_PLS_AUTOMATION_OPTIONS.md}]
+
 # ============================================================
 # ARCHITECTURE — capabilities, components, MCP tools, settlement,
 #   execution stack, state machines, skills
@@ -1514,6 +1581,33 @@ architecture:
       status: planned
       phase: phase:v4.0
       decisions: [decision:LD-8]
+
+  # [v2.2] Deployment architecture from TECHNICAL_MCP_DEPLOYMENT.md
+  deployment:
+    hosting:
+      provider: Railway
+      plan: "Hobby (usage-based)"
+      cost_monthly_usd: 5
+      url_pattern: "*.up.railway.app"
+      ssl: "Auto (Let's Encrypt)"
+      deploy_command: "railway up"
+      cold_start_seconds: 2
+      alternatives_evaluated: ["Fly.io ($3-5/mo)", "Render ($7/mo)", "DigitalOcean ($5/mo)", "ngrok (free, local)"]
+    architecture_summary: |
+      Internet -> Railway (public URL)
+        FastAPI app (serve_with_auction.py)
+          /fleet/mcp ......... MCP endpoint (15 auction tools)
+          /fakerover/mcp ..... FakeRover simulator MCP
+          /api/v1/ ........... HTTP REST for yakrobot.bid frontend
+          / .................. Health check / status JSON
+        SQLite volume (/data/auction.db)
+        Environment variables (Railway dashboard)
+    database:
+      mvp: "SQLite on Railway volume mount ($0.25/GB)"
+      migration_trigger: ">1 instance or >10 concurrent auction writers"
+      target: "Railway Postgres ($5/mo)"
+    path_to_real_operators: "Deploy -> public MCP URL -> operators connect Claude Code -> bid on real tasks"
+    sources: [{path: docs/wave1/TECHNICAL_MCP_DEPLOYMENT.md}]
 
   # [Entry 2] Scoring profiles per vertical
   scoring_profiles:
@@ -2084,6 +2178,109 @@ architecture:
       execution_stack_coverage: {layer_0: flags_constraints, layer_2: provides_inputs}
       staleness_policy: {max_age_days: 90, fields_affected: [airspace_class, obstacles, weather_norms]}
       sources: [{path: docs/research/ANALYSIS_AUTONOMOUS_EXECUTION_GAPS.md}]
+
+    # [v2.2] Built skills from .claude/skills/ + validated by research docs
+    - id: skill:bond_verification
+      status: implemented
+      version: "1.0"
+      description: "Verify payment bond documents against Treasury Circular 570, surety portals, and project requirements"
+      inputs: [bond_document_pdf, task_value_usd, project_state]
+      outputs:
+        - surety_verified
+        - penal_sum_adequate
+        - effective_date_current
+        - state_license_valid
+        - underwriting_limit_check
+        - verification_result  # VERIFIED / FAILED with specific check results
+      verification_sources:
+        - "Treasury Circular 570 (annual Excel, machine-parseable)"
+        - "Surety portals: Merchants Bonding, Intact, Frankenmuth (online), Travelers/Liberty Mutual/CNA (phone/email)"
+        - "AM Best ratings for financial strength"
+      real_examples_found: 6
+      sources: [{path: docs/research/legal/RESEARCH_BOND_VERIFICATION_EXAMPLES.md}]
+
+    - id: skill:legal_terms_compare
+      status: implemented
+      version: "1.0"
+      description: "Compare legal terms between operator standard terms and GC proposed subcontract across 12 dimensions"
+      inputs: [operator_terms_pdf, gc_subcontract_pdf, project_type]
+      outputs:
+        - clause_comparison_matrix  # 12 dimensions side-by-side
+        - unenforceable_flags  # e.g., broad-form indemnity on public projects per MCL 691.991
+        - missing_clause_flags  # e.g., data ownership not specified
+        - risk_imbalances  # e.g., uncapped LOL, pay-if-paid
+        - negotiation_recommendations
+      comparison_dimensions: 12
+      dimensions: [indemnification, limitation_of_liability, insurance_minimums, payment_terms, retainage, data_ownership, standard_of_care, consequential_damages, dispute_resolution, termination, change_orders, pls_responsibility]
+      anti_indemnity_statute: "MCL 691.991 — voids broad-form indemnity on public works (sole negligence of indemnitee)"
+      real_examples_found: 7
+      standard_forms_compared: ["AIA A401-2017", "ConsensusDocs 750", "MDOT Form 1302-FED"]
+      sources: [{path: docs/research/legal/RESEARCH_LEGAL_TERMS_COMPARISON_EXAMPLES.md}]
+
+    # [v2.2] Top 10 skill candidates from RESEARCH_SKILL_CANDIDATES.md (55 total ranked)
+    # Full list: docs/research/RESEARCH_SKILL_CANDIDATES.md
+    - id: skill:task_decomposer
+      status: planned
+      rank: 1
+      description: "Decompose natural-language survey request into parallel/sequential subtasks with sensor routing"
+      phase: phase:v2.0
+      complexity: HIGH
+    - id: skill:subcontract_generator
+      status: planned
+      rank: 2
+      description: "Auto-generate ConsensusDocs 751 subcontract from task spec + winning bid"
+      phase: phase:v2.0
+      complexity: HIGH
+    - id: skill:coi_parser
+      status: planned
+      rank: 3
+      description: "Parse ACORD 25 COI PDFs and extract all structured fields with confidence scores"
+      phase: phase:v2.0
+      complexity: MEDIUM
+    - id: skill:bid_evaluator
+      status: planned
+      rank: 4
+      description: "Score and rank bids using vertical-specific weighted scoring with qualification checks"
+      phase: phase:v1.5
+      complexity: MEDIUM
+    - id: skill:weather_scheduler
+      status: planned
+      rank: 5
+      description: "Check NOAA Aviation Weather API against task constraints and find flyable windows"
+      phase: phase:v2.0
+      complexity: MEDIUM
+    - id: skill:deliverable_validator
+      status: planned
+      rank: 6
+      description: "Validate output files (LandXML, DXF, GeoTIFF, LAS) against task spec format and accuracy"
+      phase: phase:v2.0
+      complexity: HIGH
+    - id: skill:pls_license_checker
+      status: planned
+      rank: 7
+      description: "Validate PLS license number against state board databases (AZ, NV, NM, MI)"
+      phase: phase:v2.0
+      complexity: MEDIUM
+    - id: skill:award_review_briefing
+      status: planned
+      rank: 8
+      description: "Generate qualification summary for recommended winner with all automated check results"
+      phase: phase:v2.0
+      complexity: LOW
+    - id: skill:flight_plan_generator
+      status: planned
+      rank: 9
+      description: "Convert boundary polygon + sensor + altitude + overlap into waypoints and estimated duration"
+      phase: phase:v2.0
+      complexity: HIGH
+    - id: skill:operator_rate_advisor
+      status: planned
+      rank: 10
+      description: "Suggest per-acre pricing based on local market data, equipment tier, and task complexity"
+      phase: phase:v2.0
+      complexity: LOW
+    skill_candidates_total: 55
+    skill_candidates_source: {path: docs/research/RESEARCH_SKILL_CANDIDATES.md}
 
 # ============================================================
 # TRANSFER MAP — Earth to Lunar capability transfer

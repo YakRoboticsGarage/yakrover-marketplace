@@ -36,6 +36,29 @@ Every feature on this roadmap exists to serve a named user. If a feature cannot 
 
 ---
 
+## Wave 1: Market Validation (Immediate — before v1.5 code work)
+
+Three parallel workstreams to validate demand before building the next version:
+
+### 1. GC Outreach
+- Engagement packages for general contractors (see `docs/wave1/`)
+- Target: 5-10 GC conversations to validate survey pain points, willingness to use a marketplace, and pricing expectations
+- Deliverable: Validated demand signal or pivot insight
+
+### 2. Operator Outreach
+- Engagement packages for drone/robot operators (see `docs/wave1/`)
+- Target: 5-10 operator conversations to validate supply-side economics, willingness to bid on tasks, and equipment readiness
+- Deliverable: Letter-of-intent pipeline or operator onboarding commitments
+
+### 3. MCP Deployment
+- Deploy the MCP server as a live tool that prospective users (GCs, operators, agents) can interact with
+- Demonstrate the RFP-to-auction flow end-to-end via Claude Desktop or similar MCP client
+- Deliverable: Live MCP endpoint at yakrobot.bid with real interaction data
+
+**Gate:** Wave 1 results determine whether v1.5 code work proceeds as planned, pivots scope, or changes the wedge market entirely.
+
+---
+
 ## Visual Timeline
 
 ```
