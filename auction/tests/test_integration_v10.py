@@ -508,9 +508,11 @@ class TestMCPToolsRegistered:
             "auction_award_with_confirmation",
             # Phase 4: Compliance verification tools
             "auction_verify_bond",
+            "auction_verify_bond_pdf",
             "auction_verify_operator_compliance",
             "auction_upload_compliance_doc",
             "auction_compare_terms",
+            "auction_check_sam_exclusion",
             # Operator registration
             "auction_register_operator",
             "auction_add_equipment",

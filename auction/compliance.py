@@ -3,14 +3,27 @@
 Stores and checks operator compliance documents: FAA Part 107,
 insurance COI, PLS license, SAM.gov registration, DOT prequalification,
 and DBE certification.
+
+SAM.gov Exclusions API integration: when a SAM_GOV_API_KEY env var is set,
+check_sam_exclusion() calls the real SAM.gov v4 API to verify an entity
+is not debarred from federal contracting. Without a key, it returns
+a WARN status indicating manual verification is needed.
+
+Get an API key: register at https://sam.gov, go to Account Details,
+request a Personal API Key (public data).
 """
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from dataclasses import asdict
 
+import httpx
+
 from auction.core import ComplianceRecord
+
+SAM_GOV_API_KEY = os.environ.get("SAM_GOV_API_KEY", "")
 
 
 VALID_DOC_TYPES = frozenset([
@@ -108,3 +121,118 @@ class ComplianceChecker:
     def get_record(self, robot_id: str, doc_type: str) -> ComplianceRecord | None:
         """Get a specific compliance record."""
         return self._records.get(robot_id, {}).get(doc_type)
+
+
+# ---------------------------------------------------------------------------
+# SAM.gov Exclusions API — real federal debarment check
+# ---------------------------------------------------------------------------
+
+def check_sam_exclusion(entity_name: str) -> dict:
+    """Check if an entity is excluded (debarred) via the SAM.gov Exclusions API.
+
+    Uses the real SAM.gov v4 API when SAM_GOV_API_KEY is set.
+    Without a key, returns a WARN result indicating manual verification needed.
+
+    API docs: https://open.gsa.gov/api/exclusions-api/
+    Get a key: https://sam.gov → Account Details → Personal API Key
+
+    Returns:
+        dict with status (CLEAR, EXCLUDED, WARN, ERROR), details, and source.
+    """
+    if not SAM_GOV_API_KEY:
+        return {
+            "status": "WARN",
+            "entity_name": entity_name,
+            "message": "SAM.gov API key not configured. Set SAM_GOV_API_KEY env var.",
+            "source": "not_checked",
+            "action": "Register at sam.gov and request a Personal API Key, then set SAM_GOV_API_KEY.",
+        }
+
+    url = "https://api.sam.gov/entity-information/v4/exclusions"
+    params = {
+        "api_key": SAM_GOV_API_KEY,
+        "q": entity_name,
+        "size": 5,
+    }
+
+    try:
+        response = httpx.get(url, params=params, timeout=15.0)
+
+        if response.status_code == 404:
+            return {
+                "status": "ERROR",
+                "entity_name": entity_name,
+                "message": "SAM.gov API returned 404 — API key may be invalid or expired.",
+                "source": "sam.gov",
+                "http_status": 404,
+            }
+
+        if response.status_code != 200:
+            return {
+                "status": "ERROR",
+                "entity_name": entity_name,
+                "message": f"SAM.gov API returned HTTP {response.status_code}",
+                "source": "sam.gov",
+                "http_status": response.status_code,
+            }
+
+        data = response.json()
+        total = data.get("totalRecords", 0)
+        exclusions = data.get("excludedEntity", [])
+
+        if total == 0 or not exclusions:
+            return {
+                "status": "CLEAR",
+                "entity_name": entity_name,
+                "message": f"No exclusions found for '{entity_name}' in SAM.gov",
+                "total_records": 0,
+                "source": "sam.gov Exclusions API v4 (real)",
+            }
+
+        # Found exclusion records — check if any are active
+        active = []
+        for exc in exclusions:
+            actions = exc.get("exclusionActions", {}).get("listOfActions", [])
+            for action in actions:
+                if action.get("recordStatus") == "Active":
+                    active.append({
+                        "entity": exc.get("exclusionIdentification", {}).get("entityName", ""),
+                        "type": exc.get("exclusionDetails", {}).get("exclusionType", ""),
+                        "agency": exc.get("exclusionDetails", {}).get("excludingAgencyName", ""),
+                        "activate_date": action.get("activateDate"),
+                        "termination_date": action.get("terminationDate"),
+                        "termination_type": action.get("terminationType"),
+                    })
+
+        if active:
+            return {
+                "status": "EXCLUDED",
+                "entity_name": entity_name,
+                "message": f"DEBARRED: {len(active)} active exclusion(s) found in SAM.gov",
+                "active_exclusions": active,
+                "total_records": total,
+                "source": "sam.gov Exclusions API v4 (real)",
+            }
+
+        return {
+            "status": "CLEAR",
+            "entity_name": entity_name,
+            "message": f"Found {total} record(s) but none are currently active",
+            "total_records": total,
+            "source": "sam.gov Exclusions API v4 (real)",
+        }
+
+    except httpx.TimeoutException:
+        return {
+            "status": "ERROR",
+            "entity_name": entity_name,
+            "message": "SAM.gov API request timed out (15s)",
+            "source": "sam.gov",
+        }
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "entity_name": entity_name,
+            "message": f"SAM.gov API error: {str(e)}",
+            "source": "sam.gov",
+        }

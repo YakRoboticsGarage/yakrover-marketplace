@@ -122,7 +122,7 @@
 ### FAA Part 107 in Michigan
 - **National total:** 368,604 Part 107 certificates issued as of end-2023, growing ~50K/year. Estimated ~420,000+ by early 2026.
 - **Michigan estimate:** ~3-4% of national total based on population share = **~12,000-16,000 Part 107 holders in Michigan.** Most are hobbyists or occasional commercial users. Estimated 200-400 active commercial drone survey operators statewide.
-- **Training pipeline:** Western Michigan University (Kalamazoo), Michigan State University (Lansing/East Lansing), and Northwestern Michigan College all offer Part 107 programs. WMU has a full UAS Operations certificate program.
+- **Training pipeline:** WMU (Kalamazoo), MSU (Lansing), and NMC all offer Part 107 programs.
 
 ### Michigan Society of Professional Surveyors (MSPS)
 - **Website:** [misps.org](https://www.misps.org/)

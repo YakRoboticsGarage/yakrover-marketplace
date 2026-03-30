@@ -1,16 +1,26 @@
 """RFP processing module — converts construction RFP text into structured task specs.
 
-Wraps the logic from the rfp-to-robot-spec Claude Code skill into callable
-Python functions. Uses the Anthropic API to extract survey requirements.
+Two modes:
+1. LLM-powered (default when ANTHROPIC_API_KEY is set): calls Claude with the
+   rfp-to-robot-spec skill prompt + reference docs for semantic extraction.
+2. Keyword-based (fallback): deterministic pattern matching for when no API key
+   is available or for fast/cheap testing.
+
+The LLM mode loads the skill references (michigan-standards, aashto-federal,
+robot-sensor-mapping) as context and produces structured JSON task specs.
 """
 
 from __future__ import annotations
 
+import json
+import os
 from pathlib import Path
 
 # Skill reference data paths
 _SKILL_DIR = Path(__file__).resolve().parent.parent / ".claude" / "skills" / "rfp-to-robot-spec"
 _REFS_DIR = _SKILL_DIR / "references"
+
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 
 def _load_reference(name: str) -> str:
@@ -43,11 +53,13 @@ def process_rfp(
     rfp_text: str,
     jurisdiction: str = "MI",
     site_info: dict | None = None,
+    use_llm: bool = True,
 ) -> list[dict]:
     """Process an RFP text into structured task specs.
 
-    This is a deterministic extraction that does NOT call an LLM.
-    It parses common RFP patterns and maps them to task specs.
+    When ANTHROPIC_API_KEY is set and use_llm=True, uses Claude for semantic
+    extraction (more accurate, handles complex/unusual RFPs). Falls back to
+    deterministic keyword matching when no API key or on failure.
 
     Args:
         rfp_text: The RFP document text.
@@ -74,6 +86,15 @@ def process_rfp(
     rfp_lower = rfp_text.lower()
     site_info = site_info or {}
 
+    # Try LLM-powered extraction first (if API key available)
+    if use_llm and ANTHROPIC_API_KEY:
+        try:
+            return _process_rfp_with_llm(rfp_text, jurisdiction, site_info)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"LLM RFP parsing failed, falling back to keywords: {e}")
+
+    # Fallback: keyword-based extraction
     # Extract geographic context from RFP text when not provided
     if "location" not in site_info:
         site_info["location"] = _extract_location(rfp_text)
@@ -305,6 +326,134 @@ def _build_task_spec(
             "reference_standards": site_info.get("reference_standards", []),
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# LLM-powered RFP parsing (uses Claude API)
+# ---------------------------------------------------------------------------
+
+def _load_reference(name: str) -> str:
+    """Load a skill reference file, returning empty string if not found."""
+    path = _REFS_DIR / name
+    if path.exists():
+        return path.read_text()
+    return ""
+
+
+def _process_rfp_with_llm(
+    rfp_text: str,
+    jurisdiction: str,
+    site_info: dict,
+) -> list[dict]:
+    """Parse an RFP using Claude API with skill references for context.
+
+    Loads the rfp-to-robot-spec skill's reference documents and sends them
+    as context along with the RFP text. Claude extracts survey requirements
+    and returns structured task specs.
+    """
+    import httpx
+
+    # Load skill references
+    michigan_ref = _load_reference("michigan-standards.md")
+    federal_ref = _load_reference("aashto-federal-standards.md")
+    sensor_ref = _load_reference("robot-sensor-mapping.md")
+
+    # Build the system prompt from the skill definition
+    system_prompt = f"""You are an expert construction survey specification extractor.
+Given an RFP document, extract survey requirements and produce structured JSON task specs.
+
+Each task spec must have these exact fields:
+- description (str): Clear description of the survey task
+- task_category (str): One of: site_survey, bridge_inspection, progress_monitoring, as_built, subsurface_scan, environmental_survey, control_survey, aerial_survey
+- capability_requirements (dict): with "hard" (sensors_required, certifications_required, accuracy_required), "soft" (preferred_deliverables, preferred_coordinate_system, preferred_datum), and "payload" (format, fields)
+- budget_ceiling (number): Estimated budget in USD based on scope and industry pricing
+- sla_seconds (int): Deadline in seconds (days * 86400)
+- task_decomposition (dict): rfp_id, task_index, total_tasks, dependencies (list), bundling ("independent")
+- project_metadata (dict): jurisdiction, survey_type, source ("llm_extraction"), project_name, agency, location, coordinates, terrain
+
+Reference: Robot & Sensor Mapping
+{sensor_ref[:3000]}
+
+Reference: Michigan Standards
+{michigan_ref[:2000]}
+
+Reference: Federal Standards
+{federal_ref[:2000]}
+
+Site info provided by the GC:
+{json.dumps(site_info, indent=2)}
+
+Jurisdiction: {jurisdiction}
+
+IMPORTANT: Return ONLY a JSON array of task specs. No markdown, no explanation. Just the JSON array."""
+
+    response = httpx.post(
+        "https://api.anthropic.com/v1/messages",
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+        },
+        json={
+            "model": "claude-haiku-4-5-20251001",
+            "max_tokens": 4096,
+            "system": system_prompt,
+            "messages": [
+                {"role": "user", "content": f"Extract task specs from this RFP:\n\n{rfp_text[:8000]}"}
+            ],
+        },
+        timeout=30.0,
+    )
+
+    if response.status_code != 200:
+        raise RuntimeError(f"Claude API returned {response.status_code}: {response.text[:200]}")
+
+    data = response.json()
+    content = data.get("content", [{}])[0].get("text", "")
+
+    # Parse JSON from response (handle markdown code blocks)
+    content = content.strip()
+    if content.startswith("```"):
+        content = content.split("\n", 1)[1]  # Remove opening ```json
+        if "```" in content:
+            content = content[:content.rindex("```")]  # Remove closing ```
+
+    specs = json.loads(content)
+    if not isinstance(specs, list):
+        specs = [specs]
+
+    # Ensure each spec has required fields with defaults
+    import hashlib
+    rfp_id = f"rfp_{hashlib.sha256(rfp_text[:200].encode()).hexdigest()[:12]}"
+
+    for i, spec in enumerate(specs):
+        # Ensure task_decomposition
+        if "task_decomposition" not in spec:
+            spec["task_decomposition"] = {}
+        td = spec["task_decomposition"]
+        td.setdefault("rfp_id", rfp_id)
+        td.setdefault("task_index", i)
+        td.setdefault("total_tasks", len(specs))
+        td.setdefault("dependencies", [])
+        td.setdefault("bundling", "independent")
+
+        # Ensure project_metadata
+        if "project_metadata" not in spec:
+            spec["project_metadata"] = {}
+        pm = spec["project_metadata"]
+        pm.setdefault("jurisdiction", jurisdiction)
+        pm.setdefault("source", "llm_extraction")
+        pm.update({k: v for k, v in site_info.items() if k not in pm})
+
+        # Ensure budget_ceiling is a number
+        if isinstance(spec.get("budget_ceiling"), str):
+            spec["budget_ceiling"] = float(spec["budget_ceiling"].replace(",", "").replace("$", ""))
+
+        # Ensure sla_seconds is an int
+        if isinstance(spec.get("sla_seconds"), float):
+            spec["sla_seconds"] = int(spec["sla_seconds"])
+
+    return specs
 
 
 def validate_task_specs(task_specs: list[dict]) -> dict:

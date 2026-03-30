@@ -802,6 +802,42 @@ def register_auction_tools(
             return _error_response(exc)
 
     @mcp.tool()
+    async def auction_verify_bond_pdf(
+        pdf_path: str, task_request_ids: list = [], project_state: str = "MI",
+        required_coverage: float = 0,
+    ) -> dict:
+        """Verify a payment bond from a PDF file.
+
+        Extracts text from the PDF using PyMuPDF, then runs full Treasury
+        Circular 570 verification.
+
+        Args:
+            pdf_path: Path to the bond PDF file.
+            task_request_ids: Task IDs this bond should cover.
+            project_state: State code for licensing check.
+            required_coverage: Minimum coverage amount (optional).
+        """
+        try:
+            from auction.bond_verifier import extract_text_from_pdf, verify_bond
+            text = extract_text_from_pdf(pdf_path)
+            if not text.strip():
+                return _error_response_structured(
+                    "EMPTY_PDF", "No text extracted from PDF",
+                    "The PDF may be image-only. OCR is not yet supported."
+                )
+            return verify_bond(
+                text, task_request_ids, project_state,
+                required_coverage if required_coverage > 0 else None,
+            )
+        except FileNotFoundError:
+            return _error_response_structured(
+                "FILE_NOT_FOUND", f"PDF not found: {pdf_path}",
+                "Check the file path and try again."
+            )
+        except Exception as exc:
+            return _error_response(exc)
+
+    @mcp.tool()
     async def auction_verify_operator_compliance(robot_id: str) -> dict:
         """Check an operator's compliance status across all dimensions.
 
@@ -883,6 +919,24 @@ def register_auction_tools(
         try:
             from auction.terms_comparator import compare_terms
             return compare_terms(operator_terms, gc_terms, project_state)
+        except Exception as exc:
+            return _error_response(exc)
+
+    @mcp.tool()
+    async def auction_check_sam_exclusion(entity_name: str) -> dict:
+        """Check if an entity is excluded (debarred) from federal contracting.
+
+        Calls the real SAM.gov Exclusions API v4 when SAM_GOV_API_KEY is set.
+        Without a key, returns WARN status indicating manual check needed.
+
+        Use this before awarding tasks on federally-funded projects.
+        Checks both operators and surety companies.
+
+        Returns: CLEAR (not excluded), EXCLUDED (debarred), WARN (no API key), ERROR.
+        """
+        try:
+            from auction.compliance import check_sam_exclusion
+            return check_sam_exclusion(entity_name)
         except Exception as exc:
             return _error_response(exc)
 

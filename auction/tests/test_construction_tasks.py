@@ -406,3 +406,35 @@ class TestConstructionFleet:
 
         bids = engine.get_bids(result["request_id"])
         assert bids["bid_count"] >= 2
+
+
+class TestPDFBondExtraction:
+    """PDF bond extraction and verification."""
+
+    def test_create_and_verify_pdf_bond(self):
+        import fitz
+        from auction.bond_verifier import extract_text_from_pdf, verify_bond
+        from pathlib import Path
+
+        # Create PDF from text
+        bond_text = Path("auction/tests/scenarios/gc_profiles/01_dans_excavating/bond.txt").read_text()
+        pdf_path = Path("auction/data/sample_deliverables/test_bond.pdf")
+
+        doc = fitz.open()
+        page = doc.new_page()
+        rect = fitz.Rect(72, 72, 540, 720)
+        page.insert_textbox(rect, bond_text, fontsize=9, fontname="helv")
+        doc.save(str(pdf_path))
+        doc.close()
+
+        # Extract and verify
+        extracted = extract_text_from_pdf(str(pdf_path))
+        assert len(extracted) > 100
+        assert "Travelers" in extracted or "travelers" in extracted.lower()
+
+        result = verify_bond(extracted, ["req_test"], "MI")
+        assert result["surety_circular_570"] is True
+        assert result["status"] in ("VERIFIED", "PARTIAL")
+
+        # Cleanup
+        pdf_path.unlink(missing_ok=True)
