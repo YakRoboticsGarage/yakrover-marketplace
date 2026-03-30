@@ -109,8 +109,14 @@ def build_engine():
 
 
 def create_app():
-    """Create the MCP server app."""
+    """Create the MCP server app with both MCP and REST endpoints."""
     from mcp.server.fastmcp import FastMCP
+    from starlette.applications import Starlette
+    from starlette.requests import Request
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route, Mount
+    from starlette.middleware import Middleware
+    from starlette.middleware.cors import CORSMiddleware
 
     engine, wallet, stripe_service = build_engine()
 
@@ -136,7 +142,80 @@ Start by asking the user what survey they need, or process an RFP they provide."
     tool_count = len(mcp._tool_manager._tools)
     log("SERVER", f"Registered {tool_count} MCP tools")
 
-    return mcp
+    # --- REST API for tool calls (used by Cloudflare Worker demo) ---
+
+    import asyncio
+    import json
+
+    async def handle_tool_call(request: Request) -> JSONResponse:
+        """REST endpoint: POST /api/tool/{name} — calls an MCP tool by name."""
+        tool_name = request.path_params["name"]
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+
+        # Find the tool
+        tools = mcp._tool_manager._tools
+        if tool_name not in tools:
+            return JSONResponse(
+                {"error": f"Unknown tool: {tool_name}", "available": sorted(tools.keys())},
+                status_code=404,
+            )
+
+        # Call the tool
+        try:
+            tool_fn = tools[tool_name].fn
+            # MCP tools are async — call with the input as kwargs or positional
+            if isinstance(body, dict):
+                result = await tool_fn(**body)
+            else:
+                result = await tool_fn(body)
+            return JSONResponse({"result": result})
+        except TypeError as e:
+            return JSONResponse({"error": f"Invalid parameters: {e}"}, status_code=400)
+        except Exception as e:
+            return JSONResponse({"error": str(e)}, status_code=500)
+
+    async def handle_health(request: Request) -> JSONResponse:
+        """Health check endpoint."""
+        return JSONResponse({
+            "status": "ok",
+            "tools": tool_count,
+            "fleet": len(engine.robots),
+            "wallet": str(wallet.get_balance("buyer")),
+        })
+
+    async def handle_tool_list(request: Request) -> JSONResponse:
+        """List all available tools with descriptions."""
+        tools_info = []
+        for name, tool in sorted(mcp._tool_manager._tools.items()):
+            desc = (tool.description or "")[:200]
+            tools_info.append({"name": name, "description": desc})
+        return JSONResponse({"tools": tools_info, "count": len(tools_info)})
+
+    # Build combined app: REST routes + MCP mount
+    mcp_starlette = mcp.streamable_http_app()
+
+    app = Starlette(
+        routes=[
+            Route("/health", handle_health, methods=["GET"]),
+            Route("/api/tools", handle_tool_list, methods=["GET"]),
+            Route("/api/tool/{name}", handle_tool_call, methods=["POST"]),
+            Mount("/mcp", app=mcp_starlette),
+        ],
+        middleware=[
+            Middleware(
+                CORSMiddleware,
+                allow_origins=["https://yakrobot.bid", "http://localhost:*", "https://*.here.now"],
+                allow_methods=["GET", "POST", "OPTIONS"],
+                allow_headers=["*"],
+                allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.here\.now|https://yakrobot\.bid",
+            ),
+        ],
+    )
+
+    return app, mcp
 
 
 def start_tunnel(port: int) -> str | None:
@@ -177,7 +256,7 @@ def main():
     print("  =" * 25)
     print()
 
-    mcp = create_app()
+    app, mcp = create_app()
 
     # Tunnel
     tunnel_url = None
@@ -191,6 +270,12 @@ def main():
 
     base_url = tunnel_url or f"http://localhost:{args.port}"
 
+    print()
+    print("  Endpoints:")
+    print(f"    MCP:    {base_url}/mcp")
+    print(f"    REST:   {base_url}/api/tool/{{name}}")
+    print(f"    Health: {base_url}/health")
+    print(f"    Tools:  {base_url}/api/tools")
     print()
     print("  Connect Claude Code:")
     print(f"    claude mcp add --transport http yak-robotics {base_url}/mcp")
@@ -206,7 +291,7 @@ def main():
 
     import uvicorn
     uvicorn.run(
-        mcp.streamable_http_app(),
+        app,
         host=args.host,
         port=args.port,
         log_level="info",
