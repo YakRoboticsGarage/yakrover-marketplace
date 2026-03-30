@@ -128,47 +128,35 @@ def register_auction_tools(
 
     @mcp.tool()
     async def auction_post_task(task_spec: dict) -> dict:
-        """Post a task to the robot auction marketplace.
+        """Post a construction survey task to the marketplace.
 
-        Accepts a task specification dict with these keys:
+        Accepts a task specification dict. For construction surveys, use
+        auction_process_rfp first to generate specs from an RFP — it handles
+        sensor mapping, budget estimation, and task decomposition.
 
-        - description (str): Human-readable task description.
-        - task_category (str, optional): One of "env_sensing", "visual_inspection",
-          "mapping", "delivery_ground", "aerial_survey". If omitted, inferred
-          from capability_requirements.
-        - capability_requirements (dict): Robot capability filter and payload
-          specification. Structure:
-            {
-              "tool": "<robot_tool_name>",
-              "hard": {                        # optional hard constraints
-                "sensors_required": ["temperature", "humidity"],
-                "indoor_capable": true,
-                "min_battery_percent": 20,
-                "max_distance_meters": 50
-              },
-              "payload": {                     # expected delivery format
-                "format": "json",
-                "fields": ["temperature_celsius", "humidity_percent"]
-              }
-            }
-        - budget_ceiling (float): Maximum price in USD. Minimum $0.50.
-          Typical range: $0.50-$5.00 for sensor readings.
-        - sla_seconds (int): Maximum seconds for task completion. Must be > 0.
+        Required keys:
+        - description (str): What survey is needed.
+        - task_category (str): "site_survey", "bridge_inspection", "progress_monitoring",
+          "as_built", "subsurface_scan", "control_survey", "aerial_survey", or
+          "env_sensing", "visual_inspection", "mapping".
+        - capability_requirements (dict): Sensors needed and deliverable formats.
+        - budget_ceiling (float): Maximum price in USD. Construction range: $1,500-$120,000.
+        - sla_seconds (int): Deadline in seconds (e.g., 14 days = 1209600).
 
-        Example task_spec:
+        Example (construction survey):
         {
-          "description": "Read temperature in Bay 3",
-          "task_category": "env_sensing",
+          "description": "Pre-bid topographic survey for US-131 corridor, 6.6 miles",
+          "task_category": "site_survey",
           "capability_requirements": {
-            "tool": "tumbller_get_temperature_humidity",
-            "payload": {"format": "json", "fields": ["temperature_celsius", "humidity_percent"]}
+            "hard": {"sensors_required": ["aerial_lidar", "rtk_gps"]},
+            "payload": {"format": "multi_file", "fields": ["LandXML", "DXF", "LAS"]}
           },
-          "budget_ceiling": 0.50,
-          "sla_seconds": 120
+          "budget_ceiling": 50000,
+          "sla_seconds": 1209600
         }
 
-        Returns task status including eligible robots and request_id.
-        If the spec has errors, ALL validation errors are returned at once.
+        Tip: Use auction_process_rfp to auto-generate task specs from RFP text.
+        Returns task status including eligible operators and request_id.
         """
         try:
             result = engine.post_task(task_spec)
