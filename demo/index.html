@@ -444,6 +444,109 @@ footer a:hover{text-decoration:underline}
 /* Back button */
 .back-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;font-family:inherit;font-size:0.85rem;color:var(--text-2);cursor:pointer;padding:4px 0;font-weight:500;transition:color 0.15s}
 .back-btn:hover{color:var(--text)}
+
+/* ===== OPERATOR SIGN-UP FLOW ===== */
+.op-flow-steps{display:flex;justify-content:center;gap:0;padding:16px 0 20px;font-size:0.72rem;color:var(--text-3);align-items:center;flex-wrap:nowrap}
+.op-flow-step{padding:3px 8px;border-radius:4px;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.04em;font-size:0.62rem;white-space:nowrap;flex-shrink:0;cursor:default}
+.op-flow-step.active{background:var(--accent);color:#fff;font-weight:600}
+.op-flow-step.done{color:var(--green);font-weight:500;background:var(--green-bg)}
+.op-flow-chevron{width:24px;height:0;border-top:1px solid var(--border);display:inline-block;vertical-align:middle;margin:0 2px;font-size:0}
+
+.op-panel{display:none;animation:fadeIn 0.3s ease-out both}
+.op-panel.active{display:block}
+
+.op-form-group{margin-bottom:14px}
+.op-form-group label{display:block;font-size:0.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.op-form-group input,.op-form-group select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;background:var(--bg);color:var(--text);outline:none;transition:border-color 0.2s}
+.op-form-group input:focus,.op-form-group select:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(45,95,138,0.12)}
+.op-form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.op-form-row{grid-template-columns:1fr}}
+
+.op-coverage-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.op-coverage-grid label{display:flex;align-items:center;gap:4px;font-size:0.8rem;color:var(--text-2);cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:4px;transition:all 0.15s}
+.op-coverage-grid label:hover{border-color:var(--accent)}
+.op-coverage-grid input[type="checkbox"]{accent-color:var(--accent)}
+.op-coverage-grid input[type="checkbox"]:checked+span{color:var(--text);font-weight:500}
+
+.op-range-wrap{display:flex;align-items:center;gap:12px}
+.op-range-wrap input[type="range"]{flex:1;accent-color:var(--accent)}
+.op-range-val{font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:600;min-width:60px;text-align:right}
+
+.op-equip-card{background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;animation:fadeIn 0.25s}
+.op-equip-card .eq-name{font-weight:600;font-size:0.85rem}
+.op-equip-card .eq-detail{font-size:0.72rem;color:var(--text-2)}
+.op-equip-card .eq-remove{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:1rem;padding:2px 6px}
+.op-equip-card .eq-remove:hover{color:var(--red)}
+
+.op-compliance-card{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;transition:all 0.25s}
+.op-compliance-card.uploaded{border-color:var(--green);background:var(--green-bg)}
+.op-compliance-card .cc-info{flex:1}
+.op-compliance-card .cc-name{font-weight:600;font-size:0.85rem}
+.op-compliance-card .cc-detail{font-size:0.72rem;color:var(--text-2);margin-top:2px}
+.op-compliance-card .cc-tag{font-size:0.68rem;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600}
+.op-compliance-card .cc-tag.required{background:var(--accent-light);color:var(--accent)}
+.op-compliance-card .cc-tag.optional{background:var(--bg-subtle);color:var(--text-3)}
+.op-compliance-card .cc-tag.verified{background:var(--green-bg);color:var(--green)}
+.op-compliance-card .cc-btn{padding:6px 14px;border:1px solid var(--border);border-radius:4px;background:var(--bg);font-family:inherit;font-size:0.75rem;font-weight:500;cursor:pointer;transition:all 0.15s;color:var(--text-2)}
+.op-compliance-card .cc-btn:hover{border-color:var(--accent);color:var(--accent)}
+.op-compliance-card.uploaded .cc-btn{display:none}
+.op-compliance-card .cc-check{display:none;font-size:1.1rem;color:var(--green)}
+.op-compliance-card.uploaded .cc-check{display:block}
+
+.op-pls-note{background:var(--amber-bg);border:1px solid rgba(194,123,26,0.2);border-radius:var(--radius);padding:12px 16px;font-size:0.8rem;color:var(--amber);margin-top:12px}
+
+.op-summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg-subtle);font-size:0.85rem}
+.op-summary-row:last-child{border-bottom:none}
+.op-summary-label{color:var(--text-2)}
+.op-summary-value{font-weight:500}
+
+.op-activate-success{text-align:center;padding:32px 0;animation:fadeIn 0.4s}
+.op-activate-success .big-check{width:64px;height:64px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;color:#fff;animation:popIn 0.4s ease-out}
+@keyframes popIn{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+.op-dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
+@media(max-width:500px){.op-dash-stats{grid-template-columns:1fr}}
+.op-dash-stat{background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
+.op-dash-stat .ds-val{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700}
+.op-dash-stat .ds-lbl{font-size:0.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px}
+
+.op-task-match{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;transition:box-shadow 0.15s}
+.op-task-match:hover{box-shadow:var(--shadow-lg)}
+.op-task-match .tm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.op-task-match .tm-title{font-weight:600;font-size:0.875rem}
+.op-task-match .tm-budget{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--accent)}
+.op-task-match .tm-detail{font-size:0.8rem;color:var(--text-2);margin-bottom:6px}
+.op-task-match .tm-sensors{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.op-task-match .tm-sensors .cap{font-size:0.65rem}
+
+/* ===== BOND VERIFICATION ANIMATION ===== */
+.bond-verify-step{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:0.8rem;color:var(--text-2);opacity:0;transform:translateY(6px);transition:all 0.3s ease-out}
+.bond-verify-step.visible{opacity:1;transform:translateY(0)}
+.bond-verify-step .bv-spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+.bond-verify-step .bv-check{color:var(--green);font-weight:700;font-size:0.9rem;flex-shrink:0;display:none}
+.bond-verify-step.done .bv-spinner{display:none}
+.bond-verify-step.done .bv-check{display:block}
+.bond-verify-step .bv-result{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--green);margin-left:auto;display:none}
+.bond-verify-step.done .bv-result{display:block}
+
+/* ===== TERMS ANALYSIS ===== */
+.terms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;margin-top:10px}
+.terms-dim{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-subtle);border-radius:4px;font-size:0.75rem}
+.terms-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.terms-dot.green{background:var(--green)}
+.terms-dot.yellow{background:var(--amber)}
+.terms-dot.red{background:var(--red)}
+.terms-label{color:var(--text-2)}
+.terms-note{font-size:0.68rem;color:var(--text-3);display:block;margin-top:2px}
+
+/* ===== DELIVERABLES PREVIEW ===== */
+.deliv-table{width:100%;border-collapse:collapse;font-size:0.8rem;margin:10px 0}
+.deliv-table th{text-align:left;font-size:0.68rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;padding:6px 10px;border-bottom:1px solid var(--border)}
+.deliv-table td{padding:8px 10px;border-bottom:1px solid var(--bg-subtle);color:var(--text-2)}
+.deliv-table td:first-child{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--text);font-size:0.75rem}
+.deliv-table td:nth-child(2){font-size:0.72rem;color:var(--text-3)}
+.deliv-accuracy{background:var(--green-bg);border:1px solid rgba(26,125,78,0.15);border-radius:var(--radius);padding:12px 16px;font-size:0.8rem;color:var(--green);margin:10px 0;display:flex;align-items:center;gap:8px}
+.deliv-pls{background:var(--amber-bg);border:1px solid rgba(194,123,26,0.15);border-radius:var(--radius);padding:12px 16px;font-size:0.8rem;color:var(--amber);margin:10px 0;display:flex;align-items:center;gap:8px}
 </style>
 </head>
 <body>
@@ -665,11 +768,39 @@ footer a:hover{text-decoration:underline}
         <div class="parsed-row"><span class="plabel">Project</span><span class="pval">I-94 Modernization Seg 3 Pkg 1</span></div>
         <div class="parsed-row"><span class="plabel">Penal Sum</span><span class="pval mono" style="color:var(--green)">$4,200,000</span></div>
         <div class="parsed-row"><span class="plabel">Effective</span><span class="pval">October 15, 2025</span></div>
-        <div style="margin-top:12px;padding:10px;background:var(--green-bg);border-radius:var(--radius);display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--green)">
+        <!-- Bond verification animation -->
+        <div id="bondVerifySteps" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+          <div class="bond-verify-step" data-bv="1">
+            <span class="bv-spinner"></span><span class="bv-check">&#10003;</span>
+            <span>Extracting bond fields...</span>
+            <span class="bv-result">Bond No: PB-2024-DE-78432</span>
+          </div>
+          <div class="bond-verify-step" data-bv="2">
+            <span class="bv-spinner"></span><span class="bv-check">&#10003;</span>
+            <span>Checking Treasury Circular 570 (501 companies)...</span>
+            <span class="bv-result">Travelers Casualty and Surety &mdash; Listed</span>
+          </div>
+          <div class="bond-verify-step" data-bv="3">
+            <span class="bv-spinner"></span><span class="bv-check">&#10003;</span>
+            <span>Verifying Michigan license...</span>
+            <span class="bv-result">Licensed in MI</span>
+          </div>
+          <div class="bond-verify-step" data-bv="4">
+            <span class="bv-spinner"></span><span class="bv-check">&#10003;</span>
+            <span>Checking underwriting limit...</span>
+            <span class="bv-result">$225.5M limit &mdash; covers $205K</span>
+          </div>
+          <div class="bond-verify-step" data-bv="5">
+            <span class="bv-spinner"></span><span class="bv-check">&#10003;</span>
+            <span>Verifying penal sum...</span>
+            <span class="bv-result">$4,200,000 &mdash; sufficient</span>
+          </div>
+        </div>
+        <div id="bondVerifyDone" style="display:none;margin-top:12px;padding:10px;background:var(--green-bg);border-radius:var(--radius);align-items:center;gap:8px;font-size:0.8rem;color:var(--green)">
           <span style="font-weight:700">&#10003;</span> Verified against Travelers surety portal &middot; Bond covers $205K in task values
         </div>
       </div>
-      <div style="text-align:center"><button class="btn btn-primary" id="confirmPay">Open Auctions &mdash; Payment Bonded</button></div>
+      <div style="text-align:center;display:none" id="bondConfirmWrap"><button class="btn btn-primary" id="confirmPay">Open Auctions &mdash; Payment Bonded</button></div>
     </div>
     <div id="payDone" style="display:none;text-align:center;padding:20px 0">
       <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:var(--green-bg);border-radius:var(--radius);color:var(--green);font-weight:600;font-size:0.875rem">
@@ -695,7 +826,7 @@ footer a:hover{text-decoration:underline}
       <div class="bid-grid" style="margin:0">
         <div class="bid-card" id="bid1a" style="opacity:0;transform:translateY(8px)">
           <div class="bid-name">Great Lakes Aerial</div>
-          <div class="bid-loc">Bloomfield Hills, MI &middot; DJI M350 RTK + Zenmuse L2</div>
+          <div class="bid-loc">Bloomfield Hills, MI &middot; DJI M350 RTK + Zenmuse L2 &middot; PLS: J. Chen MI #42871</div>
           <div class="bid-price-row"><div class="bid-price">$72,000</div><div class="bid-conf">99.4%</div></div>
           <div class="score-row"><div class="score-header"><span>Match</span><span>96.1</span></div><div class="score-bar"><div class="score-fill" data-w="96%"></div></div></div>
           <div class="winner-tag">&#10003; Selected</div>
@@ -721,7 +852,7 @@ footer a:hover{text-decoration:underline}
       <div class="bid-grid" style="margin:0;display:none" id="a2bids">
         <div class="bid-card" id="bid2a" style="opacity:0;transform:translateY(8px)">
           <div class="bid-name">Wolverine Survey Tech</div>
-          <div class="bid-loc">Statewide MI &middot; Spot + Leica BLK ARC + MDOT partner</div>
+          <div class="bid-loc">Statewide MI &middot; Spot + Leica BLK ARC &middot; PLS: R. Torres MI #38104 &middot; MDOT partner</div>
           <div class="bid-price-row"><div class="bid-price">$98,000</div><div class="bid-conf">98.8%</div></div>
           <div class="score-row"><div class="score-header"><span>Match</span><span>91.4</span></div><div class="score-bar"><div class="score-fill" data-w="91%"></div></div></div>
           <div class="winner-tag">&#10003; Selected &mdash; sole bidder</div>
@@ -767,27 +898,30 @@ footer a:hover{text-decoration:underline}
         <a href="#" style="font-size:0.72rem;color:var(--link);text-decoration:none;margin-left:auto" onclick="var el=document.getElementById('profile1');el.style.display=el.style.display==='none'?'block':'none';this.textContent=el.style.display==='none'?'View operator profile \u25BC':'Hide profile \u25B2';return false">View operator profile &#9660;</a>
       </div>
       <div id="profile1" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);animation:fadeIn 0.25s">
+        <div style="font-size:0.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">EQUIPMENT</div>
         <div class="detail-grid" style="margin-bottom:12px">
-          <div class="detail-item"><div class="di-label">Platform</div><div class="di-value">Enterprise drone fleet + LiDAR</div></div>
-          <div class="detail-item"><div class="di-label">LiDAR</div><div class="di-value">Zenmuse L2 — 4cm NSSDA, 240K pts/sec</div></div>
-          <div class="detail-item"><div class="di-label">Photogrammetry</div><div class="di-value">Zenmuse P1 — 45MP full-frame</div></div>
-          <div class="detail-item"><div class="di-label">RTK GPS</div><div class="di-value">&plusmn;1cm horizontal, &plusmn;1.5cm vertical</div></div>
+          <div class="detail-item"><div class="di-label">Platform</div><div class="di-value">DJI Matrice 350 RTK (3 units)</div></div>
+          <div class="detail-item"><div class="di-label">LiDAR</div><div class="di-value">Zenmuse L2 &mdash; 4cm NSSDA, 240K pts/sec</div></div>
+          <div class="detail-item"><div class="di-label">Photogrammetry</div><div class="di-value">Zenmuse P1 &mdash; 45MP full-frame, 2.5cm/px GSD</div></div>
+          <div class="detail-item"><div class="di-label">RTK GPS</div><div class="di-value">D-RTK 2 base + rover &mdash; &plusmn;1cm H / &plusmn;1.5cm V</div></div>
         </div>
         <div style="font-size:0.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">INSURANCE &amp; LEGAL</div>
         <div class="detail-grid" style="margin-bottom:12px">
-          <div class="detail-item"><div class="di-label">Operator</div><div class="di-value">Great Lakes Aerial LLC</div></div>
-          <div class="detail-item"><div class="di-label">PLS License</div><div class="di-value">MI #42871 (exp. 2027-11-30)</div></div>
-          <div class="detail-item"><div class="di-label">CGL Insurance</div><div class="di-value">$2M/$4M — Hartford</div></div>
-          <div class="detail-item"><div class="di-label">E&amp;O / Professional</div><div class="di-value">$2M/$4M — Berkley</div></div>
-          <div class="detail-item"><div class="di-label">Aviation Liability</div><div class="di-value">$5M — Global Aerospace</div></div>
+          <div class="detail-item"><div class="di-label">Operator</div><div class="di-value">Great Lakes Aerial Survey LLC</div></div>
+          <div class="detail-item"><div class="di-label">PLS</div><div class="di-value">Jennifer Chen, MI #42871 (exp. 2027-11-30)</div></div>
+          <div class="detail-item"><div class="di-label">CGL Insurance</div><div class="di-value">$2M/$4M &mdash; Hartford</div></div>
+          <div class="detail-item"><div class="di-label">E&amp;O / Professional</div><div class="di-value">$2M/$4M &mdash; Berkley</div></div>
+          <div class="detail-item"><div class="di-label">Aviation Liability</div><div class="di-value">$5M &mdash; Global Aerospace</div></div>
           <div class="detail-item"><div class="di-label">LOL Cap</div><div class="di-value">1x task fee ($72,000)</div></div>
+          <div class="detail-item"><div class="di-label">Coverage Area</div><div class="di-value">MI, OH, IN &mdash; 200 mi from Bloomfield Hills</div></div>
         </div>
         <div style="font-size:0.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">TRACK RECORD</div>
         <div class="task-stats" style="margin-bottom:12px">
-          <div class="task-stat"><div class="ts-val">287</div><div class="ts-lbl">Tasks</div></div>
-          <div class="task-stat"><div class="ts-val" style="color:var(--green)">99.4%</div><div class="ts-lbl">Completion</div></div>
-          <div class="task-stat"><div class="ts-val">42min</div><div class="ts-lbl">Avg time</div></div>
+          <div class="task-stat"><div class="ts-val">287</div><div class="ts-lbl">Tasks completed</div></div>
+          <div class="task-stat"><div class="ts-val" style="color:var(--green)">99.4%</div><div class="ts-lbl">Completion rate</div></div>
+          <div class="task-stat"><div class="ts-val">42min</div><div class="ts-lbl">Avg response</div></div>
         </div>
+        <div style="font-size:0.72rem;color:var(--text-2);margin-bottom:12px">12 MDOT projects &middot; Member since 2025 &middot; Bloomfield Hills, MI</div>
         <a href="#" onclick="openModal('Standard Terms','SURVEY SERVICES AGREEMENT — Great Lakes Aerial LLC\n\nScope: Per task specification (Pre-Construction Topo)\nFee: $72,000 (milestone billing)\nInsurance: CGL $2M/$4M, E&O $2M/$4M, Aviation $5M\nPLS: MI #42871 (supervising: J. Chen, PLS)\nLimitation of Liability: $72,000 (1x fee)\nRetainage: 10% until acceptance\nIndemnification: Mutual, proportional fault\nData Ownership: Client owns deliverables upon payment\nDispute: Negotiation > Mediation > Arbitration\nGoverning Law: Michigan\nTemplate: ConsensusDocs 750');return false" style="font-size:0.72rem;color:var(--link);text-decoration:none">View draft agreement &rarr;</a>
       </div>
     </div>
@@ -814,28 +948,66 @@ footer a:hover{text-decoration:underline}
         <a href="#" style="font-size:0.72rem;color:var(--link);text-decoration:none;margin-left:auto" onclick="var el=document.getElementById('profile2');el.style.display=el.style.display==='none'?'block':'none';this.textContent=el.style.display==='none'?'View operator profile \u25BC':'Hide profile \u25B2';return false">View operator profile &#9660;</a>
       </div>
       <div id="profile2" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);animation:fadeIn 0.25s">
+        <div style="font-size:0.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">EQUIPMENT</div>
         <div class="detail-grid" style="margin-bottom:12px">
-          <div class="detail-item"><div class="di-label">Platform</div><div class="di-value">Enterprise UAS + mobile LiDAR + terrestrial scanners</div></div>
-          <div class="detail-item"><div class="di-label">3D Scanner</div><div class="di-value">Leica BLK ARC — SLAM, &plusmn;5mm relative</div></div>
-          <div class="detail-item"><div class="di-label">GPR</div><div class="di-value">GSSI StructureScan Mini XT — 1.6GHz</div></div>
-          <div class="detail-item"><div class="di-label">Autonomy</div><div class="di-value">Spot Autowalk, IP67, 90min battery</div></div>
+          <div class="detail-item"><div class="di-label">Platform</div><div class="di-value">Boston Dynamics Spot (2 units)</div></div>
+          <div class="detail-item"><div class="di-label">3D Scanner</div><div class="di-value">Leica BLK ARC &mdash; SLAM, &plusmn;5mm relative</div></div>
+          <div class="detail-item"><div class="di-label">GPR</div><div class="di-value">GSSI StructureScan Mini XT &mdash; 1.6GHz</div></div>
+          <div class="detail-item"><div class="di-label">Autonomy</div><div class="di-value">Spot SDK Autowalk, IP67, 90min battery</div></div>
         </div>
         <div style="font-size:0.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">INSURANCE &amp; LEGAL</div>
         <div class="detail-grid" style="margin-bottom:12px">
-          <div class="detail-item"><div class="di-label">Operator</div><div class="di-value">Wolverine Survey Tech Inc</div></div>
-          <div class="detail-item"><div class="di-label">PLS License</div><div class="di-value">MI #38104 (exp. 2026-08-15)</div></div>
-          <div class="detail-item"><div class="di-label">CGL Insurance</div><div class="di-value">$1M/$2M — Travelers</div></div>
-          <div class="detail-item"><div class="di-label">E&amp;O / Professional</div><div class="di-value">$1M/$2M — CNA</div></div>
+          <div class="detail-item"><div class="di-label">Operator</div><div class="di-value">Wolverine Survey Technologies Inc</div></div>
+          <div class="detail-item"><div class="di-label">PLS</div><div class="di-value">Robert Torres, MI #38104 (exp. 2026-08-15)</div></div>
+          <div class="detail-item"><div class="di-label">CGL Insurance</div><div class="di-value">$1M/$2M &mdash; Travelers</div></div>
+          <div class="detail-item"><div class="di-label">E&amp;O / Professional</div><div class="di-value">$1M/$2M &mdash; CNA</div></div>
           <div class="detail-item"><div class="di-label">Confined Space</div><div class="di-value">OSHA 1910.146 certified crew</div></div>
           <div class="detail-item"><div class="di-label">LOL Cap</div><div class="di-value">1x task fee ($98,000)</div></div>
+          <div class="detail-item"><div class="di-label">Coverage Area</div><div class="di-value">Statewide MI &mdash; MDOT preferred vendor</div></div>
         </div>
         <div style="font-size:0.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">TRACK RECORD</div>
         <div class="task-stats" style="margin-bottom:12px">
-          <div class="task-stat"><div class="ts-val">156</div><div class="ts-lbl">Tasks</div></div>
-          <div class="task-stat"><div class="ts-val" style="color:var(--green)">98.8%</div><div class="ts-lbl">Completion</div></div>
-          <div class="task-stat"><div class="ts-val">3.2hr</div><div class="ts-lbl">Avg time</div></div>
+          <div class="task-stat"><div class="ts-val">156</div><div class="ts-lbl">Tasks completed</div></div>
+          <div class="task-stat"><div class="ts-val" style="color:var(--green)">98.8%</div><div class="ts-lbl">Completion rate</div></div>
+          <div class="task-stat"><div class="ts-val">3.2hr</div><div class="ts-lbl">Avg response</div></div>
         </div>
+        <div style="font-size:0.72rem;color:var(--text-2);margin-bottom:12px">8 MDOT projects &middot; Tunnel specialist &middot; Member since 2025</div>
         <a href="#" onclick="openModal('Standard Terms','SURVEY SERVICES AGREEMENT — Wolverine Survey Tech Inc\n\nScope: Per task specification (Tunnel 3D Scanning)\nFee: $98,000 (milestone billing)\nInsurance: CGL $1M/$2M, E&O $1M/$2M\nPLS: MI #38104 (supervising: R. Torres, PLS)\nLimitation of Liability: $98,000 (1x fee)\nRetainage: 10% until acceptance\nConfined Space: OSHA 1910.146 certified\nIndemnification: Mutual, proportional fault\nData Ownership: Client owns deliverables upon payment\nDispute: Negotiation > Mediation > Arbitration\nGoverning Law: Michigan\nTemplate: ConsensusDocs 750');return false" style="font-size:0.72rem;color:var(--link);text-decoration:none">View draft agreement &rarr;</a>
+      </div>
+    </div>
+
+    <!-- Terms Analysis -->
+    <div id="termsAnalysis" style="display:none;margin-top:12px">
+      <div class="card" style="border-left:3px solid var(--link)">
+        <h3 style="margin-bottom:4px">TERMS ANALYSIS</h3>
+        <div style="font-size:0.72rem;color:var(--text-3);margin-bottom:10px">ConsensusDocs 750 framework &middot; 12 dimensions reviewed</div>
+        <div class="terms-grid">
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">Indemnification</span></div>
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">Limitation of Liability</span></div>
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">Insurance</span></div>
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">Data Ownership</span></div>
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">Standard of Care</span></div>
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">Consequential Damages</span></div>
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">Termination</span></div>
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">Change Orders</span></div>
+          <div class="terms-dim">
+            <span class="terms-dot yellow"></span>
+            <span>
+              <span class="terms-label">Payment Terms</span>
+              <span class="terms-note">Net 30 &mdash; 7 days longer than ideal</span>
+            </span>
+          </div>
+          <div class="terms-dim">
+            <span class="terms-dot yellow"></span>
+            <span>
+              <span class="terms-label">Retainage</span>
+              <span class="terms-note">10% standard</span>
+            </span>
+          </div>
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">PLS Responsibility</span></div>
+          <div class="terms-dim"><span class="terms-dot green"></span><span class="terms-label">Dispute Resolution</span></div>
+        </div>
+        <div style="margin-top:10px;font-size:0.72rem;color:var(--text-3)">10 green &middot; 2 yellow &middot; 0 red &mdash; <a href="#" onclick="openModal('Terms Detail','TERMS ANALYSIS — ConsensusDocs 750\n\nGreen (10 dimensions):\n- Indemnification: Mutual, proportional fault ✓\n- LOL: 1x task fee per operator ✓\n- Insurance: CGL, E&O, Aviation verified ✓\n- Data Ownership: Client owns deliverables upon payment ✓\n- Standard of Care: Reasonably prudent surveyor ✓\n- Consequential Damages: Mutual waiver ✓\n- Termination: 14-day notice, payment for completed work ✓\n- Change Orders: Written approval required ✓\n- PLS Responsibility: Operators have valid PLS ✓\n- Dispute Resolution: Negotiation → Mediation → Arbitration ✓\n\nYellow (2 dimensions):\n- Payment Terms: Net 30 (industry best practice is Net 23)\n  → Recommendation: Negotiate to Net 23 for future tasks\n- Retainage: 10% held until acceptance\n  → Standard for public works, no action needed');return false" style="color:var(--link);text-decoration:none">View full analysis &rarr;</a></div>
       </div>
     </div>
 
@@ -939,6 +1111,26 @@ footer a:hover{text-decoration:underline}
       <div style="margin-top:10px"><a href="#" onclick="openModal('Agreement Detail','SURVEY SERVICES SUBCONTRACT\n\nGenerated: 2026-03-28\nTemplate: ConsensusDocs 750 (modified)\n\n--- TASK 1 ---\nOperator: Great Lakes Aerial LLC\nScope: Pre-construction topographic survey\nFee: $72,000 (milestone billing)\nInsurance: CGL $2M/$4M, E&O $2M/$4M, Aviation $5M\nPLS: MI #42871 (supervising: J. Chen, PLS)\nLOL: $72,000 (1x fee)\nRetainage: 10% until acceptance\n\n--- TASK 2 ---\nOperator: Wolverine Survey Tech Inc\nScope: Tunnel 3D scanning and as-built\nFee: $98,000 (milestone billing)\nInsurance: CGL $1M/$2M, E&O $1M/$2M\nPLS: MI #38104 (supervising: R. Torres, PLS)\nLOL: $98,000 (1x fee)\nRetainage: 10% until acceptance\n\n--- COMMON TERMS ---\nIndemnification: Mutual, proportional fault\nData Ownership: Client owns deliverables upon payment\nStandard of Care: Reasonably prudent surveyor\nDispute Resolution: Negotiation (30 days) > Mediation > Arbitration\nGoverning Law: Michigan\nPayment Bond: SUR-2025-MI-4847291 (Travelers)\n\nSigned digitally by all parties via YAK ROBOTICS marketplace.');return false" style="font-size:0.72rem;color:var(--link);text-decoration:none">View full agreement &rarr;</a></div>
     </div>
 
+    <!-- Deliverables Preview -->
+    <div class="card" style="margin-bottom:16px;border-left:3px solid var(--accent)">
+      <h3 style="margin-bottom:12px">DELIVERABLES</h3>
+      <table class="deliv-table">
+        <thead><tr><th>Filename</th><th>Format</th><th>Size / Count</th></tr></thead>
+        <tbody>
+          <tr><td>surface.xml</td><td>LandXML 1.2</td><td>12.4 MB</td></tr>
+          <tr><td>cross_sections.csv</td><td>CSV</td><td>25 stations</td></tr>
+          <tr><td>point_cloud.las</td><td>LAS 1.4</td><td>12.45M points</td></tr>
+          <tr><td>orthomosaic.tif</td><td>GeoTIFF</td><td>2" GSD</td></tr>
+        </tbody>
+      </table>
+      <div class="deliv-accuracy">
+        <span style="font-weight:700">&#10003;</span> RMSE: 1.8 cm horizontal, 4.2 cm vertical &mdash; ASPRS 2014 Class I
+      </div>
+      <div class="deliv-pls">
+        <span style="font-weight:700">&#9202;</span> PLS review pending &mdash; Jennifer Chen, MI #42871
+      </div>
+    </div>
+
     <div class="result-actions">
       <button class="btn btn-primary" onclick="resetDemo()">Upload Another RFP</button>
       <button class="btn btn-outline" id="addClaudeBtn">Add to Claude</button>
@@ -1034,29 +1226,185 @@ footer a:hover{text-decoration:underline}
   <div style="text-align:center;padding:20px 0"><button class="btn btn-outline" onclick="resetDemo()">&#8592; Back to marketplace</button></div>
 </div>
 
-<!-- SCREEN: OPERATOR -->
+<!-- SCREEN: OPERATOR (5-step sign-up flow) -->
 <div id="s-operator" class="screen">
-  <div class="op-hero">
-    <h2>For Survey Operators</h2>
-    <p>Own survey drones or ground robots? Earn revenue by joining the marketplace. Your equipment bids automatically and gets paid on delivery.</p>
+  <div class="op-flow-steps" id="opStepIndicator">
+    <div class="op-flow-step active" data-op-step="1">Register</div>
+    <span class="op-flow-chevron"></span>
+    <div class="op-flow-step" data-op-step="2">Equipment</div>
+    <span class="op-flow-chevron"></span>
+    <div class="op-flow-step" data-op-step="3">Compliance</div>
+    <span class="op-flow-chevron"></span>
+    <div class="op-flow-step" data-op-step="4">Activate</div>
+    <span class="op-flow-chevron"></span>
+    <div class="op-flow-step" data-op-step="5">Dashboard</div>
   </div>
-  <div class="op-steps">
-    <div class="op-step"><h4>1. Register</h4><p>Register your equipment on the network. Upload FAA Part 107, surveyor certs, and equipment specs.</p></div>
-    <div class="op-step"><h4>2. Configure</h4><p>Set pricing, service area, equipment availability, and deliverable formats. Your fleet bids autonomously.</p></div>
-    <div class="op-step"><h4>3. Earn</h4><p>Get paid per survey via Stripe or USDC. Track revenue, utilization, and client satisfaction.</p></div>
-  </div>
-  <div class="op-cta-grid">
-    <div class="cta-block" style="margin:0">
-      <p style="margin-bottom:12px"><strong>Already have a robot?</strong><br>Register it on the platform and start accepting tasks.</p>
-      <button class="btn btn-primary" onclick="alert('Registration flow coming in v1.5.\n\nFor now, use:\nuv run python scripts/register.py\n\nSee: github.com/YakRoboticsGarage/yakrover-8004-mcp')">Register Your Robot</button>
-      <div style="margin-top:10px"><a href="https://github.com/YakRoboticsGarage/yakrover-8004-mcp" target="_blank" style="font-size:0.8rem;color:var(--link)">View docs on GitHub &rarr;</a></div>
+
+  <!-- Step 1: Register -->
+  <div class="op-panel active" id="opStep1">
+    <div style="text-align:center;padding:16px 0 20px">
+      <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">Register as an Operator</h2>
+      <p style="font-size:0.8rem;color:var(--text-2)">Join the marketplace and start bidding on survey tasks</p>
     </div>
-    <div class="cta-block" style="margin:0;background:var(--accent-light)">
-      <p style="margin-bottom:12px;color:var(--accent-hover)"><strong>Want to become an operator?</strong><br>See what equipment you need and how to get started.</p>
-      <button class="btn btn-primary" onclick="showScreen('s-buyrobot',0)">Explore Equipment &amp; Pricing</button>
+    <div style="max-width:520px;margin:0 auto">
+      <div class="op-form-group">
+        <label>Company Name</label>
+        <input type="text" id="opCompanyName" placeholder="e.g. Great Lakes Aerial LLC">
+      </div>
+      <div class="op-form-row">
+        <div class="op-form-group">
+          <label>Contact Name</label>
+          <input type="text" id="opContactName" placeholder="e.g. Jennifer Chen">
+        </div>
+        <div class="op-form-group">
+          <label>Email</label>
+          <input type="email" id="opEmail" placeholder="jen@greatlakesaerial.com">
+        </div>
+      </div>
+      <div class="op-form-row">
+        <div class="op-form-group">
+          <label>Base City</label>
+          <input type="text" id="opCity" placeholder="e.g. Bloomfield Hills">
+        </div>
+        <div class="op-form-group">
+          <label>State</label>
+          <select id="opState">
+            <option value="">Select state...</option>
+            <option value="MI">Michigan</option>
+            <option value="OH">Ohio</option>
+            <option value="IN">Indiana</option>
+            <option value="WI">Wisconsin</option>
+            <option value="IL">Illinois</option>
+          </select>
+        </div>
+      </div>
+      <div class="op-form-group">
+        <label>Coverage States</label>
+        <div class="op-coverage-grid" id="opCoverageStates">
+          <label><input type="checkbox" value="MI" checked><span>MI</span></label>
+          <label><input type="checkbox" value="OH"><span>OH</span></label>
+          <label><input type="checkbox" value="IN"><span>IN</span></label>
+          <label><input type="checkbox" value="WI"><span>WI</span></label>
+          <label><input type="checkbox" value="IL"><span>IL</span></label>
+        </div>
+      </div>
+      <div class="op-form-group">
+        <label>Max Range from Base</label>
+        <div class="op-range-wrap">
+          <input type="range" id="opRange" min="50" max="400" value="150" step="10" oninput="document.getElementById('opRangeVal').textContent=this.value+' mi'">
+          <span class="op-range-val" id="opRangeVal">150 mi</span>
+        </div>
+      </div>
+      <div style="text-align:center;padding:16px 0">
+        <button class="btn btn-primary" onclick="opRegister()">Register</button>
+      </div>
     </div>
   </div>
-  <div style="text-align:center;padding:20px 0"><button class="btn btn-outline" onclick="resetDemo()">&#8592; Back to marketplace</button></div>
+
+  <!-- Step 2: Add Equipment -->
+  <div class="op-panel" id="opStep2">
+    <div style="text-align:center;padding:16px 0 20px">
+      <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">Add Your Equipment</h2>
+      <p style="font-size:0.8rem;color:var(--text-2)">List the sensors and platforms you operate</p>
+    </div>
+    <div style="max-width:520px;margin:0 auto">
+      <div class="op-form-row">
+        <div class="op-form-group">
+          <label>Equipment Type</label>
+          <select id="opEquipType">
+            <option value="Aerial LiDAR">Aerial LiDAR</option>
+            <option value="Terrestrial LiDAR">Terrestrial LiDAR</option>
+            <option value="Photogrammetry">Photogrammetry</option>
+            <option value="GPR">GPR</option>
+            <option value="RTK-GPS">RTK-GPS</option>
+            <option value="Thermal Camera">Thermal Camera</option>
+            <option value="Total Station">Total Station</option>
+          </select>
+        </div>
+        <div class="op-form-group">
+          <label>Accuracy (cm)</label>
+          <input type="number" id="opEquipAccuracy" placeholder="e.g. 2" value="2">
+        </div>
+      </div>
+      <div class="op-form-group">
+        <label>Model</label>
+        <input type="text" id="opEquipModel" placeholder="e.g. DJI Matrice 350 RTK + Zenmuse L2">
+      </div>
+      <div style="text-align:center;margin-bottom:20px">
+        <button class="btn btn-outline" style="font-size:0.8rem" onclick="opAddEquipment()">+ Add Equipment</button>
+      </div>
+      <div id="opEquipList"></div>
+      <div style="text-align:center;padding:16px 0">
+        <button class="btn btn-primary" id="opEquipContinue" onclick="opGoStep(3)" style="display:none">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Compliance Documents -->
+  <div class="op-panel" id="opStep3">
+    <div style="text-align:center;padding:16px 0 20px">
+      <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">Compliance Documents</h2>
+      <p style="font-size:0.8rem;color:var(--text-2)">Upload required certifications to bid on tasks</p>
+    </div>
+    <div style="max-width:520px;margin:0 auto">
+      <div id="opComplianceList"></div>
+      <div style="text-align:center;margin:12px 0;font-size:0.875rem;font-weight:600;color:var(--text)" id="opComplianceScore">0/6 verified</div>
+      <div id="opPlsNote" class="op-pls-note" style="display:none">
+        No PLS license? YAK ROBOTICS offers <strong>PLS-as-a-Service</strong> &mdash; licensed surveyors review and stamp your deliverables. Available after activation.
+      </div>
+      <div style="text-align:center;padding:16px 0">
+        <button class="btn btn-primary" onclick="opGoStep(4)">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Activate -->
+  <div class="op-panel" id="opStep4">
+    <div style="text-align:center;padding:16px 0 20px">
+      <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">Review &amp; Activate</h2>
+      <p style="font-size:0.8rem;color:var(--text-2)">Confirm your details and go live</p>
+    </div>
+    <div style="max-width:520px;margin:0 auto">
+      <div class="card" style="background:var(--bg-subtle)">
+        <h3 style="margin-bottom:12px">REGISTRATION SUMMARY</h3>
+        <div id="opSummaryContent"></div>
+      </div>
+      <div id="opActivateError" style="display:none;text-align:center;padding:10px;margin:12px 0;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:var(--radius);font-size:0.8rem;color:var(--red)"></div>
+      <div style="text-align:center;padding:16px 0">
+        <button class="btn btn-primary" style="background:var(--navy);font-size:0.95rem;padding:12px 32px" onclick="opActivate()">Activate for Bidding</button>
+      </div>
+      <div id="opActivateSuccess" style="display:none">
+        <div class="op-activate-success">
+          <div class="big-check">&#10003;</div>
+          <div style="font-size:1.2rem;font-weight:700;margin-bottom:4px">You're live!</div>
+          <div style="font-size:0.8rem;color:var(--text-2);margin-bottom:16px">Your equipment is now visible to GCs and ready to receive bids</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-3);margin-bottom:20px" id="opActivateId"></div>
+          <button class="btn btn-primary" onclick="opGoStep(5)">Go to Dashboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5: Dashboard Preview -->
+  <div class="op-panel" id="opStep5">
+    <div style="padding:16px 0 12px">
+      <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">Operator Dashboard</h2>
+      <p style="font-size:0.8rem;color:var(--text-2)" id="opDashName"></p>
+    </div>
+    <div class="op-dash-stats">
+      <div class="op-dash-stat"><div class="ds-val">0</div><div class="ds-lbl">Active Tasks</div></div>
+      <div class="op-dash-stat"><div class="ds-val">0</div><div class="ds-lbl">Bids Placed</div></div>
+      <div class="op-dash-stat"><div class="ds-val" style="color:var(--text-3)">$0</div><div class="ds-lbl">Earnings</div></div>
+    </div>
+    <div style="margin-top:20px">
+      <div style="font-size:0.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">MATCHING TASKS IN YOUR AREA</div>
+      <div id="opMatchingTasks"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;padding:20px 0;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="showScreen('s-buyrobot',0)">Explore Equipment &amp; Pricing</button>
+      <button class="btn btn-outline" onclick="resetDemo()">&#8592; Back to marketplace</button>
+    </div>
+  </div>
 </div>
 
 <!-- SCREEN: EXPLORER (PART C) -->
@@ -1434,7 +1782,7 @@ function showScreen(id,step){
     indicator.classList.add('hidden');
   } else {
     indicator.classList.remove('hidden');
-    document.querySelectorAll('.step').forEach(function(s){
+    document.querySelectorAll('#stepIndicator .step').forEach(function(s){
       var n=+s.dataset.step;
       s.classList.remove('active','done');
       if(n===step)s.classList.add('active');
@@ -1446,6 +1794,30 @@ function showScreen(id,step){
   // Initialize screens on show
   if(id==='s-explorer') initExplorer();
   if(id==='s-feed') initFullFeed();
+  // Reset operator flow to step 1 when entering
+  if(id==='s-operator'){
+    opStep=1;
+    opData={company:'',contact:'',email:'',city:'',state:'',coverage:[],range:150,equipment:[],compliance:{}};
+    document.querySelectorAll('.op-panel').forEach(function(p){p.classList.remove('active')});
+    document.getElementById('opStep1').classList.add('active');
+    document.querySelectorAll('.op-flow-step').forEach(function(s){
+      s.classList.remove('active','done');
+      if(+s.dataset.opStep===1)s.classList.add('active');
+    });
+    document.getElementById('opEquipList').innerHTML='';
+    document.getElementById('opEquipContinue').style.display='none';
+    // Reset form fields
+    var fields=['opCompanyName','opContactName','opEmail','opCity'];
+    fields.forEach(function(f){var el=document.getElementById(f);if(el)el.value=''});
+    var sel=document.getElementById('opState');if(sel)sel.value='';
+    var rng=document.getElementById('opRange');if(rng){rng.value=150;document.getElementById('opRangeVal').textContent='150 mi'}
+    document.querySelectorAll('#opCoverageStates input').forEach(function(cb){cb.checked=cb.value==='MI'});
+    // Reset activate step
+    var s4card=document.querySelector('#opStep4 .card');if(s4card)s4card.style.display='';
+    var s4btn=document.querySelector('#opStep4 .btn-primary[onclick="opActivate()"]');if(s4btn)s4btn.parentElement.style.display='';
+    var s4success=document.getElementById('opActivateSuccess');if(s4success)s4success.style.display='none';
+    var s4error=document.getElementById('opActivateError');if(s4error)s4error.style.display='none';
+  }
 }
 
 // No-availability keywords
@@ -1498,9 +1870,9 @@ function runRfpExtraction(){
 
 // Payment
 document.getElementById('goPayBtn').onclick=function(){showScreen('s-pay',3)};
-document.getElementById('payStripe').onclick=function(){document.getElementById('cardArea').style.display='block';document.getElementById('payStripe').style.borderColor='var(--accent);box-shadow:var(--shadow)'};
+document.getElementById('payStripe').onclick=function(){document.getElementById('cardArea').style.display='block';document.getElementById('payStripe').style.borderColor='var(--accent)';runBondVerification()};
 document.getElementById('payUSDC').onclick=function(){document.getElementById('cardArea').style.display='none';document.getElementById('payDone').style.display='block';document.getElementById('payDone').querySelector('div').innerHTML='<span style="font-size:1.1rem">&#127974;</span> ESCROW FUNDED';document.getElementById('payDone').querySelectorAll('div')[1].textContent='$205,000 deposited via ACH \u00b7 Operators can bid with confidence'};
-document.getElementById('confirmPay').onclick=function(){document.getElementById('cardArea').style.display='none';document.getElementById('payDone').style.display='block'};
+document.getElementById('confirmPay').onclick=function(){document.getElementById('cardArea').style.display='none';document.getElementById('payDone').style.display='block';document.getElementById('bondConfirmWrap').style.display='none'};
 
 // Parallel auctions
 document.getElementById('startAuction').onclick=function(){showScreen('s-auction',4);runParallelAuctions()};
@@ -1586,6 +1958,10 @@ document.getElementById('confirmAward2').onclick=function(){
   checkAllAwards();
 };
 function checkAllAwards(){
+  // Show terms analysis after first agreement
+  if(awards.task1===true||awards.task2===true){
+    document.getElementById('termsAnalysis').style.display='block';
+  }
   var t1resolved=(awards.task1===true||awards.task1==='skipped');
   var t2resolved=(awards.task2===true||awards.task2==='skipped');
   var atLeastOneConfirmed=(awards.task1===true||awards.task2===true);
@@ -2151,6 +2527,173 @@ function renderAgentStep(){
   });
 }
 
+// ===== BOND VERIFICATION ANIMATION =====
+function runBondVerification(){
+  var steps=document.querySelectorAll('#bondVerifySteps .bond-verify-step');
+  steps.forEach(function(s){s.classList.remove('visible','done')});
+  document.getElementById('bondVerifyDone').style.display='none';
+  document.getElementById('bondConfirmWrap').style.display='none';
+  steps.forEach(function(step,i){
+    setTimeout(function(){step.classList.add('visible')},i*400);
+    setTimeout(function(){step.classList.add('done')},i*400+350);
+  });
+  // After all steps done, show final summary and confirm button
+  setTimeout(function(){
+    document.getElementById('bondVerifyDone').style.display='flex';
+    document.getElementById('bondConfirmWrap').style.display='block';
+  },steps.length*400+200);
+}
+
+// ===== OPERATOR SIGN-UP FLOW =====
+var opStep=1;
+var opData={company:'',contact:'',email:'',city:'',state:'',coverage:[],range:150,equipment:[],compliance:{}};
+var opComplianceDocs=[
+  {id:'part107',name:'FAA Part 107',detail:'Remote pilot certificate',required:true},
+  {id:'insurance',name:'Insurance COI',detail:'CGL + E&O coverage',required:true},
+  {id:'pls',name:'PLS License',detail:'Professional Land Surveyor',required:false},
+  {id:'sam',name:'SAM.gov Registration',detail:'Federal contractor registration',required:false},
+  {id:'osha',name:'OSHA 10-Hour',detail:'Construction safety certification',required:false},
+  {id:'mdot',name:'MDOT Prequalification',detail:'Michigan DOT approved vendor',required:false}
+];
+
+function opGoStep(step){
+  opStep=step;
+  document.querySelectorAll('.op-panel').forEach(function(p){p.classList.remove('active')});
+  document.getElementById('opStep'+step).classList.add('active');
+  // Update step indicator
+  document.querySelectorAll('.op-flow-step').forEach(function(s){
+    var n=+s.dataset.opStep;
+    s.classList.remove('active','done');
+    if(n===step)s.classList.add('active');
+    else if(n<step)s.classList.add('done');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(step===3) opRenderCompliance();
+  if(step===4) opRenderSummary();
+  if(step===5) opRenderDashboard();
+}
+
+function opRegister(){
+  // Collect form data (use defaults if empty for demo)
+  opData.company=document.getElementById('opCompanyName').value||'Great Lakes Aerial LLC';
+  opData.contact=document.getElementById('opContactName').value||'Jennifer Chen';
+  opData.email=document.getElementById('opEmail').value||'jen@greatlakesaerial.com';
+  opData.city=document.getElementById('opCity').value||'Bloomfield Hills';
+  opData.state=document.getElementById('opState').value||'MI';
+  opData.range=parseInt(document.getElementById('opRange').value)||150;
+  opData.coverage=[];
+  document.querySelectorAll('#opCoverageStates input:checked').forEach(function(cb){opData.coverage.push(cb.value)});
+  if(opData.coverage.length===0) opData.coverage=['MI'];
+  opGoStep(2);
+}
+
+function opAddEquipment(){
+  var type=document.getElementById('opEquipType').value;
+  var model=document.getElementById('opEquipModel').value||'DJI Matrice 350 RTK + Zenmuse L2';
+  var accuracy=document.getElementById('opEquipAccuracy').value||'2';
+  opData.equipment.push({type:type,model:model,accuracy:accuracy+'cm'});
+  document.getElementById('opEquipModel').value='';
+  opRenderEquipList();
+}
+
+function opRenderEquipList(){
+  var html='';
+  opData.equipment.forEach(function(eq,i){
+    html+='<div class="op-equip-card"><div><div class="eq-name">'+eq.type+'</div><div class="eq-detail">'+eq.model+' &middot; &plusmn;'+eq.accuracy+'</div></div><button class="eq-remove" onclick="opRemoveEquip('+i+')">&times;</button></div>';
+  });
+  document.getElementById('opEquipList').innerHTML=html;
+  document.getElementById('opEquipContinue').style.display=opData.equipment.length>0?'inline-flex':'none';
+}
+
+function opRemoveEquip(idx){
+  opData.equipment.splice(idx,1);
+  opRenderEquipList();
+}
+
+function opRenderCompliance(){
+  var html='';
+  opComplianceDocs.forEach(function(doc){
+    var uploaded=opData.compliance[doc.id];
+    html+='<div class="op-compliance-card'+(uploaded?' uploaded':'')+'" id="opCC_'+doc.id+'">'+
+      '<div class="cc-info"><div class="cc-name">'+doc.name+'</div><div class="cc-detail">'+doc.detail+'</div></div>'+
+      '<span class="cc-tag '+(uploaded?'verified':(doc.required?'required':'optional'))+'">'+(uploaded?'Verified':(doc.required?'Required':'Optional'))+'</span>'+
+      '<span class="cc-check">&#10003;</span>'+
+      '<button class="cc-btn" onclick="opUploadDoc(\''+doc.id+'\')">Upload</button>'+
+    '</div>';
+  });
+  document.getElementById('opComplianceList').innerHTML=html;
+  var count=Object.keys(opData.compliance).length;
+  document.getElementById('opComplianceScore').textContent=count+'/'+opComplianceDocs.length+' verified';
+  // Show PLS note if PLS not uploaded
+  document.getElementById('opPlsNote').style.display=opData.compliance.pls?'none':'block';
+}
+
+function opUploadDoc(docId){
+  opData.compliance[docId]=true;
+  opRenderCompliance();
+}
+
+function opRenderSummary(){
+  var html='';
+  html+='<div class="op-summary-row"><span class="op-summary-label">Company</span><span class="op-summary-value">'+opData.company+'</span></div>';
+  html+='<div class="op-summary-row"><span class="op-summary-label">Contact</span><span class="op-summary-value">'+opData.contact+'</span></div>';
+  html+='<div class="op-summary-row"><span class="op-summary-label">Base</span><span class="op-summary-value">'+opData.city+', '+opData.state+'</span></div>';
+  html+='<div class="op-summary-row"><span class="op-summary-label">Coverage</span><span class="op-summary-value">'+opData.coverage.join(', ')+' &middot; '+opData.range+' mi range</span></div>';
+  html+='<div class="op-summary-row"><span class="op-summary-label">Equipment</span><span class="op-summary-value">'+opData.equipment.length+' sensor'+(opData.equipment.length!==1?'s':'')+'</span></div>';
+  opData.equipment.forEach(function(eq){
+    html+='<div class="op-summary-row" style="padding-left:16px"><span class="op-summary-label" style="font-size:0.8rem">'+eq.type+'</span><span class="op-summary-value" style="font-size:0.8rem">'+eq.model+'</span></div>';
+  });
+  var compCount=Object.keys(opData.compliance).length;
+  html+='<div class="op-summary-row"><span class="op-summary-label">Compliance</span><span class="op-summary-value">'+compCount+'/'+opComplianceDocs.length+' verified</span></div>';
+  document.getElementById('opSummaryContent').innerHTML=html;
+  document.getElementById('opActivateSuccess').style.display='none';
+  document.getElementById('opActivateError').style.display='none';
+}
+
+function opActivate(){
+  // Check prerequisites: need equipment + Part 107 + insurance
+  if(opData.equipment.length===0){
+    document.getElementById('opActivateError').textContent='You need at least one piece of equipment to activate.';
+    document.getElementById('opActivateError').style.display='block';
+    return;
+  }
+  if(!opData.compliance.part107){
+    document.getElementById('opActivateError').textContent='FAA Part 107 certification is required to activate.';
+    document.getElementById('opActivateError').style.display='block';
+    return;
+  }
+  if(!opData.compliance.insurance){
+    document.getElementById('opActivateError').textContent='Insurance COI is required to activate.';
+    document.getElementById('opActivateError').style.display='block';
+    return;
+  }
+  document.getElementById('opActivateError').style.display='none';
+  // Generate operator ID
+  var opId='OP-'+opData.state+'-'+(10000+Math.floor(Math.random()*90000));
+  document.getElementById('opActivateId').textContent='Operator ID: '+opId;
+  document.getElementById('opActivateSuccess').style.display='block';
+  // Hide the summary card and activate button
+  document.querySelector('#opStep4 .card').style.display='none';
+  document.querySelector('#opStep4 .btn-primary[onclick="opActivate()"]').parentElement.style.display='none';
+}
+
+function opRenderDashboard(){
+  document.getElementById('opDashName').textContent=opData.company+' &middot; '+opData.city+', '+opData.state;
+  // Matching tasks
+  var tasks=[
+    {title:'Pre-bid topo survey &mdash; I-75 interchange, Detroit',budget:'$4,200',sensors:['Aerial LiDAR','RTK-GPS'],desc:'12-acre highway interchange &middot; &plusmn;0.05 ft &middot; LandXML, DXF'},
+    {title:'Monthly progress photos &mdash; M-14 reconstruction, Ann Arbor',budget:'$1,800',sensors:['Photogrammetry'],desc:'Progress documentation &middot; 4 flights/month &middot; orthomosaic + volume calcs'},
+    {title:'Bridge deck inspection &mdash; US-23, Washtenaw Co',budget:'$3,500',sensors:['Aerial LiDAR','Thermal Camera'],desc:'Structural condition assessment &middot; thermal + visual + LiDAR'}
+  ];
+  var html='';
+  tasks.forEach(function(t){
+    html+='<div class="op-task-match"><div class="tm-header"><div class="tm-title">'+t.title+'</div><div class="tm-budget">'+t.budget+'</div></div><div class="tm-detail">'+t.desc+'</div><div class="tm-sensors">';
+    t.sensors.forEach(function(s){html+='<span class="cap">'+s+'</span>'});
+    html+='</div><button class="btn btn-primary" style="font-size:0.75rem;padding:6px 16px" onclick="openModal(\'Place Bid\',\'Bidding on: '+t.title.replace(/'/g,"\\'")+'\n\nYour bid: '+t.budget+'\nEquipment: '+opData.equipment.map(function(e){return e.model}).join(", ")+'\nDelivery: 5 business days\n\nBid submitted! You will be notified when the auction closes.\')">Bid</button></div>';
+  });
+  document.getElementById('opMatchingTasks').innerHTML=html;
+}
+
 // Reset
 function resetDemo(){
   closeRobotDetail();
@@ -2174,6 +2717,11 @@ function resetDemo(){
   document.getElementById('cardArea').style.display='none';
   document.getElementById('payDone').style.display='none';
   document.getElementById('payStripe').style.borderColor='';
+  document.getElementById('bondConfirmWrap').style.display='none';
+  document.getElementById('bondVerifyDone').style.display='none';
+  document.querySelectorAll('#bondVerifySteps .bond-verify-step').forEach(function(s){s.classList.remove('visible','done')});
+  // Reset terms analysis
+  var ta=document.getElementById('termsAnalysis');if(ta)ta.style.display='none';
   // Reset award review
   awards={task1:false,task2:false};
   document.querySelectorAll('#s-review-award .btn-primary').forEach(function(b){
