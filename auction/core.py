@@ -114,6 +114,27 @@ VALID_TASK_CATEGORIES = frozenset([
     "subsurface_scan", "environmental_survey", "control_survey",
 ])
 
+# ---------------------------------------------------------------------------
+# Standards-aligned enums and lookup tables
+# See docs/research/technical/STANDARDS_ROBOT_TASK_SPECIFICATIONS.md
+# ---------------------------------------------------------------------------
+
+VALID_ASPRS_ACCURACY_CLASSES = frozenset([
+    "1cm", "2.5cm", "5cm", "10cm", "15cm", "20cm", "33.3cm", "100cm",
+])
+
+VALID_USGS_QUALITY_LEVELS = frozenset(["QL0", "QL1", "QL2", "QL3"])
+
+VALID_DELIVERABLE_FORMATS = frozenset([
+    "LAS", "LAZ", "E57", "LandXML", "DXF", "GeoTIFF", "GeoPackage",
+    "CSV", "PDF", "SHP", "GeoJSON", "IFC", "DWG", "KML",
+])
+
+VALID_MRTA_ROBOT_TYPES = frozenset(["ST", "MT"])   # single-task / multi-task
+VALID_MRTA_TASK_TYPES = frozenset(["SR", "MR"])     # single-robot / multi-robot
+VALID_MRTA_ALLOCATION = frozenset(["IA", "TA"])     # instantaneous / time-extended
+VALID_MRTA_DEPENDENCY = frozenset(["ND", "ID", "XD", "CD"])  # none / in-schedule / cross / complex
+
 
 def infer_task_category(capability_requirements: dict) -> str:
     """Infer task_category from capability_requirements when not provided.
@@ -246,6 +267,65 @@ def validate_task_spec(task_spec: dict) -> list[str]:
         errors.append(
             f"sla_seconds must be a positive integer, got {sla!r}"
         )
+
+    # Standards-aligned field validation (optional fields, validated when present)
+    if isinstance(cap_req, dict):
+        hard = cap_req.get("hard", {})
+        if isinstance(hard, dict):
+            # EPSG code validation
+            crs_epsg = hard.get("crs_epsg")
+            if crs_epsg is not None and not isinstance(crs_epsg, int):
+                errors.append(f"crs_epsg must be an integer EPSG code, got {type(crs_epsg).__name__}")
+            vd_epsg = hard.get("vertical_datum_epsg")
+            if vd_epsg is not None and not isinstance(vd_epsg, int):
+                errors.append(f"vertical_datum_epsg must be an integer EPSG code, got {type(vd_epsg).__name__}")
+
+            # ASPRS accuracy class
+            asprs_h = hard.get("asprs_horizontal_class")
+            if asprs_h is not None and asprs_h not in VALID_ASPRS_ACCURACY_CLASSES:
+                errors.append(f"asprs_horizontal_class must be one of {sorted(VALID_ASPRS_ACCURACY_CLASSES)}, got {asprs_h!r}")
+            asprs_v = hard.get("asprs_vertical_class")
+            if asprs_v is not None and asprs_v not in VALID_ASPRS_ACCURACY_CLASSES:
+                errors.append(f"asprs_vertical_class must be one of {sorted(VALID_ASPRS_ACCURACY_CLASSES)}, got {asprs_v!r}")
+
+            # USGS quality level
+            usgs_ql = hard.get("usgs_quality_level")
+            if usgs_ql is not None and usgs_ql not in VALID_USGS_QUALITY_LEVELS:
+                errors.append(f"usgs_quality_level must be one of {sorted(VALID_USGS_QUALITY_LEVELS)}, got {usgs_ql!r}")
+
+        # Structured deliverables validation
+        deliverables = cap_req.get("deliverables")
+        if deliverables is not None:
+            if not isinstance(deliverables, list):
+                errors.append(f"deliverables must be a list, got {type(deliverables).__name__}")
+            else:
+                for i, d in enumerate(deliverables):
+                    if not isinstance(d, dict):
+                        errors.append(f"deliverables[{i}] must be a dict, got {type(d).__name__}")
+                        continue
+                    fmt = d.get("format")
+                    if fmt is not None and fmt not in VALID_DELIVERABLE_FORMATS:
+                        errors.append(f"deliverables[{i}].format {fmt!r} not in known formats {sorted(VALID_DELIVERABLE_FORMATS)}")
+
+        # MRTA classification validation
+        mrta = cap_req.get("mrta_class")
+        if mrta is not None:
+            if not isinstance(mrta, dict):
+                errors.append(f"mrta_class must be a dict, got {type(mrta).__name__}")
+            else:
+                if mrta.get("robot_type") and mrta["robot_type"] not in VALID_MRTA_ROBOT_TYPES:
+                    errors.append(f"mrta_class.robot_type must be one of {sorted(VALID_MRTA_ROBOT_TYPES)}")
+                if mrta.get("task_type") and mrta["task_type"] not in VALID_MRTA_TASK_TYPES:
+                    errors.append(f"mrta_class.task_type must be one of {sorted(VALID_MRTA_TASK_TYPES)}")
+                if mrta.get("allocation") and mrta["allocation"] not in VALID_MRTA_ALLOCATION:
+                    errors.append(f"mrta_class.allocation must be one of {sorted(VALID_MRTA_ALLOCATION)}")
+                if mrta.get("dependency") and mrta["dependency"] not in VALID_MRTA_DEPENDENCY:
+                    errors.append(f"mrta_class.dependency must be one of {sorted(VALID_MRTA_DEPENDENCY)}")
+
+        # Regulatory constraints validation
+        regulatory = cap_req.get("regulatory")
+        if regulatory is not None and not isinstance(regulatory, dict):
+            errors.append(f"regulatory must be a dict, got {type(regulatory).__name__}")
 
     return errors
 

@@ -18,14 +18,16 @@ Accept any of: pasted RFP text, file path (PDF/text), URL, or plain-language des
 Scan for these categories. Mark each as FOUND or NOT FOUND:
 
 - Survey type (topo, as-built, control, bridge, hydraulic, photogrammetric, environmental)
-- Accuracy (horizontal, vertical, point density — in feet or metric)
+- Accuracy (horizontal, vertical, point density — in feet or metric). Map to ASPRS accuracy classes and USGS quality levels.
 - Area/scope (acres, linear feet, structure count)
-- Deliverable formats (LandXML, DXF, GeoTIFF, LAS, CSV, e57, PDF)
-- Coordinate system and datum
+- Deliverable formats with versions (LAS 1.4, E57, LandXML 1.2, DXF, GeoTIFF, CSV, PDF). Each format becomes a structured deliverable entry.
+- Coordinate system and datum — resolve to EPSG codes (e.g., NAD83 MI South = EPSG:2113, NAVD88 = EPSG:5703)
 - Certifications (FAA Part 107, licensed surveyor, OSHA, PE, dive)
-- Referenced standards (MDOT sections, AASHTO, NCHRP, USGS QL, FEMA)
+- Referenced standards (MDOT sections, AASHTO, NCHRP, USGS QL, ASPRS, FEMA)
+- Regulatory requirements (Remote ID per ASTM F3411, LAANC authorization, PLS jurisdiction, airspace class)
 - Timeline (letting date, completion deadline, seasonal constraints)
 - Special conditions (traffic control, night work, environmental restrictions, utility conflicts)
+- Task allocation class (MRTA taxonomy: most construction surveys are ST-SR-IA-ND; compound multi-robot tasks are ST-SR-TA-ID)
 
 ### 3. Load applicable standards
 
@@ -58,7 +60,7 @@ Each must pass validation:
 python scripts/validate_task_spec.py < spec.json
 ```
 
-The spec structure:
+The spec structure (standards-aligned — see `references/standards-reference.md`):
 
 ```json
 {
@@ -75,15 +77,57 @@ The spec structure:
     "hard": {
       "sensors_required": ["aerial_lidar", "rtk_gps"],
       "accuracy_required": {"vertical_ft": 0.05, "horizontal_ft": 0.05},
+      "accuracy_standard": "asprs_ed2",
+      "asprs_horizontal_class": "5cm",
+      "asprs_vertical_class": "5cm",
+      "usgs_quality_level": "QL1",
+      "crs_epsg": 2113,
+      "vertical_datum_epsg": 5703,
       "certifications_required": ["faa_part_107", "licensed_surveyor"],
       "area_acres": 12,
       "terrain": "highway_corridor",
       "standards_compliance": ["MDOT_104.09", "NCHRP_748_Cat1A"]
     },
     "soft": {
-      "preferred_deliverables": ["LAS", "LandXML", "DXF", "GeoTIFF"],
       "preferred_coordinate_system": "NAD83 Michigan South Zone",
       "preferred_datum": "NAVD88"
+    },
+    "deliverables": [
+      {
+        "format": "LAS",
+        "version": "1.4",
+        "point_record_format": 6,
+        "classification_standard": "asprs",
+        "min_point_density_ppsm": 8
+      },
+      {
+        "format": "GeoTIFF",
+        "type": "orthomosaic",
+        "gsd_cm": 2.5
+      },
+      {
+        "format": "LandXML",
+        "version": "1.2",
+        "content": ["surface", "alignments"]
+      },
+      {
+        "format": "DXF",
+        "content": ["contours", "breaklines"]
+      }
+    ],
+    "regulatory": {
+      "faa_remote_id_required": true,
+      "faa_part_107_required": true,
+      "airspace_class": "G",
+      "laanc_authorization": "not_required",
+      "state_pls_required": true,
+      "pls_jurisdiction": "MI"
+    },
+    "mrta_class": {
+      "robot_type": "ST",
+      "task_type": "SR",
+      "allocation": "IA",
+      "dependency": "ND"
     },
     "payload": {
       "type": "survey_data",
@@ -104,6 +148,22 @@ The spec structure:
 }
 ```
 
+#### Standards field reference
+
+| Field | Standard | How to populate |
+|-------|----------|-----------------|
+| `accuracy_standard` | ASPRS Ed. 2 (2024) | Always `"asprs_ed2"` for US surveys |
+| `asprs_horizontal_class` | ASPRS Ed. 2 | Map RFP accuracy to nearest class: 1cm, 2.5cm, 5cm, 10cm, 15cm, 20cm, 33.3cm, 100cm |
+| `asprs_vertical_class` | ASPRS Ed. 2 | Same classes. Use defaults from `aashto-federal-standards.md` when RFP omits accuracy |
+| `usgs_quality_level` | USGS LiDAR Base Spec 2025 | QL0 (high-detail corridor), QL1 (design-grade), QL2 (standard topo), QL3 (recon) |
+| `crs_epsg` | EPSG registry | Look up in `aashto-federal-standards.md` state plane table. E.g., MI South = 2113 |
+| `vertical_datum_epsg` | EPSG registry | NAVD88 = 5703, IGLD85 = 5714 (Great Lakes) |
+| `deliverables[].format` | ASPRS LAS 1.4, ASTM E2807 (E57), LandXML 1.2 | Use standard format names and versions |
+| `deliverables[].min_point_density_ppsm` | USGS LBS | QL0: ≥20, QL1: ≥8, QL2: ≥2, QL3: ≥0.5 |
+| `regulatory.laanc_authorization` | ASTM F3548 (UTM) | `"required"` if near airports or controlled airspace, `"not_required"` for Class G |
+| `regulatory.faa_remote_id_required` | ASTM F3411 | Always `true` for drone operations (FAA mandate) |
+| `mrta_class` | Korsah-Stentz-Dias iTax (2013) | Most construction tasks: ST-SR-IA-ND. Multi-robot (compound survey): ST-SR-TA-ID |
+
 ### 6. Present results
 
 Output in this order:
@@ -120,6 +180,7 @@ Flag any requirements that no current marketplace robot can fulfill.
 - `references/michigan-standards.md` — MDOT accuracy tables, LiDAR specs, survey types, coordinate systems. Load for Michigan projects.
 - `references/aashto-federal-standards.md` — AASHTO, USGS QL levels, FHWA bridge, FAA airport, USACE dam standards, OSHA requirements, state plane zones, and default accuracy tables. Load for federal projects or when state-specific standards are unavailable.
 - `references/robot-sensor-mapping.md` — survey need → robot platform → sensor → price range. Load for step 4.
+- `references/standards-reference.md` — ASPRS accuracy classes, USGS quality levels, EPSG codes, deliverable format versions, MRTA taxonomy, regulatory standards. **Always load** for step 5 (schema population).
 
 ## Validation
 

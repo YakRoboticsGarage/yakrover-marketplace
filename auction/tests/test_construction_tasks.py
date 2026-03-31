@@ -99,6 +99,120 @@ class TestConstructionCategories:
         errors = validate_task_spec(spec)
         assert errors == [], f"Unexpected errors: {errors}"
 
+    def test_validate_standards_aligned_spec(self):
+        """Validate a full standards-aligned task spec with ASPRS, EPSG, deliverables, MRTA."""
+        spec = {
+            "description": "Topographic LiDAR survey — US-131 corridor",
+            "task_category": "site_survey",
+            "capability_requirements": {
+                "hard": {
+                    "sensors_required": ["aerial_lidar", "rtk_gps"],
+                    "accuracy_required": {"vertical_ft": 0.05, "horizontal_ft": 0.05},
+                    "accuracy_standard": "asprs_ed2",
+                    "asprs_horizontal_class": "5cm",
+                    "asprs_vertical_class": "5cm",
+                    "usgs_quality_level": "QL1",
+                    "crs_epsg": 2113,
+                    "vertical_datum_epsg": 5703,
+                    "certifications_required": ["faa_part_107", "licensed_surveyor"],
+                    "area_acres": 96,
+                    "terrain": "highway_corridor",
+                    "standards_compliance": ["MDOT_104.09"],
+                },
+                "deliverables": [
+                    {"format": "LAS", "version": "1.4", "point_record_format": 6,
+                     "classification_standard": "asprs", "min_point_density_ppsm": 8},
+                    {"format": "GeoTIFF", "type": "orthomosaic", "gsd_cm": 2.5},
+                    {"format": "LandXML", "version": "1.2", "content": ["surface"]},
+                    {"format": "DXF", "content": ["contours", "breaklines"]},
+                ],
+                "regulatory": {
+                    "faa_remote_id_required": True,
+                    "faa_part_107_required": True,
+                    "airspace_class": "G",
+                    "laanc_authorization": "not_required",
+                    "state_pls_required": True,
+                    "pls_jurisdiction": "MI",
+                },
+                "mrta_class": {
+                    "robot_type": "ST",
+                    "task_type": "SR",
+                    "allocation": "IA",
+                    "dependency": "ND",
+                },
+                "payload": {"format": "multi_file", "fields": ["point_cloud", "topo_surface"]},
+            },
+            "budget_ceiling": 45000,
+            "sla_seconds": 86400 * 14,
+        }
+        errors = validate_task_spec(spec)
+        assert errors == [], f"Unexpected errors: {errors}"
+
+    def test_validate_invalid_asprs_class(self):
+        spec = {
+            "description": "Test",
+            "task_category": "site_survey",
+            "capability_requirements": {
+                "hard": {"asprs_horizontal_class": "99cm"},
+            },
+            "budget_ceiling": 1000,
+            "sla_seconds": 3600,
+        }
+        errors = validate_task_spec(spec)
+        assert any("asprs_horizontal_class" in e for e in errors)
+
+    def test_validate_invalid_usgs_ql(self):
+        spec = {
+            "description": "Test",
+            "task_category": "site_survey",
+            "capability_requirements": {
+                "hard": {"usgs_quality_level": "QL9"},
+            },
+            "budget_ceiling": 1000,
+            "sla_seconds": 3600,
+        }
+        errors = validate_task_spec(spec)
+        assert any("usgs_quality_level" in e for e in errors)
+
+    def test_validate_invalid_epsg(self):
+        spec = {
+            "description": "Test",
+            "task_category": "site_survey",
+            "capability_requirements": {
+                "hard": {"crs_epsg": "not_a_number"},
+            },
+            "budget_ceiling": 1000,
+            "sla_seconds": 3600,
+        }
+        errors = validate_task_spec(spec)
+        assert any("crs_epsg" in e for e in errors)
+
+    def test_validate_invalid_deliverable_format(self):
+        spec = {
+            "description": "Test",
+            "task_category": "site_survey",
+            "capability_requirements": {
+                "deliverables": [{"format": "FAKE_FORMAT"}],
+            },
+            "budget_ceiling": 1000,
+            "sla_seconds": 3600,
+        }
+        errors = validate_task_spec(spec)
+        assert any("FAKE_FORMAT" in e for e in errors)
+
+    def test_validate_invalid_mrta(self):
+        spec = {
+            "description": "Test",
+            "task_category": "site_survey",
+            "capability_requirements": {
+                "mrta_class": {"robot_type": "ZZ"},
+            },
+            "budget_ceiling": 1000,
+            "sla_seconds": 3600,
+        }
+        errors = validate_task_spec(spec)
+        assert any("mrta_class.robot_type" in e for e in errors)
+
 
 class TestComplianceRecord:
     """Phase 4: ComplianceRecord dataclass."""
