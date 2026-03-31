@@ -249,9 +249,23 @@
 
   .step-text {
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: var(--slate-light);
   }
+
+  .step-text p { margin: 0 0 8px; }
+  .step-text p:last-child { margin-bottom: 0; }
+  .step-text strong { color: var(--white); font-weight: 600; }
+  .step-text ul, .step-text ol { margin: 6px 0 8px 20px; padding: 0; }
+  .step-text li { margin-bottom: 4px; }
+  .step-text li::marker { color: var(--orange); }
+
+  .summary-card .summary-text p { margin: 0 0 8px; }
+  .summary-card .summary-text p:last-child { margin-bottom: 0; }
+  .summary-card .summary-text strong { color: var(--white); font-weight: 600; }
+  .summary-card .summary-text ul, .summary-card .summary-text ol { margin: 6px 0 8px 20px; padding: 0; }
+  .summary-card .summary-text li { margin-bottom: 4px; }
+  .summary-card .summary-text li::marker { color: var(--orange); }
 
   .step-json-toggle {
     font-size: 11px;
@@ -565,7 +579,7 @@ function appendStep(step, index) {
       '<div class="step-dot done"></div>' +
       '<div class="step-body">' +
         '<div class="step-badge">' + escapeHtml(step.tool_name) + '</div>' +
-        (step.claude_text ? '<div class="step-text">' + escapeHtml(step.claude_text) + '</div>' : '') +
+        (step.claude_text ? '<div class="step-text">' + formatStepText(step.claude_text) + '</div>' : '') +
         '<div class="step-json-toggle" onclick="toggleJson(\'' + toggleId + '\')">Show result JSON</div>' +
         '<div class="step-json" id="' + toggleId + '">' +
           '// Input\n' + escapeHtml(inputJson) + '\n\n// Result\n' + escapeHtml(resultJson) +
@@ -575,7 +589,7 @@ function appendStep(step, index) {
     card.innerHTML =
       '<div class="step-dot done"></div>' +
       '<div class="step-body">' +
-        '<div class="step-text">' + escapeHtml(step.claude_text || '') + '</div>' +
+        '<div class="step-text">' + formatStepText(step.claude_text || '') + '</div>' +
       '</div>';
   }
 
@@ -594,7 +608,7 @@ function showSummary(text) {
   card.className = 'summary-card';
   card.innerHTML =
     '<h3>Auction Complete</h3>' +
-    '<div class="summary-text">' + escapeHtml(text || 'Demo run completed.') + '</div>' +
+    '<div class="summary-text">' + formatStepText(text || 'Demo run completed.') + '</div>' +
     '<a class="cta-link" href="https://yakrobot.bid" target="_blank">View on yakrobot.bid &rarr;</a>';
   container.insertBefore(card, document.querySelector('.footer'));
 }
@@ -632,6 +646,77 @@ function formatToolName(name) {
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatStepText(str) {
+  if (!str) return '';
+  // Escape first for XSS safety, then apply markdown formatting
+  var html = escapeHtml(str);
+
+  // Bold: **text**
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // Split into lines for block-level processing
+  var lines = html.split('\n');
+  var out = [];
+  var inList = false;
+  var listType = '';
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var ulMatch = line.match(/^(\s*)[-*]\s+(.*)/);
+    var olMatch = line.match(/^(\s*)\d+\.\s+(.*)/);
+
+    if (ulMatch) {
+      if (!inList || listType !== 'ul') {
+        if (inList) out.push('</' + listType + '>');
+        out.push('<ul>');
+        inList = true;
+        listType = 'ul';
+      }
+      out.push('<li>' + ulMatch[2] + '</li>');
+    } else if (olMatch) {
+      if (!inList || listType !== 'ol') {
+        if (inList) out.push('</' + listType + '>');
+        out.push('<ol>');
+        inList = true;
+        listType = 'ol';
+      }
+      out.push('<li>' + olMatch[2] + '</li>');
+    } else {
+      if (inList) {
+        out.push('</' + listType + '>');
+        inList = false;
+        listType = '';
+      }
+      if (line.trim() === '') {
+        // Blank line = paragraph break (skip consecutive)
+        if (out.length > 0 && out[out.length - 1] !== '</p><p>') {
+          out.push('</p><p>');
+        }
+      } else {
+        out.push(line);
+      }
+    }
+  }
+  if (inList) out.push('</' + listType + '>');
+
+  var result = out.join('\n');
+  // Wrap in paragraphs
+  result = '<p>' + result + '</p>';
+  // Clean up empty paragraphs and stray <br> after paragraph/block boundaries
+  result = result.replace(/<p>\s*<\/p>/g, '');
+  // Turn remaining newlines into <br> but not adjacent to block tags
+  result = result.replace(/\n(?!<\/?(?:ul|ol|li|p))/g, function(m, offset, s) {
+    // Don't add <br> right after a block closing tag
+    var before = s.slice(Math.max(0, offset - 5), offset);
+    if (/<\/(ul|ol|li|p)>$/.test(before)) return '\n';
+    return '<br>';
+  });
+  // Clean up any <br> immediately after <p> or </p>
+  result = result.replace(/<p><br>/g, '<p>');
+  result = result.replace(/<br><\/p>/g, '</p>');
+  return result;
 }
 
 function delay(ms) {
