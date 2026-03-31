@@ -53,8 +53,8 @@
 meta:
   name: "Robot Task Auction Marketplace"
   project: yakrover-auction-explorer
-  schema_version: "2.2"
-  updated: "2026-03-29"
+  schema_version: "2.3"
+  updated: "2026-03-31"
   provenance: "Generated from 19 research documents via 3-agent debate (architect, strategist, engineer). Revised by 5-agent competition (strategy, technical, UX, legal, ontology). Authoritative for entity definitions, relationships, strategic bets, and architectural decisions."
   license: "Proprietary — YAK Robotics Garage"
 
@@ -387,6 +387,14 @@ unknowns:
       mitigation: "Start with top 5 sureties (Travelers, Liberty Mutual, CNA, Zurich, Hartford); expand"
       resolve_by: phase:v2.0
       sources: [{path: docs/research/RESEARCH_CONSTRUCTION_PAYMENT_FLOWS.md}]
+      # [2026-03-30] PARTIALLY RESOLVED: Circular 570 Excel contains 501 surety companies
+      # with state licensing for all 56 US states/territories. Verification scales nationally.
+      # Remaining gap: real-time bond status (active/cancelled) requires surety portal access.
+      # No surety company offers a public REST API. Verification portals are web forms only.
+      # Surety companies with online verification: Merchants Bonding, Intact, Frankenmuth.
+      # Major sureties (Travelers, Liberty Mutual, CNA, Zurich, Hartford): phone/email only.
+      resolution_status: partially_resolved
+      resolution_note: "Circular 570 verification scales nationally (501 companies, all states). Bond-is-active verification requires surety partnerships — no public API exists."
 
     - id: unknown:eu_amlr_interpretation
       question: "EU AMLR Article 79 (July 2027) bans CASPs from handling privacy-preserving digital assets — how broadly interpreted?"
@@ -1209,6 +1217,19 @@ legal:
       threshold_usd: 50000
       sureties: [Travelers, Liberty Mutual, CNA, Zurich, Hartford]
       sources: [{path: docs/research/RESEARCH_CONSTRUCTION_PAYMENT_FLOWS.md}]
+      # [2026-03-30] Implementation status:
+      implementation:
+        circular_570_lookup: real  # 501 companies from fiscal.treasury.gov Excel
+        state_licensing_check: real  # 56 state/territory columns from Circular 570
+        underwriting_limit_check: real  # Dollar limits from Circular 570
+        pdf_bond_extraction: real  # PyMuPDF text extraction
+        surety_name_matching: real  # Exact + fuzzy matching against 501 entries
+        bond_is_active_check: not_possible  # No public API — surety portals are web forms
+        power_of_attorney_auth: not_possible  # Requires surety portal or phone
+        am_best_rating: not_possible  # Paid subscription ($5K+/yr)
+        sam_gov_exclusion: planned  # Free API available, needs API key registration
+      data_source: "auction/data/circular_570.xlsx (real Treasury data, 501 companies)"
+      data_updated: "2026-03-30"
 
     - id: legal:pe_stamped_deliverables
       description: "PLS stamp required on survey plats and deliverables relied upon for construction. All 50 states."
@@ -1585,29 +1606,65 @@ architecture:
   # [v2.2] Deployment architecture from TECHNICAL_MCP_DEPLOYMENT.md
   deployment:
     hosting:
-      provider: Railway
-      plan: "Hobby (usage-based)"
-      cost_monthly_usd: 5
-      url_pattern: "*.up.railway.app"
-      ssl: "Auto (Let's Encrypt)"
-      deploy_command: "railway up"
-      cold_start_seconds: 2
-      alternatives_evaluated: ["Fly.io ($3-5/mo)", "Render ($7/mo)", "DigitalOcean ($5/mo)", "ngrok (free, local)"]
+      provider: "here.now"
+      plan: "Authenticated (permanent)"
+      cost_monthly_usd: 0
+      domain: "yakrobot.bid"
+      ssl: "Auto (Cloudflare)"
+      deploy_command: "here-now publish <dir> --slug <slug>"
+    live_sites:
+      - url: "https://yakrobot.bid"
+        slug: gleaming-sierra-28gb
+        description: "Main interactive demo — MDOT I-94 RFQ walkthrough"
+        source: demo/index.html
+      - url: "https://yakrobot.bid/yaml"
+        slug: wistful-mantra-9vnz
+        description: "YAML ontology explorer — browse PRODUCT_DSL live"
+        source: docs/site/
+      - url: "https://yakrobot.bid/pitch"
+        slug: bronze-osprey-nsj6
+        description: "Pitch deck — investor/partner presentation"
+      - url: "https://yakrobot.bid/mcp-demo"
+        slug: sturdy-riddle-vvar
+        description: "Live auction demo — Claude orchestrates real MCP tools via tunnel"
+        source: docs/mcp_demo/index.html
+    worker:
+      name: yakrobot-chat
+      platform: "Cloudflare Workers"
+      endpoints:
+        - "POST /api/chat — chatbot proxy to Anthropic API (streaming)"
+        - "POST /api/demo — tool_use loop with MCP server (10 tools, max 8 iterations)"
+        - "POST /api/feedback — visitor feedback collection"
+        - "GET /api/health — liveness check"
+      source: chatbot/src/index.js
+      rate_limits: {chat: "25/day/IP", demo: "5/day/IP", feedback: "5/day/IP"}
+    mcp_server:
+      path: mcp_server.py
+      description: "Standalone REST API exposing 32 MCP tools for web demo"
+      endpoints:
+        - "GET /health — status, tool count, fleet size, wallet balance"
+        - "GET /api/tools — list all available tools"
+        - "POST /api/tool/{name} — invoke any MCP tool"
+      tunnel: "Cloudflare Tunnel (named: yak-demo) or cloudflared quick tunnel"
+      tunnel_domain: "mcp.yakrobot.bid (pending nameserver migration to Cloudflare)"
     architecture_summary: |
-      Internet -> Railway (public URL)
-        FastAPI app (serve_with_auction.py)
-          /fleet/mcp ......... MCP endpoint (15 auction tools)
-          /fakerover/mcp ..... FakeRover simulator MCP
-          /api/v1/ ........... HTTP REST for yakrobot.bid frontend
-          / .................. Health check / status JSON
-        SQLite volume (/data/auction.db)
-        Environment variables (Railway dashboard)
+      yakrobot.bid (here.now static hosting)
+        demo/index.html ........... Main demo (interactive walkthrough)
+        docs/mcp_demo/index.html .. Live MCP demo (Claude + real auction engine)
+        docs/site/ ................ YAML ontology explorer
+      yakrobot-chat (Cloudflare Worker)
+        /api/chat ................. Chatbot → Anthropic Messages API (streaming)
+        /api/demo ................. Tool-use loop → MCP server (non-streaming)
+      mcp_server.py (local + Cloudflare Tunnel)
+        /api/tool/{name} .......... REST proxy to 32 MCP tools
+        /health ................... Status endpoint
+      SQLite (local, :memory: for demo)
     database:
-      mvp: "SQLite on Railway volume mount ($0.25/GB)"
+      mvp: "SQLite (:memory: for demo, file-backed for persistence)"
       migration_trigger: ">1 instance or >10 concurrent auction writers"
-      target: "Railway Postgres ($5/mo)"
+      target: "Postgres (production)"
     path_to_real_operators: "Deploy -> public MCP URL -> operators connect Claude Code -> bid on real tasks"
-    sources: [{path: docs/wave1/TECHNICAL_MCP_DEPLOYMENT.md}]
+    sources: [{path: docs/wave1/TECHNICAL_MCP_DEPLOYMENT.md}, {path: chatbot/DEPLOY.md}]
 
   # [Entry 2] Scoring profiles per vertical
   scoring_profiles:
@@ -1652,8 +1709,10 @@ architecture:
       description: "ERC-8004 robot discovery"
       consumes: [repo:yakrover-8004-mcp]
     - id: component:mcp_server
-      path: src/core/server.py
-      description: "Fleet MCP server"
+      path: mcp_server.py
+      description: "Standalone REST API exposing 32 MCP tools for web demo and tunnel access"
+      status: implemented
+      phase: phase:v1.0
     - id: component:mock_fleet
       path: auction/mock_fleet.py
       description: "Simulated robots for testing"
@@ -1670,10 +1729,23 @@ architecture:
     # [Entry 2] Frontend component
     - id: component:frontend
       path: demo/index.html
-      description: "Next.js landing page + demo with robot cards, live feed, auction flow"
+      description: "Interactive demo with robot cards, live feed, operator sign-up, GC auction flow"
       status: implemented
-      phase: phase:v1.5
-      note: "Demo pricing ($0.25-$5.00 in schema.org) does not match construction pricing ($1,500-$5,000). Reconcile before launch."
+      phase: phase:v1.0
+      note: "Hosted on here.now at yakrobot.bid. Schema.org pricing ($0.25-$5.00) needs reconciling with construction pricing ($1,500-$5,000)."
+    - id: component:mcp_demo
+      path: docs/mcp_demo/index.html
+      description: "Live auction demo — Claude orchestrates real MCP tools via Cloudflare Tunnel"
+      status: implemented
+      phase: phase:v1.0
+      note: "Hosted on here.now at yakrobot.bid/mcp-demo. Renders markdown in step feed (bold, lists, paragraphs)."
+    - id: component:chatbot_worker
+      path: chatbot/src/index.js
+      description: "Cloudflare Worker — chat proxy to Anthropic API + demo tool_use loop"
+      status: implemented
+      phase: phase:v1.0
+      decisions: []
+      note: "Rate-limited (25 chat/day, 5 demo/day per IP). Injection detection. CORS for yakrobot.bid + here.now origins."
 
   # [Entry 2] External repos consumed by the marketplace
   repos:
@@ -1696,8 +1768,8 @@ architecture:
       note: "Whitepaper never referenced in v1.1 YAML — should be cited for vision section"
 
   mcp_tools:
-    existing_count: 15
-    status_summary: "15 implemented, 3+ planned from gap analysis"
+    existing_count: 32
+    status_summary: "32 implemented, 3 planned from gap analysis"
     # [Entry 2] Full parameter/return/error schemas for each tool
     existing:
       - name: post_task
@@ -1812,6 +1884,74 @@ architecture:
           - {name: deliverable_url, type: string, required: false}
         returns: {type: Task, fields: [task_id, status]}
         errors: [TASK_NOT_FOUND, TASK_NOT_IN_PROGRESS]
+    # Tools added in v1.0.1+ (construction compliance, RFP processing, operator management)
+      - name: auction_process_rfp
+        wraps: "LLM-powered RFP decomposition"
+        description: "Extracts survey tasks from RFP text with site context"
+        status: implemented
+      - name: auction_validate_task_specs
+        wraps: AuctionEngine.validate_task_specs
+        description: "Validates task specs against construction standards"
+        status: implemented
+      - name: auction_get_site_recon
+        wraps: "LLM-powered site reconnaissance"
+        description: "Generates execution context from RFP + public data"
+        status: implemented
+      - name: auction_review_bids
+        wraps: AuctionEngine.review_bids
+        description: "Structured bid comparison with operator profiles and recommendation"
+        status: implemented
+      - name: auction_award_with_confirmation
+        wraps: AuctionEngine.award_with_confirmation
+        description: "Award task to operator with pre-award checks"
+        status: implemented
+      - name: auction_verify_bond
+        wraps: "Treasury Circular 570 verification"
+        description: "Verify payment bond against real Treasury data (501 surety companies)"
+        status: implemented
+      - name: auction_verify_bond_pdf
+        description: "Extract and verify bond from PDF document"
+        status: implemented
+      - name: auction_verify_operator_compliance
+        description: "Check operator compliance: PLS, Part 107, insurance, SAM.gov"
+        status: implemented
+      - name: auction_upload_compliance_doc
+        description: "Upload compliance document for operator verification"
+        status: implemented
+      - name: auction_compare_terms
+        description: "Compare legal terms across survey contracts"
+        status: implemented
+      - name: auction_check_sam_exclusion
+        description: "Check SAM.gov federal debarment/exclusion status"
+        status: implemented
+      - name: auction_register_operator
+        description: "Register new operator with profile and credentials"
+        status: implemented
+      - name: auction_add_equipment
+        description: "Register equipment for an operator"
+        status: implemented
+      - name: auction_activate_operator
+        description: "Activate operator after compliance verification"
+        status: implemented
+      - name: auction_generate_agreement
+        description: "Generate ConsensusDocs 750 subcontract from task spec and winning bid"
+        status: implemented
+      - name: auction_track_execution
+        description: "Track task execution progress and status"
+        status: implemented
+      - name: auction_onboard_operator
+        wraps: AuctionEngine.onboard_operator
+        description: "Full operator onboarding flow"
+        status: implemented
+      - name: auction_get_operator_status
+        description: "Get operator verification and compliance status"
+        status: implemented
+      - name: auction_accept_and_execute
+        description: "Combined accept + execute for streamlined flow"
+        status: implemented
+      - name: auction_get_task_schema
+        description: "Get task specification schema for validation"
+        status: implemented
     planned:
       - name: plan_flight
         status: planned
@@ -2182,21 +2322,36 @@ architecture:
     # [v2.2] Built skills from .claude/skills/ + validated by research docs
     - id: skill:bond_verification
       status: implemented
-      version: "1.0"
-      description: "Verify payment bond documents against Treasury Circular 570, surety portals, and project requirements"
-      inputs: [bond_document_pdf, task_value_usd, project_state]
+      version: "2.0"  # Upgraded from regex-only to real Treasury data
+      description: "Verify payment bond documents against real Treasury Circular 570 data (501 companies), check state licensing, validate underwriting limits"
+      inputs: [bond_document_text_or_pdf, task_value_usd, project_state]
       outputs:
-        - surety_verified
+        - surety_verified  # Matched against 501 Circular 570 entries
+        - surety_naic_code
+        - surety_underwriting_limit  # Real dollar limit from Treasury
+        - state_licensed  # Real state licensing from Circular 570 columns
         - penal_sum_adequate
+        - coverage_sufficient  # Penal sum >= required_coverage
         - effective_date_current
-        - state_license_valid
-        - underwriting_limit_check
-        - verification_result  # VERIFIED / FAILED with specific check results
+        - verification_result  # VERIFIED / PARTIAL / FAILED with check details
       verification_sources:
-        - "Treasury Circular 570 (annual Excel, machine-parseable)"
-        - "Surety portals: Merchants Bonding, Intact, Frankenmuth (online), Travelers/Liberty Mutual/CNA (phone/email)"
-        - "AM Best ratings for financial strength"
+        - source: "Treasury Circular 570 Excel"
+          url: "https://fiscal.treasury.gov/surety-bonds/list-certified-companies.html"
+          format: xlsx
+          companies: 501
+          status: real  # Downloaded and parsed — not mocked
+          data_file: "auction/data/circular_570.xlsx"
+        - source: "Surety portals"
+          status: not_available  # No public REST API exists
+          note: "Merchants Bonding, Intact, Frankenmuth have online forms. Major sureties (Travelers, Liberty Mutual, CNA, Zurich, Hartford) require phone/email."
+        - source: "AM Best ratings"
+          status: not_available  # Paid subscription required
+          note: "$5K+/yr subscription. Not integrated."
+        - source: "SAM.gov Exclusions API"
+          url: "https://api.sam.gov/entity-information/v4/exclusions"
+          status: planned  # Free API, needs key registration
       real_examples_found: 6
+      tested_against: "5 end-to-end scenarios with real bond documents, all verified against Circular 570"
       sources: [{path: docs/research/legal/RESEARCH_BOND_VERIFICATION_EXAMPLES.md}]
 
     - id: skill:legal_terms_compare
@@ -2387,7 +2542,7 @@ roadmap:
       label: "Auction Engine (Warehouse + Fiat)"
       status: built
       personas: [persona:sarah, persona:claude_agent]
-      stats: {tests: 151, mcp_tools: 15, loc: 11400}
+      stats: {tests: 216, mcp_tools: 32, loc: 14567}
       resolves: []
       capabilities_unlocked:
         - "Auction core: Task, Bid, AuctionResult, score_bids()"
@@ -2395,9 +2550,17 @@ roadmap:
         - "HMAC + ERC-8004 Ed25519 bid signing"
         - "Failure recovery: robot offline, bad payload, auto-accept timer"
         - "Internal wallet ledger with debit/credit log"
-        - "Stripe Connect Express payouts"
+        - "Stripe Connect Express payouts (EUR/USD, working in test mode)"
         - "SQLite persistence via SyncTaskStore"
-        - "15 MCP tools including auction_quick_hire"
+        - "32 MCP tools: auction lifecycle, RFP processing, bond verification, operator compliance, agreement generation"
+        - "Real Treasury Circular 570 bond verification (501 surety companies)"
+        - "Operator compliance verification (PLS, FAA Part 107, insurance COI, SAM.gov)"
+        - "LLM-powered RFP parsing and task decomposition"
+        - "ConsensusDocs 750 subcontract generation"
+        - "Live demo at yakrobot.bid with interactive walkthrough"
+        - "Live MCP demo at yakrobot.bid/mcp-demo with Claude tool_use loop"
+        - "Chatbot worker on Cloudflare (streaming, rate-limited, injection-protected)"
+        - "7 Michigan construction operators in mock fleet"
       sources: [{path: docs/ROADMAP_v4.md}]
 
     - id: phase:v1.5
@@ -2409,20 +2572,24 @@ roadmap:
       decisions: [decision:FD-1, decision:FD-2, decision:FD-3, decision:FD-4, decision:FD-5, decision:PP-2]
       resolves: [unknown:operator_adoption, unknown:horizen_l3_viability]
       entry_gate: "v1.0 complete (151 tests passing)"
-      capabilities_unlocked:
+      already_built:
+        - "Payment bond verification — real Treasury Circular 570 data (501 companies)"
+        - "Operator compliance verification — PLS, Part 107, insurance COI, SAM.gov exclusion"
+        - "Construction task spec extensions (survey_type, accuracy, deliverables, weather)"
+        - "LLM-powered RFP parsing and task decomposition"
+        - "ConsensusDocs 750 subcontract generation"
+        - "Automated ACORD 25 COI parsing (PDF extraction)"
+        - "Live demo infrastructure (here.now hosting, Cloudflare Worker, MCP tunnel)"
+      capabilities_remaining:
         - "x402 USDC payment on Base"
         - "RobotTaskEscrow.sol with 4-mode settlement interface"
         - "Commitment hash in on-chain memos"
         - "Robot wallet addresses hidden from API"
-        - "Construction task spec extensions (survey_type, accuracy, deliverables, weather)"
-        - "Payment bond verification"
-        - "Basic COI and PLS license capture"
         - "ERC-8004 agent card: min_price, accepted_currencies, reputation_score, sensor_capabilities"
         - "Encrypted task specs at rest"
         - "DTN message schema (design only)"
         - "BBS+ credential schema (design only)"
         - "Horizen L3 testnet evaluation"
-        - "Next.js landing page with intent capture"
         - "CI/CD: GitHub Actions"
       sources: [{path: docs/FEATURE_REQUIREMENTS_v15.md}]
 

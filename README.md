@@ -26,12 +26,12 @@ robot-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 15 MCP tool handlers
+│   ├── mcp_tools.py             # 32 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
 │   ├── reputation.py            # ReputationTracker
-│   └── tests/                   # 147 passing + integration stubs
+│   └── tests/                   # 216 tests + integration stubs
 │
 ├── demo/                        ← Live website (yakrobot.bid)
 │   └── index.html               # Full interactive demo
@@ -42,8 +42,10 @@ robot-marketplace/
 │   ├── FEATURE_REQUIREMENTS_v15.md       # v1.5 build spec
 │   ├── DECISIONS.md             # All product/technical decisions
 │   ├── DEVELOPMENT_STRATEGY.md  # Testing & code safety (5-layer strategy)
+│   ├── mcp_demo/
+│   │   └── index.html           # Live MCP demo (yakrobot.bid/mcp-demo)
 │   ├── research/                # 38 research docs (see research/README.md)
-│   │   ├── PRODUCT_DSL_v2.yaml  # ← THE product ontology (2,617 lines)
+│   │   ├── PRODUCT_DSL_v2.yaml  # ← THE product ontology (3,100+ lines)
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   ├── technical/           # Architecture, execution gaps
@@ -53,7 +55,9 @@ robot-marketplace/
 ├── .claude/
 │   ├── skills/
 │   │   ├── rfp-to-robot-spec/   # RFP → auction task specs
-│   │   └── rfp-to-site-recon/   # RFP → execution context
+│   │   ├── rfp-to-site-recon/   # RFP → execution context
+│   │   ├── bond-verification/   # Payment bond compliance checks
+│   │   └── legal-terms-compare/ # Survey contract term comparison
 │   └── hooks/block-secrets.sh   # Prevents committing API keys
 │
 ├── .github/workflows/test.yml   # CI: tests + ruff + mypy
@@ -103,6 +107,7 @@ Start here, in this order:
 | URL | What it is |
 |-----|-----------|
 | **[yakrobot.bid](https://yakrobot.bid)** | Interactive demo — MDOT I-94 RFQ walkthrough |
+| **[yakrobot.bid/mcp-demo](https://yakrobot.bid/mcp-demo/)** | Live auction demo — Claude orchestrates real MCP tools |
 | **[yakrobot.bid/yaml](https://yakrobot.bid/yaml)** | YAML ontology explorer — browse PRODUCT_DSL_v2 live |
 | **[yakrobot.bid/pitch](https://yakrobot.bid/pitch)** | Pitch deck — investor/partner presentation |
 
@@ -129,9 +134,9 @@ All four follow the [skill-creator-springett](https://github.com/bglek/skill-cre
 
 ## Key Numbers
 
-- **15 MCP tools** including `auction_quick_hire` (single-call auctions)
-- **147 tests** passing, with integration test stubs for Stripe and fleet
-- **2,617-line YAML** product ontology covering the entire product
+- **32 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator compliance, agreement generation
+- **216 tests** passing, with integration test stubs for Stripe and fleet
+- **3,100+ line YAML** product ontology covering the entire product
 - **43 real MDOT RFPs** analyzed for survey requirements
 - **6 real equipment platforms** with verified specs and pricing
 - **CI pipeline** with ruff (security linting), mypy, and pytest on every push
