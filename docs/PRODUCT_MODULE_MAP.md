@@ -2,7 +2,7 @@
 
 A landscape view of every distinct component in the YAK ROBOTICS marketplace. Each module is an independently-scoped unit of development with defined inputs, outputs, and responsibilities.
 
-**Updated:** 2026-03-31 | **Modules:** 34 | **Built:** 20 | **Building:** 2 | **Planned:** 12
+**Updated:** 2026-03-31 | **Modules:** 36 | **Built:** 20 | **Building:** 2 | **Gaps:** 2 | **Planned:** 12
 
 ---
 
@@ -71,6 +71,42 @@ Award         --> [M13: Agreement Generator]
 | M11 | **Bond Verifier** | Built | `auction/bond_verifier.py` | Payment bond validation against real Treasury Circular 570 data (501 surety companies). Fuzzy name matching, state licensing, underwriting limits. PDF extraction via PyMuPDF. |
 | M12 | **Terms Comparator** | Built | `auction/terms_comparator.py` | Compares survey contract terms across 12 dimensions against ConsensusDocs 750 baseline. Flags deviations, checks state anti-indemnity statutes. |
 | M13 | **Agreement Generator** | Built | `auction/agreement.py` | Generates ConsensusDocs 750 subcontracts from task spec + winning bid. Scope, fee, schedule, insurance requirements, PLS supervision, retainage, dispute resolution. |
+
+> **Known gap (M10):** PLS certification is tracked in compliance but **not enforced** in `check_hard_constraints()`. An operator without PLS can currently win tasks requiring PLS stamps. Must be fixed before production. See PLS section below.
+
+---
+
+## 3b. DELIVERABLE QA & PLS STAMP
+
+```
+Delivered Data --> [M35: Deliverable QA] --> [M36: PLS Review & Stamp]
+                                                      |
+                                                      v
+                                               Stamped Deliverables
+```
+
+| # | Module | Status | Key Files | Description |
+|---|--------|--------|-----------|-------------|
+| M35 | **Deliverable QA** | Gap | — | Automated pre-screening of delivered survey data: point density, accuracy, coordinate system, file format, coverage completeness. Reduces PLS review time by 30-50%. Referenced in pitch as core value prop. |
+| M36 | **PLS Review & Stamp** | Gap | — | PLS-as-a-service routing: task completion triggers routing to available PLS in jurisdiction. PLS reviews via dashboard, applies electronic seal (DocuSign API). Two modes: operator-has-PLS (self-stamp) and marketplace-routes-PLS (external review). |
+
+**PLS lifecycle (current vs needed):**
+
+| Step | Current Status | What's Needed |
+|------|---------------|---------------|
+| Operator registers PLS info | Built (`operator_registry.set_pls()`) | -- |
+| Compliance tracks PLS status | Built (`compliance.py`, VERIFIED/MISSING/EXPIRED) | -- |
+| Task spec requires PLS | Built (`certifications_required: ["licensed_surveyor"]`) | -- |
+| **Engine enforces PLS in bidding** | **GAP** — `check_hard_constraints()` ignores certifications | Add certification check to hard filter |
+| **PLS jurisdiction validation** | **GAP** — MI license not checked against task state | Validate PLS state matches task jurisdiction |
+| **PLS expiration enforcement** | **GAP** — compliance flags EXPIRED but engine ignores | Block expired-PLS operators from bidding |
+| Agreement includes PLS clause | Built (`agreement.py` hard-codes PLS supervision) | -- |
+| Delivery includes PLS status | Built (`pls_review_status: "PENDING"` in payload) | -- |
+| **Deliverable QA pre-screening** | **GAP** | Automated point density, accuracy, format checks |
+| **PLS review routing** | **GAP** | Route to available PLS, dashboard, electronic seal |
+| **PLS-as-a-service for non-PLS operators** | **GAP** — test scenarios detect gap but don't resolve | Auto-route to PLS network, add review fee to cost |
+
+**Research:** `docs/research/legal/RESEARCH_PLS_AUTOMATION_OPTIONS.md` — 5-option analysis with Michigan law citations (MCL 339.2007).
 
 ---
 
@@ -263,3 +299,5 @@ M21 (BBS+ Credentials), ERC-8004 agent card extensions, compound task decomposit
 | M32 Buyer Dashboard | (planned) |
 | M33 Operator Dashboard | (planned) |
 | M34 Admin Console | (planned) |
+| M35 Deliverable QA | (gap — pitch claims it, no module exists) |
+| M36 PLS Review & Stamp | (gap — PLS-as-a-service routing + electronic seal) |
