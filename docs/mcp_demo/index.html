@@ -403,6 +403,15 @@ Budget: $45,000. Deadline: 14 days.</textarea>
     </div>
   </div>
 
+  <div class="form-section" style="margin-bottom:12px">
+    <label>MCP Server URL <span style="text-transform:none;letter-spacing:0;font-weight:400">(paste your tunnel URL)</span></label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" id="tunnelUrl" value="https://mcp.yakrobot.bid" placeholder="https://your-tunnel.trycloudflare.com" style="flex:1;background:var(--navy);border:1px solid var(--navy-mid);border-radius:6px;color:var(--white);font-family:'Inter',sans-serif;font-size:13px;padding:10px 12px">
+      <button onclick="testTunnel()" style="background:var(--navy-mid);color:var(--slate-light);border:none;border-radius:6px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap" id="testBtn">Test</button>
+    </div>
+    <div id="tunnelStatus" style="font-size:11px;margin-top:6px;color:var(--slate)">Enter the URL shown when you start mcp_server.py</div>
+  </div>
+
   <button class="run-btn" id="runBtn" onclick="runDemo()">Run Live Demo</button>
 
   <div class="step-feed" id="stepFeed"></div>
@@ -414,9 +423,41 @@ Budget: $45,000. Deadline: 14 days.</textarea>
 </div>
 
 <script>
-const API_URL = 'https://yakrobot-chat.rafaeldf2.workers.dev/api/demo';
+const WORKER_URL = 'https://yakrobot-chat.rafaeldf2.workers.dev/api/demo';
+
+async function testTunnel() {
+  const url = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
+  const status = document.getElementById('tunnelStatus');
+  const btn = document.getElementById('testBtn');
+  if (!url) { status.textContent = 'Enter a URL first'; status.style.color = '#ef4444'; return; }
+  btn.textContent = '...';
+  status.textContent = 'Testing connection...';
+  status.style.color = 'var(--slate)';
+  try {
+    const r = await fetch(url + '/health', {mode:'cors'});
+    if (r.ok) {
+      const data = await r.json();
+      status.textContent = 'Connected: ' + data.tools + ' tools, ' + data.fleet + ' operators, wallet $' + data.wallet;
+      status.style.color = '#22c55e';
+    } else {
+      status.textContent = 'Server returned ' + r.status;
+      status.style.color = '#ef4444';
+    }
+  } catch(e) {
+    status.textContent = 'Cannot reach server. Is mcp_server.py running? (' + e.message + ')';
+    status.style.color = '#ef4444';
+  }
+  btn.textContent = 'Test';
+}
 
 async function runDemo() {
+  const tunnelUrl = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
+  if (!tunnelUrl) {
+    document.getElementById('tunnelStatus').textContent = 'Enter the MCP server URL first';
+    document.getElementById('tunnelStatus').style.color = '#ef4444';
+    return;
+  }
+
   const btn = document.getElementById('runBtn');
   const feed = document.getElementById('stepFeed');
   const progressBar = document.getElementById('progressBar');
@@ -449,10 +490,10 @@ async function runDemo() {
   const prompt = rfpText + '\n\nSite Info: ' + JSON.stringify(siteInfo);
 
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ prompt, tunnel_url: tunnelUrl })
     });
 
     if (response.status === 429) {

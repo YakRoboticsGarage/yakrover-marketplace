@@ -541,8 +541,8 @@ async function incrementDemoRateLimit(env, ip) {
   await env.RATE_LIMIT_KV.put(key, String(count + 1), { expirationTtl: 86400 });
 }
 
-async function callMcpTool(env, toolName, toolInput) {
-  const mcpUrl = env.MCP_SERVER_URL || "https://mcp.yakrobot.bid";
+async function callMcpTool(env, toolName, toolInput, tunnelUrl) {
+  const mcpUrl = tunnelUrl || env.MCP_SERVER_URL || "https://mcp.yakrobot.bid";
   const response = await fetch(`${mcpUrl}/api/tool/${toolName}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -594,7 +594,7 @@ async function handleDemo(request, env, cors) {
     );
   }
 
-  const { prompt } = body;
+  const { prompt, tunnel_url } = body;
   if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
     return new Response(
       JSON.stringify({ error: "prompt is required" }),
@@ -673,7 +673,7 @@ async function handleDemo(request, env, cors) {
         const { id, name, input } = toolBlock;
 
         // Call the MCP server
-        const mcpResult = await callMcpTool(env, name, input);
+        const mcpResult = await callMcpTool(env, name, input, tunnel_url);
 
         steps.push({
           type: "tool_call",
