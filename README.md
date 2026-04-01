@@ -26,12 +26,12 @@ robot-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 32 MCP tool handlers
+│   ├── mcp_tools.py             # 34 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
 │   ├── reputation.py            # ReputationTracker
-│   └── tests/                   # 216 tests + integration stubs
+│   └── tests/                   # 238 tests + integration stubs
 │
 ├── demo/                        ← Live website (yakrobot.bid)
 │   └── index.html               # Full interactive demo
@@ -134,8 +134,8 @@ All four follow the [skill-creator-springett](https://github.com/bglek/skill-cre
 
 ## Key Numbers
 
-- **32 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator compliance, agreement generation
-- **216 tests** passing, with integration test stubs for Stripe and fleet
+- **34 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator compliance, agreement generation
+- **238 tests** passing, with integration test stubs for Stripe and fleet
 - **3,100+ line YAML** product ontology covering the entire product
 - **43 real MDOT RFPs** analyzed for survey requirements
 - **6 real equipment platforms** with verified specs and pricing

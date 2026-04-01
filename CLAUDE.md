@@ -5,7 +5,7 @@
 A marketplace where AI agents post construction survey tasks, certified robot operators bid autonomously, and the best one delivers. Starting with construction site surveying ($1K-$200K tasks), scaling to mining, infrastructure, and lunar operations. Winners are paid via Stripe (fiat) or USDC on Base (crypto). This project handles real money — payment code requires extreme care.
 
 **Wedge market:** Construction site surveying (pre-bid topo, GPR subsurface, progress monitoring). Typical tasks: $1,000-$10,000. Full project lifecycle: $25,000-$72,000+.
-**v1.0 status:** Built. 216 tests, 32 MCP tools, ~14,500 LOC.
+**v1.0 status:** Built. 238 tests, 34 MCP tools, ~15,400 LOC.
 **Next:** v1.5 (crypto rail + construction task specs + privacy-aware foundation). See `docs/FEATURE_REQUIREMENTS_v15.md`.
 **Live sites:** [yakrobot.bid](https://yakrobot.bid), [yakrobot.bid/mcp-demo](https://yakrobot.bid/mcp-demo/), [yakrobot.bid/yaml](https://yakrobot.bid/yaml), [yakrobot.bid/pitch](https://yakrobot.bid/pitch)
 
@@ -14,7 +14,7 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 - **Auction engine:** `auction/` — Task, Bid, AuctionResult, score_bids(), state machine, settlement abstraction
 - **Payment:** Stripe Connect (fiat) + USDC on Base via x402 (crypto, v1.5). Construction scale: $10K-$200K per project, not micro-payments.
 - **Escrow:** `RobotTaskEscrow.sol` on Base with 4-mode settlement abstraction (FD-1, v1.5)
-- **Fleet:** Robot/operator discovery via ERC-8004, 32 MCP tools for agent interaction
+- **Fleet:** Robot/operator discovery via ERC-8004, 34 MCP tools for agent interaction
 - **Persistence:** SQLite via `SyncTaskStore`
 - **Demo site:** `demo/index.html` — interactive demo at [yakrobot.bid](https://yakrobot.bid)
 - **Live MCP demo:** `docs/mcp_demo/index.html` — Claude orchestrates real auction at [yakrobot.bid/mcp-demo](https://yakrobot.bid/mcp-demo/)
@@ -75,7 +75,7 @@ robot-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 32 MCP tool handlers
+│   ├── mcp_tools.py             # 34 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
@@ -83,7 +83,7 @@ robot-marketplace/
 │   ├── discovery_bridge.py      # ERC-8004 robot discovery
 │   ├── mock_fleet.py            # Simulated robots for testing
 │   ├── demo.py                  # Demo script
-│   └── tests/                   # 216 tests + integration stubs
+│   └── tests/                   # 238 tests + integration stubs
 │
 ├── demo/                        # Live website (yakrobot.bid)
 │   └── index.html               # Full interactive demo
@@ -91,7 +91,7 @@ robot-marketplace/
 ├── chatbot/                     # Cloudflare Worker (yakrobot-chat)
 │   └── src/index.js             # Chat + demo API proxy
 │
-├── mcp_server.py                # Standalone REST API (32 MCP tools, Cloudflare Tunnel)
+├── mcp_server.py                # Standalone REST API (34 MCP tools, Cloudflare Tunnel)
 │
 ├── docs/                        # Documentation
 │   ├── mcp_demo/index.html      # Live MCP demo (yakrobot.bid/mcp-demo)

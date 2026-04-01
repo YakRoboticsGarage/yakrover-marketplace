@@ -2,7 +2,7 @@
 
 A landscape view of every distinct component in the YAK ROBOTICS marketplace. Each module is an independently-scoped unit of development with defined inputs, outputs, and responsibilities.
 
-**Updated:** 2026-03-31 | **Modules:** 36 | **Built:** 20 | **Building:** 2 | **Gaps:** 2 | **Planned:** 12
+**Updated:** 2026-04-01 | **Modules:** 36 | **Built:** 25 | **Building:** 2 | **Gaps:** 2 | **Planned:** 7
 
 ---
 
@@ -173,9 +173,9 @@ Tunnel       --> [M26: MCP Server] --> Engine
 
 | # | Module | Status | Key Files | Description |
 |---|--------|--------|-----------|-------------|
-| M24 | **MCP Tool Layer** | Built | `auction/mcp_tools.py` | 32 FastMCP tools wrapping the auction engine. Structured JSON responses. Error standardization. Decimal serialization. |
+| M24 | **MCP Tool Layer** | Built | `auction/mcp_tools.py` | 34 FastMCP tools wrapping the auction engine. Structured JSON responses. Error standardization. Decimal serialization. |
 | M25 | **REST API** | Built | `auction/api.py` | FastAPI router for web frontend: intent capture, task posting, bid retrieval. CORS. |
-| M26 | **Standalone MCP Server** | Built | `mcp_server.py` | HTTP server exposing 32 tools via REST (/api/tool/{name}). Cloudflare Tunnel support. Health + discovery endpoints. |
+| M26 | **Standalone MCP Server** | Built | `mcp_server.py` | HTTP server exposing 34 tools via REST (/api/tool/{name}). Cloudflare Tunnel support. Health + discovery endpoints. |
 
 ---
 

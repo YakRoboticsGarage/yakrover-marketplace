@@ -54,7 +54,7 @@ meta:
   name: "Robot Task Auction Marketplace"
   project: yakrover-auction-explorer
   schema_version: "2.3"
-  updated: "2026-03-31"
+  updated: "2026-04-01"
   provenance: "Generated from 19 research documents via 3-agent debate (architect, strategist, engineer). Revised by 5-agent competition (strategy, technical, UX, legal, ontology). Authoritative for entity definitions, relationships, strategic bets, and architectural decisions."
   license: "Proprietary — YAK Robotics Garage"
 
@@ -1640,7 +1640,7 @@ architecture:
       rate_limits: {chat: "25/day/IP", demo: "5/day/IP", feedback: "5/day/IP"}
     mcp_server:
       path: mcp_server.py
-      description: "Standalone REST API exposing 32 MCP tools for web demo"
+      description: "Standalone REST API exposing 34 MCP tools for web demo"
       endpoints:
         - "GET /health — status, tool count, fleet size, wallet balance"
         - "GET /api/tools — list all available tools"
@@ -1656,7 +1656,7 @@ architecture:
         /api/chat ................. Chatbot → Anthropic Messages API (streaming)
         /api/demo ................. Tool-use loop → MCP server (non-streaming)
       mcp_server.py (local + Cloudflare Tunnel)
-        /api/tool/{name} .......... REST proxy to 32 MCP tools
+        /api/tool/{name} .......... REST proxy to 34 MCP tools
         /health ................... Status endpoint
       SQLite (local, :memory: for demo)
     database:
@@ -2542,7 +2542,7 @@ roadmap:
       label: "Auction Engine (Warehouse + Fiat)"
       status: built
       personas: [persona:sarah, persona:claude_agent]
-      stats: {tests: 216, mcp_tools: 32, loc: 14567}
+      stats: {tests: 238, mcp_tools: 34, loc: 15370}
       resolves: []
       capabilities_unlocked:
         - "Auction core: Task, Bid, AuctionResult, score_bids()"
@@ -2552,7 +2552,7 @@ roadmap:
         - "Internal wallet ledger with debit/credit log"
         - "Stripe Connect Express payouts (EUR/USD, working in test mode)"
         - "SQLite persistence via SyncTaskStore"
-        - "32 MCP tools: auction lifecycle, RFP processing, bond verification, operator compliance, agreement generation"
+        - "34 MCP tools: auction lifecycle, RFP processing, bond verification, operator compliance, agreement generation"
         - "Real Treasury Circular 570 bond verification (501 surety companies)"
         - "Operator compliance verification (PLS, FAA Part 107, insurance COI, SAM.gov)"
         - "LLM-powered RFP parsing and task decomposition"

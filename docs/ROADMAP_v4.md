@@ -3,7 +3,7 @@
 **Project:** yakrover-auction-explorer
 **Owner:** Product
 **Last updated:** 2026-03-28 (rev 4.1, payment bonds + award confirmation + legal framework)
-**Status:** v1.0 built (216 tests, 32 MCP tools). v1.5 next. This roadmap is built around construction site surveying as the wedge market.
+**Status:** v1.0 built (238 tests, 34 MCP tools). v1.5 next. This roadmap is built around construction site surveying as the wedge market.
 
 > All product decisions and technical constraints referenced by ID live in `docs/DECISIONS.md`.
 > Feature requirements for the next build: `docs/FEATURE_REQUIREMENTS_v15.md`.
@@ -89,10 +89,10 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - Internal wallet ledger with debit/credit log (per TC-2)
 - Stripe wallet onboarding + Connect Express payouts (per TC-2, TC-3)
 - Persistent state via SQLite `SyncTaskStore`
-- 32 MCP tools: auction lifecycle, RFP processing, bond verification, operator compliance, agreement generation
+- 34 MCP tools: auction lifecycle, RFP processing, bond verification, operator compliance, agreement generation
 - Structured error responses, `available_actions`, `next_action` patterns (per AD-13, AD-14, AD-15)
 - Standards-aligned task specs: ASPRS accuracy classes, USGS quality levels, EPSG CRS codes, structured deliverables
-- 216 passing tests, ~14,500 LOC
+- 238 passing tests, ~15,400 LOC
 - Live demo at yakrobot.bid, yakrobot.bid/mcp-demo (Claude tool_use), yakrobot.bid/yaml (ontology explorer)
 - Chatbot worker on Cloudflare, MCP server with Cloudflare Tunnel
 
