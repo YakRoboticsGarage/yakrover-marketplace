@@ -10,11 +10,13 @@
 
 ## Executive Summary
 
-- **No state PLS board exposes a public REST API.** All programmatic access requires scheduled file downloads, web scraping, or FOIA/public records requests.
+- **No state PLS board exposes a public REST API.** All programmatic access requires scheduled file downloads, web scraping, or FOIA/public records requests. Three states (Colorado, Indiana, Massachusetts) have confirmed API pages; Colorado's Socrata API is the only one fully confirmed operational.
 - **NCEES has no public API** — verification is licensee-initiated via the MyNCEES web portal; no third-party pull access exists.
-- **Two states have direct CSV downloads (no account required):** Texas TBPELS publishes a daily RPLS roster CSV at a stable URL; Michigan LARA offers an on-demand Excel/CSV report generator covering Professional Surveyor with name, status, expiration, address, and email.
+- **Two states have direct no-auth file downloads:** Texas TBPELS publishes a daily RPLS roster CSV at a stable URL (`pels.texas.gov/roster/rpls_roster.csv`); Michigan LARA offers an on-demand Excel/CSV report generator with name, status, expiration, address, and email.
 - **Critical agency split in Florida:** Professional Surveyors and Mappers are licensed by **FDACS** (Dept. of Agriculture), not DBPR. Any integration targeting DBPR will miss the entire Florida PLS population.
-- **Commercial APIs exist but are priced for employment screening.** Checkr charges ~$12/check; Certn charges $3–$25/check. At construction-task volumes, building a state-adapter layer against TX CSV + MI report + CA DCA Open Data is more cost-effective than per-check APIs.
+- **Washington State has a commercial-use restriction** (RCW 42.56.070(8)) on licensee lists obtained via public records requests — legal review required before building a WA data feed.
+- **EnvZone is the only confirmed all-50-state PLS aggregator** (900K+ professionals, quarterly refresh). Not suitable for real-time status checks but covers the full market for baseline screening.
+- **Sterling's license monitoring API** is the most operationally valuable commercial option — it monitors ongoing status changes, not just one-time verification. PLS coverage needs direct confirmation.
 - **The current codebase accepts PLS data at face value** — `set_pls()` in `operator_registry.py` and `upload_document()` in `compliance.py` store operator-submitted data without any external verification call. This is the primary gap to close.
 
 ---
@@ -69,9 +71,9 @@ States that require an NCEES Record for comity licensure: Georgia, Kentucky, Mas
 - **CRITICAL:** Professional Surveyors and Mappers in Florida are licensed by **FDACS** (Dept. of Agriculture and Consumer Services), **not DBPR**. DBPR covers contractors, real estate, cosmetology, etc.
 - **FDACS PSM page:** https://www.fdacs.gov/psm
 - **Bulk data:** No public CSV download found. A Chapter 119 (Florida Sunshine Law) public records request to FDACS is the route for bulk data.
-- **DBPR** (does NOT cover surveyors): offers bulk ASCII/CSV downloads at `myfloridalicense.com/dbpr/sto/file_download/index.html` — weekly, 365K records — but this is wrong agency for PLS.
+- **DBPR** (does NOT cover surveyors): offers bulk ASCII/comma-delimited downloads at https://www2.myfloridalicense.com/public-records-read-medisclaimer/ — weekly, ~365K records (contractors, real estate, cosmetology, etc.) — **wrong agency for PLS**.
 - **Apify scraper exists for DBPR** (not FDACS): https://apify.com/exclusive_data/dbpr-myfloridalicense/api
-- **Action required:** Contact FDACS directly or file a Ch. 119 request for FL PLS bulk data.
+- **Action required:** File a Ch. 119 (Florida Sunshine Law) public records request with FDACS for Professional Surveyor and Mapper bulk data.
 
 #### Ohio — PEPS / eLicense Ohio
 - **Lookup:** https://www.elicense.ohio.gov/oh_verifylicense?board=Engineers+and+Surveyors+Board
@@ -101,7 +103,9 @@ States that require an NCEES Record for comity licensure: Georgia, Kentucky, Mas
 #### Washington — DOL / BRPELS
 - **Lookup:** https://professions.dol.wa.gov/s/license-lookup
 - **Board:** https://brpels.wa.gov/
-- **Bulk method:** Web form for individual lookup. WA DOL Open Data (data.wa.gov) has a "Professional License Counts" dataset — **aggregate counts by county/profession, not individual records**. Updated March 2026.
+- **Bulk method:** Licensee list available via public records request (email PublicRecords@brpels.wa.gov with "Request for Licensees List Form"). Index updated quarterly.
+- **⚠️ Commercial-use restriction:** Washington RCW 42.56.070(8) **prohibits commercial use** of licensee lists obtained through public records requests. This may bar direct use in a commercial compliance product — legal review required before building a WA data feed.
+- **Open data caveat:** WA DOL Open Data (data.wa.gov) has a "Professional License Counts" dataset — **aggregate counts only, not individual records**.
 - **API:** None documented.
 - **Notes:** BRPELS licenses expire on licensee's birthday every 2 years. DNR maintains a Public Land Survey records database (monuments, not surveyor licenses) — separate system, not relevant here.
 
@@ -113,10 +117,13 @@ These states were not in the 8-state deep dive but surfaced with notable access 
 
 | State | Method | URL | Notes |
 |-------|--------|-----|-------|
-| Colorado | **Socrata REST API** | https://data.colorado.gov/resource/7s5z-vewr.json | Free; supports `$where`, `$select`, `$limit`; all professions including Land Surveyor |
-| Indiana | **eLicense API** | Indiana Professional Licensing Agency | Designed for B2B credential verification; contact IN PLA directly |
-| Massachusetts | **Mass.gov API** | https://www.mass.gov | Explicit engineer/land surveyor license verification endpoint |
-| Kentucky | **Searchable roster** | http://elsweb.kyboels.ky.gov/kweb/Searchable-Roster | Public roster; scrapeable |
+| Colorado | **Socrata REST API** | https://data.colorado.gov/resource/7s5z-vewr.json | Free; `$where`, `$select`, `$limit`; nightly refresh; example: `?profession=Professional+Land+Surveyor` |
+| Indiana | **eLicense API** | https://www.in.gov/pla/license/verification-api/ | Dedicated B2B API page confirmed; engineers and land surveyors covered; contact PLA for endpoint docs |
+| Massachusetts | **Mass.gov API** | https://www.mass.gov/info-details/ma-professional-licensing-api | Dedicated API page confirmed; explicit engineer/land surveyor coverage |
+| Kentucky | **Complete list download** | http://elsweb.kyboels.ky.gov/kweb/Searchable-Roster | Board explicitly offers "download a complete list" of current licensees; filter by land surveyor |
+| Minnesota | Web lookup (daily) + PDF | https://mn.gov/aelslagid/roster.html | Daily-refreshed web lookup; historic PDF at mn.gov/aelslagid/LS_Numbers.pdf (land surveyor numbers back to 1921); bulk: contact aelslagid@state.mn.us |
+| Georgia | Web form (EVOKE) | https://gapelsb.evokeplatform.com/app/verification/search | Georgia created its own PELS Board in 2022 (HB 476); EVOKE Platform, JS-rendered, not scrapeable; NCEES Record required for comity |
+| Oklahoma | Web lookup (Thentia) | https://okpels.portalus.thentiacloud.net/webs/portal/register/ | Thentia Cloud platform; consistent public register UI; no API |
 | Maryland | Web form | https://www.dllr.state.md.us/license/ls/lsverify.shtml | Individual lookup only |
 
 ---
@@ -145,15 +152,21 @@ These states were not in the 8-state deep dive but surfaced with notable access 
 - **Turnaround:** Initiated within 1 business day; depends on source responsiveness (not instant)
 - **Integrations:** Workday, Lever, Greenhouse, Workable ATS
 
-#### Sterling (First Advantage) — Enterprise
+#### Sterling (First Advantage) — Enterprise, License Monitoring ⭐
 - **API:** https://apidocs.sterlingcheck.app
+- **Key capability:** Sterling documents "monitor provider licenses for status changes" — **ongoing license status monitoring**, not just one-time verification. This is operationally the most useful feature for a marketplace that needs to know when an active operator's PLS lapses.
+- **Coverage of PLS:** Not explicitly confirmed in public materials — contact Sterling to confirm.
 - **Notes:** Enterprise-grade; higher implementation overhead. Contact for pricing.
 
-#### EnvZone — Aggregated PE/PLS Directory
+#### EnvZone — Confirmed All-50-State PLS Aggregator ⭐⭐
 - **URL:** https://envzone.com/professional-license-verification/
-- **Source:** Claims to aggregate from NCEES and NCARB member board data
-- **Coverage:** 900K+ professionals across all 50 states, updated quarterly
-- **Access:** Web lookup only; no documented API or commercial data feed
+- **Coverage:** 900K+ licensed professionals across all 50 states + DC + territories; **PLS explicitly confirmed** as a covered profession type
+- **Source:** Aggregated from state licensing boards via NCEES and NCARB member board directories; no extrapolation
+- **Update cadence:** Quarterly — not suitable for real-time status checks, but adequate for pre-engagement due diligence
+- **Access:** Web lookup only; no documented public API — contact envzone.com for developer/data partnership
+- **Digital badge:** Professionals can claim profiles and generate QR-scannable credential badges — potential operator onboarding integration angle
+- **Disclaimer on site:** "Should not replace official verification for legal or compliance purposes"
+- **Best for:** Baseline all-50-state coverage for initial operator screening before deep state-source verification
 
 ---
 
