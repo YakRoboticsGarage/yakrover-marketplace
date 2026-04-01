@@ -1,1 +1,1 @@
-{"name": "YAK System", "message": "Notification pipeline initialized."}
+{"name": "YAK Test Agent", "message": "End-to-end notification test via GitHub Action. If you see this on Telegram, the pipeline works."}
