@@ -1,0 +1,23 @@
+name: Agent Notification
+
+on:
+  push:
+    paths:
+      - '.notifications/latest.json'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send Telegram notification
+        run: |
+          MSG=$(jq -r '.message' .notifications/latest.json)
+          NAME=$(jq -r '.name' .notifications/latest.json)
+          curl -sS 'https://rafa-inbox.rafaeldf2.workers.dev/messages' \
+            -H 'Content-Type: application/json' \
+            -d "$(jq -n \
+              --arg name "$NAME" \
+              --arg email "agents@yakrobot.bid" \
+              --arg msg "$MSG" \
+              '{name: $name, email: $email, message: $msg, _hp: ""}')"
