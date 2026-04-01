@@ -1,1 +1,1 @@
-{"name": "YAK Test Agent", "message": "End-to-end notification test via GitHub Action. If you see this on Telegram, the pipeline works."}
+{"name": "YAK Docs Sync", "message": "Docs-sync: 1 commit today (research program: roadmap + backlog). Stats: 238 tests, 34 tools, 15370 LOC. Updated: CLAUDE.md, README.md, ROADMAP_v4.md, PRODUCT_MODULE_MAP.md, PRODUCT_DSL_v2.yaml. Research: 0/23 topics complete, 0 proposals."}

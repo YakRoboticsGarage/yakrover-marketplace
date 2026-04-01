@@ -104,7 +104,7 @@ robot-marketplace/
 │   ├── DIAGRAM_SYSTEM.md        # System architecture diagrams
 │   ├── DIAGRAM_USER_JOURNEY.md  # User journey diagrams
 │   ├── research/                # 38 research docs (see research/README.md)
-│   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (2,617 lines)
+│   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (3,241 lines)
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   ├── technical/           # Architecture, execution gaps

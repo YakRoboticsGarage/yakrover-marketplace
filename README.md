@@ -136,7 +136,7 @@ All four follow the [skill-creator-springett](https://github.com/bglek/skill-cre
 
 - **34 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator compliance, agreement generation
 - **238 tests** passing, with integration test stubs for Stripe and fleet
-- **3,100+ line YAML** product ontology covering the entire product
+- **3,241 line YAML** product ontology covering the entire product
 - **43 real MDOT RFPs** analyzed for survey requirements
 - **6 real equipment platforms** with verified specs and pricing
 - **CI pipeline** with ruff (security linting), mypy, and pytest on every push
