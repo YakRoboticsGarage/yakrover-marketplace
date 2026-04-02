@@ -532,7 +532,10 @@
 
   <!-- Step 1: Robot Discovery -->
   <div class="form-section" id="discoverySection">
-    <label>Step 1 — Discover Robots on Base</label>
+    <label style="display:flex;justify-content:space-between;align-items:center">
+      Step 1 — Discover Robots on Base
+      <button onclick="discoverRobots()" style="background:var(--navy-mid);color:var(--slate-light);border:none;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0">Refresh</button>
+    </label>
     <div id="discoveryStatus" style="font-size:13px;color:var(--slate-light);padding:8px 0">
       Checking for registered robots on Base...
     </div>
