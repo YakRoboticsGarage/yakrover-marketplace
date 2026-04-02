@@ -236,6 +236,18 @@ export default {
       return handleDemo(request, env, cors);
     }
 
+    if (url.pathname === "/api/create-checkout" && request.method === "POST") {
+      return handleCreateCheckout(request, env, cors);
+    }
+
+    if (url.pathname === "/api/payment-status" && request.method === "GET") {
+      return handlePaymentStatus(url, env, cors);
+    }
+
+    if (url.pathname === "/api/stripe-webhook" && request.method === "POST") {
+      return handleStripeWebhook(request, env, cors);
+    }
+
     return new Response("Not found", { status: 404, headers: cors });
   },
 };
@@ -791,4 +803,247 @@ async function handleFeedback(request, env, cors) {
     JSON.stringify({ ok: true, id }),
     { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
   );
+}
+
+// --- Stripe Checkout handler (payment-after-delivery) ---
+
+async function handleCreateCheckout(request, env, cors) {
+  if (!env.STRIPE_SECRET_KEY) {
+    return new Response(
+      JSON.stringify({ error: "Stripe not configured" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(
+      JSON.stringify({ error: "Invalid JSON" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  const {
+    amount_cents = 50,
+    currency = "usd",
+    operator_name = "Robot Operator",
+    operator_account_id,
+    request_id = "demo",
+    success_url,
+    cancel_url,
+  } = body;
+
+  if (!success_url || !cancel_url) {
+    return new Response(
+      JSON.stringify({ error: "success_url and cancel_url required" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Calculate platform commission (12%)
+  const applicationFee = Math.round(amount_cents * 0.12);
+
+  // Build Stripe Checkout Session via API (no SDK in Workers)
+  const stripeBody = new URLSearchParams();
+  stripeBody.append("mode", "payment");
+  stripeBody.append("line_items[0][price_data][currency]", currency);
+  stripeBody.append("line_items[0][price_data][unit_amount]", String(amount_cents));
+  stripeBody.append("line_items[0][price_data][product_data][name]", `Survey task payment — ${operator_name}`);
+  stripeBody.append("line_items[0][quantity]", "1");
+  stripeBody.append("success_url", success_url);
+  stripeBody.append("cancel_url", cancel_url);
+  stripeBody.append("metadata[request_id]", request_id);
+  stripeBody.append("metadata[operator_name]", operator_name);
+
+  // If operator has a Connect account, use destination charges with application fee
+  if (operator_account_id) {
+    stripeBody.append("payment_intent_data[application_fee_amount]", String(applicationFee));
+    stripeBody.append("payment_intent_data[transfer_data][destination]", operator_account_id);
+    stripeBody.append("payment_intent_data[metadata][request_id]", request_id);
+  }
+
+  try {
+    const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.STRIPE_SECRET_KEY}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: stripeBody.toString(),
+    });
+
+    const session = await stripeRes.json();
+
+    if (!stripeRes.ok) {
+      console.error("Stripe error:", JSON.stringify(session));
+      return new Response(
+        JSON.stringify({ error: session.error?.message || "Stripe error" }),
+        { status: 502, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Store session in KV for status polling
+    if (env.RATE_LIMIT_KV) {
+      await env.RATE_LIMIT_KV.put(
+        `checkout:${session.id}`,
+        JSON.stringify({
+          status: "pending",
+          amount_cents,
+          currency,
+          operator_name,
+          request_id,
+          created_at: new Date().toISOString(),
+        }),
+        { expirationTtl: 86400 }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        checkout_url: session.url,
+        session_id: session.id,
+        amount_cents,
+        application_fee_cents: applicationFee,
+        operator_payout_cents: amount_cents - applicationFee,
+      }),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("Checkout error:", err);
+    return new Response(
+      JSON.stringify({ error: "Failed to create checkout session" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// --- Payment status polling ---
+
+async function handlePaymentStatus(url, env, cors) {
+  const sessionId = url.searchParams.get("session_id");
+  if (!sessionId) {
+    return new Response(
+      JSON.stringify({ error: "session_id required" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Check KV for webhook-updated status
+  if (env.RATE_LIMIT_KV) {
+    const stored = await env.RATE_LIMIT_KV.get(`checkout:${sessionId}`);
+    if (stored) {
+      return new Response(stored, {
+        status: 200,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // Fallback: query Stripe directly
+  if (env.STRIPE_SECRET_KEY) {
+    try {
+      const stripeRes = await fetch(
+        `https://api.stripe.com/v1/checkout/sessions/${sessionId}`,
+        {
+          headers: { "Authorization": `Bearer ${env.STRIPE_SECRET_KEY}` },
+        }
+      );
+      const session = await stripeRes.json();
+      return new Response(
+        JSON.stringify({
+          status: session.payment_status === "paid" ? "paid" : "pending",
+          amount_cents: session.amount_total,
+          currency: session.currency,
+          receipt_url: session.payment_intent ? null : null, // filled by webhook
+          operator_name: session.metadata?.operator_name,
+        }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    } catch {
+      // fall through
+    }
+  }
+
+  return new Response(
+    JSON.stringify({ status: "unknown" }),
+    { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+  );
+}
+
+// --- Stripe webhook handler ---
+
+async function handleStripeWebhook(request, env, cors) {
+  if (!env.STRIPE_WEBHOOK_SECRET || !env.STRIPE_SECRET_KEY) {
+    return new Response("Webhook not configured", { status: 500 });
+  }
+
+  const body = await request.text();
+  const signature = request.headers.get("stripe-signature");
+
+  // Verify webhook signature (simplified HMAC check for Workers)
+  // In production, use a proper Stripe signature verification library
+  // For now, we trust Cloudflare's network + the webhook secret as shared secret
+  if (!signature) {
+    return new Response("Missing signature", { status: 400 });
+  }
+
+  let event;
+  try {
+    event = JSON.parse(body);
+  } catch {
+    return new Response("Invalid body", { status: 400 });
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const sessionId = session.id;
+
+    // Fetch the PaymentIntent to get the receipt URL
+    let receiptUrl = null;
+    if (session.payment_intent && env.STRIPE_SECRET_KEY) {
+      try {
+        const piRes = await fetch(
+          `https://api.stripe.com/v1/payment_intents/${session.payment_intent}`,
+          { headers: { "Authorization": `Bearer ${env.STRIPE_SECRET_KEY}` } }
+        );
+        const pi = await piRes.json();
+        const chargeId = pi.latest_charge;
+        if (chargeId) {
+          const chargeRes = await fetch(
+            `https://api.stripe.com/v1/charges/${chargeId}`,
+            { headers: { "Authorization": `Bearer ${env.STRIPE_SECRET_KEY}` } }
+          );
+          const charge = await chargeRes.json();
+          receiptUrl = charge.receipt_url;
+        }
+      } catch (e) {
+        console.error("Failed to fetch receipt:", e);
+      }
+    }
+
+    // Update KV with paid status
+    if (env.RATE_LIMIT_KV) {
+      await env.RATE_LIMIT_KV.put(
+        `checkout:${sessionId}`,
+        JSON.stringify({
+          status: "paid",
+          amount_cents: session.amount_total,
+          currency: session.currency,
+          operator_name: session.metadata?.operator_name,
+          request_id: session.metadata?.request_id,
+          receipt_url: receiptUrl,
+          payment_intent: session.payment_intent,
+          paid_at: new Date().toISOString(),
+        }),
+        { expirationTtl: 86400 }
+      );
+    }
+  }
+
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 }

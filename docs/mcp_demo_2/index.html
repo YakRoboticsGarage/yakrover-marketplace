@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAK ROBOTICS — Live Auction Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f172a;
+    --navy-light: #1e293b;
+    --navy-mid: #334155;
+    --orange: #f97316;
+    --orange-hover: #ea580c;
+    --green: #22c55e;
+    --blue: #3b82f6;
+    --slate: #94a3b8;
+    --slate-light: #cbd5e1;
+    --white: #f8fafc;
+    --radius: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Topo watermark */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='400' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 200 Q100 150 200 200 T400 200' fill='none' stroke='%231e293b' stroke-width='1'/%3E%3Cpath d='M0 220 Q120 170 200 220 T400 220' fill='none' stroke='%231e293b' stroke-width='0.8'/%3E%3Cpath d='M0 180 Q80 130 200 180 T400 180' fill='none' stroke='%231e293b' stroke-width='0.8'/%3E%3Cpath d='M0 240 Q140 190 200 240 T400 240' fill='none' stroke='%231e293b' stroke-width='0.6'/%3E%3Cpath d='M0 160 Q60 110 200 160 T400 160' fill='none' stroke='%231e293b' stroke-width='0.6'/%3E%3Cpath d='M0 260 Q160 210 200 260 T400 260' fill='none' stroke='%231e293b' stroke-width='0.5'/%3E%3Cpath d='M0 140 Q40 90 200 140 T400 140' fill='none' stroke='%231e293b' stroke-width='0.5'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .logo {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .header p {
+    font-size: 15px;
+    color: var(--slate);
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    background: var(--navy-light);
+    border-radius: var(--radius);
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--slate);
+    display: none;
+  }
+
+  .progress-bar.visible { display: flex; }
+
+  .progress-fill {
+    height: 4px;
+    background: var(--orange);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .progress-track {
+    flex: 0 0 120px;
+    height: 4px;
+    background: var(--navy-mid);
+    border-radius: 2px;
+    margin-right: 12px;
+    overflow: hidden;
+  }
+
+  .progress-text { white-space: nowrap; }
+
+  /* Form */
+  .form-section {
+    background: var(--navy-light);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .form-section label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--slate);
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    background: var(--navy);
+    border: 1px solid var(--navy-mid);
+    border-radius: var(--radius);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 12px;
+    resize: vertical;
+  }
+
+  textarea:focus { outline: none; border-color: var(--orange); }
+
+  .site-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .site-info-grid input {
+    width: 100%;
+    background: var(--navy);
+    border: 1px solid var(--navy-mid);
+    border-radius: var(--radius);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .site-info-grid input:focus { outline: none; border-color: var(--orange); }
+
+  .site-info-grid .field-label {
+    font-size: 11px;
+    color: var(--slate);
+    margin-bottom: 4px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+  }
+
+  /* Button */
+  .run-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--orange);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    margin-bottom: 24px;
+    transition: background 0.15s;
+  }
+
+  .run-btn:hover { background: var(--orange-hover); }
+  .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Step feed */
+  .step-feed { display: flex; flex-direction: column; gap: 12px; }
+
+  .step-card {
+    background: var(--navy-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: stepIn 0.4s ease forwards;
+  }
+
+  @keyframes stepIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .step-dot.processing { background: var(--blue); animation: pulse 1s infinite; }
+  .step-dot.done { background: var(--green); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .step-body { flex: 1; min-width: 0; }
+
+  .step-badge {
+    display: inline-block;
+    background: var(--navy-mid);
+    color: var(--orange);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: monospace;
+    margin-bottom: 6px;
+  }
+
+  .step-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--slate-light);
+  }
+
+  .step-text p { margin: 0 0 8px; }
+  .step-text p:last-child { margin-bottom: 0; }
+  .step-text strong { color: var(--white); font-weight: 600; }
+  .step-text ul, .step-text ol { margin: 6px 0 8px 20px; padding: 0; }
+  .step-text li { margin-bottom: 4px; }
+  .step-text li::marker { color: var(--orange); }
+
+  .summary-card .summary-text p { margin: 0 0 8px; }
+  .summary-card .summary-text p:last-child { margin-bottom: 0; }
+  .summary-card .summary-text strong { color: var(--white); font-weight: 600; }
+  .summary-card .summary-text ul, .summary-card .summary-text ol { margin: 6px 0 8px 20px; padding: 0; }
+  .summary-card .summary-text li { margin-bottom: 4px; }
+  .summary-card .summary-text li::marker { color: var(--orange); }
+
+  .step-json-toggle {
+    font-size: 11px;
+    color: var(--slate);
+    cursor: pointer;
+    margin-top: 8px;
+    user-select: none;
+  }
+
+  .step-json-toggle:hover { color: var(--orange); }
+
+  .step-json {
+    display: none;
+    margin-top: 8px;
+    background: var(--navy);
+    border-radius: var(--radius);
+    padding: 10px;
+    font-family: monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--slate);
+    max-height: 300px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .step-json.expanded { display: block; }
+
+  /* Summary card */
+  .summary-card {
+    background: linear-gradient(135deg, var(--navy-light) 0%, #1a2744 100%);
+    border: 1px solid var(--orange);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 24px;
+    opacity: 0;
+    animation: stepIn 0.5s ease 0.3s forwards;
+  }
+
+  .summary-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--orange);
+  }
+
+  .summary-card .summary-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--slate-light);
+    white-space: pre-wrap;
+  }
+
+  .summary-card .cta-link {
+    display: inline-block;
+    margin-top: 16px;
+    color: var(--orange);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+  }
+
+  .summary-card .cta-link:hover { text-decoration: underline; }
+
+  /* Payment card */
+  .payment-card {
+    background: linear-gradient(135deg, var(--navy-light) 0%, #1a2744 100%);
+    border: 1px solid var(--green);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 16px;
+    opacity: 0;
+    animation: stepIn 0.5s ease 0.3s forwards;
+    text-align: center;
+  }
+
+  .payment-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--green);
+  }
+
+  .payment-card .payment-detail {
+    font-size: 13px;
+    color: var(--slate-light);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .payment-card .payment-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--navy-mid);
+  }
+
+  .payment-card .payment-row:last-of-type { border-bottom: none; }
+  .payment-card .payment-label { color: var(--slate); }
+  .payment-card .payment-value { color: var(--white); font-weight: 600; }
+
+  .payment-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .pay-btn {
+    padding: 12px 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .pay-btn:hover { transform: translateY(-1px); }
+  .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .pay-btn-stripe {
+    background: #635bff;
+    color: white;
+  }
+
+  .pay-btn-stripe:hover { background: #5046e5; }
+
+  .pay-btn-usdc {
+    background: #2775ca;
+    color: white;
+  }
+
+  .pay-btn-usdc:hover { background: #1d5fa0; }
+
+  /* Payment confirmation */
+  .payment-success {
+    background: linear-gradient(135deg, #0f2a1a 0%, #1a2744 100%);
+    border: 1px solid var(--green);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 16px;
+    text-align: center;
+    opacity: 0;
+    animation: stepIn 0.5s ease forwards;
+  }
+
+  .payment-success h3 { color: var(--green); font-size: 18px; margin-bottom: 12px; }
+  .payment-success .receipt-link { color: var(--orange); font-weight: 600; text-decoration: none; font-size: 14px; }
+  .payment-success .receipt-link:hover { text-decoration: underline; }
+
+  /* Error */
+  .error-msg {
+    background: #7f1d1d;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #fca5a5;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .error-msg.visible { display: block; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 12px;
+    color: var(--slate);
+    line-height: 1.6;
+  }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .container { padding: 16px 12px 32px; }
+    .header h1 { font-size: 22px; }
+    .site-info-grid { grid-template-columns: 1fr; }
+    textarea { min-height: 140px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <div class="logo">YAK ROBOTICS</div>
+    <h1>Live Auction + Payment</h1>
+    <p>Watch Claude orchestrate a real auction — then settle with real money</p>
+  </div>
+
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+    <span class="progress-text" id="progressText">Initializing...</span>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="form-section">
+    <label>RFP Document</label>
+    <textarea id="rfpText">MICHIGAN DEPARTMENT OF TRANSPORTATION
+REQUEST FOR PROPOSAL — SURVEY SERVICES
+
+Project: US-131 Resurfacing, Kalamazoo County
+Control Section: 39042
+
+SCOPE: Topographic survey of US-131 from mile marker 36.2 to 42.8
+(6.6 miles of divided highway). Cross-sections at 50-foot intervals,
+aerial LiDAR with RTK-GPS ground control, all drainage structures
+and utilities mapped. Deliverables: LandXML, DXF, LAS point cloud,
+GeoTIFF orthomosaic. Michigan PLS required. FAA Part 107 required.
+Budget: $45,000. Deadline: 14 days.</textarea>
+
+    <label style="margin-top: 16px;">Site Info</label>
+    <div class="site-info-grid">
+      <div>
+        <div class="field-label">Project</div>
+        <input type="text" id="siteProject" value="US-131 Resurfacing">
+      </div>
+      <div>
+        <div class="field-label">Location</div>
+        <input type="text" id="siteLocation" value="Kalamazoo County, MI">
+      </div>
+      <div>
+        <div class="field-label">Agency</div>
+        <input type="text" id="siteAgency" value="MDOT">
+      </div>
+      <div>
+        <div class="field-label">Terrain</div>
+        <input type="text" id="siteTerrain" value="Highway corridor">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section" style="margin-bottom:12px">
+    <label>MCP Server URL <span style="text-transform:none;letter-spacing:0;font-weight:400">(paste your tunnel URL)</span></label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" id="tunnelUrl" value="https://mcp.yakrobot.bid" placeholder="https://your-tunnel.trycloudflare.com" style="flex:1;background:var(--navy);border:1px solid var(--navy-mid);border-radius:6px;color:var(--white);font-family:'Inter',sans-serif;font-size:13px;padding:10px 12px">
+      <button onclick="testTunnel()" style="background:var(--navy-mid);color:var(--slate-light);border:none;border-radius:6px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap" id="testBtn">Test</button>
+    </div>
+    <div id="tunnelStatus" style="font-size:11px;margin-top:6px;color:var(--slate)">Enter the URL shown when you start mcp_server.py</div>
+  </div>
+
+  <button class="run-btn" id="runBtn" onclick="runDemo()">Run Live Demo</button>
+
+  <div class="step-feed" id="stepFeed"></div>
+
+  <div class="footer">
+    Powered by Claude Haiku 4.5 + YAK ROBOTICS auction engine (34 MCP tools) + Stripe Connect
+  </div>
+
+</div>
+
+<script>
+const WORKER_URL = 'https://yakrobot-chat.rafaeldf2.workers.dev/api/demo';
+
+async function testTunnel() {
+  const url = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
+  const status = document.getElementById('tunnelStatus');
+  const btn = document.getElementById('testBtn');
+  if (!url) { status.textContent = 'Enter a URL first'; status.style.color = '#ef4444'; return; }
+  btn.textContent = '...';
+  status.textContent = 'Testing connection...';
+  status.style.color = 'var(--slate)';
+  try {
+    const r = await fetch(url + '/health', {mode:'cors'});
+    if (r.ok) {
+      const data = await r.json();
+      status.textContent = 'Connected: ' + data.tools + ' tools, ' + data.fleet + ' operators, wallet $' + data.wallet;
+      status.style.color = '#22c55e';
+    } else {
+      status.textContent = 'Server returned ' + r.status;
+      status.style.color = '#ef4444';
+    }
+  } catch(e) {
+    status.textContent = 'Cannot reach server. Is mcp_server.py running? (' + e.message + ')';
+    status.style.color = '#ef4444';
+  }
+  btn.textContent = 'Test';
+}
+
+async function runDemo() {
+  const tunnelUrl = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
+  if (!tunnelUrl) {
+    document.getElementById('tunnelStatus').textContent = 'Enter the MCP server URL first';
+    document.getElementById('tunnelStatus').style.color = '#ef4444';
+    return;
+  }
+
+  const btn = document.getElementById('runBtn');
+  const feed = document.getElementById('stepFeed');
+  const progressBar = document.getElementById('progressBar');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const errorMsg = document.getElementById('errorMsg');
+
+  // Reset
+  feed.innerHTML = '';
+  errorMsg.classList.remove('visible');
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+  progressBar.classList.add('visible');
+  progressFill.style.width = '0%';
+  progressText.textContent = 'Sending RFP to auction engine...';
+
+  // Remove any existing summary
+  const oldSummary = document.querySelector('.summary-card');
+  if (oldSummary) oldSummary.remove();
+
+  // Build prompt
+  const rfpText = document.getElementById('rfpText').value.trim();
+  const siteInfo = {
+    project_name: document.getElementById('siteProject').value.trim(),
+    location: document.getElementById('siteLocation').value.trim(),
+    agency: document.getElementById('siteAgency').value.trim(),
+    terrain: document.getElementById('siteTerrain').value.trim()
+  };
+
+  const prompt = rfpText + '\n\nSite Info: ' + JSON.stringify(siteInfo);
+
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, tunnel_url: tunnelUrl })
+    });
+
+    if (response.status === 429) {
+      showError('Demo limit reached (5/day). Try again tomorrow.');
+      resetBtn();
+      return;
+    }
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ error: 'Unknown error' }));
+      showError(err.error || 'Something went wrong. Please try again.');
+      resetBtn();
+      return;
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      showError(data.error);
+      resetBtn();
+      return;
+    }
+
+    // Play back steps with animation
+    const steps = data.steps || [];
+    const toolSteps = steps.filter(s => s.type === 'tool_call');
+    const totalToolSteps = toolSteps.length || 1;
+    let toolIndex = 0;
+
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      await delay(800);
+
+      if (step.type === 'tool_call') {
+        toolIndex++;
+        const pct = Math.round((toolIndex / totalToolSteps) * 100);
+        progressFill.style.width = pct + '%';
+        progressText.textContent = 'Step ' + toolIndex + ' of ' + totalToolSteps + ' — ' + formatToolName(step.tool_name);
+      }
+
+      appendStep(step, i);
+    }
+
+    // Show summary
+    progressFill.style.width = '100%';
+    progressText.textContent = 'Complete';
+
+    await delay(500);
+    showSummary(data.final_text);
+
+  } catch (err) {
+    showError('Network error. Check your connection and try again.');
+  }
+
+  resetBtn();
+}
+
+function appendStep(step, index) {
+  const feed = document.getElementById('stepFeed');
+  const card = document.createElement('div');
+  card.className = 'step-card';
+
+  if (step.type === 'tool_call') {
+    const resultJson = JSON.stringify(step.result, null, 2);
+    const inputJson = JSON.stringify(step.input, null, 2);
+    const toggleId = 'json-' + index;
+
+    card.innerHTML =
+      '<div class="step-dot done"></div>' +
+      '<div class="step-body">' +
+        '<div class="step-badge">' + escapeHtml(step.tool_name) + '</div>' +
+        (step.claude_text ? '<div class="step-text">' + formatStepText(step.claude_text) + '</div>' : '') +
+        '<div class="step-json-toggle" onclick="toggleJson(\'' + toggleId + '\')">Show result JSON</div>' +
+        '<div class="step-json" id="' + toggleId + '">' +
+          '// Input\n' + escapeHtml(inputJson) + '\n\n// Result\n' + escapeHtml(resultJson) +
+        '</div>' +
+      '</div>';
+  } else {
+    card.innerHTML =
+      '<div class="step-dot done"></div>' +
+      '<div class="step-body">' +
+        '<div class="step-text">' + formatStepText(step.claude_text || '') + '</div>' +
+      '</div>';
+  }
+
+  feed.appendChild(card);
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function toggleJson(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('expanded');
+}
+
+function showSummary(text) {
+  const container = document.querySelector('.container');
+  const card = document.createElement('div');
+  card.className = 'summary-card';
+  card.innerHTML =
+    '<h3>Delivery Accepted</h3>' +
+    '<div class="summary-text">' + formatStepText(text || 'Demo run completed.') + '</div>';
+  container.insertBefore(card, document.querySelector('.footer'));
+
+  // Show payment card after summary
+  setTimeout(function() { showPaymentCard(container); }, 800);
+}
+
+function showPaymentCard(container) {
+  const card = document.createElement('div');
+  card.className = 'payment-card';
+  card.id = 'paymentCard';
+
+  const amountCents = 50;
+  const feeCents = Math.round(amountCents * 0.12);
+  const operatorCents = amountCents - feeCents;
+  const operatorName = 'Apex Aerial Surveys';
+
+  card.innerHTML =
+    '<h3>Release Payment</h3>' +
+    '<div class="payment-detail">Survey data verified. Release payment to the winning operator.</div>' +
+    '<div style="max-width:300px;margin:0 auto 16px">' +
+      '<div class="payment-row"><span class="payment-label">Task total</span><span class="payment-value">$' + (amountCents / 100).toFixed(2) + '</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Operator payout (' + operatorName + ')</span><span class="payment-value">$' + (operatorCents / 100).toFixed(2) + '</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Platform commission (12%)</span><span class="payment-value">$' + (feeCents / 100).toFixed(2) + '</span></div>' +
+    '</div>' +
+    '<div class="payment-buttons">' +
+      '<button class="pay-btn pay-btn-stripe" onclick="payWithStripe(' + amountCents + ')">Pay $' + (amountCents / 100).toFixed(2) + ' with Card</button>' +
+      '<button class="pay-btn pay-btn-usdc" onclick="payWithUSDC()" disabled title="Coming soon">Pay $0.01 USDC</button>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--slate);margin-top:12px">Production payment. Real money. Stripe processes the card charge.</div>';
+
+  container.insertBefore(card, document.querySelector('.footer'));
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function payWithStripe(amountCents) {
+  const btn = document.querySelector('.pay-btn-stripe');
+  btn.disabled = true;
+  btn.textContent = 'Creating checkout...';
+
+  const currentUrl = window.location.href.split('?')[0];
+  const sessionIdPlaceholder = '{CHECKOUT_SESSION_ID}';
+
+  try {
+    const res = await fetch(WORKER_URL.replace('/api/demo', '/api/create-checkout'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount_cents: amountCents,
+        currency: 'usd',
+        operator_name: 'Apex Aerial Surveys',
+        request_id: 'demo_' + Date.now(),
+        success_url: currentUrl + '?payment=success&session_id=' + sessionIdPlaceholder,
+        cancel_url: currentUrl + '?payment=cancelled',
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      btn.textContent = 'Error: ' + data.error;
+      btn.disabled = false;
+      return;
+    }
+
+    if (data.checkout_url) {
+      // Replace placeholder with actual session ID in success URL
+      // Stripe will replace {CHECKOUT_SESSION_ID} automatically
+      window.location.href = data.checkout_url;
+    }
+  } catch (err) {
+    btn.textContent = 'Network error — try again';
+    btn.disabled = false;
+  }
+}
+
+function payWithUSDC() {
+  // Phase 2: wallet connect + USDC transfer to Splits contract
+  alert('USDC payment coming in Phase 2. Use card payment for now.');
+}
+
+// Check for payment return on page load
+function checkPaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const payment = params.get('payment');
+  const sessionId = params.get('session_id');
+
+  if (payment === 'success' && sessionId) {
+    showPaymentSuccess(sessionId);
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+  } else if (payment === 'cancelled') {
+    // User cancelled — do nothing special
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+async function showPaymentSuccess(sessionId) {
+  const container = document.querySelector('.container');
+  const feed = document.getElementById('stepFeed');
+  feed.innerHTML = '';
+
+  // Remove any existing payment/summary cards
+  document.querySelectorAll('.payment-card, .summary-card').forEach(function(el) { el.remove(); });
+
+  // Poll for payment status
+  let status = { status: 'pending' };
+  for (let i = 0; i < 10; i++) {
+    try {
+      const res = await fetch(WORKER_URL.replace('/api/demo', '/api/payment-status') + '?session_id=' + sessionId);
+      status = await res.json();
+      if (status.status === 'paid') break;
+    } catch {}
+    await delay(2000);
+  }
+
+  const card = document.createElement('div');
+  card.className = 'payment-success';
+
+  if (status.status === 'paid') {
+    const amountStr = status.amount_cents ? '$' + (status.amount_cents / 100).toFixed(2) : '$0.50';
+    const feeCents = Math.round((status.amount_cents || 50) * 0.12);
+    const operatorCents = (status.amount_cents || 50) - feeCents;
+    const operatorName = status.operator_name || 'Robot Operator';
+
+    card.innerHTML =
+      '<h3>Payment Complete</h3>' +
+      '<div style="font-size:14px;color:var(--slate-light);margin-bottom:16px">' +
+        'Real money moved through a real robot auction.' +
+      '</div>' +
+      '<div style="max-width:300px;margin:0 auto 16px;text-align:left">' +
+        '<div class="payment-row"><span class="payment-label">Total charged</span><span class="payment-value">' + amountStr + '</span></div>' +
+        '<div class="payment-row"><span class="payment-label">' + operatorName + ' received</span><span class="payment-value" style="color:var(--green)">$' + (operatorCents / 100).toFixed(2) + '</span></div>' +
+        '<div class="payment-row"><span class="payment-label">Platform commission</span><span class="payment-value">$' + (feeCents / 100).toFixed(2) + '</span></div>' +
+      '</div>' +
+      (status.receipt_url ? '<a class="receipt-link" href="' + status.receipt_url + '" target="_blank">View Stripe receipt &rarr;</a><br>' : '') +
+      '<a class="receipt-link" href="https://yakrobot.bid" target="_blank" style="margin-top:8px;display:inline-block">Back to yakrobot.bid &rarr;</a>';
+  } else {
+    card.innerHTML =
+      '<h3>Payment Processing</h3>' +
+      '<div style="font-size:14px;color:var(--slate-light)">Your payment is being processed. Check your email for a Stripe receipt.</div>' +
+      '<a class="receipt-link" href="https://yakrobot.bid" target="_blank" style="margin-top:12px;display:inline-block">Back to yakrobot.bid &rarr;</a>';
+  }
+
+  container.insertBefore(card, document.querySelector('.footer'));
+}
+
+// Run on page load
+checkPaymentReturn();
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('visible');
+  const bar = document.getElementById('progressBar');
+  bar.classList.remove('visible');
+}
+
+function resetBtn() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = false;
+  btn.textContent = 'Run Live Demo';
+}
+
+function formatToolName(name) {
+  const map = {
+    'auction_process_rfp': 'Processing RFP...',
+    'auction_post_task': 'Posting task...',
+    'auction_get_bids': 'Collecting bids...',
+    'auction_review_bids': 'Reviewing bids...',
+    'auction_verify_bond': 'Verifying bond...',
+    'auction_award_with_confirmation': 'Awarding task...',
+    'auction_generate_agreement': 'Generating agreement...',
+    'auction_execute': 'Executing task...',
+    'auction_confirm_delivery': 'Confirming delivery...',
+    'auction_list_tasks': 'Listing tasks...'
+  };
+  return map[name] || name;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatStepText(str) {
+  if (!str) return '';
+  // Escape first for XSS safety, then apply markdown formatting
+  var html = escapeHtml(str);
+
+  // Bold: **text**
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // Split into lines for block-level processing
+  var lines = html.split('\n');
+  var out = [];
+  var inList = false;
+  var listType = '';
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var ulMatch = line.match(/^(\s*)[-*]\s+(.*)/);
+    var olMatch = line.match(/^(\s*)\d+\.\s+(.*)/);
+
+    if (ulMatch) {
+      if (!inList || listType !== 'ul') {
+        if (inList) out.push('</' + listType + '>');
+        out.push('<ul>');
+        inList = true;
+        listType = 'ul';
+      }
+      out.push('<li>' + ulMatch[2] + '</li>');
+    } else if (olMatch) {
+      if (!inList || listType !== 'ol') {
+        if (inList) out.push('</' + listType + '>');
+        out.push('<ol>');
+        inList = true;
+        listType = 'ol';
+      }
+      out.push('<li>' + olMatch[2] + '</li>');
+    } else {
+      if (inList) {
+        out.push('</' + listType + '>');
+        inList = false;
+        listType = '';
+      }
+      if (line.trim() === '') {
+        // Blank line = paragraph break (skip consecutive)
+        if (out.length > 0 && out[out.length - 1] !== '</p><p>') {
+          out.push('</p><p>');
+        }
+      } else {
+        out.push(line);
+      }
+    }
+  }
+  if (inList) out.push('</' + listType + '>');
+
+  var result = out.join('\n');
+  // Wrap in paragraphs
+  result = '<p>' + result + '</p>';
+  // Clean up empty paragraphs and stray <br> after paragraph/block boundaries
+  result = result.replace(/<p>\s*<\/p>/g, '');
+  // Turn remaining newlines into <br> but not adjacent to block tags
+  result = result.replace(/\n(?!<\/?(?:ul|ol|li|p))/g, function(m, offset, s) {
+    // Don't add <br> right after a block closing tag
+    var before = s.slice(Math.max(0, offset - 5), offset);
+    if (/<\/(ul|ol|li|p)>$/.test(before)) return '\n';
+    return '<br>';
+  });
+  // Clean up any <br> immediately after <p> or </p>
+  result = result.replace(/<p><br>/g, '<p>');
+  result = result.replace(/<br><\/p>/g, '</p>');
+  return result;
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+</script>
+
+<!-- Chat Widget -->
+<style>
+.chat-fab{position:fixed;bottom:24px;right:24px;z-index:9000;width:52px;height:52px;border-radius:50%;background:var(--orange);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:transform 0.15s,box-shadow 0.15s}
+.chat-fab:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(0,0,0,0.4)}
+.chat-fab svg{width:24px;height:24px}
+.chat-fab.open svg.icon-chat{display:none}
+.chat-fab:not(.open) svg.icon-close{display:none}
+.chat-panel{position:fixed;bottom:88px;right:24px;z-index:8999;width:380px;max-width:calc(100vw - 48px);height:520px;max-height:calc(100vh - 120px);background:var(--navy-light);border:1px solid var(--navy-mid);border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.4);display:none;flex-direction:column;overflow:hidden}
+.chat-panel.open{display:flex}
+.chat-header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;border-bottom:1px solid var(--navy-mid)}
+.chat-header-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.chat-header-title{font-size:13px;font-weight:600}
+.chat-header-sub{font-size:11px;opacity:0.5;margin-left:auto}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:85%;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.5;word-wrap:break-word}
+.chat-msg a{color:var(--orange);text-decoration:underline}
+.chat-msg-user{align-self:flex-end;background:var(--navy-mid);color:#fff;border-bottom-right-radius:2px}
+.chat-msg-assistant{align-self:flex-start;background:var(--navy);color:var(--slate-light);border-bottom-left-radius:2px}
+.chat-msg-assistant p{margin:0 0 6px}.chat-msg-assistant p:last-child{margin-bottom:0}
+.chat-msg-typing{align-self:flex-start;background:var(--navy);color:var(--slate);font-style:italic;padding:10px 14px;border-radius:8px;border-bottom-left-radius:2px}
+.chat-input-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--navy-mid);background:var(--navy-light);flex-shrink:0}
+.chat-input-row input{flex:1;border:1px solid var(--navy-mid);border-radius:6px;padding:8px 12px;font-family:inherit;font-size:13px;color:#fff;background:var(--navy);outline:none}
+.chat-input-row input:focus{border-color:var(--orange)}
+.chat-input-row input::placeholder{color:var(--slate)}
+.chat-input-row button{background:var(--orange);color:#fff;border:none;border-radius:6px;padding:8px 14px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.chat-input-row button:hover{background:var(--orange-hover)}
+.chat-input-row button:disabled{opacity:0.5;cursor:not-allowed}
+@media(max-width:500px){.chat-panel{bottom:0;right:0;width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0}.chat-fab{bottom:16px;right:16px}}
+</style>
+
+<button class="chat-fab" id="chatFab" onclick="toggleChat()">
+  <svg class="icon-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div class="chat-header-dot"></div>
+    <div class="chat-header-title">YAK ROBOTICS</div>
+    <div class="chat-header-sub">Ask about the demo</div>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg chat-msg-assistant">Ask me anything about the live demo, the auction engine, how the marketplace works, or the technology behind it.</div>
+    <div style="font-size:10px;color:var(--slate);text-align:center;padding:4px 14px;">Demo assistant for illustrative purposes only.</div>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Ask about the demo..." onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendChat()">
+    <button id="chatSend" onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var CHAT_API = 'https://yakrobot-chat.rafaeldf2.workers.dev/api/chat';
+  var messages = [];
+  var sending = false;
+
+  window.toggleChat = function(){
+    document.getElementById('chatFab').classList.toggle('open');
+    document.getElementById('chatPanel').classList.toggle('open');
+    if(document.getElementById('chatPanel').classList.contains('open'))
+      document.getElementById('chatInput').focus();
+  };
+
+  window.sendChat = function(){
+    if(sending) return;
+    var input = document.getElementById('chatInput');
+    var text = input.value.trim();
+    if(!text) return;
+    input.value = '';
+    appendMsg('user', text);
+    messages.push({role:'user', content:text});
+
+    var typing = document.createElement('div');
+    typing.className = 'chat-msg chat-msg-typing';
+    typing.id = 'chatTyping';
+    typing.textContent = 'Thinking...';
+    document.getElementById('chatMessages').appendChild(typing);
+    scrollChat();
+
+    sending = true;
+    document.getElementById('chatSend').disabled = true;
+
+    fetch(CHAT_API, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({messages: messages})
+    }).then(function(res){
+      if(res.status === 429){
+        var t=document.getElementById('chatTyping');if(t)t.remove();
+        appendMsg('assistant','Daily limit reached. Try again tomorrow.');
+        sending=false;document.getElementById('chatSend').disabled=false;
+        return;
+      }
+      var ct = res.headers.get('Content-Type')||'';
+      if(ct.indexOf('application/json')!==-1){
+        return res.json().then(function(data){
+          var t=document.getElementById('chatTyping');if(t)t.remove();
+          if(data.error) appendMsg('assistant',data.error);
+          else if(data.reply) appendMsg('assistant',data.reply);
+          sending=false;document.getElementById('chatSend').disabled=false;
+        });
+      }
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = '';
+      var fullText = '';
+      var t = document.getElementById('chatTyping');
+      if(t) t.remove();
+      var msgEl = document.createElement('div');
+      msgEl.className = 'chat-msg chat-msg-assistant';
+      document.getElementById('chatMessages').appendChild(msgEl);
+
+      function read(){
+        reader.read().then(function(result){
+          if(result.done){
+            if(fullText){messages.push({role:'assistant',content:fullText});msgEl.innerHTML=formatMsg(fullText)}
+            sending=false;document.getElementById('chatSend').disabled=false;scrollChat();return;
+          }
+          buffer += decoder.decode(result.value,{stream:true});
+          var lines = buffer.split('\n');
+          buffer = lines.pop()||'';
+          for(var i=0;i<lines.length;i++){
+            var line=lines[i].trim();
+            if(line.startsWith('data: ')){
+              var data=line.slice(6);
+              if(data==='[DONE]') continue;
+              try{var evt=JSON.parse(data);if(evt.type==='content_block_delta'&&evt.delta&&evt.delta.text){fullText+=evt.delta.text;msgEl.innerHTML=formatMsg(fullText);scrollChat()}}catch(e){}
+            }
+          }
+          read();
+        });
+      }
+      read();
+    }).catch(function(err){
+      var t=document.getElementById('chatTyping');if(t)t.remove();
+      appendMsg('assistant','Could not connect. Please try again.');
+      sending=false;document.getElementById('chatSend').disabled=false;
+    });
+  };
+
+  function appendMsg(role,text){
+    var el=document.createElement('div');
+    el.className='chat-msg chat-msg-'+role;
+    el.innerHTML=role==='user'?esc(text):formatMsg(text);
+    document.getElementById('chatMessages').appendChild(el);
+    scrollChat();
+  }
+  function scrollChat(){var c=document.getElementById('chatMessages');c.scrollTop=c.scrollHeight}
+  function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+  function formatMsg(text){
+    var html=esc(text);
+    html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    html=html.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+    html=html.replace(/\n\n/g,'</p><p>');
+    html=html.replace(/\n/g,'<br>');
+    return '<p>'+html+'</p>';
+  }
+})();
+</script>
+
+</body>
+</html>
