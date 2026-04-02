@@ -1238,3 +1238,64 @@ def register_auction_tools(
             }
         except Exception as exc:
             return _error_response(exc)
+
+    @mcp.tool()
+    async def auction_submit_feedback(
+        request_id: str,
+        role: str = "buyer",
+        rating: int = 5,
+        comment: str = "",
+        robot_id: str = "",
+    ) -> dict:
+        """Submit feedback after a completed auction.
+
+        Both buyers and operators can rate the transaction. Feedback
+        is recorded in the event log and reputation system.
+
+        Args:
+            request_id: Task request ID.
+            role: "buyer" or "operator".
+            rating: 1-5 stars.
+            comment: Optional free-text feedback.
+            robot_id: Robot/operator ID (required if role is "buyer").
+        """
+        try:
+            if rating < 1 or rating > 5:
+                return {"error": True, "error_code": "INVALID_RATING", "message": "rating must be 1-5"}
+
+            if role not in ("buyer", "operator"):
+                return {"error": True, "error_code": "INVALID_ROLE", "message": "role must be 'buyer' or 'operator'"}
+
+            # Record in reputation system
+            if engine.reputation is not None and role == "buyer" and robot_id:
+                # Buyer rating of operator — record as reputation signal
+                engine.reputation.record_outcome(
+                    robot_id=robot_id,
+                    request_id=request_id,
+                    outcome="feedback",
+                    sla_met=rating >= 3,
+                )
+
+            # Emit event
+            if engine.events is not None:
+                engine.events.emit(
+                    "feedback.submitted",
+                    request_id=request_id,
+                    actor_id=robot_id if role == "operator" else "buyer",
+                    actor_role=role,
+                    data={
+                        "rating": rating,
+                        "comment": comment,
+                        "robot_id": robot_id,
+                    },
+                )
+
+            return {
+                "recorded": True,
+                "request_id": request_id,
+                "role": role,
+                "rating": rating,
+                "note": "Feedback recorded in event log and reputation system.",
+            }
+        except Exception as exc:
+            return _error_response(exc)

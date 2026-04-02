@@ -252,6 +252,10 @@ export default {
       return handleUploadDelivery(request, env, cors);
     }
 
+    if (url.pathname === "/api/auction-feedback" && request.method === "POST") {
+      return handleAuctionFeedback(request, env, cors);
+    }
+
     return new Response("Not found", { status: 404, headers: cors });
   },
 };
@@ -1141,4 +1145,129 @@ async function handleUploadDelivery(request, env, cors) {
       { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
+}
+
+// --- Auction feedback handler ---
+
+async function handleAuctionFeedback(request, env, cors) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(
+      JSON.stringify({ error: "Invalid JSON" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  const {
+    request_id,
+    role,              // "buyer" or "operator"
+    robot_id,
+    robot_name,
+    rating,            // 1-5
+    comment,
+    payment_method,    // "stripe" or "usdc"
+    payment_tx,        // tx hash or stripe transfer id
+    ipfs_cid,          // delivery CID
+    delivery_accepted, // boolean
+  } = body;
+
+  if (!request_id || !role || rating === undefined) {
+    return new Response(
+      JSON.stringify({ error: "request_id, role, and rating required" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  if (rating < 1 || rating > 5) {
+    return new Response(
+      JSON.stringify({ error: "rating must be 1-5" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  const timestamp = new Date().toISOString();
+  const feedbackId = `af_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+  const entry = {
+    id: feedbackId,
+    timestamp,
+    request_id: sanitizeInput(request_id || "").slice(0, 100),
+    role: role === "operator" ? "operator" : "buyer",
+    robot_id: sanitizeInput(robot_id || "").slice(0, 100),
+    robot_name: sanitizeInput(robot_name || "").slice(0, 200),
+    rating: Math.min(5, Math.max(1, parseInt(rating))),
+    comment: sanitizeInput(comment || "").slice(0, 1000),
+    payment_method: sanitizeInput(payment_method || "").slice(0, 20),
+    payment_tx: sanitizeInput(payment_tx || "").slice(0, 200),
+    ipfs_cid: sanitizeInput(ipfs_cid || "").slice(0, 100),
+    delivery_accepted: !!delivery_accepted,
+    ip_country: request.headers.get("CF-IPCountry") || "unknown",
+  };
+
+  // Store in KV
+  if (env.FEEDBACK_KV) {
+    await env.FEEDBACK_KV.put(
+      `auction-feedback:${feedbackId}`,
+      JSON.stringify(entry),
+      { expirationTtl: 365 * 86400 } // Keep for 1 year
+    );
+  }
+
+  // Create GitHub issue for visibility (if GITHUB_TOKEN is set)
+  let issueUrl = null;
+  if (env.GITHUB_TOKEN) {
+    try {
+      const stars = "★".repeat(entry.rating) + "☆".repeat(5 - entry.rating);
+      const issueBody = [
+        `## Auction Feedback`,
+        ``,
+        `| Field | Value |`,
+        `|-------|-------|`,
+        `| **Rating** | ${stars} (${entry.rating}/5) |`,
+        `| **Role** | ${entry.role} |`,
+        `| **Robot** | ${entry.robot_name} (${entry.robot_id}) |`,
+        `| **Request ID** | \`${entry.request_id}\` |`,
+        `| **Payment** | ${entry.payment_method} ${entry.payment_tx ? '`' + entry.payment_tx + '`' : 'N/A'} |`,
+        `| **Delivery** | ${entry.delivery_accepted ? 'Accepted' : 'Rejected'} ${entry.ipfs_cid ? '[IPFS](' + 'https://gateway.pinata.cloud/ipfs/' + entry.ipfs_cid + ')' : ''} |`,
+        `| **Timestamp** | ${entry.timestamp} |`,
+        ``,
+        entry.comment ? `### Comment\n${entry.comment}` : '_No comment provided._',
+        ``,
+        `---`,
+        `_Submitted automatically by the YAK ROBOTICS marketplace demo._`,
+      ].join("\n");
+
+      const ghRes = await fetch("https://api.github.com/repos/YakRoboticsGarage/robot-marketplace/issues", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${env.GITHUB_TOKEN}`,
+          "Content-Type": "application/json",
+          "User-Agent": "yakrobot-chat-worker",
+        },
+        body: JSON.stringify({
+          title: `[Feedback] ${stars} — ${entry.robot_name || 'Robot'} (${entry.role})`,
+          body: issueBody,
+          labels: ["feedback", "auction", entry.role],
+        }),
+      });
+
+      if (ghRes.ok) {
+        const issue = await ghRes.json();
+        issueUrl = issue.html_url;
+      }
+    } catch (e) {
+      console.error("GitHub issue creation failed:", e);
+    }
+  }
+
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      feedback_id: feedbackId,
+      issue_url: issueUrl,
+    }),
+    { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+  );
 }

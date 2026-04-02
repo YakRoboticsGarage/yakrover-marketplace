@@ -1397,7 +1397,6 @@ async function payWithUSDC(operatorWallet) {
 
 function showUsdcSuccess(data) {
   var container = document.querySelector('.container');
-  // Remove payment card
   var pc = document.getElementById('paymentCard');
   if (pc) pc.remove();
 
@@ -1422,6 +1421,105 @@ function showUsdcSuccess(data) {
 
   container.insertBefore(card, document.querySelector('.footer'));
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Show feedback prompt after payment
+  setTimeout(function() {
+    showFeedbackPrompt(container, {
+      payment_method: 'usdc',
+      payment_tx: data.operator_tx,
+    });
+  }, 1000);
+}
+
+function showFeedbackPrompt(container, paymentInfo) {
+  var robotName = discoveredRobots.length > 0 ? discoveredRobots[0].name : 'Robot Operator';
+  var robotId = discoveredRobots.length > 0 ? discoveredRobots[0].agent_id : '';
+
+  var card = document.createElement('div');
+  card.className = 'step-card';
+  card.style.marginTop = '16px';
+  card.innerHTML =
+    '<div class="step-dot done" style="background:var(--orange)"></div>' +
+    '<div class="step-body">' +
+      '<div style="font-size:14px;font-weight:600;color:var(--white);margin-bottom:8px">Step 5 — Rate this transaction</div>' +
+      '<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">How was your experience with ' + escapeHtml(robotName) + '?</div>' +
+      '<div id="feedbackStars" style="font-size:24px;cursor:pointer;margin-bottom:8px">' +
+        '<span data-star="1" onmouseover="previewStars(1)" onmouseout="resetStars()" onclick="selectStar(1)">☆</span>' +
+        '<span data-star="2" onmouseover="previewStars(2)" onmouseout="resetStars()" onclick="selectStar(2)">☆</span>' +
+        '<span data-star="3" onmouseover="previewStars(3)" onmouseout="resetStars()" onclick="selectStar(3)">☆</span>' +
+        '<span data-star="4" onmouseover="previewStars(4)" onmouseout="resetStars()" onclick="selectStar(4)">☆</span>' +
+        '<span data-star="5" onmouseover="previewStars(5)" onmouseout="resetStars()" onclick="selectStar(5)">☆</span>' +
+      '</div>' +
+      '<textarea id="feedbackComment" placeholder="Optional: share what went well or what could improve..." style="width:100%;min-height:60px;background:var(--navy);border:1px solid var(--navy-mid);border-radius:4px;color:var(--white);font-family:Inter,sans-serif;font-size:12px;padding:8px;resize:vertical;margin-bottom:8px"></textarea>' +
+      '<button class="pay-btn" style="background:var(--orange);font-size:12px;padding:8px 16px" id="feedbackSubmitBtn" onclick="submitFeedback(\'' + escapeHtml(robotId) + '\',\'' + escapeHtml(robotName) + '\',\'' + escapeHtml(paymentInfo.payment_method || '') + '\',\'' + escapeHtml(paymentInfo.payment_tx || '') + '\')">Submit Feedback</button>' +
+      '<span id="feedbackStatus" style="font-size:11px;color:var(--slate);margin-left:8px"></span>' +
+    '</div>';
+
+  container.insertBefore(card, document.querySelector('.footer'));
+}
+
+var selectedRating = 0;
+
+function previewStars(n) {
+  var spans = document.querySelectorAll('#feedbackStars span');
+  spans.forEach(function(s, i) { s.textContent = i < n ? '★' : '☆'; s.style.color = i < n ? 'var(--orange)' : 'var(--slate)'; });
+}
+
+function resetStars() {
+  previewStars(selectedRating);
+}
+
+function selectStar(n) {
+  selectedRating = n;
+  previewStars(n);
+}
+
+async function submitFeedback(robotId, robotName, paymentMethod, paymentTx) {
+  if (selectedRating === 0) {
+    document.getElementById('feedbackStatus').textContent = 'Please select a rating';
+    return;
+  }
+
+  var btn = document.getElementById('feedbackSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  var comment = document.getElementById('feedbackComment').value.trim();
+
+  try {
+    var res = await fetch(WORKER_BASE + '/api/auction-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        request_id: 'demo_' + Date.now(),
+        role: 'buyer',
+        robot_id: robotId,
+        robot_name: robotName,
+        rating: selectedRating,
+        comment: comment,
+        payment_method: paymentMethod,
+        payment_tx: paymentTx,
+        delivery_accepted: true,
+      }),
+    });
+
+    var data = await res.json();
+    if (data.ok) {
+      btn.textContent = 'Submitted ✓';
+      var status = document.getElementById('feedbackStatus');
+      status.style.color = 'var(--green)';
+      status.textContent = 'Thank you! ';
+      if (data.issue_url) {
+        status.innerHTML += '<a href="' + data.issue_url + '" target="_blank" style="color:var(--orange);text-decoration:none">View on GitHub →</a>';
+      }
+    } else {
+      btn.textContent = 'Error — try again';
+      btn.disabled = false;
+    }
+  } catch (e) {
+    btn.textContent = 'Network error';
+    btn.disabled = false;
+  }
 }
 
 // Check for payment return on page load
@@ -1488,6 +1586,16 @@ async function showPaymentSuccess(sessionId) {
   }
 
   container.insertBefore(card, document.querySelector('.footer'));
+
+  // Show feedback after Stripe payment too
+  if (status.status === 'paid') {
+    setTimeout(function() {
+      showFeedbackPrompt(container, {
+        payment_method: 'stripe',
+        payment_tx: status.payment_intent || '',
+      });
+    }, 1000);
+  }
 }
 
 // Run on page load
