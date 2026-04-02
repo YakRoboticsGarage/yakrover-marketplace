@@ -420,6 +420,75 @@
   .payment-success .receipt-link { color: var(--orange); font-weight: 600; text-decoration: none; font-size: 14px; }
   .payment-success .receipt-link:hover { text-decoration: underline; }
 
+  /* Robot discovery cards */
+  .robot-disc-card {
+    background: var(--navy);
+    border: 1px solid var(--navy-mid);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .robot-disc-name { font-size: 14px; font-weight: 600; color: var(--white); }
+  .robot-disc-meta { font-size: 12px; color: var(--slate); margin-top: 2px; }
+  .robot-disc-badges { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-green { background: #064e3b; color: #6ee7b7; }
+  .badge-yellow { background: #78350f; color: #fcd34d; }
+  .badge-red { background: #7f1d1d; color: #fca5a5; }
+  .badge-blue { background: #1e3a5f; color: #93c5fd; }
+
+  /* Discovery status states */
+  .discovery-empty {
+    text-align: center;
+    padding: 24px;
+    border: 1px dashed var(--navy-mid);
+    border-radius: var(--radius);
+    color: var(--slate);
+  }
+
+  .discovery-empty h4 { color: var(--slate-light); margin-bottom: 8px; font-size: 14px; }
+  .discovery-empty p { font-size: 12px; line-height: 1.6; }
+  .discovery-empty a { color: var(--orange); text-decoration: none; }
+  .discovery-empty a:hover { text-decoration: underline; }
+
+  /* Delivery verification card */
+  .delivery-card {
+    background: linear-gradient(135deg, var(--navy-light) 0%, #1a2744 100%);
+    border: 1px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 16px;
+    opacity: 0;
+    animation: stepIn 0.5s ease 0.3s forwards;
+  }
+
+  .delivery-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--blue); }
+
+  .file-manifest {
+    font-size: 12px;
+    font-family: monospace;
+    background: var(--navy);
+    border-radius: var(--radius);
+    padding: 10px;
+    margin: 8px 0;
+  }
+
+  .file-row { display: flex; justify-content: space-between; padding: 3px 0; color: var(--slate-light); }
+  .file-row .file-name { color: var(--white); }
+  .file-row .file-size { color: var(--slate); }
+
   /* Error */
   .error-msg {
     background: #7f1d1d;
@@ -458,7 +527,16 @@
   <div class="header">
     <div class="logo">YAK ROBOTICS</div>
     <h1>Live Auction + Payment</h1>
-    <p>Watch Claude orchestrate a real auction — then settle with real money</p>
+    <p>Real robots on Base. Real auction. Real payment settlement.</p>
+  </div>
+
+  <!-- Step 1: Robot Discovery -->
+  <div class="form-section" id="discoverySection">
+    <label>Step 1 — Discover Robots on Base</label>
+    <div id="discoveryStatus" style="font-size:13px;color:var(--slate-light);padding:8px 0">
+      Checking for registered robots on Base...
+    </div>
+    <div id="robotCards" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
   </div>
 
   <div class="progress-bar" id="progressBar">
@@ -470,8 +548,9 @@
 
   <div class="error-msg" id="errorMsg"></div>
 
-  <div class="form-section">
-    <label>RFP Document</label>
+  <!-- Step 2: RFP + Auction -->
+  <div class="form-section" id="rfpSection">
+    <label>Step 2 — RFP Document</label>
     <textarea id="rfpText">MICHIGAN DEPARTMENT OF TRANSPORTATION
 REQUEST FOR PROPOSAL — SURVEY SERVICES
 
@@ -483,7 +562,7 @@ SCOPE: Topographic survey of US-131 from mile marker 36.2 to 42.8
 aerial LiDAR with RTK-GPS ground control, all drainage structures
 and utilities mapped. Deliverables: LandXML, DXF, LAS point cloud,
 GeoTIFF orthomosaic. Michigan PLS required. FAA Part 107 required.
-Budget: $45,000. Deadline: 14 days.</textarea>
+Budget: $0.50. Deadline: 14 days.</textarea>
 
     <label style="margin-top: 16px;">Site Info</label>
     <div class="site-info-grid">
@@ -515,18 +594,119 @@ Budget: $45,000. Deadline: 14 days.</textarea>
     <div id="tunnelStatus" style="font-size:11px;margin-top:6px;color:var(--slate)">Enter the URL shown when you start mcp_server.py</div>
   </div>
 
-  <button class="run-btn" id="runBtn" onclick="runDemo()">Run Live Demo</button>
+  <button class="run-btn" id="runBtn" onclick="runDemo()">Run Auction</button>
 
   <div class="step-feed" id="stepFeed"></div>
 
   <div class="footer">
-    Powered by Claude Haiku 4.5 + YAK ROBOTICS auction engine (34 MCP tools) + Stripe Connect
+    Powered by Claude Haiku 4.5 + YAK ROBOTICS auction engine (34 MCP tools) + Stripe Connect + Base
   </div>
 
 </div>
 
 <script>
 const WORKER_URL = 'https://yakrobot-chat.rafaeldf2.workers.dev/api/demo';
+const WORKER_BASE = 'https://yakrobot-chat.rafaeldf2.workers.dev';
+
+// Global state
+var discoveredRobots = [];
+var auctionComplete = false;
+
+// ===== ROBOT DISCOVERY =====
+
+async function discoverRobots() {
+  const status = document.getElementById('discoveryStatus');
+  const cards = document.getElementById('robotCards');
+  const tunnelUrl = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
+
+  status.textContent = 'Querying Base blockchain for registered robots...';
+  status.style.color = 'var(--slate-light)';
+  cards.innerHTML = '';
+
+  // Try discovering via MCP server (which calls discovery.py)
+  if (tunnelUrl) {
+    try {
+      const r = await fetch(tunnelUrl + '/api/tool/discover_robot_agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      if (r.ok) {
+        const data = await r.json();
+        if (data.robots && data.robots.length > 0) {
+          discoveredRobots = data.robots;
+          renderDiscoveredRobots(data.robots);
+          return;
+        }
+      }
+    } catch (e) { /* fall through */ }
+  }
+
+  // No MCP server or no robots found — try direct (placeholder for future Base RPC query)
+  // For now, show truthful empty state
+  showNoRobots();
+}
+
+function renderDiscoveredRobots(robots) {
+  const status = document.getElementById('discoveryStatus');
+  const cards = document.getElementById('robotCards');
+
+  status.innerHTML = '<span style="color:var(--green)">' + robots.length + ' robot' + (robots.length > 1 ? 's' : '') + ' found on Base</span>';
+
+  robots.forEach(function(robot) {
+    var hasPayment = robot.payment && (robot.payment.stripe_connect_id || robot.payment.usdc_wallet);
+    var hasMcp = !!robot.mcp_endpoint;
+
+    var badges = '';
+    badges += '<span class="badge badge-blue">ERC-8004</span>';
+    if (hasMcp) badges += '<span class="badge badge-green">MCP</span>';
+    if (hasPayment) {
+      badges += '<span class="badge badge-green">Payment</span>';
+    } else {
+      badges += '<span class="badge badge-yellow">No Payment</span>';
+    }
+
+    var caps = (robot.capabilities || robot.mcp_tools || []).slice(0, 3).join(', ');
+
+    var card = document.createElement('div');
+    card.className = 'robot-disc-card';
+    card.innerHTML =
+      '<div>' +
+        '<div class="robot-disc-name">' + escapeHtml(robot.name || robot.agent_id) + '</div>' +
+        '<div class="robot-disc-meta">' + escapeHtml(caps || 'Capabilities loading...') +
+          (robot.agent_id ? ' &middot; <a href="https://basescan.org/token/' + escapeHtml(robot.agent_id) + '" target="_blank" style="color:var(--orange);text-decoration:none;font-size:11px">View on Basescan</a>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="robot-disc-badges">' + badges + '</div>';
+    cards.appendChild(card);
+  });
+
+  // Check if any robot can receive payment
+  var paymentReady = robots.some(function(r) { return r.payment && (r.payment.stripe_connect_id || r.payment.usdc_wallet); });
+  if (!paymentReady) {
+    var notice = document.createElement('div');
+    notice.style.cssText = 'font-size:11px;color:#fcd34d;margin-top:8px;padding:8px;background:#78350f22;border-radius:4px';
+    notice.textContent = 'Robots found but none have payment addresses configured. Auction will run but payment settlement is unavailable until operators register Stripe or wallet addresses.';
+    cards.appendChild(notice);
+  }
+}
+
+function showNoRobots() {
+  var status = document.getElementById('discoveryStatus');
+  status.innerHTML = '';
+  var cards = document.getElementById('robotCards');
+  cards.innerHTML =
+    '<div class="discovery-empty">' +
+      '<h4>No robots registered on Base</h4>' +
+      '<p>The marketplace discovers robots via ERC-8004 on-chain identity. No robots are currently registered with survey capabilities.</p>' +
+      '<p style="margin-top:8px">The demo will use <strong>simulated operators</strong> (7 Michigan construction fleet). ' +
+      'To register a real robot, see <a href="https://github.com/YakRoboticsGarage/yakrover-8004-mcp" target="_blank">yakrover-8004-mcp</a>.</p>' +
+      '<p style="margin-top:8px;font-size:11px;color:var(--slate)">Payment settlement requires at least one robot with a Stripe Connect account or USDC wallet in its agent card.</p>' +
+    '</div>';
+}
+
+// Run discovery on page load (after a short delay for tunnel URL)
+setTimeout(discoverRobots, 500);
 
 async function testTunnel() {
   const url = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
@@ -542,6 +722,8 @@ async function testTunnel() {
       const data = await r.json();
       status.textContent = 'Connected: ' + data.tools + ' tools, ' + data.fleet + ' operators, wallet $' + data.wallet;
       status.style.color = '#22c55e';
+      // Re-run discovery with the new tunnel URL
+      discoverRobots();
     } else {
       status.textContent = 'Server returned ' + r.status;
       status.style.color = '#ef4444';
@@ -693,61 +875,180 @@ function toggleJson(id) {
 
 function showSummary(text) {
   const container = document.querySelector('.container');
+
+  // Summary card
   const card = document.createElement('div');
   card.className = 'summary-card';
   card.innerHTML =
-    '<h3>Delivery Accepted</h3>' +
+    '<h3>Auction Complete</h3>' +
     '<div class="summary-text">' + formatStepText(text || 'Demo run completed.') + '</div>';
   container.insertBefore(card, document.querySelector('.footer'));
 
-  // Show payment card after summary
-  setTimeout(function() { showPaymentCard(container); }, 800);
+  // Show delivery verification card
+  setTimeout(function() { showDeliveryCard(container); }, 800);
 }
 
-function showPaymentCard(container) {
-  const card = document.createElement('div');
-  card.className = 'payment-card';
-  card.id = 'paymentCard';
+function showDeliveryCard(container) {
+  var card = document.createElement('div');
+  card.className = 'delivery-card';
 
-  const amountCents = 50;
-  const feeCents = Math.round(amountCents * 0.12);
-  const operatorCents = amountCents - feeCents;
-  const operatorName = 'Apex Aerial Surveys';
+  // Check if a real delivery IPFS CID is available (future: from auction result)
+  var hasIpfs = false; // Will be true when real robots deliver via IPFS
+  var sampleCid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi'; // placeholder
 
-  card.innerHTML =
-    '<h3>Release Payment</h3>' +
-    '<div class="payment-detail">Survey data verified. Release payment to the winning operator.</div>' +
-    '<div style="max-width:300px;margin:0 auto 16px">' +
-      '<div class="payment-row"><span class="payment-label">Task total</span><span class="payment-value">$' + (amountCents / 100).toFixed(2) + '</span></div>' +
-      '<div class="payment-row"><span class="payment-label">Operator payout (' + operatorName + ')</span><span class="payment-value">$' + (operatorCents / 100).toFixed(2) + '</span></div>' +
-      '<div class="payment-row"><span class="payment-label">Platform commission (12%)</span><span class="payment-value">$' + (feeCents / 100).toFixed(2) + '</span></div>' +
-    '</div>' +
-    '<div class="payment-buttons">' +
-      '<button class="pay-btn pay-btn-stripe" onclick="payWithStripe(' + amountCents + ')">Pay $' + (amountCents / 100).toFixed(2) + ' with Card</button>' +
-      '<button class="pay-btn pay-btn-usdc" onclick="payWithUSDC()" disabled title="Coming soon">Pay $0.01 USDC</button>' +
-    '</div>' +
-    '<div style="font-size:11px;color:var(--slate);margin-top:12px">Production payment. Real money. Stripe processes the card charge.</div>';
+  if (hasIpfs) {
+    card.innerHTML =
+      '<h3>Step 3 — Verify Delivery</h3>' +
+      '<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">The operator uploaded survey deliverables to IPFS. Verify the data before releasing payment.</div>' +
+      '<div class="file-manifest">' +
+        '<div class="file-row"><span class="file-name">point_cloud.las</span><span class="file-size">4.2 MB &middot; LAS 1.4</span></div>' +
+        '<div class="file-row"><span class="file-name">orthomosaic.tiff</span><span class="file-size">12.0 MB &middot; GeoTIFF</span></div>' +
+        '<div class="file-row"><span class="file-name">topo_surface.xml</span><span class="file-size">98 KB &middot; LandXML 1.2</span></div>' +
+        '<div class="file-row"><span class="file-name">survey_report.pdf</span><span class="file-size">210 KB &middot; PDF</span></div>' +
+      '</div>' +
+      '<div style="font-size:12px;margin-top:8px">' +
+        '<span style="color:var(--slate)">IPFS CID:</span> ' +
+        '<a href="https://ipfs.io/ipfs/' + sampleCid + '" target="_blank" style="color:var(--orange);font-family:monospace;font-size:11px;text-decoration:none">' + sampleCid.substring(0, 20) + '...</a>' +
+      '</div>' +
+      '<div style="margin-top:16px">' +
+        '<button class="pay-btn" style="background:var(--green);font-size:12px;padding:8px 16px" onclick="acceptDelivery()">Accept Delivery &amp; Proceed to Payment</button>' +
+        '<button class="pay-btn" style="background:#7f1d1d;font-size:12px;padding:8px 16px;margin-left:8px" onclick="rejectDelivery()">Reject</button>' +
+      '</div>';
+  } else {
+    // No IPFS delivery — using simulated fleet
+    card.innerHTML =
+      '<h3>Step 3 — Delivery Verification</h3>' +
+      '<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">' +
+        'Survey data delivered by simulated operator. In production, deliverables are uploaded to IPFS with a content-addressed hash (CID) that the buyer can independently verify before releasing payment.' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--slate);margin-bottom:12px;padding:10px;background:var(--navy);border-radius:4px">' +
+        '<strong style="color:var(--slate-light)">What will change with real robots:</strong><br>' +
+        '1. Robot uploads LAS/GeoTIFF/DXF to IPFS after survey<br>' +
+        '2. IPFS CID recorded on-chain (immutable proof of delivery)<br>' +
+        '3. You download and verify data quality before paying<br>' +
+        '4. Payment release is gated on your verification' +
+      '</div>';
+
+    // Check if payment is possible
+    var paymentReady = discoveredRobots.some(function(r) {
+      return r.payment && (r.payment.stripe_connect_id || r.payment.usdc_wallet);
+    });
+
+    if (paymentReady) {
+      card.innerHTML += '<button class="pay-btn" style="background:var(--green);font-size:12px;padding:8px 16px" onclick="acceptDelivery()">Accept &amp; Proceed to Payment</button>';
+    } else {
+      card.innerHTML +=
+        '<div style="margin-top:12px;font-size:12px;color:#fcd34d;padding:8px;background:#78350f22;border-radius:4px">' +
+          'Payment settlement unavailable. ' +
+          (discoveredRobots.length > 0
+            ? 'Registered robots have no payment address in their agent card. Operators need to add a Stripe Connect account or USDC wallet.'
+            : 'No robots registered on Base. Using simulated fleet — real payment requires ERC-8004 registered robots with payment addresses.') +
+        '</div>' +
+        '<button class="pay-btn" style="background:var(--green);font-size:12px;padding:8px 16px;margin-top:12px" onclick="acceptDelivery()">Accept Delivery (payment demo)</button>';
+    }
+  }
 
   container.insertBefore(card, document.querySelector('.footer'));
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-async function payWithStripe(amountCents) {
-  const btn = document.querySelector('.pay-btn-stripe');
+function acceptDelivery() {
+  var container = document.querySelector('.container');
+  showPaymentCard(container);
+  document.getElementById('paymentCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function rejectDelivery() {
+  showError('Delivery rejected. In production, the task would be re-pooled for new bids.');
+}
+
+function showPaymentCard(container) {
+  var card = document.createElement('div');
+  card.className = 'payment-card';
+  card.id = 'paymentCard';
+
+  var amountCents = 50;
+  var feeCents = Math.round(amountCents * 0.12);
+  var operatorCents = amountCents - feeCents;
+
+  // Find operator payment info from discovered robots
+  var operatorName = 'Robot Operator';
+  var stripeAccountId = null;
+  var usdcWallet = null;
+
+  if (discoveredRobots.length > 0) {
+    var robot = discoveredRobots[0]; // Use first discovered robot for demo
+    operatorName = robot.name || robot.agent_id || 'Robot Operator';
+    if (robot.payment) {
+      stripeAccountId = robot.payment.stripe_connect_id || null;
+      usdcWallet = robot.payment.usdc_wallet || null;
+    }
+  }
+
+  var stripeEnabled = !!stripeAccountId;
+  var usdcEnabled = !!usdcWallet;
+
+  card.innerHTML =
+    '<h3>Step 4 — Release Payment</h3>' +
+    '<div class="payment-detail">Delivery accepted. Release payment to the operator.</div>' +
+    '<div style="max-width:320px;margin:0 auto 16px">' +
+      '<div class="payment-row"><span class="payment-label">Task total</span><span class="payment-value">$' + (amountCents / 100).toFixed(2) + '</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Operator (' + escapeHtml(operatorName) + ')</span><span class="payment-value" style="color:var(--green)">$' + (operatorCents / 100).toFixed(2) + ' (88%)</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Platform commission</span><span class="payment-value">$' + (feeCents / 100).toFixed(2) + ' (12%)</span></div>' +
+    '</div>' +
+    '<div class="payment-buttons">' +
+      '<button class="pay-btn pay-btn-stripe" onclick="payWithStripe(' + amountCents + ',\'' + escapeHtml(stripeAccountId || '') + '\')" ' +
+        (stripeEnabled ? '' : 'disabled title="Operator has no Stripe Connect account"') + '>' +
+        'Pay $' + (amountCents / 100).toFixed(2) + ' with Card' +
+      '</button>' +
+      '<button class="pay-btn pay-btn-usdc" onclick="payWithUSDC(\'' + escapeHtml(usdcWallet || '') + '\')" ' +
+        (usdcEnabled ? '' : 'disabled title="Operator has no USDC wallet on Base"') + '>' +
+        'Pay $0.01 USDC' +
+      '</button>' +
+    '</div>';
+
+  // Show status messages for unavailable options
+  var notices = [];
+  if (!stripeEnabled) notices.push('Stripe: operator has no Connect account in agent card');
+  if (!usdcEnabled) notices.push('USDC: operator has no wallet address in agent card');
+  if (notices.length > 0 && notices.length < 2) {
+    card.innerHTML += '<div style="font-size:11px;color:var(--slate);margin-top:12px">' + notices.join(' &middot; ') + '</div>';
+  } else if (notices.length === 2) {
+    card.innerHTML +=
+      '<div style="font-size:11px;color:#fcd34d;margin-top:12px;padding:8px;background:#78350f22;border-radius:4px">' +
+        'Payment unavailable. No robots with payment addresses are registered. ' +
+        'Once an operator adds a Stripe Connect account or USDC wallet to their ERC-8004 agent card, these buttons activate.' +
+      '</div>';
+  } else {
+    card.innerHTML += '<div style="font-size:11px;color:var(--slate);margin-top:12px">Production payment. Real money.</div>';
+  }
+
+  container.insertBefore(card, document.querySelector('.footer'));
+}
+
+async function payWithStripe(amountCents, operatorAccountId) {
+  var btn = document.querySelector('.pay-btn-stripe');
   btn.disabled = true;
   btn.textContent = 'Creating checkout...';
 
-  const currentUrl = window.location.href.split('?')[0];
-  const sessionIdPlaceholder = '{CHECKOUT_SESSION_ID}';
+  var currentUrl = window.location.href.split('?')[0];
+  var sessionIdPlaceholder = '{CHECKOUT_SESSION_ID}';
+
+  // Find operator name from discovered robots
+  var operatorName = 'Robot Operator';
+  if (discoveredRobots.length > 0) {
+    operatorName = discoveredRobots[0].name || operatorName;
+  }
 
   try {
-    const res = await fetch(WORKER_URL.replace('/api/demo', '/api/create-checkout'), {
+    var res = await fetch(WORKER_BASE + '/api/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         amount_cents: amountCents,
         currency: 'usd',
-        operator_name: 'Apex Aerial Surveys',
+        operator_name: operatorName,
+        operator_account_id: operatorAccountId || undefined,
         request_id: 'demo_' + Date.now(),
         success_url: currentUrl + '?payment=success&session_id=' + sessionIdPlaceholder,
         cancel_url: currentUrl + '?payment=cancelled',
@@ -773,9 +1074,9 @@ async function payWithStripe(amountCents) {
   }
 }
 
-function payWithUSDC() {
-  // Phase 2: wallet connect + USDC transfer to Splits contract
-  alert('USDC payment coming in Phase 2. Use card payment for now.');
+function payWithUSDC(walletAddress) {
+  // Phase 2: wallet connect + USDC transfer to Splits contract on Base
+  alert('USDC payment to ' + (walletAddress || 'operator') + ' coming in Phase 2. Use card payment for now.');
 }
 
 // Check for payment return on page load
@@ -806,7 +1107,7 @@ async function showPaymentSuccess(sessionId) {
   let status = { status: 'pending' };
   for (let i = 0; i < 10; i++) {
     try {
-      const res = await fetch(WORKER_URL.replace('/api/demo', '/api/payment-status') + '?session_id=' + sessionId);
+      const res = await fetch(WORKER_BASE + '/api/payment-status?session_id=' + sessionId);
       status = await res.json();
       if (status.status === 'paid') break;
     } catch {}
