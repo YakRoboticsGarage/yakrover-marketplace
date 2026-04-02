@@ -618,6 +618,14 @@ const WORKER_BASE = 'https://yakrobot-chat.rafaeldf2.workers.dev';
 var discoveredRobots = [];
 var auctionComplete = false;
 
+// ERC-8004 contract addresses & RPC
+var IDENTITY_REGISTRY = '0x8004A818BFB912233c491871b3d84c89A494BD9e';
+var GET_AGENT_WALLET_SELECTOR = '0x00339509'; // keccak256("getAgentWallet(uint256)")[:4]
+var RPC_URLS = {
+  8453:     'https://mainnet.base.org',
+  11155111: 'https://ethereum-sepolia-rpc.publicnode.com',
+};
+
 // ERC-8004 subgraph endpoints (from agent0-sdk)
 var SUBGRAPH_URLS = {
   1:        'https://gateway.thegraph.com/api/7fd2e7d89ce3ef24cd0d4590298f0b2c/subgraphs/id/FV6RR6y13rsnCxBAicKuQEwDp8ioEGiNaWaZUmvr1F8k',  // Ethereum Mainnet
@@ -657,6 +665,16 @@ async function discoverRobots() {
     }
   }
 
+  // Fetch on-chain wallets for each robot via RPC
+  for (var j = 0; j < allRobots.length; j++) {
+    try {
+      var wallet = await getAgentWallet(allRobots[j].chain_id, allRobots[j].agent_id);
+      if (wallet && wallet !== '0x0000000000000000000000000000000000000000') {
+        allRobots[j].payment.usdc_wallet = wallet;
+      }
+    } catch (e) { /* ignore RPC failures */ }
+  }
+
   discoveredRobots = allRobots;
 
   // Separate Base mainnet from testnet
@@ -664,10 +682,8 @@ async function discoverRobots() {
   var testnetRobots = allRobots.filter(function(r) { return r.chain_id !== 8453; });
 
   if (baseRobots.length > 0) {
-    // Production robots found — show them
     renderDiscoveredRobots(baseRobots);
   } else if (testnetRobots.length > 0) {
-    // Only testnet robots — show them with context, then empty state
     renderDiscoveredRobots(testnetRobots);
   } else {
     showNoRobots();
@@ -748,13 +764,16 @@ function renderDiscoveredRobots(robots) {
     var hasPayment = robot.payment && (robot.payment.stripe_connect_id || robot.payment.usdc_wallet);
     var hasMcp = !!robot.mcp_endpoint;
 
+    var walletAddr = (robot.payment && robot.payment.usdc_wallet) || '';
+    var walletShort = walletAddr ? walletAddr.slice(0, 6) + '...' + walletAddr.slice(-4) : '';
+
     var badges = '';
     badges += '<span class="badge badge-blue">' + escapeHtml(robot.chain_name) + '</span>';
     if (robot.active) badges += '<span class="badge badge-green">Active</span>';
     if (hasMcp) badges += '<span class="badge badge-green">MCP</span>';
     if (robot.x402_support) badges += '<span class="badge badge-green">x402</span>';
     if (hasPayment) {
-      badges += '<span class="badge badge-green">Wallet</span>';
+      badges += '<span class="badge badge-green" title="' + escapeHtml(walletAddr) + '">Wallet ' + walletShort + '</span>';
     } else {
       badges += '<span class="badge badge-yellow">No Wallet</span>';
     }
@@ -814,6 +833,37 @@ function showNoRobots() {
       'To register, see <a href="https://github.com/YakRoboticsGarage/yakrover-8004-mcp" target="_blank">yakrover-8004-mcp</a>.</p>' +
       '<p style="margin-top:8px;font-size:11px;color:var(--slate)">Live payment requires at least one robot with a Stripe Connect account or USDC wallet in its agent card.</p>' +
     '</div>';
+}
+
+// Call getAgentWallet(agentId) on the ERC-8004 identity registry via eth_call
+async function getAgentWallet(chainId, agentId) {
+  var rpcUrl = RPC_URLS[chainId];
+  if (!rpcUrl) return null;
+
+  // Encode: selector (4 bytes) + uint256 agentId (32 bytes, zero-padded)
+  var idHex = parseInt(agentId).toString(16).padStart(64, '0');
+  var callData = GET_AGENT_WALLET_SELECTOR + idHex;
+
+  var res = await fetch(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'eth_call',
+      params: [{ to: IDENTITY_REGISTRY, data: callData }, 'latest'],
+      id: 1,
+    }),
+  });
+
+  var data = await res.json();
+  if (data.error || !data.result || data.result === '0x') return null;
+
+  // Result is a 32-byte ABI-encoded address — extract last 20 bytes
+  var raw = data.result.replace('0x', '');
+  var addr = '0x' + raw.slice(24);
+
+  // Checksum not critical for display — just return lowercased
+  return addr;
 }
 
 // Run discovery on page load (after a short delay for tunnel URL)
@@ -1129,7 +1179,8 @@ function showPaymentCard(container) {
         'Once an operator adds a Stripe Connect account or USDC wallet to their ERC-8004 agent card, these buttons activate.' +
       '</div>';
   } else {
-    card.innerHTML += '<div style="font-size:11px;color:var(--slate);margin-top:12px">Production payment. Real money.</div>';
+    var walletDisplay = usdcWallet ? '<div style="font-size:11px;color:var(--slate);margin-top:12px">Operator wallet: <a href="https://sepolia.etherscan.io/address/' + escapeHtml(usdcWallet) + '" target="_blank" style="color:var(--orange);text-decoration:none;font-family:monospace">' + escapeHtml(usdcWallet.slice(0,6) + '...' + usdcWallet.slice(-4)) + '</a> (on-chain via getAgentWallet)</div>' : '';
+    card.innerHTML += walletDisplay + '<div style="font-size:11px;color:var(--slate);margin-top:4px">Production payment. Real money.</div>';
   }
 
   container.insertBefore(card, document.querySelector('.footer'));
