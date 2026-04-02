@@ -26,7 +26,7 @@ robot-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 34 MCP tool handlers
+│   ├── mcp_tools.py             # 35 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
@@ -44,8 +44,8 @@ robot-marketplace/
 │   ├── DEVELOPMENT_STRATEGY.md  # Testing & code safety (5-layer strategy)
 │   ├── mcp_demo/
 │   │   └── index.html           # Live MCP demo (yakrobot.bid/mcp-demo)
-│   ├── research/                # 38 research docs (see research/README.md)
-│   │   ├── PRODUCT_DSL_v2.yaml  # ← THE product ontology (3,100+ lines)
+│   ├── research/                # 52 research docs (see research/README.md)
+│   │   ├── PRODUCT_DSL_v2.yaml  # ← THE product ontology (3,200+ lines)
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   ├── technical/           # Architecture, execution gaps
@@ -92,7 +92,7 @@ Start here, in this order:
 | # | Document | What it tells you |
 |---|----------|-------------------|
 | 1 | **[PRODUCT_DSL_v2.yaml](docs/research/PRODUCT_DSL_v2.yaml)** | The entire product in one file — vision, bets, users, architecture, market, legal, roadmap |
-| 2 | **[Research README](docs/research/README.md)** | Index of all 38 research documents |
+| 2 | **[Research README](docs/research/README.md)** | Index of all 52 research documents |
 | 3 | **[User Journey](docs/USER_JOURNEY_CONSTRUCTION_v01.md)** | Marco's story — pre-bid survey for a highway project |
 | 4 | **[Roadmap v4](docs/ROADMAP_v4.md)** | Construction → Mining → Infrastructure → Lunar |
 | 5 | **[Decisions](docs/DECISIONS.md)** | Every product and technical decision with rationale |
@@ -137,10 +137,10 @@ All four follow the [skill-creator-springett](https://github.com/bglek/skill-cre
 
 - **35 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator compliance, agreement generation, event tracking, feedback
 - **238 tests** passing, with integration test stubs for Stripe and fleet
-- **143 commits** across the project
+- **50 commits** across the project
 - **31 research topics** in automated research roadmap (2 completed, 6 improvement proposals)
 - **Live payment demo** at yakrobot.bid/mcp-demo-2 with real robot discovery, IPFS delivery, Stripe + USDC settlement
-- **3,241 line YAML** product ontology covering the entire product
+- **3,243 line YAML** product ontology covering the entire product
 - **43 real MDOT RFPs** analyzed for survey requirements
 - **6 real equipment platforms** with verified specs and pricing
 - **CI pipeline** with ruff (security linting), mypy, and pytest on every push
