@@ -142,7 +142,7 @@ topics:
     title: "LAS/LAZ point cloud validation tools and libraries"
     module: M35_deliverable_qa
     hypothesis: "Open-source tools (PDAL, lastools, CloudCompare) may provide automated QA checks we can integrate for point density, classification, accuracy"
-    status: queued
+    status: in_progress
     priority: critical
     estimated_sessions: 1
     depends_on: []
