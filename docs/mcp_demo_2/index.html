@@ -623,8 +623,8 @@ var SUBGRAPH_URLS = {
   84532:    'https://gateway.thegraph.com/api/536c6d8572876cabea4a4ad0fa49aa57/subgraphs/id/4yYAvQLFjBhBtdRCY7eUWo181VNoTSLLFd5M7FXQAi6u',  // Base Sepolia
 };
 
-// Which chains to query (Base mainnet + Sepolia for now)
-var DISCOVERY_CHAINS = [8453, 11155111];
+// Production: Base mainnet only
+var DISCOVERY_CHAINS = [8453];
 
 // ===== ROBOT DISCOVERY (direct subgraph query — no server needed) =====
 
@@ -632,7 +632,7 @@ async function discoverRobots() {
   var status = document.getElementById('discoveryStatus');
   var cards = document.getElementById('robotCards');
 
-  status.textContent = 'Querying ERC-8004 registry on Base + Sepolia...';
+  status.textContent = 'Querying ERC-8004 registry on Base...';
   status.style.color = 'var(--slate-light)';
   cards.innerHTML = '';
   discoveredRobots = [];
@@ -661,41 +661,60 @@ async function discoverRobots() {
 }
 
 async function querySubgraph(url, chainId) {
-  var query = '{ agents(first: 50, orderBy: createdAt, orderDirection: desc) { id chainId agentId owner registrationFile { name description active x402Support mcpEndpoint mcpTools agentWallet agentWalletChainId } } }';
+  // Step 1: Query for agents with category="robot" metadata (hex-encoded: 0x726f626f74)
+  var robotMetaQuery = '{ agentMetadata_collection(where: {key: "category", value: "0x726f626f74"}, first: 50) { agent { id agentId registrationFile { name description active mcpEndpoint mcpTools } } } }';
 
-  var res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: query }),
-  });
-
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  var data = await res.json();
-  if (data.errors) throw new Error(data.errors[0].message);
-
-  var agents = (data.data && data.data.agents) || [];
   var chainName = chainId === 8453 ? 'Base' : chainId === 11155111 ? 'Sepolia' : chainId === 1 ? 'Ethereum' : 'Chain ' + chainId;
 
-  return agents.map(function(a) {
-    var rf = a.registrationFile || {};
-    return {
-      agent_id: a.agentId || a.id,
-      chain_id: chainId,
-      chain_name: chainName,
-      name: rf.name || 'Agent #' + (a.agentId || a.id),
-      description: rf.description || '',
-      active: rf.active || false,
-      x402_support: rf.x402Support || false,
-      mcp_endpoint: rf.mcpEndpoint || '',
-      mcp_tools: rf.mcpTools ? rf.mcpTools.split(',').map(function(t) { return t.trim(); }) : [],
-      owner: a.owner || '',
-      payment: {
-        usdc_wallet: rf.agentWallet || null,
-        wallet_chain_id: rf.agentWalletChainId || null,
-        stripe_connect_id: null, // Not in subgraph yet — will come from on-chain metadata
-      },
-    };
-  });
+  try {
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: robotMetaQuery }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+
+    if (data.errors) {
+      console.warn('Subgraph metadata query error:', data.errors[0].message);
+      return [];
+    }
+
+    var metaEntries = (data.data && data.data.agentMetadata_collection) || [];
+
+    return metaEntries.filter(function(m) {
+      return m.agent && m.agent.registrationFile && m.agent.registrationFile.name;
+    }).map(function(m) {
+      var a = m.agent;
+      var rf = a.registrationFile || {};
+      var tools = [];
+      if (rf.mcpTools && Array.isArray(rf.mcpTools)) {
+        tools = rf.mcpTools;
+      } else if (rf.mcpTools && typeof rf.mcpTools === 'string') {
+        tools = rf.mcpTools.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+      }
+      return {
+        agent_id: a.agentId || a.id,
+        chain_id: chainId,
+        chain_name: chainName,
+        name: rf.name || 'Robot #' + (a.agentId || a.id),
+        description: rf.description || '',
+        active: rf.active || false,
+        x402_support: false,
+        mcp_endpoint: rf.mcpEndpoint || '',
+        mcp_tools: tools,
+        owner: '',
+        payment: {
+          usdc_wallet: null,
+          wallet_chain_id: null,
+          stripe_connect_id: null,
+        },
+      };
+    });
+  } catch (e) {
+    console.warn('Subgraph query failed for chain ' + chainId + ':', e.message);
+    return [];
+  }
 }
 
 function renderDiscoveredRobots(robots) {
@@ -758,15 +777,16 @@ function renderDiscoveredRobots(robots) {
 
 function showNoRobots() {
   var status = document.getElementById('discoveryStatus');
-  status.innerHTML = '';
+  status.innerHTML = '<span style="color:var(--slate)">0 robots found on Base</span>';
   var cards = document.getElementById('robotCards');
   cards.innerHTML =
     '<div class="discovery-empty">' +
       '<h4>No robots registered on Base</h4>' +
-      '<p>The marketplace discovers robots via ERC-8004 on-chain identity. No robots are currently registered with survey capabilities.</p>' +
-      '<p style="margin-top:8px">The demo will use <strong>simulated operators</strong> (7 Michigan construction fleet). ' +
-      'To register a real robot, see <a href="https://github.com/YakRoboticsGarage/yakrover-8004-mcp" target="_blank">yakrover-8004-mcp</a>.</p>' +
-      '<p style="margin-top:8px;font-size:11px;color:var(--slate)">Payment settlement requires at least one robot with a Stripe Connect account or USDC wallet in its agent card.</p>' +
+      '<p>The marketplace discovers robots via <a href="https://eips.ethereum.org/EIPS/eip-8004" target="_blank">ERC-8004</a> on-chain identity on Base. ' +
+      'Only agents with <code style="font-size:11px;background:var(--navy-mid);padding:1px 4px;border-radius:2px">category: robot</code> metadata are shown.</p>' +
+      '<p style="margin-top:8px">The demo auction will use <strong>simulated operators</strong> (7 Michigan construction fleet) until real robots register on Base. ' +
+      'To register a robot, see <a href="https://github.com/YakRoboticsGarage/yakrover-8004-mcp" target="_blank">yakrover-8004-mcp</a>.</p>' +
+      '<p style="margin-top:8px;font-size:11px;color:var(--slate)">Live payment requires at least one robot with a Stripe Connect account or USDC wallet address in its on-chain agent card.</p>' +
     '</div>';
 }
 
