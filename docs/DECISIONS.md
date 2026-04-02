@@ -106,14 +106,16 @@ Card payments are not made per-task. Buyers purchase credit bundles upfront (e.g
 
 ---
 
-### TC-4 · Crypto Stack: x402 + USDC on Base (updated 2026-04-02)
-- **Library:** `pip install "x402[fastapi]"` (Coinbase official Python SDK, v2, production-ready, 75M+ tx settled)
-- **Middleware:** `PaymentMiddlewareASGI` on payment-required MCP endpoints
-- **Escrow:** `RobotTaskEscrow.sol` on Base — v1.1 Phase 3
-- **Distribution:** Splits.org (88% operator / 12% platform) — audited, zero fees, deployed on Base + Ethereum mainnet
-- **Demo chain:** Base mainnet (gas ~$0.007/tx, practical for $0.01+ demo tasks)
-- **Production chain:** Ethereum mainnet (swap RPC URL + chain ID when task values justify gas costs)
-- **Decision:** Chain is a config value. Architecture is chain-agnostic. Robot identity (ERC-8004) and payment chain are independent.
+### TC-4 · Crypto Stack: USDC on Base (updated 2026-04-02, post-critique revision)
+- **Settlement:** Direct USDC transfer to robot wallet address (read from on-chain `getAgentWallet()`)
+- **x402:** NOT used for marketplace settlement (critique found it's pay-to-access, not escrow). Reserved for agent-to-robot control (Tumbller sessions).
+- **Splits.org:** NOT used for demo (direct transfer is simpler). Available for production-scale multi-operator distribution.
+- **Robot wallet discovery:** `getAgentWallet(agentId)` on ERC-8004 identity registry. Verified: Tumbller (agent 989, Sepolia) returns `0x99a55d71682807fde9c81e0984aBdd2C7AcCE136`.
+- **Demo chain:** Sepolia (where Tumbller is registered). Base mainnet when robots register there.
+- **Production chain:** Base mainnet (gas ~$0.007/tx). Ethereum mainnet for high-value tasks.
+- **Escrow:** `RobotTaskEscrow.sol` deferred to v1.1 Phase 3 (not needed for $0.50 demo).
+- **Fiat rail:** Stripe destination charges with `application_fee_amount` (12%). No fiat-to-crypto bridge.
+- **Discovery:** Direct subgraph query from browser + `eth_call` for wallet. No server dependency.
 
 ---
 

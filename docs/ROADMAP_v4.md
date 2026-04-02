@@ -129,46 +129,45 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 
 ---
 
-## v1.1 — Live Payment Settlement (PLANNED)
+## v1.1 — Live Payment Settlement (IN PROGRESS)
 
 | | |
 |---|---|
-| **Timeline** | ~15 days across 3 phases |
+| **Timeline** | ~5 days remaining |
 | **Serves** | Marco (buyer), operators, investors (proof of real settlement) |
 | **Goal** | Real-money payment through a real auction. Both Stripe (fiat) and USDC (crypto). Production, not test mode. |
+| **Demo** | https://yakrobot.bid/mcp-demo-2/ |
 
-> **Detailed plan:** `docs/research/PLAN_PAYMENT_SETTLEMENT_DEMO.md`
+> **Detailed plan:** `docs/research/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`
+
+### What's built
+- **Robot discovery from browser** — direct subgraph query + on-chain `getAgentWallet()` RPC call. No server dependency. Discovers `fleet_provider: yakrover` robots on Base + Sepolia.
+- **Tumbller found on Sepolia** — agent #989, wallet `0x99a55d71682807fde9c81e0984aBdd2C7AcCE136`, active, MCP endpoint live
+- **Stripe Checkout endpoint** — worker creates destination charges with 12% `application_fee_amount`
+- **Payment-after-delivery UX** — auction runs free, payment is the climax (post-critique redesign)
+- **Truthful state** — demo shows exactly what's real at every step
 
 ### Decisions (resolved 2026-04-02)
 - **Stripe:** Production mode (`sk_live_...`). Real cards, real charges.
-- **Crypto chain:** Base for demo, Ethereum mainnet for production. Chain is a config value.
-- **Revenue split:** Splits.org (88% operator / 12% platform). Audited, zero fees.
-- **Robot identity:** Stay on Sepolia. Owners registering on Base production in parallel.
-- **Escrow:** x402 + Splits first, custom escrow contract as Phase 3.
+- **Crypto:** Direct USDC transfer to robot wallet (read from on-chain `getAgentWallet`). No x402 for settlement. No Splits needed for demo.
+- **Robot discovery:** Subgraph + RPC from browser. `fleet_provider: yakrover` filter.
+- **Robot wallet:** Already set on ERC-8004 contract. `getAgentWallet(989)` returns `0x99a5...E136`.
+- **Delivery:** IPFS upload planned. Placeholder UI in demo now.
+- **Chain:** Base for production. Sepolia for current demo (Tumbller registered there).
 
-### Phase 1: Stripe rail (3-4 days)
-- Fix currency hardcode bug in `create_transfer()`
-- Stripe Checkout in mcp-demo page (buyer funds wallet with real card, $0.50)
-- Real operator payout via Connect transfer on delivery confirmation
-- Webhook handler for payment confirmation
+### What's blocking
+- [ ] Production Stripe account + keys in worker secrets
+- [ ] One operator completes Stripe Connect Express onboarding
+- [ ] Webhook registered in Stripe dashboard
+- [ ] Worker redeployed with secrets (`wrangler deploy`)
+- [ ] USDC wallet connect code (ethers.js, ~1-2 days)
+- [ ] Robot registered on Base mainnet (8004 team, in parallel)
 
-### Phase 2: Crypto rail (4-5 days)
-- x402 middleware on MCP server (`pip install "x402[fastapi]"`, production-ready)
-- Splits.org contract for 88/12 distribution (deployed on Base)
-- USDC operator payout on delivery confirmation
-- Buyer funds wallet manually (USDC on Base) or via Coinbase Onramp
-
-### Phase 3: On-chain escrow (5-7 days)
-- `RobotTaskEscrow.sol` on Base (deposit/release/refund)
-- Commitment hash memos (FD-4)
-- Wire into settlement abstraction (FD-1)
-
-### Dependencies
-- [ ] Production Stripe account (apply now, 1-3 day review)
-- [ ] Platform wallet on Base (USDC + ETH for gas)
-- [ ] Coinbase Developer Platform account (x402 facilitator, free tier)
-- [ ] At least 1 operator with Stripe Connect Express + Base wallet
-- [ ] Robot owners registering on Base production (in parallel)
+### Dropped from earlier plans
+- ~~x402 middleware~~ — wrong tool for marketplace settlement (pay-to-access, not escrow)
+- ~~Splits.org for demo~~ — direct transfer simpler; Splits for production scale
+- ~~Wallet funding before auction~~ — payment is the climax, not the prelude
+- ~~Internal wallet ledger for real payments~~ — Stripe/blockchain IS the ledger
 
 ---
 
