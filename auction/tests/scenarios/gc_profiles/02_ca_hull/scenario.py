@@ -12,15 +12,15 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
-from auction.engine import AuctionEngine
-from auction.wallet import WalletLedger
-from auction.reputation import ReputationTracker
-from auction.mock_fleet import create_construction_fleet
-from auction.rfp_processor import process_rfp, validate_task_specs, get_site_recon
-from auction.bond_verifier import verify_bond
-from auction.terms_comparator import compare_terms
 from auction.agreement import generate_agreement
+from auction.bond_verifier import verify_bond
 from auction.compliance import ComplianceChecker
+from auction.engine import AuctionEngine
+from auction.mock_fleet import create_construction_fleet
+from auction.reputation import ReputationTracker
+from auction.rfp_processor import get_site_recon, process_rfp, validate_task_specs
+from auction.terms_comparator import compare_terms
+from auction.wallet import WalletLedger
 
 PROFILE_DIR = Path(__file__).parent
 PASS = "\u2713"
@@ -86,9 +86,11 @@ def main():
     recon = get_site_recon(rfp_text, specs)
     step(f"Terrain: {recon['terrain']['type']}", recon, True)
     step(f"Airspace: {recon['airspace']['class']}", recon, True)
-    step(f"DTW restriction detected", recon,
-         "dtw_airspace" in recon.get("access_restrictions", [])
-         or recon["airspace"]["class"] in ("B", "C"))
+    step(
+        "DTW restriction detected",
+        recon,
+        "dtw_airspace" in recon.get("access_restrictions", []) or recon["airspace"]["class"] in ("B", "C"),
+    )
 
     print("\n[5] Upload compliance docs for operators")
     # Simulate uploading compliance docs for each operator in the fleet
@@ -123,14 +125,17 @@ def main():
     target_robot = "trident-inspection"
     for doc_name, doc in compliance_docs.items():
         import json
+
         record = compliance.upload_document(target_robot, doc["doc_type"], json.dumps(doc))
-        step(f"Uploaded {doc_name} for {target_robot}: {record.status}", record,
-             record.status == "VERIFIED")
+        step(f"Uploaded {doc_name} for {target_robot}: {record.status}", record, record.status == "VERIFIED")
 
     print("\n[6] Verify operator compliance")
     result = compliance.verify_operator(target_robot)
-    step(f"Operator {target_robot}: {result['verified']}/{result['total_checks']} checks",
-         result, result["verified"] >= 3)
+    step(
+        f"Operator {target_robot}: {result['verified']}/{result['total_checks']} checks",
+        result,
+        result["verified"] >= 3,
+    )
 
     print("\n[7] Post tasks")
     request_ids = []
@@ -138,8 +143,11 @@ def main():
         try:
             result = engine.post_task(spec)
             request_ids.append(result["request_id"])
-            step(f"Task {i} posted: {result['state']} ({result['eligible_robots']} eligible)", result,
-                 result["state"] == "bidding" and result["eligible_robots"] > 0)
+            step(
+                f"Task {i} posted: {result['state']} ({result['eligible_robots']} eligible)",
+                result,
+                result["state"] == "bidding" and result["eligible_robots"] > 0,
+            )
         except Exception as e:
             step(f"Task {i} FAILED to post", str(e), False)
 
@@ -152,8 +160,11 @@ def main():
     for i, rid in enumerate(request_ids):
         review = engine.review_bids(rid)
         rec = review.get("recommendation", {})
-        step(f"Task {i}: recommended {rec.get('robot_id', 'none')}", review,
-             rec is not None and rec.get("robot_id") is not None)
+        step(
+            f"Task {i}: recommended {rec.get('robot_id', 'none')}",
+            review,
+            rec is not None and rec.get("robot_id") is not None,
+        )
 
     print("\n[10] Compare terms — expect flags for broad-form indemnification")
     operator_terms = (
@@ -162,21 +173,21 @@ def main():
         "mutual waiver of consequential damages, Net 30 payment."
     )
     terms_result = compare_terms(operator_terms, gc_terms, "MI")
-    step(f"Risk level: {terms_result['overall_risk']}", terms_result,
-         terms_result["overall_risk"] in ("high", "medium"))
+    step(
+        f"Risk level: {terms_result['overall_risk']}", terms_result, terms_result["overall_risk"] in ("high", "medium")
+    )
     step(f"Flags: {len(terms_result['flags'])}", terms_result, len(terms_result["flags"]) > 0)
 
     # Check for specific red flags (flags are strings like "INDEMNIFICATION: ...")
     flags_text = " ".join(terms_result["flags"]).lower()
-    step("Broad-form indemnification flagged", terms_result["flags"],
-         "indemnif" in flags_text)
-    step("Pay-when-paid or payment issue flagged", terms_result["flags"],
-         "payment" in flags_text or "pay" in flags_text)
+    step("Broad-form indemnification flagged", terms_result["flags"], "indemnif" in flags_text)
+    step(
+        "Pay-when-paid or payment issue flagged", terms_result["flags"], "payment" in flags_text or "pay" in flags_text
+    )
 
     print("\n[11] Verify payment bond")
     bond_result = verify_bond(bond_text, request_ids)
-    step(f"Bond status: {bond_result['status']}", bond_result,
-         bond_result["status"] in ("VERIFIED", "PARTIAL"))
+    step(f"Bond status: {bond_result['status']}", bond_result, bond_result["status"] in ("VERIFIED", "PARTIAL"))
 
     print("\n[12] Award tasks")
     awarded_ids = []
@@ -187,8 +198,7 @@ def main():
         if robot_id:
             result = engine.accept_bid(rid, robot_id)
             awarded_ids.append(rid)
-            step(f"Task {i} awarded to {robot_id}: {result['state']}", result,
-                 result["state"] == "bid_accepted")
+            step(f"Task {i} awarded to {robot_id}: {result['state']}", result, result["state"] == "bid_accepted")
         else:
             step(f"Task {i}: no eligible bids", review, False)
 
@@ -196,8 +206,11 @@ def main():
     for rid in awarded_ids:
         record = engine._get_record(rid)
         agreement = generate_agreement(record, "consensusdocs_750")
-        step(f"Agreement for {record.winning_bid.robot_id}: {agreement['status']}", agreement,
-             agreement["status"] == "draft")
+        step(
+            f"Agreement for {record.winning_bid.robot_id}: {agreement['status']}",
+            agreement,
+            agreement["status"] == "draft",
+        )
         step(f"  Fee: ${agreement['terms']['fee']['contract_price']}", agreement, True)
 
     # Gap report

@@ -6,22 +6,16 @@ engine integration, and progress updates.
 
 from __future__ import annotations
 
-from decimal import Decimal
-
-import pytest
-
-from auction.events import EventEmitter, VALID_PROGRESS_STATES, make_event
-from auction.core import Task
 from auction.engine import AuctionEngine
+from auction.events import VALID_PROGRESS_STATES, EventEmitter, make_event
 from auction.store import SyncTaskStore
-
 
 # ---------------------------------------------------------------------------
 # EventEmitter unit tests
 # ---------------------------------------------------------------------------
 
-class TestEventEmitter:
 
+class TestEventEmitter:
     def test_emit_creates_event(self):
         emitter = EventEmitter()
         event = emitter.emit("task.posted", request_id="req_001")
@@ -94,8 +88,8 @@ class TestEventEmitter:
 # SQLite persistence tests
 # ---------------------------------------------------------------------------
 
-class TestEventPersistence:
 
+class TestEventPersistence:
     def test_save_and_query_events(self):
         store = SyncTaskStore(":memory:")
         store.initialize()
@@ -128,7 +122,7 @@ class TestEventPersistence:
         store.initialize()
         emitter = EventEmitter(store=store)
 
-        for i in range(20):
+        for _i in range(20):
             emitter.emit("task.posted")
 
         events = store.query_events(limit=5)
@@ -139,11 +133,12 @@ class TestEventPersistence:
 # Engine integration tests
 # ---------------------------------------------------------------------------
 
-class TestEngineEvents:
 
+class TestEngineEvents:
     def _make_engine(self):
         """Create a minimal engine with events enabled."""
         from auction.mock_fleet import create_construction_fleet
+
         fleet = create_construction_fleet()
         emitter = EventEmitter()
         engine = AuctionEngine(fleet, events=emitter)
@@ -151,16 +146,18 @@ class TestEngineEvents:
 
     def test_post_task_emits_events(self):
         engine, emitter = self._make_engine()
-        result = engine.post_task({
-            "description": "Topo survey",
-            "task_category": "site_survey",
-            "capability_requirements": {
-                "hard": {"sensors_required": ["aerial_lidar"]},
-                "payload": {"format": "json", "fields": ["data"]},
-            },
-            "budget_ceiling": 5000,
-            "sla_seconds": 86400,
-        })
+        result = engine.post_task(
+            {
+                "description": "Topo survey",
+                "task_category": "site_survey",
+                "capability_requirements": {
+                    "hard": {"sensors_required": ["aerial_lidar"]},
+                    "payload": {"format": "json", "fields": ["data"]},
+                },
+                "budget_ceiling": 5000,
+                "sla_seconds": 86400,
+            }
+        )
         assert result["state"] == "bidding"
         # Should have posted + bidding_opened events
         events = emitter.get_events(request_id=result["request_id"])
@@ -171,16 +168,18 @@ class TestEngineEvents:
     def test_full_lifecycle_emits_events(self):
         engine, emitter = self._make_engine()
         # Post
-        result = engine.post_task({
-            "description": "Topo survey",
-            "task_category": "site_survey",
-            "capability_requirements": {
-                "hard": {"sensors_required": ["aerial_lidar"]},
-                "payload": {"format": "json", "fields": ["data"]},
-            },
-            "budget_ceiling": 50000,
-            "sla_seconds": 86400,
-        })
+        result = engine.post_task(
+            {
+                "description": "Topo survey",
+                "task_category": "site_survey",
+                "capability_requirements": {
+                    "hard": {"sensors_required": ["aerial_lidar"]},
+                    "payload": {"format": "json", "fields": ["data"]},
+                },
+                "budget_ceiling": 50000,
+                "sla_seconds": 86400,
+            }
+        )
         rid = result["request_id"]
 
         # Get bids
@@ -202,8 +201,8 @@ class TestEngineEvents:
 # Progress state validation
 # ---------------------------------------------------------------------------
 
-class TestProgressStates:
 
+class TestProgressStates:
     def test_valid_progress_states(self):
         assert "mobilizing" in VALID_PROGRESS_STATES
         assert "en_route" in VALID_PROGRESS_STATES

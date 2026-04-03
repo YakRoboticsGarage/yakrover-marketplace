@@ -6,7 +6,6 @@ Wraps the logic from the legal-terms-compare Claude Code skill.
 
 from __future__ import annotations
 
-
 # The 12 comparison dimensions from the legal-terms-compare skill
 COMPARISON_DIMENSIONS = [
     "indemnification",
@@ -25,10 +24,22 @@ COMPARISON_DIMENSIONS = [
 
 # Michigan anti-indemnity statute reference
 ANTI_INDEMNITY_STATES = {
-    "MI": {"statute": "MCL 691.991", "type": "broad_form", "note": "Michigan prohibits broad-form indemnification in construction contracts"},
+    "MI": {
+        "statute": "MCL 691.991",
+        "type": "broad_form",
+        "note": "Michigan prohibits broad-form indemnification in construction contracts",
+    },
     "OH": {"statute": "ORC 2305.31", "type": "broad_form", "note": "Ohio prohibits broad-form indemnification"},
-    "AZ": {"statute": "ARS 34-226", "type": "broad_form", "note": "Arizona prohibits broad-form indemnification in construction"},
-    "TX": {"statute": "Chapter 151 CPRC", "type": "broad_form", "note": "Texas prohibits broad-form indemnification in construction"},
+    "AZ": {
+        "statute": "ARS 34-226",
+        "type": "broad_form",
+        "note": "Arizona prohibits broad-form indemnification in construction",
+    },
+    "TX": {
+        "statute": "Chapter 151 CPRC",
+        "type": "broad_form",
+        "note": "Texas prohibits broad-form indemnification in construction",
+    },
 }
 
 # Marketplace baseline terms (ConsensusDocs 750 aligned)
@@ -121,15 +132,17 @@ def compare_terms(
                 risk = "low"
                 note = "GC terms specify litigation instead of arbitration"
 
-        comparisons.append({
-            "dimension": dim,
-            "baseline": baseline,
-            "operator_clause_found": op_clause is not None,
-            "gc_clause_found": gc_clause is not None,
-            "deviation": deviation,
-            "risk": risk,
-            "note": note,
-        })
+        comparisons.append(
+            {
+                "dimension": dim,
+                "baseline": baseline,
+                "operator_clause_found": op_clause is not None,
+                "gc_clause_found": gc_clause is not None,
+                "deviation": deviation,
+                "risk": risk,
+                "note": note,
+            }
+        )
 
     high_risk = sum(1 for c in comparisons if c["risk"] == "high")
     medium_risk = sum(1 for c in comparisons if c["risk"] == "medium")

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 # ---------------------------------------------------------------------------
@@ -30,9 +30,7 @@ except ImportError:
     pass
 
 # Valid entry_type values
-VALID_ENTRY_TYPES = frozenset(
-    ["reservation_25", "delivery_75", "release", "credit", "refund", "fund"]
-)
+VALID_ENTRY_TYPES = frozenset(["reservation_25", "delivery_75", "release", "credit", "refund", "fund"])
 
 
 # ---------------------------------------------------------------------------
@@ -47,10 +45,7 @@ class InsufficientBalance(Exception):
         self.wallet_id = wallet_id
         self.required = required
         self.available = available
-        super().__init__(
-            f"Wallet '{wallet_id}': insufficient balance "
-            f"(required={required}, available={available})"
-        )
+        super().__init__(f"Wallet '{wallet_id}': insufficient balance (required={required}, available={available})")
 
 
 # ---------------------------------------------------------------------------
@@ -75,13 +70,12 @@ def _make_entry(
         "amount": amount,
         "balance_after": balance_after,
         "request_id": request_id,
-        "timestamp": datetime.now(timezone.utc),
+        "timestamp": datetime.now(UTC),
         "note": note,
     }
 
     if _USE_LEDGER_ENTRY_DATACLASS:
         # LedgerEntry dataclass may not have entry_id; pass only known fields.
-        import inspect
 
         _le_fields = {f.name for f in __import__("dataclasses").fields(LedgerEntry)}
         filtered = {k: v for k, v in entry.items() if k in _le_fields}
@@ -116,17 +110,13 @@ class WalletLedger:
 
     # -- public API -------------------------------------------------------
 
-    def create_wallet(
-        self, wallet_id: str, initial_balance: Decimal = Decimal("0")
-    ) -> None:
+    def create_wallet(self, wallet_id: str, initial_balance: Decimal = Decimal("0")) -> None:
         """Create a new wallet.  Raises ``ValueError`` if it already exists."""
         if wallet_id in self._balances:
             raise ValueError(f"Wallet '{wallet_id}' already exists")
         self._balances[wallet_id] = Decimal(str(initial_balance))
 
-    def fund_wallet(
-        self, wallet_id: str, amount: Decimal, note: str = ""
-    ) -> dict:
+    def fund_wallet(self, wallet_id: str, amount: Decimal, note: str = "") -> dict:
         """Add funds to an existing wallet and record a ledger entry."""
         with self._lock:
             self._require_wallet(wallet_id)
@@ -232,17 +222,9 @@ class WalletLedger:
         """Return ledger entries, optionally filtered by wallet and/or request."""
         results = self._entries
         if wallet_id is not None:
-            results = [
-                e
-                for e in results
-                if (e["wallet_id"] if isinstance(e, dict) else e.wallet_id) == wallet_id
-            ]
+            results = [e for e in results if (e["wallet_id"] if isinstance(e, dict) else e.wallet_id) == wallet_id]
         if request_id is not None:
-            results = [
-                e
-                for e in results
-                if (e["request_id"] if isinstance(e, dict) else e.request_id) == request_id
-            ]
+            results = [e for e in results if (e["request_id"] if isinstance(e, dict) else e.request_id) == request_id]
         return list(results)
 
 

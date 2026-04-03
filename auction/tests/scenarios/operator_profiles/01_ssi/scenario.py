@@ -25,7 +25,6 @@ Key assertions:
     - Bid scoring reflects full compliance bonus
 """
 
-from decimal import Decimal
 from pathlib import Path
 
 SCENARIO_DIR = Path(__file__).parent
@@ -75,7 +74,5 @@ def verify_compliance(result: dict) -> bool:
     """Verify all compliance checks pass."""
     for doc_type, expected_status in EXPECTED_COMPLIANCE.items():
         actual = result.get(doc_type)
-        assert actual == expected_status, (
-            f"{doc_type}: expected {expected_status}, got {actual}"
-        )
+        assert actual == expected_status, f"{doc_type}: expected {expected_status}, got {actual}"
     return True

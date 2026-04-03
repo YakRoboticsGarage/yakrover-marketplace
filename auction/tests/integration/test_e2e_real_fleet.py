@@ -130,10 +130,7 @@ class TestEndToEndRealFleet:
         )
         assert status_resp.status_code == 200
         status = status_resp.json()
-        final_state = (
-            status.get("result", {}).get("state")
-            or status.get("state")
-        )
+        final_state = status.get("result", {}).get("state") or status.get("state")
         assert final_state in ("settled", "verified"), f"Unexpected final state: {final_state}"
 
         await mcp_client.aclose()

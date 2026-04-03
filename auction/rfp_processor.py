@@ -44,8 +44,16 @@ SENSOR_MAPPING = {
 
 # Standard deliverable formats
 DELIVERABLE_FORMATS = [
-    "LandXML", "DXF", "CSV", "GeoTIFF", "LAS", "LAZ", "e57", "PDF",
-    "Civil 3D TIN", "Pix4D Report",
+    "LandXML",
+    "DXF",
+    "CSV",
+    "GeoTIFF",
+    "LAS",
+    "LAZ",
+    "e57",
+    "PDF",
+    "Civil 3D TIN",
+    "Pix4D Report",
 ]
 
 
@@ -92,6 +100,7 @@ def process_rfp(
             return _process_rfp_with_llm(rfp_text, jurisdiction, site_info)
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).warning(f"LLM RFP parsing failed, falling back to keywords: {e}")
 
     # Fallback: keyword-based extraction
@@ -136,9 +145,10 @@ def process_rfp(
 def _extract_location(rfp_text: str) -> str:
     """Extract location from RFP text."""
     import re
+
     rfp_lower = rfp_text.lower()
     # Look for state-route patterns like "I-94", "SR-89A", "US-131"
-    route_match = re.search(r'\b(I-\d+|SR-\d+\w?|US-\d+|M-\d+)\b', rfp_text)
+    route_match = re.search(r"\b(I-\d+|SR-\d+\w?|US-\d+|M-\d+)\b", rfp_text)
     route = route_match.group(0) if route_match else None
 
     # Look for city/county names
@@ -185,11 +195,12 @@ def _extract_agency(rfp_text: str) -> str:
 def _extract_project_name(rfp_text: str) -> str:
     """Extract project name from RFP text (first substantive line)."""
     import re
+
     for line in rfp_text.strip().split("\n"):
         line = line.strip()
         if len(line) > 10 and not line.startswith("#"):
             # Clean up and truncate
-            return re.sub(r'\s+', ' ', line)[:120]
+            return re.sub(r"\s+", " ", line)[:120]
     return "Project name not extracted"
 
 
@@ -203,6 +214,7 @@ def _build_task_spec(
 ) -> dict:
     """Build a single task spec from a detected survey type and site context."""
     import hashlib
+
     rfp_id = f"rfp_{hashlib.sha256(rfp_text[:200].encode()).hexdigest()[:12]}"
 
     templates = {
@@ -332,6 +344,7 @@ def _build_task_spec(
 # LLM-powered RFP parsing (uses Claude API)
 # ---------------------------------------------------------------------------
 
+
 def _load_reference(name: str) -> str:
     """Load a skill reference file, returning empty string if not found."""
     path = _REFS_DIR / name
@@ -398,9 +411,7 @@ IMPORTANT: Return ONLY a JSON array of task specs. No markdown, no explanation. 
             "model": "claude-haiku-4-5-20251001",
             "max_tokens": 4096,
             "system": system_prompt,
-            "messages": [
-                {"role": "user", "content": f"Extract task specs from this RFP:\n\n{rfp_text[:8000]}"}
-            ],
+            "messages": [{"role": "user", "content": f"Extract task specs from this RFP:\n\n{rfp_text[:8000]}"}],
         },
         timeout=30.0,
     )
@@ -416,7 +427,7 @@ IMPORTANT: Return ONLY a JSON array of task specs. No markdown, no explanation. 
     if content.startswith("```"):
         content = content.split("\n", 1)[1]  # Remove opening ```json
         if "```" in content:
-            content = content[:content.rindex("```")]  # Remove closing ```
+            content = content[: content.rindex("```")]  # Remove closing ```
 
     specs = json.loads(content)
     if not isinstance(specs, list):
@@ -424,6 +435,7 @@ IMPORTANT: Return ONLY a JSON array of task specs. No markdown, no explanation. 
 
     # Ensure each spec has required fields with defaults
     import hashlib
+
     rfp_id = f"rfp_{hashlib.sha256(rfp_text[:200].encode()).hexdigest()[:12]}"
 
     for i, spec in enumerate(specs):
@@ -473,13 +485,15 @@ def validate_task_specs(task_specs: list[dict]) -> dict:
         valid = len(errors) == 0
         if not valid:
             all_valid = False
-        results.append({
-            "index": i,
-            "valid": valid,
-            "errors": errors,
-            "task_category": spec_copy.get("task_category"),
-            "description": spec.get("description", "")[:100],
-        })
+        results.append(
+            {
+                "index": i,
+                "valid": valid,
+                "errors": errors,
+                "task_category": spec_copy.get("task_category"),
+                "description": spec.get("description", "")[:100],
+            }
+        )
 
     return {
         "total_specs": len(task_specs),
@@ -556,9 +570,7 @@ def get_site_recon(rfp_text: str, task_specs: list[dict]) -> dict:
     weather = {
         "max_wind_kph": 40 if "aerial_lidar" in sensors_needed else 60,
         "precipitation": (
-            "none_during_flight"
-            if any(s in sensors_needed for s in ["aerial_lidar", "photogrammetry"])
-            else "light_ok"
+            "none_during_flight" if any(s in sensors_needed for s in ["aerial_lidar", "photogrammetry"]) else "light_ok"
         ),
         "visibility_km": 5.0,
         "source": "INFERRED",
@@ -572,8 +584,13 @@ def get_site_recon(rfp_text: str, task_specs: list[dict]) -> dict:
         "airspace": airspace,
         "weather_constraints": weather,
         "access": {
-            "requires_escort": "restricted" in rfp_lower or "military" in rfp_lower or "secure" in rfp_lower or "escort_required" in meta.get("access_restrictions", []),
-            "traffic_control_needed": "highway" in rfp_lower or "interstate" in rfp_lower or "highway_traffic" in meta.get("access_restrictions", []),
+            "requires_escort": "restricted" in rfp_lower
+            or "military" in rfp_lower
+            or "secure" in rfp_lower
+            or "escort_required" in meta.get("access_restrictions", []),
+            "traffic_control_needed": "highway" in rfp_lower
+            or "interstate" in rfp_lower
+            or "highway_traffic" in meta.get("access_restrictions", []),
             "confined_space": "tunnel" in rfp_lower or "culvert" in rfp_lower,
             "access_restrictions": meta.get("access_restrictions", []),
             "source": "RFP",

@@ -12,15 +12,15 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
-from auction.engine import AuctionEngine
-from auction.wallet import WalletLedger
-from auction.reputation import ReputationTracker
-from auction.mock_fleet import create_construction_fleet
-from auction.rfp_processor import process_rfp, validate_task_specs, get_site_recon
-from auction.bond_verifier import verify_bond
-from auction.terms_comparator import compare_terms
 from auction.agreement import generate_agreement
+from auction.bond_verifier import verify_bond
 from auction.compliance import ComplianceChecker
+from auction.engine import AuctionEngine
+from auction.mock_fleet import create_construction_fleet
+from auction.reputation import ReputationTracker
+from auction.rfp_processor import get_site_recon, process_rfp, validate_task_specs
+from auction.terms_comparator import compare_terms
+from auction.wallet import WalletLedger
 
 PROFILE_DIR = Path(__file__).parent
 PASS = "\u2713"
@@ -93,8 +93,11 @@ def main():
         try:
             result = engine.post_task(spec)
             request_ids.append(result["request_id"])
-            step(f"Task {i} posted: {result['state']} ({result['eligible_robots']} eligible)", result,
-                 result["state"] == "bidding" and result["eligible_robots"] > 0)
+            step(
+                f"Task {i} posted: {result['state']} ({result['eligible_robots']} eligible)",
+                result,
+                result["state"] == "bidding" and result["eligible_robots"] > 0,
+            )
         except Exception as e:
             step(f"Task {i} FAILED to post", str(e), False)
 
@@ -107,8 +110,11 @@ def main():
     for i, rid in enumerate(request_ids):
         review = engine.review_bids(rid)
         rec = review.get("recommendation", {})
-        step(f"Task {i}: recommended {rec.get('robot_id', 'none')}", review,
-             rec is not None and rec.get("robot_id") is not None)
+        step(
+            f"Task {i}: recommended {rec.get('robot_id', 'none')}",
+            review,
+            rec is not None and rec.get("robot_id") is not None,
+        )
 
     print("\n[8] Verify operator compliance")
     for i, rid in enumerate(request_ids):
@@ -123,8 +129,7 @@ def main():
 
     print("\n[9] Verify payment bond")
     bond_result = verify_bond(bond_text, request_ids)
-    step(f"Bond status: {bond_result['status']}", bond_result,
-         bond_result["status"] in ("VERIFIED", "PARTIAL"))
+    step(f"Bond status: {bond_result['status']}", bond_result, bond_result["status"] in ("VERIFIED", "PARTIAL"))
     step(f"Bond surety: {bond_result.get('surety', 'unknown')}", bond_result, True)
 
     print("\n[10] Compare terms")
@@ -143,8 +148,7 @@ def main():
         if robot_id:
             result = engine.accept_bid(rid, robot_id)
             awarded_ids.append(rid)
-            step(f"Task {i} awarded to {robot_id}: {result['state']}", result,
-                 result["state"] == "bid_accepted")
+            step(f"Task {i} awarded to {robot_id}: {result['state']}", result, result["state"] == "bid_accepted")
         else:
             step(f"Task {i}: cannot award — no eligible bids", review, False)
 
@@ -152,16 +156,20 @@ def main():
     for rid in awarded_ids:
         record = engine._get_record(rid)
         agreement = generate_agreement(record, "consensusdocs_750")
-        step(f"Agreement for {record.winning_bid.robot_id}: {agreement['status']}", agreement,
-             agreement["status"] == "draft")
+        step(
+            f"Agreement for {record.winning_bid.robot_id}: {agreement['status']}",
+            agreement,
+            agreement["status"] == "draft",
+        )
         step(f"  Fee: ${agreement['terms']['fee']['contract_price']}", agreement, True)
 
     print("\n[13] Execute tasks")
+
     async def run_execution():
         for rid in awarded_ids:
             result = await engine.execute(rid)
-            step(f"Execution {rid[:12]}: {result.get('state', 'unknown')}", result,
-                 result.get("state") == "delivered")
+            step(f"Execution {rid[:12]}: {result.get('state', 'unknown')}", result, result.get("state") == "delivered")
+
     asyncio.run(run_execution())
 
     print("\n[14] Confirm deliveries")
@@ -172,8 +180,11 @@ def main():
     print("\n[15] List project tasks")
     rfp_id = specs[0]["task_decomposition"]["rfp_id"]
     listing = engine.list_tasks({"rfp_id": rfp_id})
-    step(f"Project tasks: {listing['total']} (posted {len(request_ids)}, awarded {len(awarded_ids)})",
-         listing, listing["total"] == len(request_ids))
+    step(
+        f"Project tasks: {listing['total']} (posted {len(request_ids)}, awarded {len(awarded_ids)})",
+        listing,
+        listing["total"] == len(request_ids),
+    )
 
     print("\n[16] Final wallet balance")
     final_balance = wallet.get_balance("buyer")

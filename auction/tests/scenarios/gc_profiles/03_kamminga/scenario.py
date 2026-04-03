@@ -11,13 +11,13 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
-from auction.engine import AuctionEngine
-from auction.wallet import WalletLedger
-from auction.reputation import ReputationTracker
-from auction.mock_fleet import create_construction_fleet
-from auction.rfp_processor import process_rfp, validate_task_specs, get_site_recon
-from auction.terms_comparator import compare_terms
 from auction.agreement import generate_agreement
+from auction.engine import AuctionEngine
+from auction.mock_fleet import create_construction_fleet
+from auction.reputation import ReputationTracker
+from auction.rfp_processor import get_site_recon, process_rfp, validate_task_specs
+from auction.terms_comparator import compare_terms
+from auction.wallet import WalletLedger
 
 PROFILE_DIR = Path(__file__).parent
 PASS = "\u2713"
@@ -87,8 +87,11 @@ def main():
     spec = specs[0]
     result = engine.post_task(spec)
     request_id = result["request_id"]
-    step(f"Task posted: {result['state']} ({result['eligible_robots']} eligible)", result,
-         result["state"] == "bidding" and result["eligible_robots"] > 0)
+    step(
+        f"Task posted: {result['state']} ({result['eligible_robots']} eligible)",
+        result,
+        result["state"] == "bidding" and result["eligible_robots"] > 0,
+    )
 
     print("\n[6] Collect bids — expect budget-tier operators")
     bids = engine.get_bids(request_id)
@@ -104,8 +107,7 @@ def main():
     rec = review.get("recommendation", {})
     robot_id = rec.get("robot_id", "none")
     rec_price = rec.get("price", rec.get("amount", "unknown"))
-    step(f"Recommended: {robot_id} at ${rec_price}", review,
-         rec is not None and rec.get("robot_id") is not None)
+    step(f"Recommended: {robot_id} at ${rec_price}", review, rec is not None and rec.get("robot_id") is not None)
 
     print("\n[8] Compare terms — expect low/no risk (standard terms)")
     operator_terms = (
@@ -114,20 +116,17 @@ def main():
         "Net 30 payment, operator retains methodology."
     )
     terms_result = compare_terms(operator_terms, gc_terms, "MI")
-    step(f"Risk level: {terms_result['overall_risk']}", terms_result,
-         terms_result["overall_risk"] in ("low", "medium"))
+    step(f"Risk level: {terms_result['overall_risk']}", terms_result, terms_result["overall_risk"] in ("low", "medium"))
     step(f"Flags: {len(terms_result['flags'])}", terms_result, True)
 
     print("\n[9] Award task")
     result = engine.accept_bid(request_id, robot_id)
-    step(f"Awarded to {robot_id}: {result['state']}", result,
-         result["state"] == "bid_accepted")
+    step(f"Awarded to {robot_id}: {result['state']}", result, result["state"] == "bid_accepted")
 
     print("\n[10] Generate agreement — monthly recurring")
     record = engine._get_record(request_id)
     agreement = generate_agreement(record, "consensusdocs_750")
-    step(f"Agreement status: {agreement['status']}", agreement,
-         agreement["status"] == "draft")
+    step(f"Agreement status: {agreement['status']}", agreement, agreement["status"] == "draft")
     step(f"Fee: ${agreement['terms']['fee']['contract_price']}", agreement, True)
 
     # Verify recurring structure if present

@@ -16,8 +16,7 @@ request a Personal API Key (public data).
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
-from dataclasses import asdict
+from datetime import UTC, datetime
 
 import httpx
 
@@ -26,14 +25,16 @@ from auction.core import ComplianceRecord
 SAM_GOV_API_KEY = os.environ.get("SAM_GOV_API_KEY", "")
 
 
-VALID_DOC_TYPES = frozenset([
-    "faa_part_107",
-    "insurance_coi",
-    "pls_license",
-    "sam_registration",
-    "dot_prequalification",
-    "dbe_certification",
-])
+VALID_DOC_TYPES = frozenset(
+    [
+        "faa_part_107",
+        "insurance_coi",
+        "pls_license",
+        "sam_registration",
+        "dot_prequalification",
+        "dbe_certification",
+    ]
+)
 
 VALID_STATUSES = frozenset(["VERIFIED", "MISSING", "EXPIRED", "NOT_REQUIRED"])
 
@@ -64,7 +65,7 @@ class ComplianceChecker:
             robot_id=robot_id,
             doc_type=doc_type,
             status="VERIFIED",
-            verified_at=datetime.now(timezone.utc),
+            verified_at=datetime.now(UTC),
             expires_at=expires_at,
             details=details or {"content_length": len(content), "uploaded": True},
         )
@@ -80,31 +81,35 @@ class ComplianceChecker:
         Returns a checklist with status for each document type.
         """
         records = self._records.get(robot_id, {})
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         checklist = []
         for doc_type in sorted(VALID_DOC_TYPES):
             record = records.get(doc_type)
             if record is None:
-                checklist.append({
-                    "doc_type": doc_type,
-                    "status": "MISSING",
-                    "verified_at": None,
-                    "expires_at": None,
-                    "details": {},
-                })
+                checklist.append(
+                    {
+                        "doc_type": doc_type,
+                        "status": "MISSING",
+                        "verified_at": None,
+                        "expires_at": None,
+                        "details": {},
+                    }
+                )
             else:
                 # Check expiration
                 status = record.status
                 if record.expires_at is not None and record.expires_at < now:
                     status = "EXPIRED"
-                checklist.append({
-                    "doc_type": record.doc_type,
-                    "status": status,
-                    "verified_at": record.verified_at.isoformat() if record.verified_at else None,
-                    "expires_at": record.expires_at.isoformat() if record.expires_at else None,
-                    "details": record.details,
-                })
+                checklist.append(
+                    {
+                        "doc_type": record.doc_type,
+                        "status": status,
+                        "verified_at": record.verified_at.isoformat() if record.verified_at else None,
+                        "expires_at": record.expires_at.isoformat() if record.expires_at else None,
+                        "details": record.details,
+                    }
+                )
 
         verified_count = sum(1 for c in checklist if c["status"] == "VERIFIED")
 
@@ -126,6 +131,7 @@ class ComplianceChecker:
 # ---------------------------------------------------------------------------
 # SAM.gov Exclusions API — real federal debarment check
 # ---------------------------------------------------------------------------
+
 
 def check_sam_exclusion(entity_name: str) -> dict:
     """Check if an entity is excluded (debarred) via the SAM.gov Exclusions API.
@@ -195,14 +201,16 @@ def check_sam_exclusion(entity_name: str) -> dict:
             actions = exc.get("exclusionActions", {}).get("listOfActions", [])
             for action in actions:
                 if action.get("recordStatus") == "Active":
-                    active.append({
-                        "entity": exc.get("exclusionIdentification", {}).get("entityName", ""),
-                        "type": exc.get("exclusionDetails", {}).get("exclusionType", ""),
-                        "agency": exc.get("exclusionDetails", {}).get("excludingAgencyName", ""),
-                        "activate_date": action.get("activateDate"),
-                        "termination_date": action.get("terminationDate"),
-                        "termination_type": action.get("terminationType"),
-                    })
+                    active.append(
+                        {
+                            "entity": exc.get("exclusionIdentification", {}).get("entityName", ""),
+                            "type": exc.get("exclusionDetails", {}).get("exclusionType", ""),
+                            "agency": exc.get("exclusionDetails", {}).get("excludingAgencyName", ""),
+                            "activate_date": action.get("activateDate"),
+                            "termination_date": action.get("terminationDate"),
+                            "termination_type": action.get("terminationType"),
+                        }
+                    )
 
         if active:
             return {

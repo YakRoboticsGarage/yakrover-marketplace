@@ -22,13 +22,14 @@ See: auction/discovery_bridge.py for the PluginRobotAdapter interface.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
 @dataclass
 class OperatorProfile:
     """Registered operator on the marketplace."""
+
     operator_id: str
     company_name: str
     contact_name: str
@@ -40,7 +41,7 @@ class OperatorProfile:
     sensors: list[str] = field(default_factory=list)  # Flat list derived from equipment
     certifications: list[str] = field(default_factory=list)  # faa_part_107, pls_license, etc.
     pricing: dict = field(default_factory=dict)  # {min_daily_rate, preferred_task_types, ...}
-    registered_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    registered_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     status: str = "pending"  # pending, active, suspended
     compliance_status: dict = field(default_factory=dict)  # From ComplianceChecker
     pls_info: dict | None = None  # {name, license, state, expires}
@@ -64,6 +65,7 @@ class OperatorRegistry:
     ) -> OperatorProfile:
         """Register a new operator. Returns the profile with a generated operator_id."""
         import hashlib
+
         operator_id = f"op_{hashlib.sha256(f'{company_name}:{contact_email}'.encode()).hexdigest()[:12]}"
 
         if operator_id in self._operators:
@@ -213,14 +215,16 @@ class OperatorRegistry:
                 continue
             if state and state not in op.coverage_states:
                 continue
-            results.append({
-                "operator_id": op.operator_id,
-                "company_name": op.company_name,
-                "location": op.location,
-                "status": op.status,
-                "sensors": op.sensors,
-                "equipment_count": len(op.equipment),
-            })
+            results.append(
+                {
+                    "operator_id": op.operator_id,
+                    "company_name": op.company_name,
+                    "location": op.location,
+                    "status": op.status,
+                    "sensors": op.sensors,
+                    "equipment_count": len(op.equipment),
+                }
+            )
         return {"total": len(results), "operators": results}
 
     def _get(self, operator_id: str) -> OperatorProfile:

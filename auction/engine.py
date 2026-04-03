@@ -20,23 +20,21 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
+from datetime import UTC
 from decimal import Decimal
 
 from auction.core import (
-    AuctionResult,
-    Bid,
-    DeliveryPayload,
-    Task,
-    TaskState,
-    VALID_TASK_CATEGORIES,
     WEIGHT_CONFIDENCE,
     WEIGHT_PRICE,
     WEIGHT_REPUTATION,
     WEIGHT_SLA,
+    Bid,
+    DeliveryPayload,
+    Task,
+    TaskState,
     check_hard_constraints,
     log,
     score_bids,
-    sign_bid,
     validate_task_spec,
     verify_bid,
 )
@@ -69,9 +67,9 @@ except ImportError:  # pragma: no cover
 # Rate limits and input size limits (v1.0.1 — Security M-1, M-4)
 # ---------------------------------------------------------------------------
 
-MAX_ACTIVE_TASKS_PER_WALLET = 20       # Prevent task-flooding
-MAX_REPOOL_ROUNDS = 3                  # Prevent infinite re-pool loops
-MAX_DESCRIPTION_LENGTH = 2000          # Prevent oversized task descriptions
+MAX_ACTIVE_TASKS_PER_WALLET = 20  # Prevent task-flooding
+MAX_REPOOL_ROUNDS = 3  # Prevent infinite re-pool loops
+MAX_DESCRIPTION_LENGTH = 2000  # Prevent oversized task descriptions
 MAX_CAPABILITY_REQUIREMENTS_SIZE = 50  # Max keys in capability_requirements dict (nested)
 
 # ---------------------------------------------------------------------------
@@ -79,26 +77,27 @@ MAX_CAPABILITY_REQUIREMENTS_SIZE = 50  # Max keys in capability_requirements dic
 # ---------------------------------------------------------------------------
 
 VALID_TRANSITIONS: dict[TaskState | None, list[TaskState]] = {
-    None:                         [TaskState.POSTED],
-    TaskState.POSTED:             [TaskState.BIDDING, TaskState.WITHDRAWN],
-    TaskState.BIDDING:            [TaskState.BID_ACCEPTED, TaskState.WITHDRAWN],
-    TaskState.BID_ACCEPTED:       [TaskState.IN_PROGRESS, TaskState.PROVIDER_CANCELLED, TaskState.WITHDRAWN],
-    TaskState.IN_PROGRESS:        [TaskState.DELIVERED, TaskState.ABANDONED, TaskState.WITHDRAWN],
-    TaskState.DELIVERED:          [TaskState.VERIFIED, TaskState.REJECTED, TaskState.WITHDRAWN],
-    TaskState.VERIFIED:           [TaskState.SETTLED],
-    TaskState.REJECTED:           [TaskState.RE_POOLED, TaskState.WITHDRAWN],  # v1.0.1: allow cancel from rejected
-    TaskState.ABANDONED:          [TaskState.RE_POOLED, TaskState.WITHDRAWN],  # v1.0.1: allow cancel from abandoned
+    None: [TaskState.POSTED],
+    TaskState.POSTED: [TaskState.BIDDING, TaskState.WITHDRAWN],
+    TaskState.BIDDING: [TaskState.BID_ACCEPTED, TaskState.WITHDRAWN],
+    TaskState.BID_ACCEPTED: [TaskState.IN_PROGRESS, TaskState.PROVIDER_CANCELLED, TaskState.WITHDRAWN],
+    TaskState.IN_PROGRESS: [TaskState.DELIVERED, TaskState.ABANDONED, TaskState.WITHDRAWN],
+    TaskState.DELIVERED: [TaskState.VERIFIED, TaskState.REJECTED, TaskState.WITHDRAWN],
+    TaskState.VERIFIED: [TaskState.SETTLED],
+    TaskState.REJECTED: [TaskState.RE_POOLED, TaskState.WITHDRAWN],  # v1.0.1: allow cancel from rejected
+    TaskState.ABANDONED: [TaskState.RE_POOLED, TaskState.WITHDRAWN],  # v1.0.1: allow cancel from abandoned
     TaskState.PROVIDER_CANCELLED: [TaskState.RE_POOLED, TaskState.WITHDRAWN],  # v1.0.1: allow cancel from cancelled
-    TaskState.RE_POOLED:          [TaskState.BIDDING, TaskState.WITHDRAWN],
+    TaskState.RE_POOLED: [TaskState.BIDDING, TaskState.WITHDRAWN],
     # Terminal states
-    TaskState.SETTLED:            [],
-    TaskState.WITHDRAWN:          [],
+    TaskState.SETTLED: [],
+    TaskState.WITHDRAWN: [],
 }
 
 
 # ---------------------------------------------------------------------------
 # TaskRecord — in-memory task store entry
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class TaskRecord:
@@ -125,6 +124,7 @@ class TaskRecord:
 # ---------------------------------------------------------------------------
 # AuctionEngine
 # ---------------------------------------------------------------------------
+
 
 class AuctionEngine:
     """Orchestrates the robot task auction lifecycle.
@@ -202,12 +202,13 @@ class AuctionEngine:
             delivery = None
             dl = row.get("delivery")
             if dl is not None:
-                from datetime import datetime, timezone
+                from datetime import datetime
+
                 delivered_at = dl.get("delivered_at")
                 if isinstance(delivered_at, str):
                     delivered_at = datetime.fromisoformat(delivered_at)
                     if delivered_at.tzinfo is None:
-                        delivered_at = delivered_at.replace(tzinfo=timezone.utc)
+                        delivered_at = delivered_at.replace(tzinfo=UTC)
                 delivery = DeliveryPayload(
                     request_id=dl["request_id"],
                     robot_id=dl["robot_id"],
@@ -218,18 +219,20 @@ class AuctionEngine:
 
             # Reconstruct bids list
             bids_list = []
-            for bd in (row.get("bids") or []):
+            for bd in row.get("bids") or []:
                 if isinstance(bd, dict) and "robot_id" in bd:
-                    bids_list.append(Bid(
-                        request_id=bd["request_id"],
-                        robot_id=bd["robot_id"],
-                        price=Decimal(str(bd["price"])),
-                        sla_commitment_seconds=bd["sla_commitment_seconds"],
-                        ai_confidence=bd["ai_confidence"],
-                        capability_metadata=bd.get("capability_metadata", {}),
-                        reputation_metadata=bd.get("reputation_metadata", {}),
-                        bid_hash=bd["bid_hash"],
-                    ))
+                    bids_list.append(
+                        Bid(
+                            request_id=bd["request_id"],
+                            robot_id=bd["robot_id"],
+                            price=Decimal(str(bd["price"])),
+                            sla_commitment_seconds=bd["sla_commitment_seconds"],
+                            ai_confidence=bd["ai_confidence"],
+                            capability_metadata=bd.get("capability_metadata", {}),
+                            reputation_metadata=bd.get("reputation_metadata", {}),
+                            bid_hash=bd["bid_hash"],
+                        )
+                    )
 
             state = TaskState(row["state"])
 
@@ -303,16 +306,18 @@ class AuctionEngine:
         # Serialize bids
         bids_list = []
         for b in record.bids:
-            bids_list.append({
-                "request_id": b.request_id,
-                "robot_id": b.robot_id,
-                "price": b.price,
-                "sla_commitment_seconds": b.sla_commitment_seconds,
-                "ai_confidence": b.ai_confidence,
-                "capability_metadata": b.capability_metadata,
-                "reputation_metadata": b.reputation_metadata,
-                "bid_hash": b.bid_hash,
-            })
+            bids_list.append(
+                {
+                    "request_id": b.request_id,
+                    "robot_id": b.robot_id,
+                    "price": b.price,
+                    "sla_commitment_seconds": b.sla_commitment_seconds,
+                    "ai_confidence": b.ai_confidence,
+                    "capability_metadata": b.capability_metadata,
+                    "reputation_metadata": b.reputation_metadata,
+                    "bid_hash": b.bid_hash,
+                }
+            )
 
         self.store.save_task(
             request_id=record.request_id,
@@ -339,10 +344,7 @@ class AuctionEngine:
         from_state = record.state if hasattr(record, "state") else None
         valid = VALID_TRANSITIONS.get(from_state, [])
         if to_state not in valid:
-            raise ValueError(
-                f"Invalid transition: {from_state} -> {to_state}. "
-                f"Valid targets: {valid}"
-            )
+            raise ValueError(f"Invalid transition: {from_state} -> {to_state}. Valid targets: {valid}")
         from_label = from_state.value if from_state else "(none)"
         log("STATE", f"{record.request_id} | {from_label} -> {to_state.value} | {detail}")
         record.state = to_state
@@ -397,14 +399,14 @@ class AuctionEngine:
         """
         # v1.0.1: Enforce max re-pool rounds (Security M-1)
         if record.bid_round >= MAX_REPOOL_ROUNDS:
-            self._transition(record, TaskState.WITHDRAWN,
-                             f"max re-pool rounds ({MAX_REPOOL_ROUNDS}) exceeded")
+            self._transition(record, TaskState.WITHDRAWN, f"max re-pool rounds ({MAX_REPOOL_ROUNDS}) exceeded")
             # Refund any reservation
             if self.wallet is not None:
                 try:
                     reservation = (record.task.budget_ceiling * Decimal("0.25")).quantize(Decimal("0.01"))
-                    self.wallet.credit("buyer", reservation, record.request_id, "refund",
-                                       note=f"Refund: max re-pool rounds exceeded")
+                    self.wallet.credit(
+                        "buyer", reservation, record.request_id, "refund", note="Refund: max re-pool rounds exceeded"
+                    )
                 except Exception:
                     pass  # Wallet may not have been debited
             return {
@@ -443,18 +445,23 @@ class AuctionEngine:
         if len(eligible) == 0:
             # No robots left — transition to BIDDING then WITHDRAWN
             self._transition(
-                record, TaskState.BIDDING,
+                record,
+                TaskState.BIDDING,
                 f"bid round {record.bid_round}: 0 eligible robots after exclusions",
             )
             self._transition(record, TaskState.WITHDRAWN, "reason: no_capable_robots (all excluded)")
             log("REPOOL", f"{record.request_id} | no eligible robots remain, task withdrawn")
         else:
             self._transition(
-                record, TaskState.BIDDING,
+                record,
+                TaskState.BIDDING,
                 f"bid round {record.bid_round}: {len(eligible)} eligible robots",
             )
-            log("REPOOL", f"{record.request_id} | re-pooled for round {record.bid_round} "
-                f"({len(eligible)} eligible, {len(record.previous_winners)} excluded)")
+            log(
+                "REPOOL",
+                f"{record.request_id} | re-pooled for round {record.bid_round} "
+                f"({len(eligible)} eligible, {len(record.previous_winners)} excluded)",
+            )
 
         return {
             "request_id": record.request_id,
@@ -471,8 +478,10 @@ class AuctionEngine:
             return
         for bid in record.bids:
             if bid.robot_id != record.winning_bid.robot_id:
-                log("NOTIFY", f"{bid.robot_id} | not selected for {record.request_id} | "
-                    f"winner: {record.winning_bid.robot_id}")
+                log(
+                    "NOTIFY",
+                    f"{bid.robot_id} | not selected for {record.request_id} | winner: {record.winning_bid.robot_id}",
+                )
 
     # ------------------------------------------------------------------
     # Auto-accept timer (AD-7, v0.5)
@@ -481,17 +490,14 @@ class AuctionEngine:
     def _start_auto_accept_timer(self, record: TaskRecord) -> None:
         """Create a background asyncio task for auto-accept after timeout."""
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
         except RuntimeError:
             # No running event loop — skip timer (e.g. synchronous tests)
             log("TIMER", f"{record.request_id} | auto-accept timer skipped (no event loop)")
             return
 
-        record.auto_accept_handle = asyncio.create_task(
-            self._auto_accept_callback(record.request_id)
-        )
-        log("TIMER", f"{record.request_id} | auto-accept timer started "
-            f"({record.task.auto_accept_seconds}s)")
+        record.auto_accept_handle = asyncio.create_task(self._auto_accept_callback(record.request_id))
+        log("TIMER", f"{record.request_id} | auto-accept timer started ({record.task.auto_accept_seconds}s)")
 
     def _cancel_auto_accept_timer(self, record: TaskRecord) -> None:
         """Cancel the auto-accept asyncio task if it exists and is running."""
@@ -505,8 +511,7 @@ class AuctionEngine:
         record = self._get_record(request_id)
         await asyncio.sleep(record.task.auto_accept_seconds)
         if record.state == TaskState.DELIVERED:
-            log("TIMER", f"{request_id} | auto-accept timer fired after "
-                f"{record.task.auto_accept_seconds}s")
+            log("TIMER", f"{request_id} | auto-accept timer fired after {record.task.auto_accept_seconds}s")
             self.confirm_delivery(request_id)
 
     # ------------------------------------------------------------------
@@ -521,20 +526,16 @@ class AuctionEngine:
         # v1.0.1: Input size limits (Security M-4)
         desc = task_spec.get("description", "")
         if len(desc) > MAX_DESCRIPTION_LENGTH:
-            raise ValueError(
-                f"Description exceeds maximum length ({len(desc)} > {MAX_DESCRIPTION_LENGTH})"
-            )
+            raise ValueError(f"Description exceeds maximum length ({len(desc)} > {MAX_DESCRIPTION_LENGTH})")
         cap_req = task_spec.get("capability_requirements", {})
-        if isinstance(cap_req, dict) and sum(len(v) if isinstance(v, dict) else 1 for v in cap_req.values()) > MAX_CAPABILITY_REQUIREMENTS_SIZE:
-            raise ValueError(
-                f"capability_requirements exceeds maximum size ({MAX_CAPABILITY_REQUIREMENTS_SIZE} keys)"
-            )
+        if (
+            isinstance(cap_req, dict)
+            and sum(len(v) if isinstance(v, dict) else 1 for v in cap_req.values()) > MAX_CAPABILITY_REQUIREMENTS_SIZE
+        ):
+            raise ValueError(f"capability_requirements exceeds maximum size ({MAX_CAPABILITY_REQUIREMENTS_SIZE} keys)")
 
         # v1.0.1: Rate limit — max active tasks per wallet (Security M-1)
-        active_count = sum(
-            1 for r in self._tasks.values()
-            if r.state not in (TaskState.SETTLED, TaskState.WITHDRAWN)
-        )
+        active_count = sum(1 for r in self._tasks.values() if r.state not in (TaskState.SETTLED, TaskState.WITHDRAWN))
         if active_count >= MAX_ACTIVE_TASKS_PER_WALLET:
             raise ValueError(
                 f"Too many active tasks ({active_count} >= {MAX_ACTIVE_TASKS_PER_WALLET}). "
@@ -545,8 +546,7 @@ class AuctionEngine:
         validation_errors = validate_task_spec(task_spec)
         if validation_errors:
             raise ValueError(
-                f"Task validation failed with {len(validation_errors)} error(s): "
-                + "; ".join(validation_errors)
+                f"Task validation failed with {len(validation_errors)} error(s): " + "; ".join(validation_errors)
             )
 
         # Build the Task (validates budget_ceiling, task_category, payment_method)
@@ -611,10 +611,7 @@ class AuctionEngine:
             )
 
         eligible_robot_ids = [r.robot_id for r in eligible]
-        has_mock = any(
-            "fake" in rid or "mock" in rid
-            for rid in eligible_robot_ids
-        )
+        has_mock = any("fake" in rid or "mock" in rid for rid in eligible_robot_ids)
 
         return {
             "request_id": task.request_id,
@@ -641,9 +638,7 @@ class AuctionEngine:
         """
         record = self._get_record(request_id)
         if record.state != TaskState.BIDDING:
-            raise ValueError(
-                f"get_bids requires state BIDDING, got {record.state.value}"
-            )
+            raise ValueError(f"get_bids requires state BIDDING, got {record.state.value}")
 
         bids: list[Bid] = []
         bid_details: list[dict] = []
@@ -678,7 +673,9 @@ class AuctionEngine:
                 "bid_hash": bid.bid_hash,
                 "signature_valid": sig_valid,
                 "eligible": not over_budget,
-                "disqualification_reason": f"over_budget (${bid.price} > ${record.task.budget_ceiling})" if over_budget else None,
+                "disqualification_reason": f"over_budget (${bid.price} > ${record.task.budget_ceiling})"
+                if over_budget
+                else None,
             }
             bid_details.append(bid_entry)
 
@@ -742,9 +739,7 @@ class AuctionEngine:
         """
         record = self._get_record(request_id)
         if record.state != TaskState.BIDDING:
-            raise ValueError(
-                f"accept_bid requires state BIDDING, got {record.state.value}"
-            )
+            raise ValueError(f"accept_bid requires state BIDDING, got {record.state.value}")
 
         # Find the bid
         bid = None
@@ -765,8 +760,9 @@ class AuctionEngine:
         if self.wallet is not None:
             if not self.wallet.check_balance("buyer", reservation):
                 raise InsufficientBalance("buyer", reservation, self.wallet.get_balance("buyer"))
-            self.wallet.debit("buyer", reservation, request_id, "reservation_25",
-                              note=f"25% reservation for {robot_id}")
+            self.wallet.debit(
+                "buyer", reservation, request_id, "reservation_25", note=f"25% reservation for {robot_id}"
+            )
             log("PAYMENT", f"${reservation} debited (25% reservation) from buyer wallet")
         else:
             log("PAYMENT", f"(stub) Would debit ${reservation} (25% reservation) from buyer wallet")
@@ -815,9 +811,7 @@ class AuctionEngine:
         """
         record = self._get_record(request_id)
         if record.state != TaskState.BID_ACCEPTED:
-            raise ValueError(
-                f"execute requires state BID_ACCEPTED, got {record.state.value}"
-            )
+            raise ValueError(f"execute requires state BID_ACCEPTED, got {record.state.value}")
 
         winning_bid = record.winning_bid
         robot = self._robots_by_id[winning_bid.robot_id]
@@ -835,19 +829,21 @@ class AuctionEngine:
                 robot.execute(record.task),
                 timeout=record.task.sla_seconds,
             )
-        except asyncio.TimeoutError:
-            log("TIMEOUT", f"{record.request_id} | {winning_bid.robot_id} timed out "
-                f"after {record.task.sla_seconds}s SLA")
+        except TimeoutError:
+            log(
+                "TIMEOUT",
+                f"{record.request_id} | {winning_bid.robot_id} timed out after {record.task.sla_seconds}s SLA",
+            )
 
             # IN_PROGRESS -> ABANDONED
-            self._transition(record, TaskState.ABANDONED,
-                             f"SLA timeout ({record.task.sla_seconds}s)")
+            self._transition(record, TaskState.ABANDONED, f"SLA timeout ({record.task.sla_seconds}s)")
 
             # Refund 25% reservation
             reservation = (winning_bid.price * Decimal("0.25")).quantize(Decimal("0.01"))
             if self.wallet is not None:
-                self.wallet.credit("buyer", reservation, request_id, "refund",
-                                   note=f"25% refund after {winning_bid.robot_id} timeout")
+                self.wallet.credit(
+                    "buyer", reservation, request_id, "refund", note=f"25% refund after {winning_bid.robot_id} timeout"
+                )
                 log("PAYMENT", f"${reservation} refunded (25% reservation) to buyer wallet")
             else:
                 log("PAYMENT", f"(stub) Would refund ${reservation} (25% reservation) to buyer wallet")
@@ -909,9 +905,7 @@ class AuctionEngine:
         """
         record = self._get_record(request_id)
         if record.state != TaskState.DELIVERED:
-            raise ValueError(
-                f"confirm_delivery requires state DELIVERED, got {record.state.value}"
-            )
+            raise ValueError(f"confirm_delivery requires state DELIVERED, got {record.state.value}")
 
         # v0.5: Cancel auto-accept timer
         self._cancel_auto_accept_timer(record)
@@ -921,6 +915,7 @@ class AuctionEngine:
 
         # v1.1: Run deliverable QA at the buyer-configured level
         from auction.deliverable_qa import check_delivery as qa_check
+
         task_spec = {
             "task_category": task.task_category,
             "capability_requirements": task.capability_requirements,
@@ -929,14 +924,15 @@ class AuctionEngine:
 
         if qa_result.status == "FAIL":
             log("VERIFY", f"{request_id} | QA FAILED (level {qa_result.level}): {qa_result.issues}")
-            raise ValueError(
-                f"Delivery QA failed (level {qa_result.level}): {qa_result.issues}"
-            )
+            raise ValueError(f"Delivery QA failed (level {qa_result.level}): {qa_result.issues}")
 
         if qa_result.status == "WARN":
             log("VERIFY", f"{request_id} | QA WARN (level {qa_result.level}): {qa_result.issues}")
 
-        log("VERIFY", f"{request_id} | QA {qa_result.status} (level {qa_result.level}, {len(qa_result.checks_run)} checks)")
+        log(
+            "VERIFY",
+            f"{request_id} | QA {qa_result.status} (level {qa_result.level}, {len(qa_result.checks_run)} checks)",
+        )
 
         # Store QA result on the record for downstream access
         record.qa_result = qa_result.to_dict()
@@ -949,20 +945,27 @@ class AuctionEngine:
         delivery_payment = (agreed_price * Decimal("0.75")).quantize(Decimal("0.01"))
 
         if self.wallet is not None:
-            self.wallet.debit("buyer", delivery_payment, request_id, "delivery_75",
-                              note="75% delivery payment")
+            self.wallet.debit("buyer", delivery_payment, request_id, "delivery_75", note="75% delivery payment")
             log("PAYMENT", f"${delivery_payment} debited (75% delivery) from buyer wallet")
             # Credit full amount to robot operator
             try:
-                self.wallet.credit(record.winning_bid.robot_id, agreed_price,
-                                   request_id, "credit",
-                                   note=f"Operator payment for {request_id}")
+                self.wallet.credit(
+                    record.winning_bid.robot_id,
+                    agreed_price,
+                    request_id,
+                    "credit",
+                    note=f"Operator payment for {request_id}",
+                )
             except KeyError:
                 # Operator wallet may not exist yet — create it
                 self.wallet.create_wallet(record.winning_bid.robot_id)
-                self.wallet.credit(record.winning_bid.robot_id, agreed_price,
-                                   request_id, "credit",
-                                   note=f"Operator payment for {request_id}")
+                self.wallet.credit(
+                    record.winning_bid.robot_id,
+                    agreed_price,
+                    request_id,
+                    "credit",
+                    note=f"Operator payment for {request_id}",
+                )
             log("PAYMENT", f"${agreed_price} credited to {record.winning_bid.robot_id} operator wallet")
         else:
             log("PAYMENT", f"(stub) Would debit ${delivery_payment} (75% delivery) from buyer wallet")
@@ -989,8 +992,10 @@ class AuctionEngine:
                 metadata={"request_id": request_id, "robot_id": robot_id},
             )
             self._last_stripe_transfer = stripe_transfer_result
-            log("STRIPE", f"Transfer {amount_cents}c to {robot_id}: "
-                f"{'stub' if stripe_transfer_result.get('stub') else 'live'}")
+            log(
+                "STRIPE",
+                f"Transfer {amount_cents}c to {robot_id}: {'stub' if stripe_transfer_result.get('stub') else 'live'}",
+            )
 
         # VERIFIED -> SETTLED
         self._transition(record, TaskState.SETTLED, "task complete")
@@ -1034,9 +1039,7 @@ class AuctionEngine:
         """
         record = self._get_record(request_id)
         if record.state != TaskState.DELIVERED:
-            raise ValueError(
-                f"reject_delivery requires state DELIVERED, got {record.state.value}"
-            )
+            raise ValueError(f"reject_delivery requires state DELIVERED, got {record.state.value}")
 
         # v0.5: Cancel auto-accept timer
         self._cancel_auto_accept_timer(record)
@@ -1050,8 +1053,9 @@ class AuctionEngine:
         # v0.5: Refund 25% reservation
         reservation = (record.winning_bid.price * Decimal("0.25")).quantize(Decimal("0.01"))
         if self.wallet is not None:
-            self.wallet.credit("buyer", reservation, request_id, "refund",
-                               note=f"25% refund after rejection of {rejected_robot_id}")
+            self.wallet.credit(
+                "buyer", reservation, request_id, "refund", note=f"25% refund after rejection of {rejected_robot_id}"
+            )
             log("PAYMENT", f"${reservation} refunded (25% reservation) to buyer wallet")
         else:
             log("PAYMENT", f"(stub) Would refund ${reservation} (25% reservation) to buyer wallet")
@@ -1094,20 +1098,22 @@ class AuctionEngine:
 
         if reason == "provider_cancelled":
             if record.state != TaskState.BID_ACCEPTED:
-                raise ValueError(
-                    f"provider_cancelled requires state BID_ACCEPTED, got {record.state.value}"
-                )
+                raise ValueError(f"provider_cancelled requires state BID_ACCEPTED, got {record.state.value}")
             cancelled_robot_id = record.winning_bid.robot_id
 
             # BID_ACCEPTED -> PROVIDER_CANCELLED
-            self._transition(record, TaskState.PROVIDER_CANCELLED,
-                             f"provider cancelled ({cancelled_robot_id})")
+            self._transition(record, TaskState.PROVIDER_CANCELLED, f"provider cancelled ({cancelled_robot_id})")
 
             # Refund 25% reservation
             reservation = (record.winning_bid.price * Decimal("0.25")).quantize(Decimal("0.01"))
             if self.wallet is not None:
-                self.wallet.credit("buyer", reservation, request_id, "refund",
-                                   note=f"25% refund after provider cancel of {cancelled_robot_id}")
+                self.wallet.credit(
+                    "buyer",
+                    reservation,
+                    request_id,
+                    "refund",
+                    note=f"25% refund after provider cancel of {cancelled_robot_id}",
+                )
                 log("PAYMENT", f"${reservation} refunded (25% reservation) to buyer wallet")
             else:
                 log("PAYMENT", f"(stub) Would refund ${reservation} (25% reservation) to buyer wallet")
@@ -1133,21 +1139,19 @@ class AuctionEngine:
 
         # Default: robot-initiated abandonment
         if record.state != TaskState.IN_PROGRESS:
-            raise ValueError(
-                f"abandon_task requires state IN_PROGRESS, got {record.state.value}"
-            )
+            raise ValueError(f"abandon_task requires state IN_PROGRESS, got {record.state.value}")
 
         abandoned_robot_id = record.winning_bid.robot_id
 
         # IN_PROGRESS -> ABANDONED
-        self._transition(record, TaskState.ABANDONED,
-                         f"manually abandoned ({abandoned_robot_id} unresponsive)")
+        self._transition(record, TaskState.ABANDONED, f"manually abandoned ({abandoned_robot_id} unresponsive)")
 
         # Refund 25% reservation
         reservation = (record.winning_bid.price * Decimal("0.25")).quantize(Decimal("0.01"))
         if self.wallet is not None:
-            self.wallet.credit("buyer", reservation, request_id, "refund",
-                               note=f"25% refund after abandonment of {abandoned_robot_id}")
+            self.wallet.credit(
+                "buyer", reservation, request_id, "refund", note=f"25% refund after abandonment of {abandoned_robot_id}"
+            )
             log("PAYMENT", f"${reservation} refunded (25% reservation) to buyer wallet")
         else:
             log("PAYMENT", f"(stub) Would refund ${reservation} (25% reservation) to buyer wallet")
@@ -1187,9 +1191,7 @@ class AuctionEngine:
         # Terminal states cannot be cancelled
         terminal_states = {TaskState.SETTLED, TaskState.WITHDRAWN}
         if record.state in terminal_states:
-            raise ValueError(
-                f"Cannot cancel task in terminal state {record.state.value}"
-            )
+            raise ValueError(f"Cannot cancel task in terminal state {record.state.value}")
 
         # Cancel auto-accept timer if active
         self._cancel_auto_accept_timer(record)
@@ -1200,8 +1202,7 @@ class AuctionEngine:
         if record.winning_bid is not None and self.wallet is not None:
             reservation = (record.winning_bid.price * Decimal("0.25")).quantize(Decimal("0.01"))
             try:
-                self.wallet.credit("buyer", reservation, request_id, "refund",
-                                   note=f"Cancellation refund: {reason}")
+                self.wallet.credit("buyer", reservation, request_id, "refund", note=f"Cancellation refund: {reason}")
                 refund_amount = reservation
                 refunded = True
                 log("PAYMENT", f"${reservation} refunded (cancellation) to buyer wallet")
@@ -1247,10 +1248,7 @@ class AuctionEngine:
                 "delivered_at": record.delivery.delivered_at.isoformat(),
             }
 
-        timer_active = (
-            record.auto_accept_handle is not None
-            and not record.auto_accept_handle.done()
-        )
+        timer_active = record.auto_accept_handle is not None and not record.auto_accept_handle.done()
 
         # Wallet entries for this request (if wallet exists)
         wallet_entries = []
@@ -1260,11 +1258,13 @@ class AuctionEngine:
                 if isinstance(e, dict):
                     wallet_entries.append(e)
                 else:
-                    wallet_entries.append({
-                        "entry_type": e.entry_type,
-                        "amount": str(e.amount),
-                        "wallet_id": e.wallet_id,
-                    })
+                    wallet_entries.append(
+                        {
+                            "entry_type": e.entry_type,
+                            "amount": str(e.amount),
+                            "wallet_id": e.wallet_id,
+                        }
+                    )
 
         # State-aware available actions and hints (REC-18)
         _actions_by_state = {
@@ -1291,22 +1291,22 @@ class AuctionEngine:
             TaskState.REJECTED: ([], "Task ended."),
         }
         available_actions, hint = _actions_by_state.get(
-            record.state, ([], None),
+            record.state,
+            ([], None),
         )
 
         # Auto-accept deadline as ISO timestamp (REC-20)
         auto_accept_deadline = None
         if timer_active:
             from datetime import timedelta
+
             if record.delivery is not None:
                 auto_accept_deadline = (
-                    record.delivery.delivered_at
-                    + timedelta(seconds=record.task.auto_accept_seconds)
+                    record.delivery.delivered_at + timedelta(seconds=record.task.auto_accept_seconds)
                 ).isoformat()
             elif record.task.posted_at is not None:
                 auto_accept_deadline = (
-                    record.task.posted_at
-                    + timedelta(seconds=record.task.auto_accept_seconds)
+                    record.task.posted_at + timedelta(seconds=record.task.auto_accept_seconds)
                 ).isoformat()
 
         result = {
@@ -1369,16 +1369,18 @@ class AuctionEngine:
                     "capability_metadata": getattr(robot, "capability_metadata", {}),
                 }
 
-            bid_comparisons.append({
-                "robot_id": bid.robot_id,
-                "price": str(bid.price),
-                "sla_commitment_seconds": bid.sla_commitment_seconds,
-                "ai_confidence": bid.ai_confidence,
-                "score": score,
-                "eligible": bid.price <= record.task.budget_ceiling,
-                "reputation": bid.reputation_metadata,
-                "operator": operator_info,
-            })
+            bid_comparisons.append(
+                {
+                    "robot_id": bid.robot_id,
+                    "price": str(bid.price),
+                    "sla_commitment_seconds": bid.sla_commitment_seconds,
+                    "ai_confidence": bid.ai_confidence,
+                    "score": score,
+                    "eligible": bid.price <= record.task.budget_ceiling,
+                    "reputation": bid.reputation_metadata,
+                    "operator": operator_info,
+                }
+            )
 
         recommended = scored[0][0].robot_id if scored else None
 
@@ -1391,8 +1393,12 @@ class AuctionEngine:
             "bids": bid_comparisons,
             "recommendation": {
                 "robot_id": recommended,
-                "reason": f"Highest composite score ({scored[0][1]}) across price, SLA, confidence, and reputation" if scored else None,
-            } if recommended else None,
+                "reason": f"Highest composite score ({scored[0][1]}) across price, SLA, confidence, and reputation"
+                if scored
+                else None,
+            }
+            if recommended
+            else None,
         }
 
     # ------------------------------------------------------------------
@@ -1422,18 +1428,20 @@ class AuctionEngine:
             if "task_category" in filters and record.task.task_category != filters["task_category"]:
                 continue
 
-            results.append({
-                "request_id": rid,
-                "description": record.task.description,
-                "task_category": record.task.task_category,
-                "state": record.state.value,
-                "budget_ceiling": str(record.task.budget_ceiling),
-                "bid_count": len(record.bids),
-                "winning_robot": record.winning_bid.robot_id if record.winning_bid else None,
-                "rfp_id": record.task.task_decomposition.get("rfp_id"),
-                "task_index": record.task.task_decomposition.get("task_index"),
-                "posted_at": record.task.posted_at.isoformat(),
-            })
+            results.append(
+                {
+                    "request_id": rid,
+                    "description": record.task.description,
+                    "task_category": record.task.task_category,
+                    "state": record.state.value,
+                    "budget_ceiling": str(record.task.budget_ceiling),
+                    "bid_count": len(record.bids),
+                    "winning_robot": record.winning_bid.robot_id if record.winning_bid else None,
+                    "rfp_id": record.task.task_decomposition.get("rfp_id"),
+                    "task_index": record.task.task_decomposition.get("task_index"),
+                    "posted_at": record.task.posted_at.isoformat(),
+                }
+            )
 
         return {
             "total": len(results),

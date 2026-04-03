@@ -9,22 +9,23 @@ See docs/research/ANALYSIS_TRACKING_DASHBOARDS.md for the full spec.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-
 
 # ---------------------------------------------------------------------------
 # Valid execution progress states (operator-reported, not engine-enforced)
 # ---------------------------------------------------------------------------
 
-VALID_PROGRESS_STATES = frozenset([
-    "mobilizing",   # Reviewing specs, planning flight
-    "en_route",     # Traveling to site
-    "on_site",      # Arrived, setting up equipment
-    "capturing",    # Data capture in progress
-    "processing",   # Post-processing data
-    "uploading",    # Preparing deliverables
-])
+VALID_PROGRESS_STATES = frozenset(
+    [
+        "mobilizing",  # Reviewing specs, planning flight
+        "en_route",  # Traveling to site
+        "on_site",  # Arrived, setting up equipment
+        "capturing",  # Data capture in progress
+        "processing",  # Post-processing data
+        "uploading",  # Preparing deliverables
+    ]
+)
 
 
 def make_event(
@@ -44,7 +45,7 @@ def make_event(
         "actor_id": actor_id,
         "actor_role": actor_role,
         "data": data or {},
-        "timestamp": (timestamp or datetime.now(timezone.utc)).isoformat(),
+        "timestamp": (timestamp or datetime.now(UTC)).isoformat(),
     }
 
 

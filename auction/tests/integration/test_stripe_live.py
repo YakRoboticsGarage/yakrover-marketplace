@@ -48,9 +48,7 @@ class TestStripeWalletTopUp:
 class TestStripeOperatorTransfer:
     """Verify operator payout via Connect Express works."""
 
-    def test_transfer_to_operator(
-        self, stripe_api_key: str, stripe_operator_account: str
-    ) -> None:
+    def test_transfer_to_operator(self, stripe_api_key: str, stripe_operator_account: str) -> None:
         stripe.api_key = stripe_api_key
 
         # Fund platform balance first (test mode only)

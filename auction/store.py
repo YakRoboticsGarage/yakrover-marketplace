@@ -18,16 +18,16 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
 import aiosqlite
 
-
 # ---------------------------------------------------------------------------
 # JSON helpers — Decimal and datetime round-trip safely
 # ---------------------------------------------------------------------------
+
 
 def _json_serializer(obj: Any) -> Any:
     """Custom JSON serializer for types that stdlib json cannot handle."""
@@ -47,7 +47,7 @@ def _json_object_hook(dct: dict) -> Any:
         # Handle both aware and naive ISO strings
         dt = datetime.fromisoformat(s)
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         return dt
     return dct
 
@@ -74,6 +74,7 @@ _TERMINAL_STATES = frozenset({"settled", "withdrawn"})
 # ---------------------------------------------------------------------------
 # TaskStore
 # ---------------------------------------------------------------------------
+
 
 class TaskStore:
     """Async SQLite persistence layer for the auction system.
@@ -223,7 +224,7 @@ class TaskStore:
         mutable columns.
         """
         db = await self._conn()
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         await db.execute(
             """
@@ -259,7 +260,7 @@ class TaskStore:
     async def save_bid(self, bid_dict: dict) -> None:
         """Insert a bid record into the bids table."""
         db = await self._conn()
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         await db.execute(
             "INSERT INTO bids (request_id, robot_id, bid_json, created_at) VALUES (?, ?, ?, ?)",
@@ -275,7 +276,7 @@ class TaskStore:
     async def save_delivery(self, request_id: str, delivery_dict: dict) -> None:
         """Update the task row with delivery data."""
         db = await self._conn()
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         await db.execute(
             "UPDATE tasks SET delivery_json = ?, updated_at = ? WHERE request_id = ?",
@@ -286,7 +287,7 @@ class TaskStore:
     async def update_state(self, request_id: str, state: str) -> None:
         """Update the state column of an existing task."""
         db = await self._conn()
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         await db.execute(
             "UPDATE tasks SET state = ?, updated_at = ? WHERE request_id = ?",
@@ -298,9 +299,7 @@ class TaskStore:
         """Load a full task record by *request_id*, or ``None`` if missing."""
         db = await self._conn()
 
-        async with db.execute(
-            "SELECT * FROM tasks WHERE request_id = ?", (request_id,)
-        ) as cursor:
+        async with db.execute("SELECT * FROM tasks WHERE request_id = ?", (request_id,)) as cursor:
             row = await cursor.fetchone()
 
         if row is None:
@@ -328,7 +327,7 @@ class TaskStore:
     async def save_wallet_balance(self, wallet_id: str, balance: Decimal) -> None:
         """Upsert a wallet balance."""
         db = await self._conn()
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         await db.execute(
             """
@@ -370,7 +369,7 @@ class TaskStore:
                 str(entry_dict["balance_after"]),
                 entry_dict.get("request_id", ""),
                 entry_dict.get("note", ""),
-                entry_dict.get("timestamp", datetime.now(timezone.utc)).isoformat()
+                entry_dict.get("timestamp", datetime.now(UTC)).isoformat()
                 if isinstance(entry_dict.get("timestamp"), datetime)
                 else str(entry_dict.get("timestamp", "")),
             ),
@@ -426,7 +425,7 @@ class TaskStore:
         """Insert a reputation outcome record."""
         db = await self._conn()
 
-        ts = record_dict.get("timestamp", datetime.now(timezone.utc))
+        ts = record_dict.get("timestamp", datetime.now(UTC))
         ts_str = ts.isoformat() if isinstance(ts, datetime) else str(ts)
 
         await db.execute(
@@ -445,9 +444,7 @@ class TaskStore:
         )
         await db.commit()
 
-    async def load_reputation_records(
-        self, robot_id: str | None = None
-    ) -> list[dict]:
+    async def load_reputation_records(self, robot_id: str | None = None) -> list[dict]:
         """Load reputation records, optionally filtered by *robot_id*."""
         db = await self._conn()
 
@@ -476,6 +473,7 @@ class TaskStore:
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _row_to_task_dict(row) -> dict:
     """Convert a tasks table row to a plain dict with deserialized JSON.
@@ -586,6 +584,7 @@ _SCHEMA_DDL = """
 # SyncTaskStore — synchronous sqlite3 store for use in AuctionEngine
 # ---------------------------------------------------------------------------
 
+
 class SyncTaskStore:
     """Synchronous SQLite persistence layer for the auction engine.
 
@@ -650,7 +649,7 @@ class SyncTaskStore:
     ) -> None:
         """Upsert a task record (synchronous)."""
         db = self._conn()
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         db.execute(
             """
@@ -686,9 +685,7 @@ class SyncTaskStore:
     def load_task(self, request_id: str) -> dict | None:
         """Load a full task record by *request_id*, or ``None`` if missing."""
         db = self._conn()
-        cursor = db.execute(
-            "SELECT * FROM tasks WHERE request_id = ?", (request_id,)
-        )
+        cursor = db.execute("SELECT * FROM tasks WHERE request_id = ?", (request_id,))
         row = cursor.fetchone()
         if row is None:
             return None

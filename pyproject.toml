@@ -63,7 +63,18 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"auction/tests/*" = ["S101"]  # allow assert in tests
+"auction/tests/*" = ["S101", "S105", "S106", "E402"]  # allow assert, test passwords, conditional imports
+"auction/api.py" = ["E402"]  # conditional FastAPI import
+"auction/mcp_tools.py" = ["E402", "E501"]  # conditional imports + long docstrings
+"auction/demo.py" = ["E402"]  # imports after dotenv.load_dotenv()
+"auction/store.py" = ["S608"]  # parameterized SQL is safe
+"auction/compliance.py" = ["S105"]  # "PASS" status constant, not a password
+"auction/engine.py" = ["S110"]  # intentional except-pass for wallet creation fallback
+"auction/agreement.py" = ["E501"]  # long legal text strings
+"auction/bond_verifier.py" = ["E501"]  # long data format strings
+"auction/rfp_processor.py" = ["E501"]  # long prompt/template strings
+"auction/terms_comparator.py" = ["E501"]  # long legal comparison strings
+"auction/tests/scenarios/*" = ["S101", "E501"]  # scenarios have long descriptive strings
 
 [tool.mypy]
 python_version = "3.13"

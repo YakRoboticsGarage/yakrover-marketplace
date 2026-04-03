@@ -61,11 +61,11 @@ RECOMMENDED_PLS = "01_jennifer_chen"
 
 ELIGIBLE_TASK_TYPES = [
     "progress_monitoring",  # May not require PLS
-    "photogrammetry",       # Depends on deliverable requirements
+    "photogrammetry",  # Depends on deliverable requirements
 ]
 
 INELIGIBLE_WITHOUT_PLS = [
-    "aerial_lidar_topo",      # Requires PLS stamp
-    "control_survey",         # Requires PLS stamp
+    "aerial_lidar_topo",  # Requires PLS stamp
+    "control_survey",  # Requires PLS stamp
     "terrestrial_lidar_tunnel",  # Requires PLS stamp
 ]

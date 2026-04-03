@@ -12,25 +12,20 @@ All httpx calls are mocked. All Stripe SDK calls are mocked.
 
 from __future__ import annotations
 
-import asyncio
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from auction.core import Task, TaskState, sign_bid, verify_bid
+from auction.core import TaskState
 from auction.engine import AuctionEngine
 from auction.mock_fleet import (
-    FakeRoverBay3,
-    FakeRoverBay7,
-    MockDrone01,
     create_demo_fleet,
 )
 from auction.reputation import ReputationTracker
 from auction.store import SyncTaskStore
 from auction.stripe_service import StripeService
 from auction.wallet import StripeWalletService, WalletLedger
-
 
 # ---------------------------------------------------------------------------
 # Shared fixtures and helpers
@@ -108,6 +103,7 @@ def _make_engine(
 # Test 1: Full lifecycle with SQLite
 # ---------------------------------------------------------------------------
 
+
 class TestFullLifecycleWithSQLite:
     """post -> bid -> accept -> execute -> confirm, verify task persisted in store."""
 
@@ -118,7 +114,9 @@ class TestFullLifecycleWithSQLite:
         reputation = ReputationTracker()
 
         engine = _make_engine(
-            wallet=wallet, reputation=reputation, store=store,
+            wallet=wallet,
+            reputation=reputation,
+            store=store,
         )
 
         # 1. Post task
@@ -160,6 +158,7 @@ class TestFullLifecycleWithSQLite:
 # Test 2: Restart recovery
 # ---------------------------------------------------------------------------
 
+
 class TestRestartRecovery:
     """Save mid-flow, create new engine from same store, verify state restored."""
 
@@ -198,6 +197,7 @@ class TestRestartRecovery:
 # Test 3: Stripe settlement (mocked)
 # ---------------------------------------------------------------------------
 
+
 class TestStripeSettlement:
     """confirm_delivery triggers mocked stripe.Transfer.create."""
 
@@ -210,7 +210,9 @@ class TestStripeSettlement:
         stripe_svc = StripeService(api_key=None)  # stub mode
 
         engine = _make_engine(
-            wallet=wallet, store=store, stripe_service=stripe_svc,
+            wallet=wallet,
+            store=store,
+            stripe_service=stripe_svc,
         )
 
         post_result = engine.post_task(VALID_TASK_SPEC)
@@ -254,7 +256,9 @@ class TestStripeSettlement:
 
         with patch("stripe.Transfer.create", return_value=mock_transfer):
             engine = _make_engine(
-                wallet=wallet, store=store, stripe_service=stripe_svc,
+                wallet=wallet,
+                store=store,
+                stripe_service=stripe_svc,
             )
 
             post_result = engine.post_task(VALID_TASK_SPEC)
@@ -277,6 +281,7 @@ class TestStripeSettlement:
 # ---------------------------------------------------------------------------
 # Test 4: Wallet topup (mocked)
 # ---------------------------------------------------------------------------
+
 
 class TestWalletTopup:
     """Mock Stripe PaymentIntent, verify wallet funded."""
@@ -321,6 +326,7 @@ class TestWalletTopup:
 # Test 5: Backward compatibility — no store, no stripe
 # ---------------------------------------------------------------------------
 
+
 class TestBackwardCompat:
     """AuctionEngine(fleet) with no store, no stripe still works (v0.5 mode)."""
 
@@ -353,7 +359,9 @@ class TestBackwardCompat:
         wallet = _make_wallet()
         reputation = ReputationTracker()
         engine = AuctionEngine(
-            create_demo_fleet(), wallet=wallet, reputation=reputation,
+            create_demo_fleet(),
+            wallet=wallet,
+            reputation=reputation,
         )
 
         post_result = engine.post_task(VALID_TASK_SPEC)
@@ -372,6 +380,7 @@ class TestBackwardCompat:
 # ---------------------------------------------------------------------------
 # Test 6: Ed25519 full lifecycle
 # ---------------------------------------------------------------------------
+
 
 class TestEd25519Lifecycle:
     """Full lifecycle with SIGNING_MODE=ed25519."""
@@ -458,11 +467,13 @@ class TestEd25519Lifecycle:
 # Test 7: All 15 MCP tools registered
 # ---------------------------------------------------------------------------
 
+
 class TestMCPToolsRegistered:
     """Verify all 15 tools register on FastMCP."""
 
     def test_new_mcp_tools_registered(self):
         from mcp.server.fastmcp import FastMCP
+
         from auction.mcp_tools import register_auction_tools
 
         mcp = FastMCP("test-auction")
@@ -472,7 +483,8 @@ class TestMCPToolsRegistered:
         stripe_wallet = StripeWalletService(ledger=wallet, stripe_service=stripe_svc)
 
         register_auction_tools(
-            mcp, engine,
+            mcp,
+            engine,
             stripe_wallet_service=stripe_wallet,
             stripe_service=stripe_svc,
         )
@@ -481,51 +493,53 @@ class TestMCPToolsRegistered:
         tools = mcp._tool_manager._tools
         tool_names = sorted(tools.keys())
 
-        expected = sorted([
-            "auction_post_task",
-            "auction_get_bids",
-            "auction_accept_bid",
-            "auction_execute",
-            "auction_confirm_delivery",
-            "auction_reject_delivery",
-            "auction_cancel_task",
-            "auction_get_task_schema",
-            "auction_get_status",
-            # v1.0 new tools
-            "auction_fund_wallet",
-            "auction_get_wallet_balance",
-            "auction_onboard_operator",
-            "auction_get_operator_status",
-            # Convenience tools (REC-16b, REC-19)
-            "auction_accept_and_execute",
-            "auction_quick_hire",
-            # Phase 2: RFP processing tools
-            "auction_process_rfp",
-            "auction_validate_task_specs",
-            "auction_get_site_recon",
-            # Phase 3: Buyer review and award confirmation
-            "auction_review_bids",
-            "auction_award_with_confirmation",
-            # Phase 4: Compliance verification tools
-            "auction_verify_bond",
-            "auction_verify_bond_pdf",
-            "auction_verify_operator_compliance",
-            "auction_upload_compliance_doc",
-            "auction_compare_terms",
-            "auction_check_sam_exclusion",
-            # Operator registration
-            "auction_register_operator",
-            "auction_add_equipment",
-            "auction_activate_operator",
-            # Phase 5: Agreement generation and project management
-            "auction_generate_agreement",
-            "auction_track_execution",
-            "auction_list_tasks",
-            # Phase 6: Tracking and observability (v1.0.2)
-            "auction_update_progress",
-            "auction_get_task_feed",
-            # Phase 7: Feedback
-            "auction_submit_feedback",
-        ])
+        expected = sorted(
+            [
+                "auction_post_task",
+                "auction_get_bids",
+                "auction_accept_bid",
+                "auction_execute",
+                "auction_confirm_delivery",
+                "auction_reject_delivery",
+                "auction_cancel_task",
+                "auction_get_task_schema",
+                "auction_get_status",
+                # v1.0 new tools
+                "auction_fund_wallet",
+                "auction_get_wallet_balance",
+                "auction_onboard_operator",
+                "auction_get_operator_status",
+                # Convenience tools (REC-16b, REC-19)
+                "auction_accept_and_execute",
+                "auction_quick_hire",
+                # Phase 2: RFP processing tools
+                "auction_process_rfp",
+                "auction_validate_task_specs",
+                "auction_get_site_recon",
+                # Phase 3: Buyer review and award confirmation
+                "auction_review_bids",
+                "auction_award_with_confirmation",
+                # Phase 4: Compliance verification tools
+                "auction_verify_bond",
+                "auction_verify_bond_pdf",
+                "auction_verify_operator_compliance",
+                "auction_upload_compliance_doc",
+                "auction_compare_terms",
+                "auction_check_sam_exclusion",
+                # Operator registration
+                "auction_register_operator",
+                "auction_add_equipment",
+                "auction_activate_operator",
+                # Phase 5: Agreement generation and project management
+                "auction_generate_agreement",
+                "auction_track_execution",
+                "auction_list_tasks",
+                # Phase 6: Tracking and observability (v1.0.2)
+                "auction_update_progress",
+                "auction_get_task_feed",
+                # Phase 7: Feedback
+                "auction_submit_feedback",
+            ]
+        )
 
         assert tool_names == expected, f"Expected {expected}, got {tool_names}"

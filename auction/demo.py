@@ -28,6 +28,7 @@ import os
 from decimal import Decimal
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from auction.core import log
@@ -43,7 +44,6 @@ from auction.reputation import ReputationTracker
 from auction.store import SyncTaskStore
 from auction.stripe_service import StripeService
 from auction.wallet import StripeWalletService, WalletLedger
-
 
 # ---------------------------------------------------------------------------
 # Task specs reused across scenarios
@@ -80,6 +80,7 @@ def banner(title: str) -> None:
 # Scenario 1: Happy Path
 # ---------------------------------------------------------------------------
 
+
 async def scenario_1(
     wallet: WalletLedger,
     reputation: ReputationTracker,
@@ -101,8 +102,11 @@ async def scenario_1(
     # 0. Fund wallet via Stripe (stub or real)
     log("WALLET", "Funding wallet via Stripe...")
     topup_result = stripe_wallet.fund_wallet("buyer", Decimal("5.00"))
-    log("WALLET", f"Top-up result: balance=${topup_result['balance']}, "
-        f"stripe={'stub' if topup_result['payment_intent'].get('stub') else 'live'}")
+    log(
+        "WALLET",
+        f"Top-up result: balance=${topup_result['balance']}, "
+        f"stripe={'stub' if topup_result['payment_intent'].get('stub') else 'live'}",
+    )
 
     # 1. Post task
     post_result = engine.post_task(TEMP_HUMIDITY_TASK)
@@ -113,7 +117,7 @@ async def scenario_1(
     recommended = bid_result["recommended_winner"]
 
     # 3. Accept the recommended bid
-    accept_result = engine.accept_bid(request_id, recommended)
+    engine.accept_bid(request_id, recommended)
 
     # 4. Execute — real HTTP to simulator
     try:
@@ -154,6 +158,7 @@ async def scenario_1(
 # Scenario 2: No Capable Robots
 # ---------------------------------------------------------------------------
 
+
 async def scenario_2(
     wallet: WalletLedger,
     reputation: ReputationTracker,
@@ -191,12 +196,13 @@ async def scenario_2(
     request_id = post_result["request_id"]
 
     log("RESULT", f"Task {request_id} state: {post_result['state']}")
-    log("RESULT", f"No robots available with 'welding' capability.")
+    log("RESULT", "No robots available with 'welding' capability.")
 
 
 # ---------------------------------------------------------------------------
 # Scenario 3: Cheapest Doesn't Win
 # ---------------------------------------------------------------------------
+
 
 async def scenario_3(
     wallet: WalletLedger,
@@ -239,6 +245,7 @@ async def scenario_3(
 # Scenario 4: Robot Timeout
 # ---------------------------------------------------------------------------
 
+
 async def scenario_4(
     wallet: WalletLedger,
     reputation: ReputationTracker,
@@ -279,8 +286,8 @@ async def scenario_4(
     post_result = engine.post_task(timeout_task)
     request_id = post_result["request_id"]
 
-    bid_result = engine.get_bids(request_id)
-    log("RESULT", f"Accepting timeout-robot to demonstrate timeout flow")
+    engine.get_bids(request_id)
+    log("RESULT", "Accepting timeout-robot to demonstrate timeout flow")
 
     engine.accept_bid(request_id, "timeout-robot")
 
@@ -329,6 +336,7 @@ async def scenario_4(
 # Scenario 5: Bad Payload
 # ---------------------------------------------------------------------------
 
+
 async def scenario_5(
     wallet: WalletLedger,
     reputation: ReputationTracker,
@@ -351,8 +359,8 @@ async def scenario_5(
     post_result = engine.post_task(TEMP_HUMIDITY_TASK)
     request_id = post_result["request_id"]
 
-    bid_result = engine.get_bids(request_id)
-    log("RESULT", f"Accepting badpayload-robot to demonstrate rejection flow")
+    engine.get_bids(request_id)
+    log("RESULT", "Accepting badpayload-robot to demonstrate rejection flow")
 
     engine.accept_bid(request_id, "badpayload-robot")
 
@@ -410,6 +418,7 @@ async def scenario_5(
 # Main
 # ---------------------------------------------------------------------------
 
+
 async def main() -> None:
     """Run all five demo scenarios."""
     print()
@@ -462,11 +471,14 @@ async def main() -> None:
     if all_reps:
         log("REPUTATION", "Robot reputation summary:")
         for robot_id, rep in all_reps.items():
-            log("REPUTATION", f"  {robot_id}: "
+            log(
+                "REPUTATION",
+                f"  {robot_id}: "
                 f"completed={rep['tasks_completed']}, "
                 f"completion_rate={rep['completion_rate']:.2f}, "
                 f"on_time_rate={rep['on_time_rate']:.2f}, "
-                f"rejection_rate={rep['rejection_rate']:.2f}")
+                f"rejection_rate={rep['rejection_rate']:.2f}",
+            )
     else:
         log("REPUTATION", "No reputation data recorded.")
 

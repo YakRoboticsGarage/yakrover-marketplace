@@ -16,20 +16,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from auction.core import Task, TaskState, verify_bid
+from auction.core import TaskState, verify_bid
 from auction.engine import AuctionEngine
 from auction.mock_fleet import (
     BadPayloadRobot,
     FakeRoverBay3,
-    FakeRoverBay7,
-    MockDrone01,
     TimeoutRobot,
     create_demo_fleet,
     create_scenario3_fleet,
 )
 from auction.reputation import ReputationTracker
 from auction.wallet import WalletLedger
-
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
@@ -494,7 +491,7 @@ class TestTimeoutAbandonment:
         post_result = engine.post_task(task_spec)
         request_id = post_result["request_id"]
 
-        bids_result = engine.get_bids(request_id)
+        engine.get_bids(request_id)
         # Accept the timeout robot specifically
         engine.accept_bid(request_id, "timeout-robot")
 
@@ -516,7 +513,7 @@ class TestTimeoutAbandonment:
         post_result = engine.post_task(task_spec)
         request_id = post_result["request_id"]
 
-        bids_result = engine.get_bids(request_id)
+        engine.get_bids(request_id)
         engine.accept_bid(request_id, "timeout-robot")
 
         # Get the reservation amount

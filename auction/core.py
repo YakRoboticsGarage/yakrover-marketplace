@@ -15,9 +15,9 @@ import secrets
 import uuid
 import warnings
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 
 # ---------------------------------------------------------------------------
 # Optional eth_account import for Ed25519 signing (v1.0)
@@ -44,7 +44,8 @@ SIGNING_MODE = os.environ.get("SIGNING_MODE", "hmac")
 # DM-6: Task lifecycle states (AD-8)
 # ---------------------------------------------------------------------------
 
-class TaskState(str, Enum):
+
+class TaskState(StrEnum):
     """Task lifecycle states. See DECISIONS.md DM-6, AD-8."""
 
     # v0.1 — fully implemented
@@ -90,7 +91,7 @@ def compute_commitment_hash(request_id: str, salt: str) -> str:
     This hash goes on-chain instead of the raw request_id. The platform
     stores (request_id, salt) to verify linkage later. See FD-4.
     """
-    payload = f"{request_id}||{salt}".encode("utf-8")
+    payload = f"{request_id}||{salt}".encode()
     return hashlib.sha256(payload).hexdigest()
 
 
@@ -106,33 +107,67 @@ def verify_commitment(request_id: str, salt: str, commitment_hash: str) -> bool:
 # DM-1: Task categories
 # ---------------------------------------------------------------------------
 
-VALID_TASK_CATEGORIES = frozenset([
-    # Original sensor-reading categories
-    "env_sensing", "visual_inspection", "mapping", "delivery_ground", "aerial_survey",
-    # Construction survey categories
-    "site_survey", "bridge_inspection", "progress_monitoring", "as_built",
-    "subsurface_scan", "environmental_survey", "control_survey",
-])
+VALID_TASK_CATEGORIES = frozenset(
+    [
+        # Original sensor-reading categories
+        "env_sensing",
+        "visual_inspection",
+        "mapping",
+        "delivery_ground",
+        "aerial_survey",
+        # Construction survey categories
+        "site_survey",
+        "bridge_inspection",
+        "progress_monitoring",
+        "as_built",
+        "subsurface_scan",
+        "environmental_survey",
+        "control_survey",
+    ]
+)
 
 # ---------------------------------------------------------------------------
 # Standards-aligned enums and lookup tables
 # See docs/research/technical/STANDARDS_ROBOT_TASK_SPECIFICATIONS.md
 # ---------------------------------------------------------------------------
 
-VALID_ASPRS_ACCURACY_CLASSES = frozenset([
-    "1cm", "2.5cm", "5cm", "10cm", "15cm", "20cm", "33.3cm", "100cm",
-])
+VALID_ASPRS_ACCURACY_CLASSES = frozenset(
+    [
+        "1cm",
+        "2.5cm",
+        "5cm",
+        "10cm",
+        "15cm",
+        "20cm",
+        "33.3cm",
+        "100cm",
+    ]
+)
 
 VALID_USGS_QUALITY_LEVELS = frozenset(["QL0", "QL1", "QL2", "QL3"])
 
-VALID_DELIVERABLE_FORMATS = frozenset([
-    "LAS", "LAZ", "E57", "LandXML", "DXF", "GeoTIFF", "GeoPackage",
-    "CSV", "PDF", "SHP", "GeoJSON", "IFC", "DWG", "KML",
-])
+VALID_DELIVERABLE_FORMATS = frozenset(
+    [
+        "LAS",
+        "LAZ",
+        "E57",
+        "LandXML",
+        "DXF",
+        "GeoTIFF",
+        "GeoPackage",
+        "CSV",
+        "PDF",
+        "SHP",
+        "GeoJSON",
+        "IFC",
+        "DWG",
+        "KML",
+    ]
+)
 
-VALID_MRTA_ROBOT_TYPES = frozenset(["ST", "MT"])   # single-task / multi-task
-VALID_MRTA_TASK_TYPES = frozenset(["SR", "MR"])     # single-robot / multi-robot
-VALID_MRTA_ALLOCATION = frozenset(["IA", "TA"])     # instantaneous / time-extended
+VALID_MRTA_ROBOT_TYPES = frozenset(["ST", "MT"])  # single-task / multi-task
+VALID_MRTA_TASK_TYPES = frozenset(["SR", "MR"])  # single-robot / multi-robot
+VALID_MRTA_ALLOCATION = frozenset(["IA", "TA"])  # instantaneous / time-extended
 VALID_MRTA_DEPENDENCY = frozenset(["ND", "ID", "XD", "CD"])  # none / in-schedule / cross / complex
 
 
@@ -187,13 +222,9 @@ def validate_task_spec(task_spec: dict) -> list[str]:
     try:
         budget = Decimal(str(task_spec.get("budget_ceiling", 0)))
         if budget < Decimal("0.50"):
-            errors.append(
-                f"budget_ceiling must be >= $0.50, got ${budget}"
-            )
+            errors.append(f"budget_ceiling must be >= $0.50, got ${budget}")
     except Exception:
-        errors.append(
-            f"budget_ceiling must be a number, got {task_spec.get('budget_ceiling')!r}"
-        )
+        errors.append(f"budget_ceiling must be a number, got {task_spec.get('budget_ceiling')!r}")
 
     # task_category — infer from capability_requirements when not provided
     category = task_spec.get("task_category")
@@ -202,9 +233,7 @@ def validate_task_spec(task_spec: dict) -> list[str]:
         task_spec["task_category"] = inferred
         category = inferred
     if category not in VALID_TASK_CATEGORIES:
-        errors.append(
-            f"task_category must be one of {sorted(VALID_TASK_CATEGORIES)}, got {category!r}"
-        )
+        errors.append(f"task_category must be one of {sorted(VALID_TASK_CATEGORIES)}, got {category!r}")
 
     # capability_requirements must be a dict
     cap_req = task_spec.get("capability_requirements")
@@ -217,10 +246,19 @@ def validate_task_spec(task_spec: dict) -> list[str]:
     else:
         # Warn if none of the expected top-level keys are present
         _expected_cap_keys = {
-            "hard", "soft", "payload", "tool",
-            "deliverables", "certifications_required", "accuracy_required",
-            "area_acres", "terrain", "standards_compliance",
-            "preferred_deliverables", "preferred_coordinate_system", "preferred_datum",
+            "hard",
+            "soft",
+            "payload",
+            "tool",
+            "deliverables",
+            "certifications_required",
+            "accuracy_required",
+            "area_acres",
+            "terrain",
+            "standards_compliance",
+            "preferred_deliverables",
+            "preferred_coordinate_system",
+            "preferred_datum",
         }
         if not _expected_cap_keys.intersection(cap_req.keys()):
             errors.append(
@@ -235,38 +273,26 @@ def validate_task_spec(task_spec: dict) -> list[str]:
             sensors = hard.get("sensors_required")
             if sensors is not None and not isinstance(sensors, list):
                 errors.append(
-                    f"capability_requirements.hard.sensors_required must be a list, "
-                    f"got {type(sensors).__name__}"
+                    f"capability_requirements.hard.sensors_required must be a list, got {type(sensors).__name__}"
                 )
 
         # If payload is provided, validate its structure
         payload = cap_req.get("payload")
         if payload is not None:
             if not isinstance(payload, dict):
-                errors.append(
-                    f"capability_requirements.payload must be a dict, "
-                    f"got {type(payload).__name__}"
-                )
+                errors.append(f"capability_requirements.payload must be a dict, got {type(payload).__name__}")
             else:
                 fmt = payload.get("format")
                 if fmt is not None and not isinstance(fmt, str):
-                    errors.append(
-                        f"capability_requirements.payload.format must be a string, "
-                        f"got {type(fmt).__name__}"
-                    )
+                    errors.append(f"capability_requirements.payload.format must be a string, got {type(fmt).__name__}")
                 fields = payload.get("fields")
                 if fields is not None and not isinstance(fields, list):
-                    errors.append(
-                        f"capability_requirements.payload.fields must be a list, "
-                        f"got {type(fields).__name__}"
-                    )
+                    errors.append(f"capability_requirements.payload.fields must be a list, got {type(fields).__name__}")
 
     # sla_seconds must be a positive integer
     sla = task_spec.get("sla_seconds")
     if not isinstance(sla, int) or sla <= 0:
-        errors.append(
-            f"sla_seconds must be a positive integer, got {sla!r}"
-        )
+        errors.append(f"sla_seconds must be a positive integer, got {sla!r}")
 
     # Standards-aligned field validation (optional fields, validated when present)
     if isinstance(cap_req, dict):
@@ -283,10 +309,14 @@ def validate_task_spec(task_spec: dict) -> list[str]:
             # ASPRS accuracy class
             asprs_h = hard.get("asprs_horizontal_class")
             if asprs_h is not None and asprs_h not in VALID_ASPRS_ACCURACY_CLASSES:
-                errors.append(f"asprs_horizontal_class must be one of {sorted(VALID_ASPRS_ACCURACY_CLASSES)}, got {asprs_h!r}")
+                errors.append(
+                    f"asprs_horizontal_class must be one of {sorted(VALID_ASPRS_ACCURACY_CLASSES)}, got {asprs_h!r}"
+                )
             asprs_v = hard.get("asprs_vertical_class")
             if asprs_v is not None and asprs_v not in VALID_ASPRS_ACCURACY_CLASSES:
-                errors.append(f"asprs_vertical_class must be one of {sorted(VALID_ASPRS_ACCURACY_CLASSES)}, got {asprs_v!r}")
+                errors.append(
+                    f"asprs_vertical_class must be one of {sorted(VALID_ASPRS_ACCURACY_CLASSES)}, got {asprs_v!r}"
+                )
 
             # USGS quality level
             usgs_ql = hard.get("usgs_quality_level")
@@ -305,7 +335,9 @@ def validate_task_spec(task_spec: dict) -> list[str]:
                         continue
                     fmt = d.get("format")
                     if fmt is not None and fmt not in VALID_DELIVERABLE_FORMATS:
-                        errors.append(f"deliverables[{i}].format {fmt!r} not in known formats {sorted(VALID_DELIVERABLE_FORMATS)}")
+                        errors.append(
+                            f"deliverables[{i}].format {fmt!r} not in known formats {sorted(VALID_DELIVERABLE_FORMATS)}"
+                        )
 
         # MRTA classification validation
         mrta = cap_req.get("mrta_class")
@@ -341,7 +373,7 @@ class Task:
     sla_seconds: int = 120
     request_id: str = field(default_factory=lambda: f"req_{uuid.uuid4().hex[:12]}")
     auto_accept_seconds: int = 3600  # AD-7: stubbed in v0.1
-    posted_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    posted_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     # v1.1.1: FD-4 commitment hash — on-chain memo uses this instead of raw request_id
     commitment_salt: str = field(default_factory=generate_commitment_salt)
     commitment_hash: str = ""
@@ -353,17 +385,14 @@ class Task:
 
     def __post_init__(self) -> None:
         if self.budget_ceiling < Decimal("0.50"):
-            raise ValueError(
-                f"budget_ceiling must be >= $0.50 (TC-1), got ${self.budget_ceiling}"
-            )
+            raise ValueError(f"budget_ceiling must be >= $0.50 (TC-1), got ${self.budget_ceiling}")
         # Infer task_category from capability_requirements when not provided
         if not self.task_category:
             inferred = infer_task_category(self.capability_requirements)
             object.__setattr__(self, "task_category", inferred)
         if self.task_category not in VALID_TASK_CATEGORIES:
             raise ValueError(
-                f"task_category must be one of {sorted(VALID_TASK_CATEGORIES)}, "
-                f"got '{self.task_category}'"
+                f"task_category must be one of {sorted(VALID_TASK_CATEGORIES)}, got '{self.task_category}'"
             )
         # v1.1.1: Generate commitment hash if not provided
         if not self.commitment_hash:
@@ -375,14 +404,14 @@ class Task:
         # v1.1.1: Validate payment method
         if self.payment_method not in VALID_PAYMENT_METHODS:
             raise ValueError(
-                f"payment_method must be one of {sorted(VALID_PAYMENT_METHODS)}, "
-                f"got '{self.payment_method}'"
+                f"payment_method must be one of {sorted(VALID_PAYMENT_METHODS)}, got '{self.payment_method}'"
             )
 
 
 # ---------------------------------------------------------------------------
 # DM-2: Bid
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class Bid:
@@ -401,6 +430,7 @@ class Bid:
 # ---------------------------------------------------------------------------
 # DM-3: AuctionResult
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class AuctionResult:
@@ -423,6 +453,7 @@ class AuctionResult:
 # DM-4: DeliveryPayload
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class DeliveryPayload:
     """Payload delivered by the winning robot. See DECISIONS.md DM-4."""
@@ -437,6 +468,7 @@ class DeliveryPayload:
 # ---------------------------------------------------------------------------
 # Hard constraint filter (AD-5, Phase 1)
 # ---------------------------------------------------------------------------
+
 
 def check_hard_constraints(
     task: Task,
@@ -454,7 +486,7 @@ def check_hard_constraints(
     # alongside v0.1 flat string lists.  Backward compatible.
     raw_sensors = robot_capabilities.get("sensors", [])
     if raw_sensors and isinstance(raw_sensors[0], dict):
-        robot_sensors = set(s["type"] for s in raw_sensors if "type" in s)
+        robot_sensors = {s["type"] for s in raw_sensors if "type" in s}
     else:
         robot_sensors = set(raw_sensors)
 
@@ -542,8 +574,7 @@ def generate_keypair() -> tuple[str, str]:
     """
     if not _HAS_ETH_ACCOUNT:
         raise RuntimeError(
-            "eth_account is not installed — cannot generate Ed25519 keypair. "
-            "Install it with: pip install eth-account"
+            "eth_account is not installed — cannot generate Ed25519 keypair. Install it with: pip install eth-account"
         )
     account = Account.create()
     return (account.key.hex(), account.address)
@@ -632,6 +663,7 @@ def verify_bid(bid: Bid, key: str) -> bool:
 # Console logging
 # ---------------------------------------------------------------------------
 
+
 def log(tag: str, message: str) -> None:
     """Print a tagged log line. Tag is left-padded to 10 chars with brackets."""
     print(f"[{tag:<8s}] {message}")
@@ -640,6 +672,7 @@ def log(tag: str, message: str) -> None:
 # ---------------------------------------------------------------------------
 # DM-NEW: LedgerEntry — shared type used by wallet.py (v0.5)
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class LedgerEntry:
@@ -651,12 +684,13 @@ class LedgerEntry:
     request_id: str = ""
     note: str = ""
     balance_after: Decimal = Decimal("0")
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 # ---------------------------------------------------------------------------
 # DM-NEW: ReputationRecord — shared type used by reputation.py (v0.5)
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ReputationRecord:
@@ -666,20 +700,22 @@ class ReputationRecord:
     request_id: str
     outcome: str  # "completed" | "rejected" | "abandoned" | "cancelled"
     sla_met: bool
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 # ---------------------------------------------------------------------------
 # ComplianceRecord — compliance document for operator verification
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ComplianceRecord:
     """Compliance document for an operator. Used by compliance.py."""
+
     robot_id: str
     doc_type: str  # faa_part_107, insurance_coi, pls_license, sam_registration, dot_prequalification, dbe_certification
     status: str  # VERIFIED, MISSING, EXPIRED, NOT_REQUIRED
-    verified_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    verified_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     expires_at: datetime | None = None
     details: dict = field(default_factory=dict)
 
@@ -688,12 +724,14 @@ class ComplianceRecord:
 # Agreement — subcontract agreement between buyer and operator
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class Agreement:
     """Generated subcontract agreement between buyer and operator."""
+
     request_id: str
     template: str = "consensusdocs_750"
-    generated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     buyer_signed: bool = False
     operator_signed: bool = False
     terms: dict = field(default_factory=dict)

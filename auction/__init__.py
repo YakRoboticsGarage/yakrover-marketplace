@@ -5,6 +5,10 @@ See docs/DECISIONS.md for all product and technical decisions.
 """
 
 from .core import (
+    WEIGHT_CONFIDENCE,
+    WEIGHT_PRICE,
+    WEIGHT_REPUTATION,
+    WEIGHT_SLA,
     AuctionResult,
     Bid,
     DeliveryPayload,
@@ -12,10 +16,6 @@ from .core import (
     ReputationRecord,
     Task,
     TaskState,
-    WEIGHT_CONFIDENCE,
-    WEIGHT_PRICE,
-    WEIGHT_REPUTATION,
-    WEIGHT_SLA,
     check_hard_constraints,
     log,
     score_bids,

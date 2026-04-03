@@ -4,8 +4,8 @@ Simulates: Plaid bank connection, escrow funding, payment processing,
 and operator payout. No real money moves.
 """
 
+from datetime import UTC, datetime
 from decimal import Decimal
-from datetime import datetime, timezone
 
 
 class MockPlaidConnection:
@@ -20,7 +20,7 @@ class MockPlaidConnection:
 
     def initiate_ach_transfer(self, amount: Decimal, memo: str = "") -> dict:
         return {
-            "transfer_id": f"ach_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+            "transfer_id": f"ach_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
             "amount": str(amount),
             "status": "pending",
             "estimated_arrival": "2-3 business days",
@@ -81,7 +81,7 @@ class MockOperatorPayout:
             "amount": str(amount),
             "method": method,
             "status": "completed",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         self._payouts.append(record)
         return record

@@ -19,17 +19,17 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # QA result
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class QAResult:
     """Result of running QA checks on a delivery."""
 
     status: str  # "PASS", "WARN", "FAIL"
-    level: int   # QA level that was applied (0-3)
+    level: int  # QA level that was applied (0-3)
     issues: list[str] = field(default_factory=list)
     checks_run: list[str] = field(default_factory=list)
     details: dict[str, Any] = field(default_factory=dict)
@@ -77,6 +77,7 @@ DEFAULT_QA_LEVELS = {
 # ---------------------------------------------------------------------------
 # QA engine
 # ---------------------------------------------------------------------------
+
 
 def get_qa_level(task_spec: dict) -> int:
     """Determine QA level for a task.
@@ -180,8 +181,9 @@ def _check_level_1(data: dict, spec: dict) -> QAResult:
         else:
             issues.append(f"Readings should be a list, got {type(readings).__name__}")
 
-    status = "FAIL" if any("Missing required" in i or "empty" in i.lower() for i in issues) else \
-             "WARN" if issues else "PASS"
+    status = (
+        "FAIL" if any("Missing required" in i or "empty" in i.lower() for i in issues) else "WARN" if issues else "PASS"
+    )
 
     return QAResult(status=status, level=1, issues=issues, checks_run=checks, details=details)
 
@@ -246,8 +248,13 @@ def _check_level_2(data: dict, spec: dict) -> QAResult:
         elif not delivered_files:
             issues.append(f"Task specifies {len(deliverables_spec)} deliverable(s) but delivery has no file list")
 
-    status = "FAIL" if any("below" in i.lower() or "missing required" in i.lower() for i in issues) else \
-             "WARN" if issues else "PASS"
+    status = (
+        "FAIL"
+        if any("below" in i.lower() or "missing required" in i.lower() for i in issues)
+        else "WARN"
+        if issues
+        else "PASS"
+    )
 
     return QAResult(status=status, level=2, issues=issues, checks_run=checks, details=details)
 
@@ -270,8 +277,13 @@ def _check_level_3(data: dict, spec: dict) -> QAResult:
     else:
         issues.append("No PLS review status in delivery — PLS stamp required for this task")
 
-    status = "FAIL" if any("rejected" in i.lower() or "no pls" in i.lower() for i in issues) else \
-             "WARN" if issues else "PASS"
+    status = (
+        "FAIL"
+        if any("rejected" in i.lower() or "no pls" in i.lower() for i in issues)
+        else "WARN"
+        if issues
+        else "PASS"
+    )
 
     return QAResult(status=status, level=3, issues=issues, checks_run=checks, details=details)
 
@@ -279,6 +291,7 @@ def _check_level_3(data: dict, spec: dict) -> QAResult:
 # ---------------------------------------------------------------------------
 # Sensor plausibility checks
 # ---------------------------------------------------------------------------
+
 
 def _check_sensor_plausibility(data: dict, issues: list[str], details: dict) -> None:
     """Check sensor readings are within plausible ranges."""

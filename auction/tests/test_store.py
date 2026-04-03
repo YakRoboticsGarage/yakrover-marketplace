@@ -6,7 +6,7 @@ Requires pytest-asyncio.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -14,10 +14,10 @@ import pytest_asyncio
 
 from auction.store import TaskStore, _dumps, _loads
 
-
 # ---------------------------------------------------------------------------
 # Fixture: fresh in-memory store per test
 # ---------------------------------------------------------------------------
+
 
 @pytest_asyncio.fixture
 async def store():
@@ -32,6 +32,7 @@ async def store():
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _sample_task_dict() -> dict:
     return {
         "description": "Read temperature in warehouse",
@@ -43,7 +44,7 @@ def _sample_task_dict() -> dict:
         "budget_ceiling": Decimal("1.00"),
         "sla_seconds": 300,
         "request_id": "req_test123",
-        "posted_at": datetime(2026, 3, 24, 12, 0, 0, tzinfo=timezone.utc),
+        "posted_at": datetime(2026, 3, 24, 12, 0, 0, tzinfo=UTC),
     }
 
 
@@ -65,7 +66,7 @@ def _sample_delivery_dict() -> dict:
         "request_id": "req_test123",
         "robot_id": "tumbller-01",
         "data": {"temperature_celsius": 22.5, "humidity_percent": 45.0},
-        "delivered_at": datetime(2026, 3, 24, 12, 2, 30, tzinfo=timezone.utc),
+        "delivered_at": datetime(2026, 3, 24, 12, 2, 30, tzinfo=UTC),
         "sla_met": True,
     }
 
@@ -80,9 +81,7 @@ async def test_initialize_creates_tables(store: TaskStore):
     """Verify that initialize() creates all expected tables."""
     db = await store._conn()
 
-    async with db.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-    ) as cur:
+    async with db.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name") as cur:
         rows = await cur.fetchall()
 
     table_names = {row["name"] for row in rows}
@@ -218,7 +217,7 @@ async def test_save_and_load_ledger_entries(store: TaskStore):
         "balance_after": Decimal("25.00"),
         "request_id": "",
         "note": "Wallet funded",
-        "timestamp": datetime(2026, 3, 24, 12, 0, 0, tzinfo=timezone.utc),
+        "timestamp": datetime(2026, 3, 24, 12, 0, 0, tzinfo=UTC),
     }
     entry2 = {
         "entry_id": "le_002",
@@ -228,7 +227,7 @@ async def test_save_and_load_ledger_entries(store: TaskStore):
         "balance_after": Decimal("24.91"),
         "request_id": "req_test123",
         "note": "25% reservation",
-        "timestamp": datetime(2026, 3, 24, 12, 1, 0, tzinfo=timezone.utc),
+        "timestamp": datetime(2026, 3, 24, 12, 1, 0, tzinfo=UTC),
     }
     entry3 = {
         "entry_id": "le_003",
@@ -238,7 +237,7 @@ async def test_save_and_load_ledger_entries(store: TaskStore):
         "balance_after": Decimal("0.35"),
         "request_id": "req_test123",
         "note": "Operator payment",
-        "timestamp": datetime(2026, 3, 24, 12, 5, 0, tzinfo=timezone.utc),
+        "timestamp": datetime(2026, 3, 24, 12, 5, 0, tzinfo=UTC),
     }
 
     await store.save_ledger_entry(entry1)
@@ -271,21 +270,21 @@ async def test_save_and_load_reputation_records(store: TaskStore):
         "request_id": "req_001",
         "outcome": "completed",
         "sla_met": True,
-        "timestamp": datetime(2026, 3, 24, 12, 0, 0, tzinfo=timezone.utc),
+        "timestamp": datetime(2026, 3, 24, 12, 0, 0, tzinfo=UTC),
     }
     rec2 = {
         "robot_id": "tumbller-01",
         "request_id": "req_002",
         "outcome": "abandoned",
         "sla_met": False,
-        "timestamp": datetime(2026, 3, 24, 13, 0, 0, tzinfo=timezone.utc),
+        "timestamp": datetime(2026, 3, 24, 13, 0, 0, tzinfo=UTC),
     }
     rec3 = {
         "robot_id": "fakerover-01",
         "request_id": "req_003",
         "outcome": "completed",
         "sla_met": True,
-        "timestamp": datetime(2026, 3, 24, 14, 0, 0, tzinfo=timezone.utc),
+        "timestamp": datetime(2026, 3, 24, 14, 0, 0, tzinfo=UTC),
     }
 
     await store.save_reputation_record(rec1)
@@ -336,7 +335,7 @@ async def test_decimal_precision_roundtrip(store: TaskStore):
 @pytest.mark.asyncio
 async def test_datetime_roundtrip(store: TaskStore):
     """UTC datetime values survive JSON round-trip through SQLite."""
-    original_dt = datetime(2026, 3, 24, 15, 30, 45, tzinfo=timezone.utc)
+    original_dt = datetime(2026, 3, 24, 15, 30, 45, tzinfo=UTC)
 
     task_dict = _sample_task_dict()
     task_dict["posted_at"] = original_dt
@@ -394,7 +393,7 @@ async def test_json_helpers_roundtrip():
     """Internal _dumps/_loads helpers preserve Decimal and datetime exactly."""
     data = {
         "price": Decimal("1.23"),
-        "timestamp": datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        "timestamp": datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC),
         "name": "test",
         "count": 42,
     }
@@ -404,7 +403,7 @@ async def test_json_helpers_roundtrip():
 
     assert restored["price"] == Decimal("1.23")
     assert isinstance(restored["price"], Decimal)
-    assert restored["timestamp"] == datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    assert restored["timestamp"] == datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
     assert isinstance(restored["timestamp"], datetime)
     assert restored["name"] == "test"
     assert restored["count"] == 42

@@ -6,7 +6,7 @@ and compliance data using ConsensusDocs 750 or AIA A401 templates.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 
@@ -25,7 +25,7 @@ def generate_agreement(record: object, template: str = "consensusdocs_750") -> d
     if bid is None:
         raise ValueError("Cannot generate agreement without a winning bid")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Build terms from task spec and bid
     terms = {
@@ -83,7 +83,11 @@ def generate_agreement(record: object, template: str = "consensusdocs_750") -> d
             "waiver": "Mutual waiver of consequential, incidental, and indirect damages",
         },
         "dispute_resolution": {
-            "steps": ["Direct negotiation (14 days)", "Mediation (30 days)", "Binding arbitration (AAA Construction Rules)"],
+            "steps": [
+                "Direct negotiation (14 days)",
+                "Mediation (30 days)",
+                "Binding arbitration (AAA Construction Rules)",
+            ],
             "governing_law": task.project_metadata.get("jurisdiction", "MI"),
             "venue": f"State of {task.project_metadata.get('jurisdiction', 'Michigan')}",
         },

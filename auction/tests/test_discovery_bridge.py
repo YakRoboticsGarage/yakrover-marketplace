@@ -21,10 +21,10 @@ from auction.discovery_bridge import (
     discover_and_adapt_from_plugins,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fake RobotPlugin / RobotMetadata stubs (no real import needed)
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class FakeMetadata:
@@ -60,15 +60,15 @@ class StubPlugin:
 
 
 def _make_task(**overrides) -> Task:
-    defaults = dict(
-        description="Read temperature in Bay 3",
-        task_category="env_sensing",
-        capability_requirements={
+    defaults = {
+        "description": "Read temperature in Bay 3",
+        "task_category": "env_sensing",
+        "capability_requirements": {
             "hard": {"sensors_required": ["temperature", "humidity"]},
         },
-        budget_ceiling=Decimal("2.00"),
-        sla_seconds=300,
-    )
+        "budget_ceiling": Decimal("2.00"),
+        "sla_seconds": 300,
+    }
     defaults.update(overrides)
     return Task(**defaults)
 
@@ -101,6 +101,7 @@ SAMPLE_BID_DICT = {
 # ---------------------------------------------------------------------------
 # PluginRobotAdapter tests
 # ---------------------------------------------------------------------------
+
 
 class TestPluginRobotAdapter:
     """Test the adapter wrapping a RobotPlugin for the auction engine."""
@@ -182,9 +183,7 @@ class TestPluginRobotAdapter:
         """When the plugin has a client, execute() calls it directly."""
         plugin = StubPlugin(bid_result=SAMPLE_BID_DICT)
         plugin.client = MagicMock()
-        plugin.client.get = AsyncMock(
-            return_value={"temperature": 23.4, "humidity": 55.1}
-        )
+        plugin.client.get = AsyncMock(return_value={"temperature": 23.4, "humidity": 55.1})
 
         adapter = PluginRobotAdapter(plugin)
         task = _make_task()
@@ -249,6 +248,7 @@ class TestPluginRobotAdapter:
 # _task_to_spec tests
 # ---------------------------------------------------------------------------
 
+
 class TestTaskToSpec:
     def test_converts_task_to_dict(self):
         task = _make_task()
@@ -265,6 +265,7 @@ class TestTaskToSpec:
 # ---------------------------------------------------------------------------
 # discover_and_adapt tests
 # ---------------------------------------------------------------------------
+
 
 class TestDiscoverAndAdapt:
     def test_returns_empty_when_import_fails(self):
@@ -284,20 +285,10 @@ class TestDiscoverAndAdapt:
     def test_wraps_discovered_robots(self, _mock_import, mock_instantiate):
         """When discovery returns robots, they get wrapped as adapters."""
         # We need to patch at the point of import inside the function.
-        fake_entry = {
-            "agent_id": "0x123",
-            "name": "Fake Rover",
-            "robot_type": "differential_drive",
-            "fleet_provider": "yakrover",
-            "fleet_domain": "yakrover.com/dev",
-            "mcp_tools": ["fakerover_move"],
-        }
         plugin = StubPlugin(bid_result=SAMPLE_BID_DICT)
         mock_instantiate.return_value = plugin
 
-        with patch(
-            "auction.discovery_bridge.discover_and_adapt"
-        ) as mock_fn:
+        with patch("auction.discovery_bridge.discover_and_adapt") as mock_fn:
             mock_fn.return_value = [PluginRobotAdapter(plugin)]
             result = mock_fn()
 
@@ -325,6 +316,7 @@ class TestDiscoverAndAdaptFromPlugins:
 # ---------------------------------------------------------------------------
 # Integration: adapter works with AuctionEngine
 # ---------------------------------------------------------------------------
+
 
 class TestAdapterWithEngine:
     """Verify the adapter satisfies the AuctionEngine robot contract."""

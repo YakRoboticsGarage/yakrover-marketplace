@@ -35,6 +35,7 @@ pytestmark = pytest.mark.skipif(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_bid(
     robot_id: str = "rover_1",
     request_id: str = "req_test_001",

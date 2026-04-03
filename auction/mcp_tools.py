@@ -18,6 +18,7 @@ auction mode is enabled.
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC
 from decimal import Decimal
 from typing import Any
 
@@ -26,10 +27,10 @@ from mcp.server.fastmcp import FastMCP
 from auction.core import VALID_TASK_CATEGORIES, TaskState
 from auction.engine import AuctionEngine
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _decimals_to_strings(obj: Any) -> Any:
     """Recursively convert Decimal values to strings for JSON serialization."""
@@ -43,7 +44,9 @@ def _decimals_to_strings(obj: Any) -> Any:
 
 
 def _error_response_structured(
-    error_code: str, message: str, hint: str,
+    error_code: str,
+    message: str,
+    hint: str,
 ) -> dict:
     """Build a structured, agent-friendly error dict."""
     return {"error_code": error_code, "message": message, "hint": hint}
@@ -104,6 +107,7 @@ def _error_response(exc: Exception) -> dict:
 # ---------------------------------------------------------------------------
 # Tool registration
 # ---------------------------------------------------------------------------
+
 
 def register_auction_tools(
     mcp: FastMCP,
@@ -220,7 +224,7 @@ def register_auction_tools(
         try:
             result = await engine.execute(request_id)
             return _decimals_to_strings(result)
-        except (ValueError, KeyError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, ValueError, KeyError) as exc:
             return _error_response(exc)
 
     @mcp.tool()
@@ -239,13 +243,15 @@ def register_auction_tools(
         try:
             accept_result = engine.accept_bid(request_id, robot_id)
             execute_result = await engine.execute(request_id)
-            return _decimals_to_strings({
-                "accept": accept_result,
-                "execute": execute_result,
-                "state": execute_result.get("state"),
-                "request_id": request_id,
-            })
-        except (ValueError, KeyError, asyncio.TimeoutError) as exc:
+            return _decimals_to_strings(
+                {
+                    "accept": accept_result,
+                    "execute": execute_result,
+                    "state": execute_result.get("state"),
+                    "request_id": request_id,
+                }
+            )
+        except (TimeoutError, ValueError, KeyError) as exc:
             return _error_response(exc)
 
     @mcp.tool()
@@ -335,10 +341,16 @@ def register_auction_tools(
                             "required": False,
                             "description": "Hard constraint filter. Robots not meeting these are excluded.",
                             "properties": {
-                                "sensors_required": {"type": "list[str]", "description": "Sensors the robot must have."},
+                                "sensors_required": {
+                                    "type": "list[str]",
+                                    "description": "Sensors the robot must have.",
+                                },
                                 "indoor_capable": {"type": "bool", "description": "Robot must be indoor-capable."},
                                 "min_battery_percent": {"type": "int", "description": "Minimum battery percentage."},
-                                "max_distance_meters": {"type": "float", "description": "Maximum distance to task location."},
+                                "max_distance_meters": {
+                                    "type": "float",
+                                    "description": "Maximum distance to task location.",
+                                },
                             },
                         },
                         "payload": {
@@ -346,8 +358,15 @@ def register_auction_tools(
                             "required": False,
                             "description": "Expected delivery payload specification.",
                             "properties": {
-                                "format": {"type": "string", "default": "json", "description": "Payload format. Defaults to 'json'."},
-                                "fields": {"type": "list[str]", "description": "Expected field names in the delivered data."},
+                                "format": {
+                                    "type": "string",
+                                    "default": "json",
+                                    "description": "Payload format. Defaults to 'json'.",
+                                },
+                                "fields": {
+                                    "type": "list[str]",
+                                    "description": "Expected field names in the delivered data.",
+                                },
                             },
                         },
                     },
@@ -423,7 +442,10 @@ def register_auction_tools(
                     except KeyError:
                         engine.wallet.create_wallet(wallet_id)
                     engine.wallet.credit(
-                        wallet_id, Decimal(str(amount)), "", "credit",
+                        wallet_id,
+                        Decimal(str(amount)),
+                        "",
+                        "credit",
                         note=f"Funded ${amount} (no Stripe — internal ledger)",
                     )
                     balance = engine.wallet.get_balance(wallet_id)
@@ -549,40 +571,46 @@ def register_auction_tools(
             request_id = post_result["request_id"]
 
             if post_result["state"] == "withdrawn":
-                return _decimals_to_strings({
-                    "error_code": "NO_ELIGIBLE_ROBOTS",
-                    "message": "No robots are eligible for this task.",
-                    "request_id": request_id,
-                    "state": post_result["state"],
-                    "hint": "Check capability_requirements or try a different task_category.",
-                })
+                return _decimals_to_strings(
+                    {
+                        "error_code": "NO_ELIGIBLE_ROBOTS",
+                        "message": "No robots are eligible for this task.",
+                        "request_id": request_id,
+                        "state": post_result["state"],
+                        "hint": "Check capability_requirements or try a different task_category.",
+                    }
+                )
 
             # Step 2: Get bids
             current_state = "bidding"
             bids_result = engine.get_bids(request_id)
 
             if bids_result["bid_count"] == 0:
-                return _decimals_to_strings({
-                    "error_code": "NO_BIDS",
-                    "message": "No robots submitted bids.",
-                    "request_id": request_id,
-                    "state": bids_result["state"],
-                    "hint": "Try increasing budget_ceiling or relaxing capability_requirements.",
-                })
+                return _decimals_to_strings(
+                    {
+                        "error_code": "NO_BIDS",
+                        "message": "No robots submitted bids.",
+                        "request_id": request_id,
+                        "state": bids_result["state"],
+                        "hint": "Try increasing budget_ceiling or relaxing capability_requirements.",
+                    }
+                )
 
             recommended = bids_result.get("recommended_winner")
             if recommended is None:
-                return _decimals_to_strings({
-                    "error_code": "NO_ELIGIBLE_BIDS",
-                    "message": "All bids were disqualified (e.g. over budget).",
-                    "request_id": request_id,
-                    "state": bids_result["state"],
-                    "hint": "Try increasing budget_ceiling.",
-                })
+                return _decimals_to_strings(
+                    {
+                        "error_code": "NO_ELIGIBLE_BIDS",
+                        "message": "All bids were disqualified (e.g. over budget).",
+                        "request_id": request_id,
+                        "state": bids_result["state"],
+                        "hint": "Try increasing budget_ceiling.",
+                    }
+                )
 
             # Step 3: Accept recommended winner
             current_state = "accepting"
-            accept_result = engine.accept_bid(request_id, recommended)
+            engine.accept_bid(request_id, recommended)
 
             # Step 4: Execute
             current_state = "executing"
@@ -590,27 +618,31 @@ def register_auction_tools(
 
             # Handle timeout / re-pool
             if execute_result.get("timeout"):
-                return _decimals_to_strings({
-                    "error_code": "EXECUTION_TIMEOUT",
-                    "message": f"Robot {recommended} timed out during execution.",
-                    "request_id": request_id,
-                    "state": execute_result["state"],
-                    "hint": "The task has been re-pooled for new bids. Use auction_get_bids to continue manually.",
-                })
+                return _decimals_to_strings(
+                    {
+                        "error_code": "EXECUTION_TIMEOUT",
+                        "message": f"Robot {recommended} timed out during execution.",
+                        "request_id": request_id,
+                        "state": execute_result["state"],
+                        "hint": "The task has been re-pooled for new bids. Use auction_get_bids to continue manually.",
+                    }
+                )
 
             # Step 5: Confirm delivery
             current_state = "confirming"
             confirm_result = engine.confirm_delivery(request_id)
 
-            return _decimals_to_strings({
-                "request_id": request_id,
-                "state": confirm_result["state"],
-                "robot_id": recommended,
-                "data": confirm_result["delivery"]["data"],
-                "cost": confirm_result["settlement"]["operator_transfer"],
-                "sla_met": confirm_result["delivery"]["sla_met"],
-                "delivered_at": confirm_result["delivery"]["delivered_at"],
-            })
+            return _decimals_to_strings(
+                {
+                    "request_id": request_id,
+                    "state": confirm_result["state"],
+                    "robot_id": recommended,
+                    "data": confirm_result["delivery"]["data"],
+                    "cost": confirm_result["settlement"]["operator_transfer"],
+                    "sla_met": confirm_result["delivery"]["sla_met"],
+                    "delivered_at": confirm_result["delivery"]["delivered_at"],
+                }
+            )
 
         except Exception as exc:
             error = _error_response(exc)
@@ -624,7 +656,9 @@ def register_auction_tools(
 
     @mcp.tool()
     async def auction_process_rfp(
-        rfp_text: str, jurisdiction: str = "MI", site_info: dict = {},
+        rfp_text: str,
+        jurisdiction: str = "MI",
+        site_info: dict = None,
     ) -> dict:
         """Process a construction RFP into structured task specs for the auction.
 
@@ -654,29 +688,36 @@ def register_auction_tools(
 
         Returns dict with task_specs list, warnings for missing fields, and metadata.
         """
+        if site_info is None:
+            site_info = {}
         try:
             from auction.rfp_processor import process_rfp
+
             specs = process_rfp(rfp_text, jurisdiction, site_info or None)
 
             warnings = []
             if not site_info.get("coordinates"):
-                warnings.append("No coordinates — operators need lat/lon to plan flights. Provide site_info.coordinates.")
+                warnings.append(
+                    "No coordinates — operators need lat/lon to plan flights. Provide site_info.coordinates."
+                )
             if not site_info.get("survey_area"):
                 warnings.append("No survey area — budget estimates may be inaccurate. Provide site_info.survey_area.")
             if not site_info.get("project_name"):
                 warnings.append("No project name — extracted from RFP text, may be inaccurate.")
 
-            return _decimals_to_strings({
-                "jurisdiction": jurisdiction,
-                "task_count": len(specs),
-                "task_specs": specs,
-                "site_info_provided": bool(site_info),
-                "warnings": warnings,
-                "note": (
-                    "Each task_spec can be passed to auction_post_task. "
-                    "Review and adjust budget_ceiling and sla_seconds before posting."
-                ),
-            })
+            return _decimals_to_strings(
+                {
+                    "jurisdiction": jurisdiction,
+                    "task_count": len(specs),
+                    "task_specs": specs,
+                    "site_info_provided": bool(site_info),
+                    "warnings": warnings,
+                    "note": (
+                        "Each task_spec can be passed to auction_post_task. "
+                        "Review and adjust budget_ceiling and sla_seconds before posting."
+                    ),
+                }
+            )
         except Exception as exc:
             return _error_response(exc)
 
@@ -689,6 +730,7 @@ def register_auction_tools(
         """
         try:
             from auction.rfp_processor import validate_task_specs
+
             return validate_task_specs(task_specs)
         except Exception as exc:
             return _error_response(exc)
@@ -706,6 +748,7 @@ def register_auction_tools(
         """
         try:
             from auction.rfp_processor import get_site_recon
+
             return get_site_recon(rfp_text, task_specs)
         except Exception as exc:
             return _error_response(exc)
@@ -736,9 +779,7 @@ def register_auction_tools(
             return _error_response(exc)
 
     @mcp.tool()
-    async def auction_award_with_confirmation(
-        request_id: str, robot_id: str, buyer_notes: str = ""
-    ) -> dict:
+    async def auction_award_with_confirmation(request_id: str, robot_id: str, buyer_notes: str = "") -> dict:
         """Award a task to a specific operator with buyer confirmation.
 
         Unlike auction_accept_bid which can auto-execute, this tool accepts
@@ -757,9 +798,7 @@ def register_auction_tools(
             # Record buyer notes
             record = engine._get_record(request_id)
             record.buyer_notes = buyer_notes
-            record.awarded_at = __import__("datetime").datetime.now(
-                __import__("datetime").timezone.utc
-            ).isoformat()
+            record.awarded_at = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
             result["buyer_notes"] = buyer_notes
             result["awarded_at"] = record.awarded_at
             result["next_step"] = (
@@ -785,13 +824,16 @@ def register_auction_tools(
         """
         try:
             from auction.bond_verifier import verify_bond
+
             return verify_bond(bond_text, task_request_ids)
         except Exception as exc:
             return _error_response(exc)
 
     @mcp.tool()
     async def auction_verify_bond_pdf(
-        pdf_path: str, task_request_ids: list = [], project_state: str = "MI",
+        pdf_path: str,
+        task_request_ids: list = None,
+        project_state: str = "MI",
         required_coverage: float = 0,
     ) -> dict:
         """Verify a payment bond from a PDF file.
@@ -805,22 +847,25 @@ def register_auction_tools(
             project_state: State code for licensing check.
             required_coverage: Minimum coverage amount (optional).
         """
+        if task_request_ids is None:
+            task_request_ids = []
         try:
             from auction.bond_verifier import extract_text_from_pdf, verify_bond
+
             text = extract_text_from_pdf(pdf_path)
             if not text.strip():
                 return _error_response_structured(
-                    "EMPTY_PDF", "No text extracted from PDF",
-                    "The PDF may be image-only. OCR is not yet supported."
+                    "EMPTY_PDF", "No text extracted from PDF", "The PDF may be image-only. OCR is not yet supported."
                 )
             return verify_bond(
-                text, task_request_ids, project_state,
+                text,
+                task_request_ids,
+                project_state,
                 required_coverage if required_coverage > 0 else None,
             )
         except FileNotFoundError:
             return _error_response_structured(
-                "FILE_NOT_FOUND", f"PDF not found: {pdf_path}",
-                "Check the file path and try again."
+                "FILE_NOT_FOUND", f"PDF not found: {pdf_path}", "Check the file path and try again."
             )
         except Exception as exc:
             return _error_response(exc)
@@ -840,17 +885,16 @@ def register_auction_tools(
         Each item returns VERIFIED, MISSING, EXPIRED, or NOT_REQUIRED.
         """
         try:
-            if not hasattr(engine, '_compliance_checker'):
+            if not hasattr(engine, "_compliance_checker"):
                 from auction.compliance import ComplianceChecker
+
                 engine._compliance_checker = ComplianceChecker()
             return engine._compliance_checker.verify_operator(robot_id)
         except Exception as exc:
             return _error_response(exc)
 
     @mcp.tool()
-    async def auction_upload_compliance_doc(
-        robot_id: str, doc_type: str, content: str
-    ) -> dict:
+    async def auction_upload_compliance_doc(robot_id: str, doc_type: str, content: str) -> dict:
         """Upload a compliance document for an operator.
 
         doc_type must be one of:
@@ -864,12 +908,13 @@ def register_auction_tools(
         The document is stored and marked as VERIFIED.
         """
         try:
-            if not hasattr(engine, '_compliance_checker'):
+            if not hasattr(engine, "_compliance_checker"):
                 from auction.compliance import ComplianceChecker
+
                 engine._compliance_checker = ComplianceChecker()
             record = engine._compliance_checker.upload_document(robot_id, doc_type, content)
             # After successful upload, update operator registry if it exists
-            if hasattr(engine, '_operator_registry'):
+            if hasattr(engine, "_operator_registry"):
                 try:
                     op = engine._operator_registry._get(robot_id)
                     if doc_type not in op.certifications:
@@ -886,9 +931,7 @@ def register_auction_tools(
             return _error_response(exc)
 
     @mcp.tool()
-    async def auction_compare_terms(
-        operator_terms: str, gc_terms: str, project_state: str = "MI"
-    ) -> dict:
+    async def auction_compare_terms(operator_terms: str, gc_terms: str, project_state: str = "MI") -> dict:
         """Compare operator standard terms vs. GC subcontract terms.
 
         Analyzes across 12 dimensions: indemnification, limitation of liability,
@@ -906,6 +949,7 @@ def register_auction_tools(
         """
         try:
             from auction.terms_comparator import compare_terms
+
             return compare_terms(operator_terms, gc_terms, project_state)
         except Exception as exc:
             return _error_response(exc)
@@ -924,6 +968,7 @@ def register_auction_tools(
         """
         try:
             from auction.compliance import check_sam_exclusion
+
             return check_sam_exclusion(entity_name)
         except Exception as exc:
             return _error_response(exc)
@@ -958,12 +1003,17 @@ def register_auction_tools(
             max_range_miles: Maximum travel distance from base
         """
         try:
-            if not hasattr(engine, '_operator_registry'):
+            if not hasattr(engine, "_operator_registry"):
                 from auction.operator_registry import OperatorRegistry
+
                 engine._operator_registry = OperatorRegistry()
             profile = engine._operator_registry.register(
-                company_name, contact_name, contact_email,
-                location, coverage_states or [], max_range_miles,
+                company_name,
+                contact_name,
+                contact_email,
+                location,
+                coverage_states or [],
+                max_range_miles,
             )
             return engine._operator_registry.get_profile(profile.operator_id)
         except Exception as exc:
@@ -989,11 +1039,15 @@ def register_auction_tools(
             accuracy_cm: Equipment accuracy in centimeters
         """
         try:
-            if not hasattr(engine, '_operator_registry'):
+            if not hasattr(engine, "_operator_registry"):
                 from auction.operator_registry import OperatorRegistry
+
                 engine._operator_registry = OperatorRegistry()
             return engine._operator_registry.add_equipment(
-                operator_id, equipment_type, model, accuracy_cm=accuracy_cm,
+                operator_id,
+                equipment_type,
+                model,
+                accuracy_cm=accuracy_cm,
             )
         except Exception as exc:
             return _error_response(exc)
@@ -1007,8 +1061,9 @@ def register_auction_tools(
         Returns activation status or list of issues to fix.
         """
         try:
-            if not hasattr(engine, '_operator_registry'):
+            if not hasattr(engine, "_operator_registry"):
                 from auction.operator_registry import OperatorRegistry
+
                 engine._operator_registry = OperatorRegistry()
             return engine._operator_registry.activate(operator_id)
         except Exception as exc:
@@ -1019,9 +1074,7 @@ def register_auction_tools(
     # ------------------------------------------------------------------
 
     @mcp.tool()
-    async def auction_generate_agreement(
-        request_id: str, template: str = "consensusdocs_750"
-    ) -> dict:
+    async def auction_generate_agreement(request_id: str, template: str = "consensusdocs_750") -> dict:
         """Generate a subcontract agreement for an awarded task.
 
         Creates a structured agreement from the task spec, winning bid,
@@ -1038,11 +1091,10 @@ def register_auction_tools(
         """
         try:
             from auction.agreement import generate_agreement
+
             record = engine._get_record(request_id)
             if record.state != TaskState.BID_ACCEPTED:
-                raise ValueError(
-                    f"generate_agreement requires state bid_accepted, got {record.state.value}"
-                )
+                raise ValueError(f"generate_agreement requires state bid_accepted, got {record.state.value}")
             if record.winning_bid is None:
                 raise ValueError("No winning bid to generate agreement for")
 
@@ -1062,13 +1114,14 @@ def register_auction_tools(
         management during task execution.
         """
         try:
-            from datetime import datetime, timezone
+            from datetime import datetime
+
             record = engine._get_record(request_id)
 
             elapsed = None
             sla_remaining = None
             if record.task.posted_at:
-                now = datetime.now(timezone.utc)
+                now = datetime.now(UTC)
                 elapsed_seconds = (now - record.task.posted_at).total_seconds()
                 elapsed = int(elapsed_seconds)
                 sla_remaining = max(0, record.task.sla_seconds - int(elapsed_seconds))
@@ -1081,24 +1134,26 @@ def register_auction_tools(
             elif record.state in (TaskState.VERIFIED, TaskState.SETTLED):
                 delivery_status = "accepted"
 
-            return _decimals_to_strings({
-                "request_id": request_id,
-                "state": record.state.value,
-                "task_description": record.task.description,
-                "task_category": record.task.task_category,
-                "budget_ceiling": str(record.task.budget_ceiling),
-                "sla_seconds": record.task.sla_seconds,
-                "elapsed_seconds": elapsed,
-                "sla_remaining_seconds": sla_remaining,
-                "sla_met": sla_remaining > 0 if sla_remaining is not None else None,
-                "winning_robot": record.winning_bid.robot_id if record.winning_bid else None,
-                "winning_price": str(record.winning_bid.price) if record.winning_bid else None,
-                "delivery_status": delivery_status,
-                "delivery_data": record.delivery.data if record.delivery else None,
-                "bid_round": record.bid_round,
-                "rfp_id": record.task.task_decomposition.get("rfp_id"),
-                "task_index": record.task.task_decomposition.get("task_index"),
-            })
+            return _decimals_to_strings(
+                {
+                    "request_id": request_id,
+                    "state": record.state.value,
+                    "task_description": record.task.description,
+                    "task_category": record.task.task_category,
+                    "budget_ceiling": str(record.task.budget_ceiling),
+                    "sla_seconds": record.task.sla_seconds,
+                    "elapsed_seconds": elapsed,
+                    "sla_remaining_seconds": sla_remaining,
+                    "sla_met": sla_remaining > 0 if sla_remaining is not None else None,
+                    "winning_robot": record.winning_bid.robot_id if record.winning_bid else None,
+                    "winning_price": str(record.winning_bid.price) if record.winning_bid else None,
+                    "delivery_status": delivery_status,
+                    "delivery_data": record.delivery.data if record.delivery else None,
+                    "bid_round": record.bid_round,
+                    "rfp_id": record.task.task_decomposition.get("rfp_id"),
+                    "task_index": record.task.task_decomposition.get("task_index"),
+                }
+            )
         except (ValueError, KeyError) as exc:
             return _error_response(exc)
 
@@ -1126,7 +1181,7 @@ def register_auction_tools(
         progress_state: str,
         percent_complete: int = 0,
         status_text: str = "",
-        location: dict = {},
+        location: dict = None,
     ) -> dict:
         """Report execution progress on an active task.
 
@@ -1142,6 +1197,8 @@ def register_auction_tools(
             status_text: Free-text status update (optional).
             location: {lat, lng} GPS coordinates (optional).
         """
+        if location is None:
+            location = {}
         try:
             from auction.events import VALID_PROGRESS_STATES
 

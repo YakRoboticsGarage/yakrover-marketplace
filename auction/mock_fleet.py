@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import json as _json_mod
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -40,6 +40,7 @@ def _load_sample(data: dict, path: Path, key: str) -> None:
 # ---------------------------------------------------------------------------
 # MockRobot base class
 # ---------------------------------------------------------------------------
+
 
 class MockRobot:
     """Base class for simulated demo robots.
@@ -74,7 +75,7 @@ class MockRobot:
         # Support WoT TD sensor format (list of dicts) and flat string lists
         raw_sensors = self.capability_metadata.get("sensors", [])
         if raw_sensors and isinstance(raw_sensors[0], dict):
-            robot_sensors = set(s["type"] for s in raw_sensors if "type" in s)
+            robot_sensors = {s["type"] for s in raw_sensors if "type" in s}
         else:
             robot_sensors = set(raw_sensors)
 
@@ -109,7 +110,7 @@ class MockRobot:
             response = await client.get("http://localhost:8080/sensor/ht")
             data = response.json()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         elapsed_seconds = (now - task.posted_at).total_seconds()
         sla_met = elapsed_seconds <= task.sla_seconds
 
@@ -129,6 +130,7 @@ class MockRobot:
 # ---------------------------------------------------------------------------
 # Robot A: fakerover-bay3
 # ---------------------------------------------------------------------------
+
 
 class FakeRoverBay3(MockRobot):
     """Warehouse rover in Bay 3 — closest to typical task locations."""
@@ -160,6 +162,7 @@ class FakeRoverBay3(MockRobot):
 # Robot B: fakerover-bay7
 # ---------------------------------------------------------------------------
 
+
 class FakeRoverBay7(MockRobot):
     """Warehouse rover in Bay 7 — farther away, lower battery."""
 
@@ -190,6 +193,7 @@ class FakeRoverBay7(MockRobot):
 # Robot C: mock-drone-01
 # ---------------------------------------------------------------------------
 
+
 class MockDrone01(MockRobot):
     """Aerial drone — has RGB camera only, no temperature/humidity sensors.
 
@@ -219,6 +223,7 @@ class MockDrone01(MockRobot):
 # ---------------------------------------------------------------------------
 # Robot D: timeout-robot (v0.5)
 # ---------------------------------------------------------------------------
+
 
 class TimeoutRobot(MockRobot):
     """Robot whose execute() never returns. Triggers timeout/abandonment."""
@@ -252,6 +257,7 @@ class TimeoutRobot(MockRobot):
 # Robot E: badpayload-robot (v0.5)
 # ---------------------------------------------------------------------------
 
+
 class BadPayloadRobot(MockRobot):
     """Robot that delivers invalid data. Triggers rejection."""
 
@@ -275,7 +281,7 @@ class BadPayloadRobot(MockRobot):
 
     async def execute(self, task: Task) -> DeliveryPayload:
         """Return a payload with invalid data — fails verification."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         elapsed_seconds = (now - task.posted_at).total_seconds()
         sla_met = elapsed_seconds <= task.sla_seconds
 
@@ -291,6 +297,7 @@ class BadPayloadRobot(MockRobot):
 # ---------------------------------------------------------------------------
 # Fleet factory functions
 # ---------------------------------------------------------------------------
+
 
 def create_demo_fleet() -> list[MockRobot]:
     """Create the standard three-robot fleet for the v0.1 demo."""
@@ -356,6 +363,7 @@ def create_failure_fleet() -> list[MockRobot]:
 # Construction survey fleet (v1.5)
 # ---------------------------------------------------------------------------
 
+
 class ConstructionMockRobot(MockRobot):
     """Base for construction survey robots. Delivers mock survey data.
 
@@ -383,7 +391,7 @@ class ConstructionMockRobot(MockRobot):
         # Support both WoT TD format and flat string lists
         raw_sensors = self.capability_metadata.get("sensors", [])
         if raw_sensors and isinstance(raw_sensors[0], dict):
-            robot_sensors = set(s["type"] for s in raw_sensors if "type" in s)
+            robot_sensors = {s["type"] for s in raw_sensors if "type" in s}
         else:
             robot_sensors = set(raw_sensors)
 
@@ -417,8 +425,7 @@ class ConstructionMockRobot(MockRobot):
         Includes expected payload fields for verification, rich metadata,
         and references to actual sample files in auction/data/sample_deliverables/.
         """
-        import json as _json
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         elapsed_seconds = (now - task.posted_at).total_seconds()
         sla_met = elapsed_seconds <= task.sla_seconds
 
@@ -477,14 +484,16 @@ class ConstructionMockRobot(MockRobot):
             ]
 
         # Common metadata
-        data.update({
-            "coordinate_system": "MI South State Plane (EPSG:2113)",
-            "datum": "NAD83(2011) / NAVD88",
-            "processing_software": getattr(self, '_processing_software', "Pix4Dmatic 1.62"),
-            "operator": self.operator_company,
-            "timestamp": now.isoformat(),
-            "pls_review_status": "PENDING",
-        })
+        data.update(
+            {
+                "coordinate_system": "MI South State Plane (EPSG:2113)",
+                "datum": "NAD83(2011) / NAVD88",
+                "processing_software": getattr(self, "_processing_software", "Pix4Dmatic 1.62"),
+                "operator": self.operator_company,
+                "timestamp": now.isoformat(),
+                "pls_review_status": "PENDING",
+            }
+        )
 
         return DeliveryPayload(
             request_id=task.request_id,

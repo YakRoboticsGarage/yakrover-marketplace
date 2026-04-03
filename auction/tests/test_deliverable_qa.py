@@ -1,10 +1,9 @@
 """Tests for deliverable QA system (IMP-004, IMP-006)."""
 
-from auction.deliverable_qa import check_delivery, get_qa_level, QAResult
+from auction.deliverable_qa import QAResult, check_delivery, get_qa_level
 
 
 class TestQALevelSelection:
-
     def test_explicit_override(self):
         spec = {"capability_requirements": {"qa_level": 0}, "task_category": "site_survey"}
         assert get_qa_level(spec) == 0
@@ -26,7 +25,6 @@ class TestQALevelSelection:
 
 
 class TestLevel0:
-
     def test_always_passes(self):
         result = check_delivery({}, {}, qa_level=0)
         assert result.status == "PASS"
@@ -38,7 +36,6 @@ class TestLevel0:
 
 
 class TestLevel1:
-
     def test_basic_valid_delivery(self):
         data = {"temperature_c": 22.5, "humidity_pct": 45.0}
         spec = {
@@ -96,7 +93,6 @@ class TestLevel1:
 
 
 class TestLevel2:
-
     def test_passes_with_all_standards_data(self):
         data = {
             "readings": [{"temperature_c": 22.0}],
@@ -160,7 +156,6 @@ class TestLevel2:
 
 
 class TestLevel3:
-
     def test_pls_approved_passes(self):
         data = {"readings": [{}], "pls_review_status": "APPROVED"}
         spec = {"capability_requirements": {"qa_level": 3, "payload": {"fields": ["readings"]}}}
@@ -218,7 +213,6 @@ class TestServerRoomDemo:
 
 
 class TestQAResult:
-
     def test_to_dict(self):
         r = QAResult(status="PASS", level=1, checks_run=["data_exists"], details={"field_count": 3})
         d = r.to_dict()

@@ -9,27 +9,26 @@ v1.1.1: Types and interface only. Implementations come in v1.5+.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from typing import Protocol
-
 
 # ---------------------------------------------------------------------------
 # FD-1: Settlement modes
 # ---------------------------------------------------------------------------
 
 
-class SettlementMode(str, Enum):
+class SettlementMode(StrEnum):
     """Four settlement modes covering timing × privacy dimensions.
 
     See FOUNDATIONAL_TECH_ANALYSIS.md for rationale.
     """
 
     IMMEDIATE_TRANSPARENT = "immediate_transparent"  # v1.5: Base x402
-    IMMEDIATE_PRIVATE = "immediate_private"          # v2.1-P: Horizen L3 candidate
-    BATCHED_TRANSPARENT = "batched_transparent"      # v2.1-L: DTN lunar
-    BATCHED_PRIVATE = "batched_private"              # v3.0: convergence
+    IMMEDIATE_PRIVATE = "immediate_private"  # v2.1-P: Horizen L3 candidate
+    BATCHED_TRANSPARENT = "batched_transparent"  # v2.1-L: DTN lunar
+    BATCHED_PRIVATE = "batched_private"  # v3.0: convergence
 
 
 # ---------------------------------------------------------------------------
@@ -42,14 +41,14 @@ class SettlementReceipt:
     """Proof that a settlement was completed (or attempted)."""
 
     task_request_id: str
-    commitment_hash: str           # H(request_id || salt) — never raw request_id
+    commitment_hash: str  # H(request_id || salt) — never raw request_id
     mode: SettlementMode
     amount: Decimal
-    currency: str                  # "usd", "usdc", "eur"
-    recipient_id: str              # Platform-internal robot/operator ID (not wallet address)
-    tx_hash: str | None = None     # On-chain tx hash (None for Stripe)
+    currency: str  # "usd", "usdc", "eur"
+    recipient_id: str  # Platform-internal robot/operator ID (not wallet address)
+    tx_hash: str | None = None  # On-chain tx hash (None for Stripe)
     stripe_transfer_id: str | None = None  # Stripe transfer ID (None for crypto)
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     metadata: dict = field(default_factory=dict)
 
 
@@ -127,4 +126,4 @@ class PendingSettlement:
     amount: Decimal
     currency: str
     recipient_id: str
-    queued_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    queued_at: datetime = field(default_factory=lambda: datetime.now(UTC))

@@ -11,15 +11,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
-from auction.engine import AuctionEngine
-from auction.wallet import WalletLedger
-from auction.reputation import ReputationTracker
-from auction.mock_fleet import create_construction_fleet
-from auction.rfp_processor import process_rfp, validate_task_specs, get_site_recon
-from auction.bond_verifier import verify_bond
-from auction.terms_comparator import compare_terms
 from auction.agreement import generate_agreement
+from auction.bond_verifier import verify_bond
 from auction.compliance import ComplianceChecker
+from auction.engine import AuctionEngine
+from auction.mock_fleet import create_construction_fleet
+from auction.reputation import ReputationTracker
+from auction.rfp_processor import get_site_recon, process_rfp, validate_task_specs
+from auction.terms_comparator import compare_terms
+from auction.wallet import WalletLedger
 
 PROFILE_DIR = Path(__file__).parent
 PASS = "\u2713"
@@ -93,10 +93,16 @@ def main():
     print("\n[4] Site recon — expect underground + confined space")
     recon = get_site_recon(rfp_text, specs)
     step(f"Terrain: {recon['terrain']['type']}", recon, True)
-    step(f"Confined space: {recon['access'].get('confined_space', False)}", recon,
-         recon["access"].get("confined_space", False))
-    step(f"Highway traffic: {recon['access'].get('traffic_control_needed', False)}", recon,
-         recon["access"].get("traffic_control_needed", False))
+    step(
+        f"Confined space: {recon['access'].get('confined_space', False)}",
+        recon,
+        recon["access"].get("confined_space", False),
+    )
+    step(
+        f"Highway traffic: {recon['access'].get('traffic_control_needed', False)}",
+        recon,
+        recon["access"].get("traffic_control_needed", False),
+    )
 
     print("\n[5] Post tasks")
     request_ids = {}
@@ -105,15 +111,13 @@ def main():
     if topo_spec:
         result = engine.post_task(topo_spec)
         request_ids["topo"] = result["request_id"]
-        step(f"Topo posted: {result['eligible_robots']} eligible", result,
-             result["state"] == "bidding")
+        step(f"Topo posted: {result['eligible_robots']} eligible", result, result["state"] == "bidding")
 
     # Post tunnel
     if tunnel_spec:
         result = engine.post_task(tunnel_spec)
         request_ids["tunnel"] = result["request_id"]
-        step(f"Tunnel posted: {result['eligible_robots']} eligible", result,
-             result["state"] == "bidding")
+        step(f"Tunnel posted: {result['eligible_robots']} eligible", result, result["state"] == "bidding")
 
     print("\n[6] Collect bids")
     for label, rid in request_ids.items():
@@ -130,9 +134,9 @@ def main():
 
     # Tunnel should go to Wolverine (terrestrial LiDAR specialist)
     if winners.get("tunnel"):
-        step(f"Tunnel winner is ground scanner: {winners['tunnel']}",
-             winners["tunnel"],
-             "wolverine" in winners["tunnel"])
+        step(
+            f"Tunnel winner is ground scanner: {winners['tunnel']}", winners["tunnel"], "wolverine" in winners["tunnel"]
+        )
 
     print("\n[8] Verify compliance — tunnel operator needs confined space")
     for label, robot_id in winners.items():
@@ -143,8 +147,7 @@ def main():
     print("\n[9] Verify bond — $350K must cover $205K tasks")
     all_rids = list(request_ids.values())
     bond_result = verify_bond(bond_text, all_rids)
-    step(f"Bond status: {bond_result['status']}", bond_result,
-         bond_result["status"] in ("VERIFIED", "PARTIAL"))
+    step(f"Bond status: {bond_result['status']}", bond_result, bond_result["status"] in ("VERIFIED", "PARTIAL"))
     if bond_result.get("penal_sum"):
         step(f"Bond penal sum: {bond_result['penal_sum']}", bond_result, True)
 
@@ -161,8 +164,7 @@ def main():
         if robot_id:
             result = engine.accept_bid(rid, robot_id)
             awarded_ids.append(rid)
-            step(f"{label} awarded to {robot_id}: {result['state']}", result,
-                 result["state"] == "bid_accepted")
+            step(f"{label} awarded to {robot_id}: {result['state']}", result, result["state"] == "bid_accepted")
         else:
             step(f"{label}: no winner", None, False)
 
@@ -170,15 +172,19 @@ def main():
     for rid in awarded_ids:
         record = engine._get_record(rid)
         agreement = generate_agreement(record, "consensusdocs_750")
-        step(f"Agreement for {record.winning_bid.robot_id}: ${agreement['terms']['fee']['contract_price']}",
-             agreement, agreement["status"] == "draft")
+        step(
+            f"Agreement for {record.winning_bid.robot_id}: ${agreement['terms']['fee']['contract_price']}",
+            agreement,
+            agreement["status"] == "draft",
+        )
 
     print("\n[13] Execute and deliver")
+
     async def run_execution():
         for rid in awarded_ids:
             result = await engine.execute(rid)
-            step(f"Executed {rid[:12]}: {result.get('state')}", result,
-                 result.get("state") == "delivered")
+            step(f"Executed {rid[:12]}: {result.get('state')}", result, result.get("state") == "delivered")
+
     asyncio.run(run_execution())
 
     print("\n[14] Confirm deliveries")

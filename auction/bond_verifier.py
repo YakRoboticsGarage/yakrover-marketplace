@@ -10,9 +10,7 @@ Also supports PDF bond extraction via PyMuPDF.
 
 from __future__ import annotations
 
-import os
 import re
-from datetime import datetime, timezone
 from pathlib import Path
 
 import openpyxl
@@ -26,12 +24,62 @@ _CIRCULAR_570_PATH = _DATA_DIR / "circular_570.xlsx"
 
 # State column mapping (from the Excel header row)
 _STATE_COLUMNS = [
-    "AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC",
-    "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY",
-    "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MP", "MT",
-    "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK",
-    "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT",
-    "VA", "VI", "WA", "WV", "WI", "WY",
+    "AL",
+    "AK",
+    "AS",
+    "AZ",
+    "AR",
+    "CA",
+    "CO",
+    "CT",
+    "DE",
+    "DC",
+    "FL",
+    "GA",
+    "GU",
+    "HI",
+    "ID",
+    "IL",
+    "IN",
+    "IA",
+    "KS",
+    "KY",
+    "LA",
+    "ME",
+    "MD",
+    "MA",
+    "MI",
+    "MN",
+    "MS",
+    "MO",
+    "MP",
+    "MT",
+    "NE",
+    "NV",
+    "NH",
+    "NJ",
+    "NM",
+    "NY",
+    "NC",
+    "ND",
+    "OH",
+    "OK",
+    "OR",
+    "PA",
+    "PR",
+    "RI",
+    "SC",
+    "SD",
+    "TN",
+    "TX",
+    "UT",
+    "VT",
+    "VA",
+    "VI",
+    "WA",
+    "WV",
+    "WI",
+    "WY",
 ]
 
 # Cached parsed data
@@ -71,16 +119,18 @@ def _load_circular_570() -> list[dict]:
             if col_idx < len(row) and row[col_idx]:
                 licensed_states.append(state_code)
 
-        sureties.append({
-            "name": name.strip(),
-            "name_lower": name.strip().lower(),
-            "naic": row[4],
-            "address": str(row[5] or ""),
-            "phone": str(row[6] or ""),
-            "underwriting_limit": int(row[7]) if row[7] else 0,
-            "incorporated_in": str(row[8] or ""),
-            "licensed_states": licensed_states,
-        })
+        sureties.append(
+            {
+                "name": name.strip(),
+                "name_lower": name.strip().lower(),
+                "naic": row[4],
+                "address": str(row[5] or ""),
+                "phone": str(row[6] or ""),
+                "underwriting_limit": int(row[7]) if row[7] else 0,
+                "incorporated_in": str(row[8] or ""),
+                "licensed_states": licensed_states,
+            }
+        )
 
     wb.close()
     _surety_db = sureties
@@ -127,23 +177,26 @@ def _find_surety(name: str) -> dict | None:
 # PDF extraction
 # ---------------------------------------------------------------------------
 
+
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extract text from a PDF bond document using PyMuPDF."""
     try:
         import fitz  # PyMuPDF
+
         doc = fitz.open(pdf_path)
         text = ""
         for page in doc:
             text += page.get_text()
         doc.close()
         return text
-    except ImportError:
-        raise ImportError("PyMuPDF (fitz) is required for PDF extraction. Install with: pip install pymupdf")
+    except ImportError as err:
+        raise ImportError("PyMuPDF (fitz) is required for PDF extraction. Install with: pip install pymupdf") from err
 
 
 # ---------------------------------------------------------------------------
 # Bond verification
 # ---------------------------------------------------------------------------
+
 
 def verify_bond(
     bond_text: str,
@@ -176,17 +229,23 @@ def verify_bond(
     bond_number = _extract_field(bond_text, r"bond\s*(?:no|number|#)[:\s]*([A-Z0-9-]+)", "UNKNOWN")
     surety_name = _extract_surety_name(bond_text)
     penal_sum = _extract_amount(bond_text, r"penal\s*sum[:\s]*(?:.*?\$|.*?\(?\$)([\d,]+(?:\.\d{2})?)")
-    principal = _extract_field(bond_text, r"principal[:\s]*\n?\s*([A-Za-z\s&.,]+?)(?:\n|,\s*(?:a|an|the)|\d)", "Unknown")
+    principal = _extract_field(
+        bond_text, r"principal[:\s]*\n?\s*([A-Za-z\s&.,]+?)(?:\n|,\s*(?:a|an|the)|\d)", "Unknown"
+    )
     obligee = _extract_field(bond_text, r"obligee[:\s]*\n?\s*([A-Za-z\s&.,]+?)(?:\n|,\s*(?:a|an|the)|\d)", "Unknown")
-    effective_date = _extract_field(bond_text, r"(?:effective\s*)?date[:\s]*(\d{1,2}/\d{1,2}/\d{2,4}|\w+\s+\d{1,2},?\s+\d{4})", None)
+    effective_date = _extract_field(
+        bond_text, r"(?:effective\s*)?date[:\s]*(\d{1,2}/\d{1,2}/\d{2,4}|\w+\s+\d{1,2},?\s+\d{4})", None
+    )
 
     # --- Check 1: Bond number ---
-    checks.append({
-        "check": "bond_number",
-        "status": "PASS" if bond_number != "UNKNOWN" else "FAIL",
-        "value": bond_number,
-        "note": "Bond number extracted" if bond_number != "UNKNOWN" else "Could not extract bond number",
-    })
+    checks.append(
+        {
+            "check": "bond_number",
+            "status": "PASS" if bond_number != "UNKNOWN" else "FAIL",
+            "value": bond_number,
+            "note": "Bond number extracted" if bond_number != "UNKNOWN" else "Could not extract bond number",
+        }
+    )
 
     # --- Check 2: Surety on Circular 570 (REAL DATA) ---
     surety_record = None
@@ -194,105 +253,127 @@ def verify_bond(
         surety_record = _find_surety(surety_name)
 
     if surety_record:
-        checks.append({
-            "check": "circular_570_listed",
-            "status": "PASS",
-            "value": surety_record["name"],
-            "note": f"Listed on Treasury Circular 570 (NAIC: {surety_record['naic']})",
-            "source": "Treasury Dept Circular 570 (fiscal.treasury.gov)",
-            "naic": surety_record["naic"],
-            "underwriting_limit": f"${surety_record['underwriting_limit']:,}",
-        })
+        checks.append(
+            {
+                "check": "circular_570_listed",
+                "status": "PASS",
+                "value": surety_record["name"],
+                "note": f"Listed on Treasury Circular 570 (NAIC: {surety_record['naic']})",
+                "source": "Treasury Dept Circular 570 (fiscal.treasury.gov)",
+                "naic": surety_record["naic"],
+                "underwriting_limit": f"${surety_record['underwriting_limit']:,}",
+            }
+        )
     else:
-        checks.append({
-            "check": "circular_570_listed",
-            "status": "FAIL",
-            "value": surety_name or "Not identified",
-            "note": f"Surety '{surety_name}' not found in Treasury Circular 570 ({len(_load_circular_570())} companies checked)",
-            "source": "Treasury Dept Circular 570 (fiscal.treasury.gov)",
-        })
+        checks.append(
+            {
+                "check": "circular_570_listed",
+                "status": "FAIL",
+                "value": surety_name or "Not identified",
+                "note": f"Surety '{surety_name}' not found in Treasury Circular 570 ({len(_load_circular_570())} companies checked)",
+                "source": "Treasury Dept Circular 570 (fiscal.treasury.gov)",
+            }
+        )
 
     # --- Check 3: State licensing (REAL DATA) ---
     if surety_record:
         state_licensed = project_state in surety_record["licensed_states"]
-        checks.append({
-            "check": "state_licensed",
-            "status": "PASS" if state_licensed else "FAIL",
-            "value": project_state,
-            "note": (
-                f"Surety licensed in {project_state} ({len(surety_record['licensed_states'])} states total)"
-                if state_licensed
-                else f"Surety NOT licensed in {project_state}. Licensed in: {', '.join(surety_record['licensed_states'][:10])}..."
-            ),
-            "source": "Treasury Circular 570 state licensing data",
-        })
+        checks.append(
+            {
+                "check": "state_licensed",
+                "status": "PASS" if state_licensed else "FAIL",
+                "value": project_state,
+                "note": (
+                    f"Surety licensed in {project_state} ({len(surety_record['licensed_states'])} states total)"
+                    if state_licensed
+                    else f"Surety NOT licensed in {project_state}. Licensed in: {', '.join(surety_record['licensed_states'][:10])}..."
+                ),
+                "source": "Treasury Circular 570 state licensing data",
+            }
+        )
     else:
-        checks.append({
-            "check": "state_licensed",
-            "status": "WARN",
-            "value": project_state,
-            "note": "Cannot verify state licensing — surety not found on Circular 570",
-        })
+        checks.append(
+            {
+                "check": "state_licensed",
+                "status": "WARN",
+                "value": project_state,
+                "note": "Cannot verify state licensing — surety not found on Circular 570",
+            }
+        )
 
     # --- Check 4: Underwriting limit (REAL DATA) ---
     if surety_record and penal_sum:
         within_limit = penal_sum <= surety_record["underwriting_limit"]
-        checks.append({
-            "check": "underwriting_limit",
-            "status": "PASS" if within_limit else "FAIL",
-            "value": f"${penal_sum:,.2f} vs limit ${surety_record['underwriting_limit']:,}",
-            "note": (
-                f"Penal sum within surety's underwriting limit"
-                if within_limit
-                else f"PENAL SUM EXCEEDS surety's underwriting limit by ${penal_sum - surety_record['underwriting_limit']:,.2f}"
-            ),
-            "source": "Treasury Circular 570 underwriting data",
-        })
+        checks.append(
+            {
+                "check": "underwriting_limit",
+                "status": "PASS" if within_limit else "FAIL",
+                "value": f"${penal_sum:,.2f} vs limit ${surety_record['underwriting_limit']:,}",
+                "note": (
+                    "Penal sum within surety's underwriting limit"
+                    if within_limit
+                    else f"PENAL SUM EXCEEDS surety's underwriting limit by ${penal_sum - surety_record['underwriting_limit']:,.2f}"
+                ),
+                "source": "Treasury Circular 570 underwriting data",
+            }
+        )
     elif surety_record:
-        checks.append({
-            "check": "underwriting_limit",
-            "status": "WARN",
-            "value": f"Surety limit: ${surety_record['underwriting_limit']:,}",
-            "note": "Could not extract penal sum to compare against underwriting limit",
-        })
+        checks.append(
+            {
+                "check": "underwriting_limit",
+                "status": "WARN",
+                "value": f"Surety limit: ${surety_record['underwriting_limit']:,}",
+                "note": "Could not extract penal sum to compare against underwriting limit",
+            }
+        )
 
     # --- Check 5: Penal sum ---
-    checks.append({
-        "check": "penal_sum",
-        "status": "PASS" if penal_sum and penal_sum > 0 else "FAIL",
-        "value": f"${penal_sum:,.2f}" if penal_sum else "Not extracted",
-        "note": f"Penal sum: ${penal_sum:,.2f}" if penal_sum else "Could not extract penal sum",
-    })
+    checks.append(
+        {
+            "check": "penal_sum",
+            "status": "PASS" if penal_sum and penal_sum > 0 else "FAIL",
+            "value": f"${penal_sum:,.2f}" if penal_sum else "Not extracted",
+            "note": f"Penal sum: ${penal_sum:,.2f}" if penal_sum else "Could not extract penal sum",
+        }
+    )
 
     # --- Check 5b: Coverage sufficiency ---
     if required_coverage and penal_sum:
         sufficient = penal_sum >= required_coverage
-        checks.append({
-            "check": "coverage_sufficient",
-            "status": "PASS" if sufficient else "FAIL",
-            "value": f"${penal_sum:,.2f} vs required ${required_coverage:,.2f}",
-            "note": (
-                f"Bond covers required amount"
-                if sufficient
-                else f"Bond penal sum ${penal_sum:,.2f} is less than required ${required_coverage:,.2f}"
-            ),
-        })
+        checks.append(
+            {
+                "check": "coverage_sufficient",
+                "status": "PASS" if sufficient else "FAIL",
+                "value": f"${penal_sum:,.2f} vs required ${required_coverage:,.2f}",
+                "note": (
+                    "Bond covers required amount"
+                    if sufficient
+                    else f"Bond penal sum ${penal_sum:,.2f} is less than required ${required_coverage:,.2f}"
+                ),
+            }
+        )
 
     # --- Check 6: Effective date ---
-    checks.append({
-        "check": "effective_date",
-        "status": "PASS" if effective_date else "WARN",
-        "value": effective_date or "Not extracted",
-        "note": "Effective date found" if effective_date else "Could not extract effective date",
-    })
+    checks.append(
+        {
+            "check": "effective_date",
+            "status": "PASS" if effective_date else "WARN",
+            "value": effective_date or "Not extracted",
+            "note": "Effective date found" if effective_date else "Could not extract effective date",
+        }
+    )
 
     # --- Check 7: Parties identified ---
-    checks.append({
-        "check": "parties_identified",
-        "status": "PASS" if principal != "Unknown" and obligee != "Unknown" else "WARN",
-        "value": f"Principal: {principal.strip()}, Obligee: {obligee.strip()}",
-        "note": "Both parties identified" if principal != "Unknown" and obligee != "Unknown" else "One or both parties not extracted",
-    })
+    checks.append(
+        {
+            "check": "parties_identified",
+            "status": "PASS" if principal != "Unknown" and obligee != "Unknown" else "WARN",
+            "value": f"Principal: {principal.strip()}, Obligee: {obligee.strip()}",
+            "note": "Both parties identified"
+            if principal != "Unknown" and obligee != "Unknown"
+            else "One or both parties not extracted",
+        }
+    )
 
     # --- Overall status ---
     fail_count = sum(1 for c in checks if c["status"] == "FAIL")
@@ -312,9 +393,7 @@ def verify_bond(
         "surety_circular_570": surety_record is not None,
         "surety_naic": surety_record["naic"] if surety_record else None,
         "surety_underwriting_limit": f"${surety_record['underwriting_limit']:,}" if surety_record else None,
-        "surety_state_licensed": (
-            project_state in surety_record["licensed_states"] if surety_record else None
-        ),
+        "surety_state_licensed": (project_state in surety_record["licensed_states"] if surety_record else None),
         "penal_sum": f"${penal_sum:,.2f}" if penal_sum else None,
         "principal": principal.strip() if principal else None,
         "obligee": obligee.strip() if obligee else None,
@@ -335,6 +414,7 @@ def verify_bond(
 # Field extraction helpers
 # ---------------------------------------------------------------------------
 
+
 def _extract_field(text: str, pattern: str, default: str | None) -> str | None:
     """Extract a field using regex pattern."""
     match = re.search(pattern, text, re.IGNORECASE)
@@ -347,7 +427,9 @@ def _extract_surety_name(text: str) -> str | None:
     Tries multiple patterns since bond formats vary widely.
     """
     # Pattern 1: "SURETY:" followed by company name on next line(s)
-    match = re.search(r"surety[:\s]*\n?\s*([A-Za-z][A-Za-z\s&.,]+?)(?:\n\s*(?:surety|division|[0-9]))", text, re.IGNORECASE)
+    match = re.search(
+        r"surety[:\s]*\n?\s*([A-Za-z][A-Za-z\s&.,]+?)(?:\n\s*(?:surety|division|[0-9]))", text, re.IGNORECASE
+    )
     if match:
         return match.group(1).strip()
 
@@ -363,7 +445,7 @@ def _extract_surety_name(text: str) -> str | None:
         if s["name_lower"] in text_lower:
             # Find the proper-cased version from original text
             idx = text_lower.index(s["name_lower"])
-            return text[idx:idx + len(s["name"])].strip()
+            return text[idx : idx + len(s["name"])].strip()
 
     return None
 

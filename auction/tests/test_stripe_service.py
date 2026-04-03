@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from unittest.mock import ANY, MagicMock, patch
 
-import pytest
 import stripe
 
 from auction.stripe_service import StripeService
-
 
 # ---------------------------------------------------------------
 # Initialization

@@ -13,10 +13,7 @@ from decimal import Decimal
 import pytest
 
 from auction.core import (
-    VALID_TASK_CATEGORIES,
     Bid,
-    LedgerEntry,
-    ReputationRecord,
     Task,
     TaskState,
     check_hard_constraints,
@@ -26,10 +23,10 @@ from auction.core import (
     verify_bid,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers — reusable factory functions to avoid repetition
 # ---------------------------------------------------------------------------
+
 
 def make_task(
     description: str = "Measure temperature in warehouse zone A",
@@ -180,11 +177,7 @@ class TestHardConstraints:
 
     def test_check_hard_constraints_pass(self):
         """Robot with required sensors passes."""
-        task = make_task(
-            capability_requirements={
-                "hard": {"sensors_required": ["temperature", "humidity"]}
-            }
-        )
+        task = make_task(capability_requirements={"hard": {"sensors_required": ["temperature", "humidity"]}})
         robot_caps = {"sensors": ["temperature", "humidity", "lidar"]}
         eligible, reasons = check_hard_constraints(task, robot_caps)
         assert eligible is True
@@ -192,11 +185,7 @@ class TestHardConstraints:
 
     def test_check_hard_constraints_missing_sensor(self):
         """Missing sensor returns rejection reason."""
-        task = make_task(
-            capability_requirements={
-                "hard": {"sensors_required": ["temperature", "lidar"]}
-            }
-        )
+        task = make_task(capability_requirements={"hard": {"sensors_required": ["temperature", "lidar"]}})
         robot_caps = {"sensors": ["temperature"]}
         eligible, reasons = check_hard_constraints(task, robot_caps)
         assert eligible is False
@@ -204,11 +193,7 @@ class TestHardConstraints:
 
     def test_check_hard_constraints_indoor(self):
         """Indoor requirement checked correctly."""
-        task = make_task(
-            capability_requirements={
-                "hard": {"indoor_capable": True}
-            }
-        )
+        task = make_task(capability_requirements={"hard": {"indoor_capable": True}})
         # Robot that is NOT indoor capable
         robot_caps = {"sensors": [], "indoor_capable": False}
         eligible, reasons = check_hard_constraints(task, robot_caps)
@@ -223,11 +208,7 @@ class TestHardConstraints:
 
     def test_check_hard_constraints_battery(self):
         """min_battery_percent checked."""
-        task = make_task(
-            capability_requirements={
-                "hard": {"min_battery_percent": 50}
-            }
-        )
+        task = make_task(capability_requirements={"hard": {"min_battery_percent": 50}})
         # Low battery
         robot_low = {"sensors": [], "battery_percent": 30}
         eligible, reasons = check_hard_constraints(task, robot_low)
@@ -328,9 +309,7 @@ class TestScoring:
         winner = results[0]
         loser = results[1]
 
-        assert winner[0].robot_id == "robot_y", (
-            f"Expected robot_y to win, got {winner[0].robot_id}"
-        )
+        assert winner[0].robot_id == "robot_y", f"Expected robot_y to win, got {winner[0].robot_id}"
         assert loser[0].robot_id == "robot_x"
 
         # Verify approximate scores from the spec
@@ -366,11 +345,7 @@ class TestV05Additions:
 
     def test_wot_td_capability_metadata_structure(self):
         """WoT TD sensor list-of-dicts is accepted and parsed correctly."""
-        task = make_task(
-            capability_requirements={
-                "hard": {"sensors_required": ["temperature"]}
-            }
-        )
+        task = make_task(capability_requirements={"hard": {"sensors_required": ["temperature"]}})
         # WoT TD format: list of dicts with "type" key
         robot_caps = {
             "sensors": [
@@ -384,11 +359,7 @@ class TestV05Additions:
 
     def test_check_hard_constraints_wot_td_sensors(self):
         """Sensor matching works with WoT TD list-of-dicts; missing sensor detected."""
-        task = make_task(
-            capability_requirements={
-                "hard": {"sensors_required": ["temperature", "lidar"]}
-            }
-        )
+        task = make_task(capability_requirements={"hard": {"sensors_required": ["temperature", "lidar"]}})
         robot_caps = {
             "sensors": [
                 {"type": "temperature", "unit": "celsius"},
@@ -400,11 +371,7 @@ class TestV05Additions:
 
     def test_check_hard_constraints_backward_compat(self):
         """Flat string list (v0.1 format) still works after WoT TD changes."""
-        task = make_task(
-            capability_requirements={
-                "hard": {"sensors_required": ["temperature", "humidity"]}
-            }
-        )
+        task = make_task(capability_requirements={"hard": {"sensors_required": ["temperature", "humidity"]}})
         robot_caps = {"sensors": ["temperature", "humidity", "lidar"]}
         eligible, reasons = check_hard_constraints(task, robot_caps)
         assert eligible is True
@@ -434,9 +401,7 @@ class TestPropertyBased:
         completion_rate_low=st.floats(min_value=0.01, max_value=1.0),
         completion_rate_high=st.floats(min_value=0.01, max_value=1.0),
     )
-    def test_score_monotonicity_reputation(
-        self, completion_rate_low, completion_rate_high
-    ):
+    def test_score_monotonicity_reputation(self, completion_rate_low, completion_rate_high):
         """Higher reputation never decreases score (all else equal)."""
         assume(completion_rate_high > completion_rate_low)
 

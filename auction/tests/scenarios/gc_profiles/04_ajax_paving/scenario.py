@@ -11,15 +11,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
-from auction.engine import AuctionEngine
-from auction.wallet import WalletLedger
-from auction.reputation import ReputationTracker
-from auction.mock_fleet import create_construction_fleet
-from auction.rfp_processor import process_rfp, validate_task_specs, get_site_recon
-from auction.bond_verifier import verify_bond
-from auction.terms_comparator import compare_terms
 from auction.agreement import generate_agreement
+from auction.bond_verifier import verify_bond
 from auction.compliance import ComplianceChecker
+from auction.engine import AuctionEngine
+from auction.mock_fleet import create_construction_fleet
+from auction.reputation import ReputationTracker
+from auction.rfp_processor import process_rfp, validate_task_specs
+from auction.terms_comparator import compare_terms
+from auction.wallet import WalletLedger
 
 PROFILE_DIR = Path(__file__).parent
 PASS = "\u2713"
@@ -88,13 +88,11 @@ def main():
     print("\n[4] Post both tasks")
     topo_result = engine.post_task(topo_spec)
     topo_rid = topo_result["request_id"]
-    step(f"Topo posted: {topo_result['eligible_robots']} eligible", topo_result,
-         topo_result["state"] == "bidding")
+    step(f"Topo posted: {topo_result['eligible_robots']} eligible", topo_result, topo_result["state"] == "bidding")
 
     gpr_result = engine.post_task(gpr_spec)
     gpr_rid = gpr_result["request_id"]
-    step(f"GPR posted: {gpr_result['eligible_robots']} eligible", gpr_result,
-         gpr_result["state"] == "bidding")
+    step(f"GPR posted: {gpr_result['eligible_robots']} eligible", gpr_result, gpr_result["state"] == "bidding")
 
     print("\n[5] Collect bids")
     topo_bids = engine.get_bids(topo_rid)
@@ -113,31 +111,31 @@ def main():
     step(f"GPR recommended: {gpr_winner}", gpr_review, gpr_winner is not None)
 
     # Different operators should win different tasks
-    step(f"Different operators: {topo_winner} vs {gpr_winner}",
-         None, topo_winner != gpr_winner if topo_winner and gpr_winner else False)
+    step(
+        f"Different operators: {topo_winner} vs {gpr_winner}",
+        None,
+        topo_winner != gpr_winner if topo_winner and gpr_winner else False,
+    )
 
     print("\n[7] Check PLS compliance — GPR operator should lack PLS")
     if gpr_winner:
         gpr_compliance = compliance.verify_operator(gpr_winner)
         pls_check = next((c for c in gpr_compliance["checklist"] if c["doc_type"] == "pls_license"), None)
         pls_missing = pls_check and pls_check["status"] == "MISSING"
-        step(f"GPR operator PLS status: {pls_check['status'] if pls_check else 'N/A'}",
-             gpr_compliance, pls_missing)
+        step(f"GPR operator PLS status: {pls_check['status'] if pls_check else 'N/A'}", gpr_compliance, pls_missing)
         if pls_missing:
             print(f"    GAP IDENTIFIED: {gpr_winner} needs PLS-as-a-service")
-            print(f"    Recommendation: Assign Jennifer Chen (MI #42871) as PLS-of-record")
+            print("    Recommendation: Assign Jennifer Chen (MI #42871) as PLS-of-record")
     else:
         step("GPR winner not found — cannot check PLS", None, False)
 
     if topo_winner:
         topo_compliance = compliance.verify_operator(topo_winner)
-        step(f"Topo operator compliance: {topo_compliance['verified']}/6",
-             topo_compliance, True)
+        step(f"Topo operator compliance: {topo_compliance['verified']}/6", topo_compliance, True)
 
     print("\n[8] Verify bond")
     bond_result = verify_bond(bond_text, [topo_rid, gpr_rid])
-    step(f"Bond status: {bond_result['status']}", bond_result,
-         bond_result["status"] in ("VERIFIED", "PARTIAL"))
+    step(f"Bond status: {bond_result['status']}", bond_result, bond_result["status"] in ("VERIFIED", "PARTIAL"))
 
     print("\n[9] Compare terms")
     operator_terms = "Standard terms: intermediate indemnification, 1x LoL, Net 30, mutual waiver."
@@ -150,8 +148,7 @@ def main():
         if winner:
             result = engine.accept_bid(rid, winner)
             awarded_ids.append(rid)
-            step(f"{label} awarded to {winner}: {result['state']}", result,
-                 result["state"] == "bid_accepted")
+            step(f"{label} awarded to {winner}: {result['state']}", result, result["state"] == "bid_accepted")
         else:
             step(f"{label}: no winner", None, False)
 
@@ -159,15 +156,19 @@ def main():
     for rid in awarded_ids:
         record = engine._get_record(rid)
         agreement = generate_agreement(record, "consensusdocs_750")
-        step(f"Agreement for {record.winning_bid.robot_id}: ${agreement['terms']['fee']['contract_price']}",
-             agreement, agreement["status"] == "draft")
+        step(
+            f"Agreement for {record.winning_bid.robot_id}: ${agreement['terms']['fee']['contract_price']}",
+            agreement,
+            agreement["status"] == "draft",
+        )
 
     print("\n[12] Execute and deliver")
+
     async def run_execution():
         for rid in awarded_ids:
             result = await engine.execute(rid)
-            step(f"Executed {rid[:12]}: {result.get('state')}", result,
-                 result.get("state") == "delivered")
+            step(f"Executed {rid[:12]}: {result.get('state')}", result, result.get("state") == "delivered")
+
     asyncio.run(run_execution())
 
     print("\n[13] Confirm deliveries")

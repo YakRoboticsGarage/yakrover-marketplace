@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -26,6 +26,7 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # PluginRobotAdapter
 # ---------------------------------------------------------------------------
+
 
 class PluginRobotAdapter:
     """Adapts a RobotPlugin (from yakrover-8004-mcp) to the MockRobot interface.
@@ -128,7 +129,7 @@ class PluginRobotAdapter:
                 data = {
                     "temperature_celsius": sensor_data["temperature"],
                     "humidity_percent": sensor_data["humidity"],
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 }
             except Exception:
                 log.warning(
@@ -148,10 +149,10 @@ class PluginRobotAdapter:
             data = {
                 "temperature_celsius": raw["temperature"],
                 "humidity_percent": raw["humidity"],
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         elapsed = (now - task.posted_at).total_seconds()
         sla_met = elapsed <= task.sla_seconds
 
@@ -167,6 +168,7 @@ class PluginRobotAdapter:
 # ---------------------------------------------------------------------------
 # discover_and_adapt — the public entry point
 # ---------------------------------------------------------------------------
+
 
 def discover_and_adapt(
     fleet_provider: str | None = None,
@@ -226,6 +228,7 @@ def discover_and_adapt_from_plugins(
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+
 def _task_to_spec(task: Task) -> dict:
     """Convert an auction ``Task`` dataclass to the dict format RobotPlugin.bid() expects."""
     return {
@@ -275,7 +278,7 @@ def _instantiate_plugin(entry: dict) -> RobotPlugin | None:
 
     name = (entry.get("name") or "").lower()
     provider = (entry.get("fleet_provider") or "").lower()
-    rtype = (entry.get("robot_type") or "").lower()
+    (entry.get("robot_type") or "").lower()
 
     # Try matching by name fragment, then provider+type.
     for key, cls in _PLUGIN_REGISTRY.items():

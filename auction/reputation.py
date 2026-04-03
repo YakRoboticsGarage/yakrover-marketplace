@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from auction.core import ReputationRecord
 
@@ -30,11 +30,9 @@ class ReputationTracker:
     ) -> None:
         """Append a task outcome to the history."""
         if outcome not in VALID_OUTCOMES:
-            raise ValueError(
-                f"Invalid outcome {outcome!r}; must be one of {sorted(VALID_OUTCOMES)}"
-            )
+            raise ValueError(f"Invalid outcome {outcome!r}; must be one of {sorted(VALID_OUTCOMES)}")
         if timestamp is None:
-            timestamp = datetime.now(timezone.utc)
+            timestamp = datetime.now(UTC)
         self._records.append(
             ReputationRecord(
                 robot_id=robot_id,
@@ -51,12 +49,8 @@ class ReputationTracker:
 
     def get_reputation(self, robot_id: str) -> dict:
         """Return DM-5 reputation_metadata dict computed from history."""
-        cutoff = datetime.now(timezone.utc) - timedelta(days=self.rolling_window_days)
-        records = [
-            r
-            for r in self._records
-            if r.robot_id == robot_id and r.timestamp >= cutoff
-        ]
+        cutoff = datetime.now(UTC) - timedelta(days=self.rolling_window_days)
+        records = [r for r in self._records if r.robot_id == robot_id and r.timestamp >= cutoff]
 
         total = len(records)
 
@@ -73,14 +67,7 @@ class ReputationTracker:
         completion_rate = tasks_completed / total
 
         if tasks_completed > 0:
-            on_time_rate = (
-                sum(
-                    1
-                    for r in records
-                    if r.outcome == "completed" and r.sla_met
-                )
-                / tasks_completed
-            )
+            on_time_rate = sum(1 for r in records if r.outcome == "completed" and r.sla_met) / tasks_completed
         else:
             on_time_rate = 0.0
 

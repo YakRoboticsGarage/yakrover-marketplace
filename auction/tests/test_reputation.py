@@ -8,18 +8,17 @@ See docs/BUILD_PLAN_V05.md Phase B-3 and PRODUCT_SPEC_V05.md Section 10.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from auction.reputation import ReputationTracker
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-_NOW = datetime.now(timezone.utc)
+_NOW = datetime.now(UTC)
 
 
 def _ts(days_ago: int = 0) -> datetime:
@@ -30,6 +29,7 @@ def _ts(days_ago: int = 0) -> datetime:
 # ---------------------------------------------------------------------------
 # 1. test_no_history_defaults
 # ---------------------------------------------------------------------------
+
 
 def test_no_history_defaults():
     """An unknown robot gets default reputation (completion_rate=0.5)."""
@@ -46,6 +46,7 @@ def test_no_history_defaults():
 # ---------------------------------------------------------------------------
 # 2. test_record_and_get
 # ---------------------------------------------------------------------------
+
 
 def test_record_and_get():
     """Recording one completed task and retrieving reputation works."""
@@ -68,6 +69,7 @@ def test_record_and_get():
 # ---------------------------------------------------------------------------
 # 3. test_completion_rate
 # ---------------------------------------------------------------------------
+
 
 def test_completion_rate():
     """8 completed + 2 rejected = 0.8 completion rate."""
@@ -98,6 +100,7 @@ def test_completion_rate():
 # ---------------------------------------------------------------------------
 # 4. test_on_time_rate
 # ---------------------------------------------------------------------------
+
 
 def test_on_time_rate():
     """6 of 8 completed tasks met SLA = 0.75 on_time_rate."""
@@ -131,6 +134,7 @@ def test_on_time_rate():
 # 5. test_rejection_rate
 # ---------------------------------------------------------------------------
 
+
 def test_rejection_rate():
     """2 rejected of 10 total = 0.2 rejection_rate."""
     tracker = ReputationTracker()
@@ -159,6 +163,7 @@ def test_rejection_rate():
 # ---------------------------------------------------------------------------
 # 6. test_rolling_window
 # ---------------------------------------------------------------------------
+
 
 def test_rolling_window():
     """Records older than the rolling window are excluded."""
@@ -192,6 +197,7 @@ def test_rolling_window():
 # 7. test_get_all_reputations
 # ---------------------------------------------------------------------------
 
+
 def test_get_all_reputations():
     """get_all_reputations returns a dict keyed by robot_id."""
     tracker = ReputationTracker()
@@ -222,6 +228,7 @@ def test_get_all_reputations():
 # ---------------------------------------------------------------------------
 # 8. test_invalid_outcome
 # ---------------------------------------------------------------------------
+
 
 def test_invalid_outcome():
     """An invalid outcome string raises ValueError."""

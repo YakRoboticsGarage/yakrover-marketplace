@@ -14,8 +14,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
-from decimal import Decimal
+from datetime import UTC, datetime
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +22,13 @@ logger = logging.getLogger(__name__)
 try:
     from fastapi import APIRouter, HTTPException, Request
     from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.responses import JSONResponse
 
     _HAS_FASTAPI = True
 except ImportError:
     _HAS_FASTAPI = False
 
 
-def create_api_router(engine: object) -> "APIRouter":
+def create_api_router(engine: object) -> APIRouter:
     """Create a FastAPI router with REST endpoints wrapping the auction engine.
 
     Args:
@@ -72,7 +70,7 @@ def create_api_router(engine: object) -> "APIRouter":
         intent = {
             "intent_id": intent_id,
             "query": query,
-            "captured_at": datetime.now(timezone.utc).isoformat(),
+            "captured_at": datetime.now(UTC).isoformat(),
             "structured_task": None,  # Populated after Claude structures it
             "status": "captured",
         }
@@ -113,7 +111,7 @@ def create_api_router(engine: object) -> "APIRouter":
         try:
             result = engine.post_task(body)
         except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from None
 
         # Link intent if provided
         if intent_id and intent_id in _intents:
@@ -128,7 +126,7 @@ def create_api_router(engine: object) -> "APIRouter":
         try:
             return engine.get_status(request_id)
         except (KeyError, ValueError) as e:
-            raise HTTPException(status_code=404, detail=str(e))
+            raise HTTPException(status_code=404, detail=str(e)) from None
 
     @router.post("/tasks/{request_id}/bids")
     async def get_bids(request_id: str) -> dict:
@@ -136,7 +134,7 @@ def create_api_router(engine: object) -> "APIRouter":
         try:
             return engine.get_bids(request_id)
         except (KeyError, ValueError) as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from None
 
     @router.post("/tasks/{request_id}/accept")
     async def accept_bid(request_id: str, request: Request) -> dict:
@@ -150,7 +148,7 @@ def create_api_router(engine: object) -> "APIRouter":
             else:
                 return engine.accept_bid(request_id)
         except (KeyError, ValueError) as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from None
 
     @router.post("/tasks/{request_id}/execute")
     async def execute_task(request_id: str) -> dict:
@@ -158,7 +156,7 @@ def create_api_router(engine: object) -> "APIRouter":
         try:
             return engine.execute(request_id)
         except (KeyError, ValueError) as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from None
 
     @router.post("/tasks/{request_id}/confirm")
     async def confirm_delivery(request_id: str) -> dict:
@@ -166,7 +164,7 @@ def create_api_router(engine: object) -> "APIRouter":
         try:
             return engine.confirm_delivery(request_id)
         except (KeyError, ValueError) as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=400, detail=str(e)) from None
 
     # ------------------------------------------------------------------
     # Robot feed — for the real-time ticker on the frontend
@@ -181,11 +179,13 @@ def create_api_router(engine: object) -> "APIRouter":
         """
         robots = []
         for robot in engine.robots:
-            robots.append({
-                "robot_id": robot.robot_id,
-                "capabilities": getattr(robot, "capability_metadata", {}),
-                "status": "available",
-            })
+            robots.append(
+                {
+                    "robot_id": robot.robot_id,
+                    "capabilities": getattr(robot, "capability_metadata", {}),
+                    "status": "available",
+                }
+            )
         return {"robots": robots, "count": len(robots)}
 
     # ------------------------------------------------------------------
