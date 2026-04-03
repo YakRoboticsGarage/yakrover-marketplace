@@ -308,6 +308,19 @@ topics:
     estimated_sessions: 1
     depends_on: [R-024]
 
+  # ===== COMPETITIVE / ADJACENT PRODUCTS =====
+
+  - id: R-026
+    title: "publish.new — agent-native marketplace with x402/MPP payments"
+    module: system
+    hypothesis: "publish.new is an AI-native marketplace for digital goods where agents buy/sell via x402 and MPP protocols. Their approach to embedded wallets, dual human/agent checkout, and frictionless publishing may reveal UX and architectural patterns we should adopt for physical robot tasks."
+    status: queued
+    priority: high
+    estimated_sessions: 1
+    depends_on: []
+    source_url: "https://paragraph.com/@blog/your-work-paid-for-by-agents"
+    notes: "Review their codebase if open-source. Compare: how they handle delivery verification (digital goods vs physical tasks), payment splitting, agent identity, and the human/agent checkout UX fork. Also check MPP protocol — how does it differ from x402?"
+
   # ===== META: RESEARCH PIPELINE SELF-CRITIQUE =====
 
   - id: R-META-001
