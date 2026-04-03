@@ -524,6 +524,8 @@ class TestMCPToolsRegistered:
             # Phase 6: Tracking and observability (v1.0.2)
             "auction_update_progress",
             "auction_get_task_feed",
+            # Phase 7: Feedback
+            "auction_submit_feedback",
         ])
 
         assert tool_names == expected, f"Expected {expected}, got {tool_names}"
