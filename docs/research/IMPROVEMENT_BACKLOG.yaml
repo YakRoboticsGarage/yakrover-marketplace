@@ -292,11 +292,11 @@ proposals:
     research_source: "code-review"
     evidence: "CI type-check job — 143 errors in 14 files"
     effort: large
-    priority: null
-    status: proposed
+    priority: high
+    status: implemented
     proposed_date: "2026-04-03"
-    decision_date: null
-    decision_notes: null
+    decision_date: "2026-04-03"
+    decision_notes: "All 143 errors fixed. TYPE_CHECKING imports, TaskRecord.winner property, typed helpers, targeted type: ignore for dynamic patterns. Mypy CI is now blocking."
 
   - id: IMP-016
     title: "Unskip fakerover bid tests after 8004 PR #4 merge"
