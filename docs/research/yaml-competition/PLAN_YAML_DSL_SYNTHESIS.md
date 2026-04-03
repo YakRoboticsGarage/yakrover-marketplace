@@ -44,7 +44,7 @@ This matches the user's request for debate-first, parallel execution, reintegrat
 
 ## Source Documents
 
-All in /Users/rafa/Documents/robots/robot-marketplace/docs/:
+All in /Users/rafa/Documents/robots/yakrover-marketplace/docs/:
 - research/ (18 files)
 - feedback/ (12 files)
 - ROADMAP_v4.md, USER_JOURNEY_CONSTRUCTION_v01.md

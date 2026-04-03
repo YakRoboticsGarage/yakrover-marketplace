@@ -19,7 +19,7 @@
 
 ```yaml
 # ============================================================
-# robot-marketplace.yaml — Ontological Map of the Product
+# yakrover-marketplace.yaml — Ontological Map of the Product
 # ============================================================
 
 meta:

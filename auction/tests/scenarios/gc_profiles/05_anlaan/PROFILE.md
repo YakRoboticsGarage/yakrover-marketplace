@@ -25,7 +25,7 @@
 - Joint venture with C.A. Hull Company (JV lead: Anlaan)
 - Design-build contract with MDOT
 - Requires pre-construction topo, tunnel 3D scanning, and TBM alignment monitoring
-- This is the exact demo scenario for the robot-marketplace
+- This is the exact demo scenario for the yakrover-marketplace
 
 ## Test Relevance
 - **Most complex scenario** — three tasks including a manual-vendor flag

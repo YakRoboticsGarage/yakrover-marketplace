@@ -1621,68 +1621,6 @@ wheels = [
 ]
 
 [[package]]
-name = "robot-marketplace"
-version = "1.0.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "httpx" },
-    { name = "openpyxl" },
-    { name = "pymupdf" },
-    { name = "python-dotenv" },
-]
-
-[package.optional-dependencies]
-all = [
-    { name = "aiosqlite" },
-    { name = "eth-account" },
-    { name = "fastmcp" },
-    { name = "stripe" },
-]
-dev = [
-    { name = "hypothesis" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-]
-ed25519 = [
-    { name = "eth-account" },
-]
-mcp = [
-    { name = "fastmcp" },
-]
-persistence = [
-    { name = "aiosqlite" },
-]
-stripe = [
-    { name = "stripe" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiosqlite", marker = "extra == 'all'", specifier = ">=0.20" },
-    { name = "aiosqlite", marker = "extra == 'persistence'", specifier = ">=0.20" },
-    { name = "eth-account", marker = "extra == 'all'", specifier = ">=0.13" },
-    { name = "eth-account", marker = "extra == 'ed25519'", specifier = ">=0.13" },
-    { name = "fastmcp", marker = "extra == 'all'", specifier = ">=2.14" },
-    { name = "fastmcp", marker = "extra == 'mcp'", specifier = ">=2.14" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.0" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.14" },
-    { name = "openpyxl", specifier = ">=3.1.5" },
-    { name = "pymupdf", specifier = ">=1.27.2.2" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.0" },
-    { name = "python-dotenv", specifier = ">=1.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9" },
-    { name = "stripe", marker = "extra == 'all'", specifier = ">=10.0" },
-    { name = "stripe", marker = "extra == 'stripe'", specifier = ">=10.0" },
-]
-provides-extras = ["stripe", "persistence", "ed25519", "mcp", "all", "dev"]
-
-[[package]]
 name = "rpds-py"
 version = "0.30.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1986,6 +1924,68 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/9f/3e/28135a24e384493fa804216b79a6a6759a38cc4ff59118787b9fb693df93/websockets-16.0-cp314-cp314t-win_amd64.whl", hash = "sha256:b14dc141ed6d2dde437cddb216004bcac6a1df0935d79656387bd41632ba0bbd", size = 178531, upload-time = "2026-01-10T09:23:35.016Z" },
     { url = "https://files.pythonhosted.org/packages/6f/28/258ebab549c2bf3e64d2b0217b973467394a9cea8c42f70418ca2c5d0d2e/websockets-16.0-py3-none-any.whl", hash = "sha256:1637db62fad1dc833276dded54215f2c7fa46912301a24bd94d45d46a011ceec", size = 171598, upload-time = "2026-01-10T09:23:45.395Z" },
 ]
+
+[[package]]
+name = "yakrover-marketplace"
+version = "1.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "httpx" },
+    { name = "openpyxl" },
+    { name = "pymupdf" },
+    { name = "python-dotenv" },
+]
+
+[package.optional-dependencies]
+all = [
+    { name = "aiosqlite" },
+    { name = "eth-account" },
+    { name = "fastmcp" },
+    { name = "stripe" },
+]
+dev = [
+    { name = "hypothesis" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+ed25519 = [
+    { name = "eth-account" },
+]
+mcp = [
+    { name = "fastmcp" },
+]
+persistence = [
+    { name = "aiosqlite" },
+]
+stripe = [
+    { name = "stripe" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiosqlite", marker = "extra == 'all'", specifier = ">=0.20" },
+    { name = "aiosqlite", marker = "extra == 'persistence'", specifier = ">=0.20" },
+    { name = "eth-account", marker = "extra == 'all'", specifier = ">=0.13" },
+    { name = "eth-account", marker = "extra == 'ed25519'", specifier = ">=0.13" },
+    { name = "fastmcp", marker = "extra == 'all'", specifier = ">=2.14" },
+    { name = "fastmcp", marker = "extra == 'mcp'", specifier = ">=2.14" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.0" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.14" },
+    { name = "openpyxl", specifier = ">=3.1.5" },
+    { name = "pymupdf", specifier = ">=1.27.2.2" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.0" },
+    { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9" },
+    { name = "stripe", marker = "extra == 'all'", specifier = ">=10.0" },
+    { name = "stripe", marker = "extra == 'stripe'", specifier = ">=10.0" },
+]
+provides-extras = ["stripe", "persistence", "ed25519", "mcp", "all", "dev"]
 
 [[package]]
 name = "zipp"

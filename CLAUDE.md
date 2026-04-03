@@ -69,7 +69,7 @@ Key decisions for v1.5: FD-1 (settlement abstraction), FD-4 (commitment hash), F
 ## Project Structure
 
 ```
-robot-marketplace/
+yakrover-marketplace/
 │
 ├── auction/                     # Core auction engine (Python)
 │   ├── core.py                  # Task, Bid, scoring, signing, commitment hash

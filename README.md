@@ -19,7 +19,7 @@ Upload an RFP → the system extracts survey requirements → decomposes into in
 ## Project Structure
 
 ```
-robot-marketplace/
+yakrover-marketplace/
 │
 ├── auction/                     ← Core auction engine (Python)
 │   ├── core.py                  # Task, Bid, scoring, signing, commitment hash
@@ -70,8 +70,8 @@ robot-marketplace/
 
 ```bash
 # Clone and install
-git clone https://github.com/YakRoboticsGarage/robot-marketplace.git
-cd robot-marketplace && uv sync --all-extras
+git clone https://github.com/YakRoboticsGarage/yakrover-marketplace.git
+cd yakrover-marketplace && uv sync --all-extras
 
 # Run tests
 uv run pytest auction/tests/ -q --tb=short

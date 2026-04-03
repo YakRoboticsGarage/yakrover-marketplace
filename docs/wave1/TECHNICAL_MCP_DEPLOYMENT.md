@@ -95,7 +95,7 @@ brew install railway
 
 # Login and create project
 railway login
-railway init          # name it "robot-marketplace"
+railway init          # name it "yakrover-marketplace"
 
 # Add a volume for SQLite persistence
 railway volume add --mount /data

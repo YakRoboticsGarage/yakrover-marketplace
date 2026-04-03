@@ -248,7 +248,7 @@ Expected response: `{"success": true, "delivery_data": {"readings": [...]}}`
 ### 4. Run the full demo
 
 1. Start your robot's MCP server with ngrok tunnel
-2. Start the marketplace MCP server: `cd robot-marketplace && PYTHONPATH=. uv run python mcp_server.py`
+2. Start the marketplace MCP server: `cd yakrover-marketplace && PYTHONPATH=. uv run python mcp_server.py`
 3. Start a tunnel: `cloudflared tunnel --url http://localhost:8001`
 4. Go to https://yakrobot.bid/mcp-demo-2/
 5. Your robot should appear in discovery → auction runs → your robot bids → delivers → gets paid
@@ -351,7 +351,7 @@ Good feedback from buyers improves your reputation score, which makes your bids 
 
 ## Questions?
 
-- **Marketplace repo:** https://github.com/YakRoboticsGarage/robot-marketplace
+- **Marketplace repo:** https://github.com/YakRoboticsGarage/yakrover-marketplace
 - **Robot framework:** https://github.com/YakRoboticsGarage/yakrover-8004-mcp
 - **Live demo:** https://yakrobot.bid/mcp-demo-2/
 - **ERC-8004 spec:** https://eips.ethereum.org/EIPS/eip-8004

@@ -6,7 +6,7 @@ Simulated marketplace usage by real GC personas, operators, and PLSs. Each scena
 
 ```bash
 # Run all 5 GC scenarios
-cd robot-marketplace
+cd yakrover-marketplace
 PYTHONPATH=. python auction/tests/scenarios/run_all.py
 
 # Run a single scenario

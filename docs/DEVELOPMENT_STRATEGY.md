@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-27
 **Status:** Proposal — ready for review
-**Applies to:** robot-marketplace, yakrover-8004-mcp, and all marketplace repos
+**Applies to:** yakrover-marketplace, yakrover-8004-mcp, and all marketplace repos
 
 > This project handles real money (Stripe charges, USDC on Base). Code that touches payments, escrow, or wallet operations must meet a higher bar than typical application code. This document defines the development practices, testing strategy, and tooling that enforce that bar.
 
@@ -243,7 +243,7 @@ Key points:
 
 ## 4. Claude Code Configuration
 
-### CLAUDE.md Updates for robot-marketplace
+### CLAUDE.md Updates for yakrover-marketplace
 
 The existing CLAUDE.md (in the archive) is framework-level. The marketplace repo needs payment-specific instructions:
 

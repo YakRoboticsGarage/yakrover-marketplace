@@ -1,5 +1,5 @@
 [project]
-name = "robot-marketplace"
+name = "yakrover-marketplace"
 version = "1.0.0"
 description = "Robot task auction marketplace — AI agents post tasks, physical robots bid, winners are paid via Stripe or crypto"
 readme = "README.md"
@@ -34,7 +34,7 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/YakRoboticsGarage/robot-marketplace"
+Repository = "https://github.com/YakRoboticsGarage/yakrover-marketplace"
 Protocol = "https://github.com/YakRoboticsGarage/yakrover-protocols/tree/main/marketplace"
 "Robot Framework" = "https://github.com/YakRoboticsGarage/yakrover-8004-mcp"
 

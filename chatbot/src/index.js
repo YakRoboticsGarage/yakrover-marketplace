@@ -1239,7 +1239,7 @@ async function handleAuctionFeedback(request, env, cors) {
         `_Submitted automatically by the YAK ROBOTICS marketplace demo._`,
       ].join("\n");
 
-      const ghRes = await fetch("https://api.github.com/repos/YakRoboticsGarage/robot-marketplace/issues", {
+      const ghRes = await fetch("https://api.github.com/repos/YakRoboticsGarage/yakrover-marketplace/issues", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${env.GITHUB_TOKEN}`,

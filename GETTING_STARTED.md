@@ -23,8 +23,8 @@ By the end, you'll see real PaymentIntents and Transfers in your Stripe dashboar
 ## Step 1 — Get the code
 
 ```bash
-git clone https://github.com/YakRoboticsGarage/robot-marketplace.git
-cd robot-marketplace
+git clone https://github.com/YakRoboticsGarage/yakrover-marketplace.git
+cd yakrover-marketplace
 ```
 
 Install dependencies (this uses [uv](https://docs.astral.sh/uv/), a fast Python package manager):
@@ -93,7 +93,7 @@ Leave this running. Open a **second terminal** for the next step.
 In your second terminal:
 
 ```bash
-cd robot-marketplace
+cd yakrover-marketplace
 PYTHONPATH=. uv run python auction/demo.py
 ```
 
@@ -265,7 +265,7 @@ sqlite3 auction.db "SELECT request_id, state FROM tasks;"
 Scenario 1 needs the simulator at `localhost:8080`. Start it per Step 3.
 
 **"ModuleNotFoundError: No module named 'auction'"**
-Make sure you're running from the `robot-marketplace` directory with `PYTHONPATH=.` set.
+Make sure you're running from the `yakrover-marketplace` directory with `PYTHONPATH=.` set.
 
 **"Stripe mode: stub" even though I set the key**
 The key must be in a `.env` file in the project root, or set as an environment variable:
@@ -300,7 +300,7 @@ The demo script is great for seeing the auction in action, but the real way to u
 **Start the server:**
 
 ```bash
-cd robot-marketplace
+cd yakrover-marketplace
 PYTHONPATH=. uv run python serve_with_auction.py
 ```
 

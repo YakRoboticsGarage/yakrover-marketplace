@@ -7,7 +7,7 @@ Run the MCP server on your machine and let anyone connect their Claude to intera
 ### Quick start (local only)
 
 ```bash
-cd robot-marketplace
+cd yakrover-marketplace
 PYTHONPATH=. uv run python mcp_server.py
 ```
 

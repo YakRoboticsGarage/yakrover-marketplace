@@ -202,7 +202,7 @@ def create_api_router(engine: object) -> "APIRouter":
         base_url = str(request.base_url).rstrip("/")
         return {
             "mcpServers": {
-                "robot-marketplace": {
+                "yakrover-marketplace": {
                     "type": "http",
                     "url": f"{base_url}/fleet/mcp",
                     "description": "Robot task auction marketplace — post tasks, hire robots, pay on delivery",
