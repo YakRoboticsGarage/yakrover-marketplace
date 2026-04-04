@@ -1386,7 +1386,7 @@ function renderAgentStep(){
 
     if(s.agent==='claude-code'){
       // Claude Code: one-liner command
-      var addCmd='claude mcp add-json yak-robotics \'{"type":"http","url":"'+mcpUrl+'","headers":{"Authorization":"Bearer '+s.apiKey+'"}}\'';
+      var addCmd='claude mcp add-json yakrover \'{"type":"http","url":"'+mcpUrl+'","headers":{"Authorization":"Bearer '+s.apiKey+'"}}\'';
       html+='<h3>Step 3: Run this in your terminal</h3>';
       html+='<p>One command — Claude Code handles the rest. No config files to edit.</p>';
       html+='<div class="config-snippet" id="agentConfigSnippet">'+addCmd+'</div>';
@@ -1418,7 +1418,7 @@ function renderAgentStep(){
 
     } else {
       // Custom: show full JSON config
-      var configJson='{\n  "mcpServers": {\n    "yak-robotics": {\n      "type": "http",\n      "url": "'+mcpUrl+'",\n      "headers": {\n        "Authorization": "Bearer '+s.apiKey+'"\n      }\n    }\n  }\n}';
+      var configJson='{\n  "mcpServers": {\n    "yakrover": {\n      "type": "http",\n      "url": "'+mcpUrl+'",\n      "headers": {\n        "Authorization": "Bearer '+s.apiKey+'"\n      }\n    }\n  }\n}';
       html+='<h3>Step 3: MCP Configuration</h3>';
       html+='<p>Add this to your agent\'s MCP server configuration:</p>';
       html+='<div class="config-snippet" id="agentConfigSnippet">'+configJson+'</div>';

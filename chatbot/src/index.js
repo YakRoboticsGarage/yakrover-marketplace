@@ -1087,7 +1087,7 @@ async function handleUploadDelivery(request, env, cors) {
 
   // Package the delivery with metadata
   const deliveryPackage = {
-    schema: "yak-robotics/delivery/v1",
+    schema: "yakrover/delivery/v1",
     request_id,
     robot_id: robot_id || "unknown",
     robot_name: robot_name || "Unknown Robot",

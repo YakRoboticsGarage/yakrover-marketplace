@@ -14,7 +14,7 @@ PYTHONPATH=. uv run python mcp_server.py
 Server runs at `http://localhost:8001`. Connect your own Claude:
 
 ```bash
-claude mcp add --transport http yak-robotics http://localhost:8001/mcp
+claude mcp add --transport http yakrover http://localhost:8001/mcp
 ```
 
 ### Public access (free Cloudflare Tunnel)
@@ -47,7 +47,7 @@ cloudflared tunnel run --url http://localhost:8001 yak-demo
 ### Claude Code (terminal)
 
 ```bash
-claude mcp add --transport http yak-robotics https://YOUR-URL-HERE/mcp
+claude mcp add --transport http yakrover https://YOUR-URL-HERE/mcp
 ```
 
 ### Claude Desktop (GUI)
@@ -57,7 +57,7 @@ Add to your MCP config file:
 ```json
 {
   "mcpServers": {
-    "yak-robotics": {
+    "yakrover": {
       "type": "http",
       "url": "https://YOUR-URL-HERE/mcp"
     }

@@ -306,7 +306,7 @@ The marketplace wraps this in a delivery envelope and uploads to IPFS:
 
 ```json
 {
-  "schema": "yak-robotics/delivery/v1",
+  "schema": "yakrover/delivery/v1",
   "request_id": "demo_1234567",
   "robot_id": "989",
   "delivered_at": "2026-04-02T10:30:00Z",

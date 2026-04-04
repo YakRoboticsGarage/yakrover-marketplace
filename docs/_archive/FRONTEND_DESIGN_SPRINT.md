@@ -102,7 +102,7 @@ An AI agent (Claude, GPT, or any MCP-capable agent) discovers and uses the marke
 The agent fetches `https://marketplace.yakrobotics.com/.well-known/mcp.json` and finds:
 ```json
 {
-  "name": "yak-robotics-marketplace",
+  "name": "yakrover-marketplace",
   "description": "Robot task auction marketplace — post tasks, robots bid, best one wins",
   "version": "1.5.0",
   "tools": [
@@ -261,7 +261,7 @@ After each successful delivery, payment transfers to the operator's connected ac
 ```json
 {
   "mcpServers": {
-    "yak-robotics-marketplace": {
+    "yakrover-marketplace": {
       "url": "https://marketplace.yakrobotics.com/mcp/sse",
       "auth": {
         "type": "oauth2",
