@@ -652,6 +652,7 @@ var PLATFORM_COMMISSION = 0.12; // 12%
 var RPC_URLS = {
   1:        'https://ethereum-rpc.publicnode.com',
   8453:     'https://mainnet.base.org',
+  84532:    'https://sepolia.base.org',
   11155111: 'https://ethereum-sepolia-rpc.publicnode.com',
 };
 
@@ -1573,10 +1574,9 @@ async function payWithUSDC(operatorWallet) {
   var CHAIN_NAMES = { 8453: 'Base', 1: 'Ethereum', 84532: 'Base Sepolia', 11155111: 'Sepolia' };
   var CHAIN_HEX = { 8453: '0x2105', 1: '0x1', 84532: '0x14a34', 11155111: '0xaa36a7' };
 
-  // Default to Base mainnet, fall back to Sepolia for testnet robots
+  // Default to Base mainnet. For testnet robots, use Base Sepolia (supports ERC-2612 permits)
   var chainId = discoveredRobots.length > 0 ? discoveredRobots[0].chain_id : 8453;
-  // Map Sepolia robot chain to Sepolia USDC (testnet)
-  if (chainId === 11155111) chainId = 11155111;
+  if (chainId === 11155111) chainId = 84532; // Eth Sepolia robot → pay on Base Sepolia
   var chainName = CHAIN_NAMES[chainId] || 'Chain ' + chainId;
   var usdcAddr = USDC_ADDRESSES[chainId];
 

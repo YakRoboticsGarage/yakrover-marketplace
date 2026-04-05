@@ -40,7 +40,7 @@ load_dotenv()
 from auction.engine import AuctionEngine
 from auction.wallet import WalletLedger
 from auction.reputation import ReputationTracker
-from auction.mock_fleet import create_construction_fleet
+from auction.mock_fleet import create_full_fleet
 from auction.mcp_tools import register_auction_tools
 from auction.core import log
 
@@ -87,8 +87,8 @@ def build_engine():
     else:
         log("SERVER", "SQLite: in-memory (set AUCTION_DB_PATH for persistence)")
 
-    # Construction fleet — 7 Michigan operators
-    fleet = create_construction_fleet()
+    # Full fleet — sensor robots + construction operators
+    fleet = create_full_fleet()
     log("SERVER", f"Fleet: {len(fleet)} operators")
     for r in fleet:
         name = getattr(r, "name", r.robot_id)
