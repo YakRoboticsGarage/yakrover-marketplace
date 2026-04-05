@@ -1045,9 +1045,14 @@ async function runDemo() {
   const prompt = rfpText + '\n\nSite Info: ' + JSON.stringify(siteInfo) + robotContext + deliverySchemaContext;
 
   try {
+    // Admin key from URL param bypasses rate limit (e.g. ?admin=SECRET)
+    var adminKey = new URLSearchParams(window.location.search).get('admin') || '';
+    var headers = { 'Content-Type': 'application/json' };
+    if (adminKey) headers['X-Admin-Key'] = adminKey;
+
     const response = await fetch(WORKER_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       body: JSON.stringify({ prompt, tunnel_url: tunnelUrl })
     });
 

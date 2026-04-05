@@ -201,7 +201,7 @@ function corsHeaders(origin, allowedOrigin) {
   return {
     "Access-Control-Allow-Origin": allowed ? origin : allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Key",
     "Access-Control-Max-Age": "86400",
   };
 }
@@ -602,14 +602,18 @@ async function handleDemo(request, env, cors) {
     );
   }
 
-  // Rate limit by IP — 5 demo runs per day
+  // Admin bypass: X-Admin-Key header skips rate limit
+  const adminKey = request.headers.get("X-Admin-Key");
+  const isAdmin = env.ADMIN_KEY && adminKey === env.ADMIN_KEY;
+
+  // Rate limit by IP — 5 demo runs per day (admin bypasses)
   const ip =
     request.headers.get("CF-Connecting-IP") ||
     request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() ||
     "unknown";
 
   const rl = await checkDemoRateLimit(env, ip);
-  if (!rl.allowed) {
+  if (!rl.allowed && !isAdmin) {
     return new Response(
       JSON.stringify({
         error: "Demo limit reached (5/day). Try again tomorrow.",
