@@ -114,8 +114,23 @@ def process_rfp(
     if "project_name" not in site_info:
         site_info["project_name"] = _extract_project_name(rfp_text)
 
-    # Detect survey types from RFP text
+    # Detect task types from RFP text
     survey_types = []
+
+    # Environmental / sensor monitoring (non-survey tasks)
+    if any(kw in rfp_lower for kw in [
+        "temperature", "humidity", "environmental monitor", "climate assess",
+        "sensor reading", "env_sensing", "indoor climate", "server room",
+        "air quality", "thermal comfort", "data logging",
+    ]):
+        survey_types.append("env_sensing")
+    # Visual / camera inspection
+    if any(kw in rfp_lower for kw in [
+        "visual inspection", "camera inspect", "photo document", "crack detection",
+        "condition assess", "defect", "visual_inspection",
+    ]):
+        survey_types.append("visual_inspection")
+    # Construction survey types
     if any(kw in rfp_lower for kw in ["topographic", "topo survey", "surface survey", "corridor survey"]):
         survey_types.append("topographic")
     if any(kw in rfp_lower for kw in ["tunnel", "3d scan", "terrestrial lidar", "as-built"]):
@@ -132,7 +147,7 @@ def process_rfp(
         survey_types.append("control_survey")
 
     if not survey_types:
-        survey_types.append("topographic")  # Default
+        survey_types.append("topographic")  # Default for unrecognized RFPs
 
     # Generate a task spec for each detected survey type
     for i, survey_type in enumerate(survey_types):
@@ -170,6 +185,8 @@ def _infer_terrain(rfp_lower: str) -> str:
         return "mountainous"
     if any(kw in rfp_lower for kw in ["bridge", "overpass", "viaduct"]):
         return "bridge_structure"
+    if any(kw in rfp_lower for kw in ["indoor", "server room", "warehouse", "building", "facility"]):
+        return "indoor"
     return "flat"
 
 
@@ -204,6 +221,38 @@ def _extract_project_name(rfp_text: str) -> str:
     return "Project name not extracted"
 
 
+def _build_capability_requirements(t: dict, jurisdiction: str) -> dict:
+    """Build capability_requirements from a task template."""
+    hard: dict = {
+        "sensors_required": t["sensors"],
+    }
+    if t.get("certifications"):
+        hard["certifications_required"] = t["certifications"]
+    if t.get("accuracy"):
+        hard["accuracy_required"] = t["accuracy"]
+    if t.get("indoor_capable"):
+        hard["indoor_capable"] = True
+
+    cap: dict = {"hard": hard}
+
+    # Delivery schema (if template provides one)
+    if "delivery_schema" in t:
+        cap["delivery_schema"] = t["delivery_schema"]
+        cap["qa_level"] = 1
+        # For schema-driven tasks, payload mirrors the schema
+        cap["payload"] = {"format": "json", "fields": list(t["delivery_schema"].get("required", []))}
+    else:
+        # Construction survey defaults
+        cap["soft"] = {
+            "preferred_deliverables": t["deliverables"],
+            "preferred_coordinate_system": "State Plane" if jurisdiction == "MI" else "UTM",
+            "preferred_datum": "NAD83(2011)",
+        }
+        cap["payload"] = {"format": "multi_file", "fields": t["deliverables"]}
+
+    return cap
+
+
 def _build_task_spec(
     survey_type: str,
     rfp_text: str,
@@ -218,6 +267,48 @@ def _build_task_spec(
     rfp_id = f"rfp_{hashlib.sha256(rfp_text[:200].encode()).hexdigest()[:12]}"
 
     templates = {
+        "env_sensing": {
+            "description": "Environmental monitoring — sensor readings at specified waypoints",
+            "task_category": "env_sensing",
+            "sensors": ["temperature", "humidity"],
+            "deliverables": ["JSON"],
+            "accuracy": {},
+            "certifications": [],
+            "budget_range": [50, 500],
+            "sla_days": 1,
+            "indoor_capable": True,
+            "delivery_schema": {
+                "description": "Waypoint readings with temperature and humidity",
+                "required": ["readings", "summary", "duration_seconds"],
+                "properties": {
+                    "readings": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "required": ["waypoint", "temperature_c", "humidity_pct", "timestamp"],
+                            "properties": {
+                                "temperature_c": {"type": "number", "minimum": -40, "maximum": 85},
+                                "humidity_pct": {"type": "number", "minimum": 0, "maximum": 100},
+                                "waypoint": {"type": "integer", "minimum": 1},
+                                "timestamp": {"type": "string"},
+                            },
+                        },
+                    },
+                    "summary": {"type": "string", "minLength": 1},
+                    "duration_seconds": {"type": "number", "minimum": 0},
+                },
+            },
+        },
+        "visual_inspection": {
+            "description": "Visual inspection — camera-based structural or condition assessment",
+            "task_category": "visual_inspection",
+            "sensors": ["camera", "visual"],
+            "deliverables": ["PDF", "GeoTIFF"],
+            "accuracy": {},
+            "certifications": ["faa_part_107"],
+            "budget_range": [500, 5000],
+            "sla_days": 3,
+        },
         "topographic": {
             "description": "Pre-construction topographic survey — aerial LiDAR corridor mapping with RTK-GPS control",
             "task_category": "site_survey",
@@ -296,22 +387,7 @@ def _build_task_spec(
     return {
         "description": t["description"],
         "task_category": t["task_category"],
-        "capability_requirements": {
-            "hard": {
-                "sensors_required": t["sensors"],
-                "certifications_required": t["certifications"],
-                "accuracy_required": t["accuracy"],
-            },
-            "soft": {
-                "preferred_deliverables": t["deliverables"],
-                "preferred_coordinate_system": "State Plane" if jurisdiction == "MI" else "UTM",
-                "preferred_datum": "NAD83(2011)",
-            },
-            "payload": {
-                "format": "multi_file",
-                "fields": t["deliverables"],
-            },
-        },
+        "capability_requirements": _build_capability_requirements(t, jurisdiction),
         "budget_ceiling": budget,
         "sla_seconds": t["sla_days"] * 86400,  # type: ignore[operator]
         "task_decomposition": {

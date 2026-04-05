@@ -544,24 +544,13 @@ const DEMO_TOOLS = [
 const DEMO_SYSTEM = `You are demonstrating the YAK ROBOTICS robot task marketplace.
 
 A buyer has submitted a task request. Your job is to run the full auction lifecycle:
-1. Read the RFP carefully. Determine the task_category:
-   - If it asks for temperature, humidity, environmental sensing → use task_category "env_sensing" with sensors_required ["temperature", "humidity"]
-   - If it asks for survey, LiDAR, topographic → use task_category "site_survey" with sensors_required ["aerial_lidar", "rtk_gps"]
-   - If it asks for inspection, visual, thermal → use task_category "visual_inspection"
-2. Post the task directly using auction_post_task with the correct task_category and capability_requirements. Do NOT call auction_process_rfp — post the task spec yourself based on the RFP.
-3. Collect bids from operators (auction_get_bids)
+1. Process the RFP to extract task specs (auction_process_rfp)
+2. Post each task to the marketplace (auction_post_task for each)
+3. Collect bids from operators (auction_get_bids for each)
 4. Review bids and identify winners (auction_review_bids)
 5. Award to recommended operator (auction_award_with_confirmation)
 6. Execute the task (auction_execute)
 7. Confirm delivery (auction_confirm_delivery)
-
-IMPORTANT for env_sensing tasks: use these exact capability_requirements:
-{
-  "hard": {"sensors_required": ["temperature", "humidity"], "indoor_capable": true},
-  "payload": {"format": "json", "fields": ["readings", "summary"]},
-  "qa_level": 1
-}
-Set budget_ceiling from the RFP budget. Set sla_seconds from the deadline (1 hour = 3600).
 
 After each tool call, briefly explain what happened in 1-2 sentences. Be concise.
 Use the site_info provided. This is a real auction engine with real and simulated operators.
