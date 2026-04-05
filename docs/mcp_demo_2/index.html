@@ -643,7 +643,21 @@ var DISCOVERY_CHAINS = [8453, 11155111];
 // fleet_provider: "yakrover" in hex
 var YAKROVER_HEX = '0x79616b726f766572';
 
-// ===== ROBOT DISCOVERY (direct subgraph query — no server needed) =====
+// Known YAK fleet robots — fallback when subgraph is down
+var KNOWN_ROBOTS = [
+  {
+    agent_id: '989',
+    chain_id: 11155111,
+    chain_name: 'Sepolia',
+    name: 'Tumbller Self-Balancing Robot',
+    description: 'ESP32-S3 two-wheeled robot. Temperature + humidity sensors. MCP-controllable.',
+    active: true,
+    mcp_endpoint: '',
+    mcp_tools: ['tumbller_move', 'tumbller_is_online', 'tumbller_get_temperature_humidity'],
+  },
+];
+
+// ===== ROBOT DISCOVERY (subgraph primary, RPC fallback) =====
 
 async function discoverRobots() {
   var status = document.getElementById('discoveryStatus');
@@ -656,6 +670,7 @@ async function discoverRobots() {
 
   var allRobots = [];
 
+  // Primary: subgraph query
   for (var i = 0; i < DISCOVERY_CHAINS.length; i++) {
     var chainId = DISCOVERY_CHAINS[i];
     var url = SUBGRAPH_URLS[chainId];
@@ -666,6 +681,41 @@ async function discoverRobots() {
       allRobots = allRobots.concat(robots);
     } catch (e) {
       console.warn('Subgraph query failed for chain ' + chainId + ':', e.message);
+    }
+  }
+
+  // Fallback: if subgraph returned nothing, check known robots via direct RPC
+  if (allRobots.length === 0) {
+    status.textContent = 'Subgraph unavailable — checking known robots via RPC...';
+    for (var k = 0; k < KNOWN_ROBOTS.length; k++) {
+      var known = KNOWN_ROBOTS[k];
+      try {
+        var wallet = await getAgentWallet(known.chain_id, known.agent_id);
+        if (wallet && wallet !== '0x0000000000000000000000000000000000000000') {
+          allRobots.push({
+            agent_id: known.agent_id,
+            chain_id: known.chain_id,
+            chain_name: known.chain_name,
+            name: known.name,
+            description: known.description,
+            active: known.active,
+            x402_support: false,
+            mcp_endpoint: known.mcp_endpoint,
+            mcp_tools: known.mcp_tools,
+            owner: '',
+            payment: {
+              usdc_wallet: wallet,
+              wallet_chain_id: null,
+              stripe_connect_id: null,
+            },
+          });
+        }
+      } catch (e) {
+        console.warn('RPC fallback failed for agent ' + known.agent_id + ':', e.message);
+      }
+    }
+    if (allRobots.length > 0) {
+      status.textContent = 'Found via RPC fallback (subgraph down)';
     }
   }
 
