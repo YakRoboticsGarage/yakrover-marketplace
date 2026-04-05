@@ -256,6 +256,18 @@ export default {
       return handleRelayUsdc(request, env, cors);
     }
 
+    if (url.pathname === "/api/commit-payment" && request.method === "POST") {
+      return handleCommitPayment(request, env, cors);
+    }
+
+    if (url.pathname === "/api/execute-payment" && request.method === "POST") {
+      return handleExecutePayment(request, env, cors);
+    }
+
+    if (url.pathname === "/api/payment-commitment" && request.method === "GET") {
+      return handleGetCommitment(url, env, cors);
+    }
+
     if (url.pathname === "/api/auction-feedback" && request.method === "POST") {
       return handleAuctionFeedback(request, env, cors);
     }
@@ -1424,4 +1436,340 @@ async function handleRelayUsdc(request, env, cors) {
       { status: 502, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
+}
+
+// --- Commit-on-hire payment (permit stored, executed later) ---
+
+async function handleCommitPayment(request, env, cors) {
+  if (!env.RELAY_PRIVATE_KEY) {
+    return new Response(
+      JSON.stringify({ error: "Payment relay not configured" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(
+      JSON.stringify({ error: "Invalid JSON" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  const {
+    request_id,
+    chain_id,
+    owner,
+    operator_wallet,
+    total_amount,
+    deadline,
+    v, r, s,
+  } = body;
+
+  // Validate all required fields
+  if (!request_id || !chain_id || !owner || !operator_wallet || !total_amount || !deadline || v === undefined || !r || !s) {
+    return new Response(
+      JSON.stringify({ error: "Missing required fields" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Validate chain
+  const usdcAddr = USDC_CONTRACTS[chain_id];
+  const rpcUrl = RPC_ENDPOINTS[chain_id];
+  if (!usdcAddr || !rpcUrl) {
+    return new Response(
+      JSON.stringify({ error: `Unsupported chain: ${chain_id}` }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Validate deadline is in the future with enough margin
+  const now = Math.floor(Date.now() / 1000);
+  const minDeadline = now + 300; // at least 5 min in the future
+  if (deadline < minDeadline) {
+    return new Response(
+      JSON.stringify({ error: "Permit deadline too soon. Must be at least 5 minutes in the future." }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Verify buyer has sufficient balance
+  try {
+    const { ethers } = await import("ethers");
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const usdc = new ethers.Contract(usdcAddr, ["function balanceOf(address) view returns (uint256)"], provider);
+    const balance = await usdc.balanceOf(owner);
+    if (balance < BigInt(total_amount)) {
+      return new Response(
+        JSON.stringify({
+          error: "Insufficient USDC balance",
+          balance: balance.toString(),
+          required: total_amount,
+        }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+  } catch (err) {
+    console.error("Balance check failed:", err);
+    // Continue anyway — balance may change by execution time
+  }
+
+  // Store the permit commitment in KV
+  const commitment = {
+    request_id,
+    chain_id,
+    owner: owner.toLowerCase(),
+    operator_wallet: operator_wallet.toLowerCase(),
+    platform_wallet: "0xe33356d0d16c107eac7da1fc7263350cbdb548e5",
+    total_amount,
+    deadline,
+    v, r, s,
+    status: "committed",
+    committed_at: new Date().toISOString(),
+    executed_at: null,
+    tx_hashes: null,
+  };
+
+  // TTL = seconds until deadline (auto-expire when permit expires)
+  const ttlSeconds = deadline - now;
+
+  if (env.RATE_LIMIT_KV) {
+    await env.RATE_LIMIT_KV.put(
+      `permit:${request_id}`,
+      JSON.stringify(commitment),
+      { expirationTtl: Math.max(ttlSeconds, 60) }
+    );
+  }
+
+  const totalBig = BigInt(total_amount);
+  const platformAmount = totalBig * 12n / 100n;
+  const operatorAmount = totalBig - platformAmount;
+
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      request_id,
+      status: "committed",
+      owner,
+      total_amount,
+      operator_amount: operatorAmount.toString(),
+      platform_amount: platformAmount.toString(),
+      deadline,
+      deadline_human: new Date(deadline * 1000).toISOString(),
+      time_remaining_seconds: deadline - now,
+      note: "Payment authorized but not executed. Funds remain in buyer wallet until delivery is accepted.",
+    }),
+    { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+  );
+}
+
+async function handleExecutePayment(request, env, cors) {
+  if (!env.RELAY_PRIVATE_KEY) {
+    return new Response(
+      JSON.stringify({ error: "Payment relay not configured" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(
+      JSON.stringify({ error: "Invalid JSON" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  const { request_id } = body;
+  if (!request_id) {
+    return new Response(
+      JSON.stringify({ error: "request_id required" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Retrieve stored commitment
+  if (!env.RATE_LIMIT_KV) {
+    return new Response(
+      JSON.stringify({ error: "KV not configured" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  const stored = await env.RATE_LIMIT_KV.get(`permit:${request_id}`);
+  if (!stored) {
+    return new Response(
+      JSON.stringify({ error: "No payment commitment found for this request_id. It may have expired." }),
+      { status: 404, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  const commitment = JSON.parse(stored);
+
+  // Validate commitment status
+  if (commitment.status === "executed") {
+    return new Response(
+      JSON.stringify({ error: "Payment already executed", tx_hashes: commitment.tx_hashes }),
+      { status: 409, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  if (commitment.status === "executing") {
+    return new Response(
+      JSON.stringify({ error: "Payment execution already in progress" }),
+      { status: 409, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Check permit hasn't expired
+  const now = Math.floor(Date.now() / 1000);
+  if (commitment.deadline < now) {
+    commitment.status = "expired";
+    await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: 3600 });
+    return new Response(
+      JSON.stringify({ error: "Permit has expired. Buyer must re-commit.", expired_at: new Date(commitment.deadline * 1000).toISOString() }),
+      { status: 410, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Mark as executing (prevent double-execution)
+  commitment.status = "executing";
+  await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
+
+  const { chain_id, owner, operator_wallet, platform_wallet, total_amount, deadline, v, r, s } = commitment;
+  const usdcAddr = USDC_CONTRACTS[chain_id];
+  const rpcUrl = RPC_ENDPOINTS[chain_id];
+  const totalBig = BigInt(total_amount);
+  const platformAmount = totalBig * 12n / 100n;
+  const operatorAmount = totalBig - platformAmount;
+
+  try {
+    const { ethers } = await import("ethers");
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const relayWallet = new ethers.Wallet(env.RELAY_PRIVATE_KEY, provider);
+
+    const usdc = new ethers.Contract(usdcAddr, USDC_ABI, relayWallet);
+
+    // Final balance check before execution
+    const balance = await usdc.balanceOf(owner);
+    if (balance < totalBig) {
+      commitment.status = "committed"; // Reset to committed so buyer can re-fund
+      await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
+      return new Response(
+        JSON.stringify({
+          error: "Buyer's USDC balance insufficient at execution time",
+          balance: balance.toString(),
+          required: total_amount,
+          note: "Commitment is still valid. Buyer needs to re-fund their wallet.",
+        }),
+        { status: 402, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Execute: permit + two transfers
+    const permitTx = await usdc.permit(owner, relayWallet.address, totalBig, deadline, v, r, s);
+    await permitTx.wait();
+
+    const opTx = await usdc.transferFrom(owner, operator_wallet, operatorAmount);
+    const opReceipt = await opTx.wait();
+
+    const platTx = await usdc.transferFrom(owner, platform_wallet, platformAmount);
+    const platReceipt = await platTx.wait();
+
+    const explorers = { 8453: "https://basescan.org", 1: "https://etherscan.io", 84532: "https://sepolia.basescan.org", 11155111: "https://sepolia.etherscan.io" };
+    const explorer = explorers[chain_id] || "https://etherscan.io";
+
+    // Update commitment to executed
+    commitment.status = "executed";
+    commitment.executed_at = new Date().toISOString();
+    commitment.tx_hashes = {
+      permit: permitTx.hash,
+      operator: opReceipt.hash,
+      platform: platReceipt.hash,
+    };
+    await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: 86400 * 30 }); // Keep for 30 days
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        request_id,
+        chain_id,
+        permit_tx: permitTx.hash,
+        operator_tx: opReceipt.hash,
+        platform_tx: platReceipt.hash,
+        operator_amount: operatorAmount.toString(),
+        platform_amount: platformAmount.toString(),
+        explorer,
+      }),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("Payment execution error:", err);
+    // Reset status so it can be retried
+    commitment.status = "committed";
+    await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: Math.max(commitment.deadline - now, 60) });
+
+    const msg = err.message || String(err);
+    const safeMsg = msg.includes("insufficient funds") ? "Relay wallet has insufficient ETH for gas"
+      : msg.includes("expired") ? "Permit has expired"
+      : msg.includes("invalid signature") ? "Invalid permit signature — buyer may need to re-sign"
+      : msg.includes("nonce") ? "Permit nonce mismatch — a newer permit may have been signed"
+      : "Payment execution failed — will retry on next attempt";
+    return new Response(
+      JSON.stringify({ error: safeMsg, retryable: true }),
+      { status: 502, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+}
+
+async function handleGetCommitment(url, env, cors) {
+  const requestId = url.searchParams.get("request_id");
+  if (!requestId) {
+    return new Response(
+      JSON.stringify({ error: "request_id required" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  if (!env.RATE_LIMIT_KV) {
+    return new Response(
+      JSON.stringify({ status: "unknown" }),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  const stored = await env.RATE_LIMIT_KV.get(`permit:${requestId}`);
+  if (!stored) {
+    return new Response(
+      JSON.stringify({ status: "not_found", note: "No commitment found. It may have expired." }),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  const commitment = JSON.parse(stored);
+  const now = Math.floor(Date.now() / 1000);
+
+  // Don't expose the signature in the status response
+  return new Response(
+    JSON.stringify({
+      request_id: commitment.request_id,
+      status: commitment.status,
+      chain_id: commitment.chain_id,
+      owner: commitment.owner,
+      operator_wallet: commitment.operator_wallet,
+      total_amount: commitment.total_amount,
+      deadline: commitment.deadline,
+      deadline_human: new Date(commitment.deadline * 1000).toISOString(),
+      time_remaining_seconds: Math.max(0, commitment.deadline - now),
+      expired: commitment.deadline < now,
+      committed_at: commitment.committed_at,
+      executed_at: commitment.executed_at,
+      tx_hashes: commitment.tx_hashes,
+    }),
+    { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+  );
 }

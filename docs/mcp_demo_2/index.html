@@ -1203,6 +1203,29 @@ function acceptDelivery() {
   selectedQALevel = selected ? parseInt(selected.value) : 1;
 
   var container = document.querySelector('.container');
+
+  // If USDC payment was already committed, show release button instead of payment card
+  if (window._paymentCommitment) {
+    var commitCard = document.getElementById('commitmentCard');
+    if (commitCard) {
+      commitCard.innerHTML =
+        '<h3 style="color:var(--green)">Delivery Accepted — Release Payment</h3>' +
+        '<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">' +
+          'QA passed. Delivery verified. Your committed payment will now be executed on-chain.' +
+        '</div>' +
+        '<div style="max-width:320px;margin:0 auto 16px;text-align:left">' +
+          '<div class="payment-row"><span class="payment-label">Operator receives</span><span class="payment-value" style="color:var(--green)">$' + window._paymentCommitment.operator_amount.toFixed(4) + ' USDC</span></div>' +
+          '<div class="payment-row"><span class="payment-label">Platform commission</span><span class="payment-value">$' + window._paymentCommitment.platform_amount.toFixed(4) + ' USDC</span></div>' +
+        '</div>' +
+        '<button class="pay-btn pay-btn-usdc release-payment-btn" onclick="releasePayment()">Release Payment (gasless)</button>' +
+        '<div style="font-size:11px;color:var(--slate);margin-top:8px">Platform submits the transaction. No gas needed from your wallet.</div>';
+      commitCard.style.borderColor = 'var(--green)';
+      commitCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    return;
+  }
+
+  // No prior commitment — show the payment card (Stripe or fresh USDC)
   showPaymentCard(container);
   document.getElementById('paymentCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -1252,7 +1275,7 @@ function showPaymentCard(container) {
       '</button>' +
       '<button class="pay-btn pay-btn-usdc" onclick="payWithUSDC(\'' + escapeHtml(usdcWallet || '') + '\')" ' +
         (usdcEnabled ? 'title="Gasless — platform pays gas. Base + Ethereum mainnet supported."' : 'disabled title="Operator has no USDC wallet"') + '>' +
-        'Pay $0.01 USDC (gasless)' +
+        'Commit $0.01 USDC (gasless)' +
       '</button>' +
     '</div>';
 
@@ -1456,17 +1479,18 @@ async function payWithUSDC(operatorWallet) {
     var sig = await signer.signTypedData(domain, types, permitValue);
     var splitSig = ethers.Signature.from(sig);
 
-    // Send to relay worker (platform pays gas)
-    btn.textContent = 'Relaying transaction (platform pays gas)...';
+    // Store permit as payment commitment (no money moves yet)
+    btn.textContent = 'Committing payment...';
+    var commitRequestId = 'req_' + Date.now();
 
-    var relayRes = await fetch(WORKER_BASE + '/api/relay-usdc', {
+    var commitRes = await fetch(WORKER_BASE + '/api/commit-payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        request_id: commitRequestId,
         chain_id: chainId,
         owner: buyerAddr,
         operator_wallet: operatorWallet,
-        platform_wallet: PLATFORM_WALLET,
         total_amount: totalUnits.toString(),
         deadline: deadline,
         v: splitSig.v,
@@ -1475,30 +1499,27 @@ async function payWithUSDC(operatorWallet) {
       }),
     });
 
-    var relayData = await relayRes.json();
+    var commitData = await commitRes.json();
 
-    if (!relayRes.ok || relayData.error) {
-      btn.textContent = relayData.error || 'Relay failed';
+    if (!commitRes.ok || commitData.error) {
+      btn.textContent = commitData.error || 'Commit failed';
       btn.disabled = false;
       return;
     }
 
-    // Show success
-    var explorer = relayData.explorer;
-    var opAmount = Number(BigInt(relayData.operator_amount)) / 1000000;
-    var platAmount = Number(BigInt(relayData.platform_amount)) / 1000000;
-
-    showUsdcSuccess({
-      operator_tx: relayData.operator_tx,
-      platform_tx: relayData.platform_tx,
-      operator_wallet: operatorWallet,
-      platform_wallet: PLATFORM_WALLET,
-      operator_amount: opAmount,
-      platform_amount: platAmount,
-      explorer: explorer,
+    // Store the request_id for later execution
+    window._paymentCommitment = {
+      request_id: commitRequestId,
+      chain_id: chainId,
       chain_name: chainName,
-      gasless: true,
-    });
+      operator_wallet: operatorWallet,
+      operator_amount: Number(BigInt(commitData.operator_amount)) / 1000000,
+      platform_amount: Number(BigInt(commitData.platform_amount)) / 1000000,
+      deadline: commitData.deadline,
+    };
+
+    // Show commitment confirmation (money hasn't moved)
+    showPaymentCommitted(commitData, chainName);
 
   } catch (err) {
     console.error('USDC payment error:', err);
@@ -1507,6 +1528,95 @@ async function payWithUSDC(operatorWallet) {
       btn.textContent = 'Signature rejected';
     }
     btn.disabled = false;
+  }
+}
+
+function showPaymentCommitted(data, chainName) {
+  var container = document.querySelector('.container');
+  var pc = document.getElementById('paymentCard');
+  if (pc) pc.remove();
+
+  var card = document.createElement('div');
+  card.className = 'payment-card';
+  card.id = 'commitmentCard';
+  card.style.borderColor = 'var(--orange)';
+
+  var timeRemaining = Math.floor(data.time_remaining_seconds / 60);
+  var opAmount = (Number(BigInt(data.operator_amount)) / 1000000).toFixed(4);
+  var platAmount = (Number(BigInt(data.platform_amount)) / 1000000).toFixed(4);
+
+  card.innerHTML =
+    '<h3 style="color:var(--orange)">Payment Committed</h3>' +
+    '<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">' +
+      'Your payment is authorized but <strong>no money has moved</strong>. ' +
+      'Funds remain in your wallet until you accept the delivery.' +
+    '</div>' +
+    '<div style="max-width:320px;margin:0 auto 12px;text-align:left">' +
+      '<div class="payment-row"><span class="payment-label">Status</span><span class="payment-value" style="color:var(--orange)">Committed (pending delivery)</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Amount</span><span class="payment-value">$' + (Number(data.total_amount) / 1000000).toFixed(4) + ' USDC</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Operator will receive</span><span class="payment-value">$' + opAmount + '</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Platform commission</span><span class="payment-value">$' + platAmount + '</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Chain</span><span class="payment-value">' + escapeHtml(chainName) + '</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Expires in</span><span class="payment-value">' + timeRemaining + ' minutes</span></div>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--slate);margin-bottom:12px">' +
+      'The robot will now execute the task. After delivery and QA validation, click "Release Payment" to complete the transaction.' +
+    '</div>' +
+    '<div style="padding:10px;background:var(--navy);border-radius:4px;font-size:11px;color:var(--slate)">' +
+      'Waiting for delivery + QA verification before payment can be released...' +
+    '</div>';
+
+  container.insertBefore(card, document.querySelector('.footer'));
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function releasePayment() {
+  var commitment = window._paymentCommitment;
+  if (!commitment) {
+    alert('No payment commitment found. Please commit payment first.');
+    return;
+  }
+
+  var btn = document.querySelector('.release-payment-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Releasing payment...';
+  }
+
+  try {
+    var execRes = await fetch(WORKER_BASE + '/api/execute-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ request_id: commitment.request_id }),
+    });
+
+    var execData = await execRes.json();
+
+    if (!execRes.ok || execData.error) {
+      if (btn) {
+        btn.textContent = execData.error || 'Execution failed';
+        btn.disabled = false;
+      }
+      return;
+    }
+
+    showUsdcSuccess({
+      operator_tx: execData.operator_tx,
+      platform_tx: execData.platform_tx,
+      operator_wallet: commitment.operator_wallet,
+      platform_wallet: PLATFORM_WALLET,
+      operator_amount: commitment.operator_amount,
+      platform_amount: commitment.platform_amount,
+      explorer: execData.explorer,
+      chain_name: commitment.chain_name,
+      gasless: true,
+    });
+  } catch (err) {
+    console.error('Release payment error:', err);
+    if (btn) {
+      btn.textContent = 'Network error — try again';
+      btn.disabled = false;
+    }
   }
 }
 
