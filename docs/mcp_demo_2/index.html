@@ -538,7 +538,7 @@
       <button onclick="discoverRobots()" style="background:var(--navy-mid);color:var(--slate-light);border:none;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0">Refresh</button>
     </label>
     <div id="discoveryStatus" style="font-size:13px;color:var(--slate-light);padding:8px 0">
-      Checking for registered robots on Base...
+      Discovering YAK fleet robots...
     </div>
     <div id="robotCards" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
   </div>
@@ -751,16 +751,23 @@ async function querySubgraph(url, chainId) {
   var chainName = chainId === 8453 ? 'Base' : chainId === 11155111 ? 'Sepolia' : chainId === 1 ? 'Ethereum' : 'Chain ' + chainId;
 
   try {
+    // 8-second timeout — subgraph can hang when indexers are down
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
+
     var res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: robotMetaQuery }),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
+
     if (!res.ok) throw new Error('HTTP ' + res.status);
     var data = await res.json();
 
     if (data.errors) {
-      console.warn('Subgraph metadata query error:', data.errors[0].message);
+      console.warn('Subgraph error for chain ' + chainId + ':', data.errors[0].message);
       return [];
     }
 
