@@ -173,19 +173,24 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - [x] CI fully green (lint, mypy 0 errors, 264 tests)
 - [x] Repo renamed to yakrover-marketplace
 
-### What's blocking
-- [ ] Production Stripe account + `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
-- [ ] One operator completes Stripe Connect Express onboarding
-- [x] ~~`PINATA_JWT` worker secret for IPFS uploads~~ — DONE (verified working, real CID returned)
+### What's blocking v1.1 completion
 - [ ] 8004 team: `robot_submit_bid` + `robot_execute_task` MCP tools (plan reviewed in PR #5)
-- [ ] Robot registered on Base mainnet (8004 team — multi-chain Stage 6 in their plan)
+- [ ] Robot registered on Base or Ethereum mainnet (8004 team — multi-chain Stage 6)
+- [ ] End-to-end test: real robot bids → real execution → real sensor data → IPFS upload → schema QA → USDC payment
 - [ ] After 8004 PR #4 merges: unskip 4 fakerover bid tests
+
+### Deferred to next phase (after USDC + robot execution confirmed working)
+- [ ] Production Stripe: switch `sk_test_` → `sk_live_`, operator completes real Connect onboarding
+- [ ] Stripe payment confirmation visible to robot/operator (robot doesn't currently verify payment)
+- [ ] Operator Stripe Connect ID stored in robot agent card (currently hardcoded in demo)
+- [ ] Stripe webhook for payment status tracking
 
 ### Dropped from earlier plans
 - ~~x402 middleware~~ — wrong tool for marketplace settlement (pay-to-access, not escrow)
 - ~~Splits.org for demo~~ — direct transfer simpler; Splits for production scale
 - ~~Wallet funding before auction~~ — payment is the climax, not the prelude
 - ~~Internal wallet ledger for real payments~~ — Stripe/blockchain IS the ledger
+- ~~25/75 payment split~~ — simplified to full payment on delivery
 
 ---
 

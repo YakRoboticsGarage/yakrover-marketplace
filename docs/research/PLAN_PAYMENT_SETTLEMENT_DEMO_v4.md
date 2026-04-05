@@ -175,29 +175,43 @@ Browser (yakrobot.bid/mcp-demo-2)
 ### Done
 | What | Status |
 |------|--------|
-| Browser robot discovery (subgraph + getAgentWallet RPC) | ✅ Live |
+| Browser robot discovery (subgraph + getAgentWallet RPC + fallback) | ✅ Live |
+| Ethereum mainnet + Base + Sepolia in discovery chains | ✅ Live |
 | Auction via MCP server + Claude tool_use | ✅ Live (needs tunnel) |
-| IPFS delivery upload (Pinata via worker) | ✅ Built (needs PINATA_JWT secret) |
-| USDC wallet connect + two-transfer settlement | ✅ Built |
-| Stripe Checkout endpoint with 12% application_fee | ✅ Built |
-| Platform USDC wallet configured | ✅ 0xe333...8e5 |
-| Feedback loop (demo → KV + GitHub issue → research agent) | ✅ Live (issue #2 verified) |
-| Worker deployed with GITHUB_TOKEN | ✅ Done |
-| Robot operator onboarding guide | ✅ Published |
+| Discovered robot injected into auction prompt | ✅ Live |
+| IPFS delivery upload (Pinata via worker) | ✅ Live (PINATA_JWT configured) |
+| Gasless USDC (ERC-2612 permit relay) | ✅ Live |
+| Commit-on-hire (permit on award, execute on delivery) | ✅ Live |
+| Multi-wallet (Rabby, MetaMask, Coinbase Wallet) | ✅ Live |
+| Multi-chain (Eth mainnet, Base, Sepolia) | ✅ Live |
+| Relay wallet funded on all chains | ✅ Live |
+| Stripe Checkout (test mode, $1.00, 88/12 split) | ✅ Live |
+| Schema-driven delivery QA | ✅ Live |
+| 4-level buyer-configurable QA (none → schema → standards → PLS) | ✅ Live |
+| Feedback loop (demo → KV + GitHub issue → research agent) | ✅ Live |
+| Platform USDC wallet | ✅ 0xe333...8e5 |
+| All worker secrets configured | ✅ ANTHROPIC, GITHUB, RELAY, PINATA, STRIPE (test) |
 
-### Remaining (blocked on external parties)
-| Phase | What | Days | Blocker |
-|-------|------|------|---------|
-| **Stripe production keys** | Add `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` to worker | 0.5 | Need production Stripe account |
-| **Operator Stripe Connect** | One operator completes Express onboarding | 0.5 | Need operator action |
-| ~~PINATA_JWT~~ | ~~Add Pinata API key to worker~~ | ~~0.5~~ | DONE — verified, real CID returned |
-| **Robot bid/execute tools** | 8004 team adds `robot_submit_bid`, `robot_execute_task` | 2-3 | Onboarding guide sent |
-| **Base mainnet registration** | Register robot on Base with `fleet_provider: yakrover` | 0.5 | 8004 team |
-| **Worker redeploy** | Deploy with all secrets configured | 0.5 | After above secrets added |
+### Current phase: waiting on 8004 team
+| What | Blocker |
+|------|---------|
+| **Robot MCP tools** (`robot_submit_bid`, `robot_execute_task`) | Anuraj — PR #5 plan reviewed |
+| **Robot registration on mainnet** (Eth or Base) | Anuraj — multi-chain Stage 6 |
+| **End-to-end test**: real bid → real execution → real sensor data → IPFS → QA → USDC payment | Blocked on above two |
 
-### Future (not blocking demo)
-| Phase | What | Days |
-|-------|------|------|
-| Escrow contract on Base | On-chain hold/release for $50+ tasks | 5-7 |
+### Next phase: after USDC + robot execution confirmed working
+| What | Notes |
+|------|-------|
+| Stripe production (`sk_live_`) | Replace test key with live key |
+| Operator Stripe Connect onboarding | Anuraj or robot operator completes real KYC |
+| Stripe Connect ID in robot agent card | Currently hardcoded `acct_1TEjjLC2lXDckgmS` in demo |
+| Stripe payment confirmation to operator | Robot doesn't currently verify Stripe payment |
+| Stripe webhook for status tracking | `STRIPE_WEBHOOK_SECRET` ready, endpoint built, needs registration |
+
+### Future
+| What | Notes |
+|------|-------|
+| Escrow contract on Base/Ethereum | On-chain hold/release for high-value tasks (>$10K) |
+| Splits.org for multi-operator distribution | Production-scale revenue splitting |
 | Fiat-to-USDC checkout | Research topic R-024 | TBD |
 | Splits.org integration | Production-scale multi-operator distribution | 2-3 |
