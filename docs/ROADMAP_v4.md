@@ -133,11 +133,11 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 
 | | |
 |---|---|
-| **Milestone** | End-to-end auction + USDC payment confirmed working on Base Sepolia (2026-04-05) |
+| **Milestone 2** | Base mainnet USDC payment with real ERC-8004 robot + correct user journey (2026-04-05) |
 | **Serves** | Marco (buyer), operators, investors (proof of real settlement) |
 | **Goal** | Real-money payment through a real auction. Both Stripe (fiat) and USDC (crypto). |
 | **Demo** | https://yakrobot.bid/mcp-demo-2/ |
-| **Revert tag** | `v1.1-milestone-payment-e2e` — revert to this if future UI changes break functionality |
+| **Revert tags** | `v1.1-milestone-payment-e2e` (Sepolia), `v1.1-milestone-base-mainnet` (mainnet + UX) |
 
 > **Detailed plan:** `docs/research/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`
 
@@ -158,13 +158,18 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - **Feedback:** Demo → Cloudflare KV + GitHub issue → research agent processes → improvement proposals.
 
 ### What's done (confirmed working 2026-04-05)
-- [x] Browser robot discovery (subgraph + getAgentWallet RPC)
+- [x] Browser robot discovery (subgraph + getAgentWallet RPC + agentWallet metadata)
 - [x] Gasless USDC payment (ERC-2612 permit + relay, platform pays gas)
 - [x] Commit-on-hire: buyer signs permit on award, money moves on delivery acceptance
-- [x] **End-to-end USDC payment on Base Sepolia** — permit signed, committed, released, USDC transferred to operator + platform
+- [x] **End-to-end USDC payment on Base Sepolia** — permit signed, committed, released, USDC transferred
+- [x] **End-to-end USDC payment on Base mainnet** — real ERC-8004 robot (FakeRover-Finland-01, agent #38801), real USDC
+- [x] Two-phase demo: auction stops after award → buyer commits payment → robot executes → QA → release
+- [x] Correct user journey: data payload blurred until payment released
+- [x] Resumable payment execution (permit/transfer steps tracked individually, survives partial failures)
 - [x] Multi-wallet: Rabby, MetaMask, Coinbase Wallet
 - [x] Multi-chain: Base mainnet, Ethereum mainnet, Base Sepolia, Eth Sepolia
 - [x] Relay wallet funded (0x4b59...0d9) on all 4 chains
+- [x] Worker-safe RPC endpoints (1rpc.io — Base/Eth public RPCs blocked CF Workers)
 - [x] Stripe Checkout endpoint with 12% application_fee
 - [x] IPFS delivery upload (Pinata via worker)
 - [x] Schema-driven delivery QA: task spec includes delivery_schema, robot self-checks, QA validates same schema
@@ -178,8 +183,8 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - [x] Repo renamed to yakrover-marketplace
 
 ### What's blocking v1.1 completion
+- [x] ~~Robot registered on Base or Ethereum mainnet~~ — FakeRover-Finland-01 on Base (agent #38801)
 - [ ] 8004 team: `robot_submit_bid` + `robot_execute_task` MCP tools (plan reviewed in PR #5)
-- [ ] Robot registered on Base or Ethereum mainnet (8004 team — multi-chain Stage 6)
 - [ ] End-to-end test: real robot bids → real execution → real sensor data → IPFS upload → schema QA → USDC payment
 - [ ] After 8004 PR #4 merges: unskip 4 fakerover bid tests
 
