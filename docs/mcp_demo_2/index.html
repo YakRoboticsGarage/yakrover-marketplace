@@ -527,8 +527,8 @@
 
   <div class="header">
     <div class="logo">YAK ROBOTICS</div>
-    <h1>Live Auction + Payment</h1>
-    <p>Real robots on Base. Real auction. Real payment settlement.</p>
+    <h1>Hire a Robot</h1>
+    <p>Give a task. Get a bid. Don't delay.</p>
   </div>
 
   <!-- Step 1: Robot Discovery -->
@@ -668,6 +668,8 @@ async function discoverRobots() {
   cards.innerHTML = '';
   discoveredRobots = [];
 
+  try { // Wrap entire function to catch any silent errors
+
   var allRobots = [];
 
   // Primary: subgraph queries (run ALL in parallel with 5s timeout each)
@@ -747,6 +749,22 @@ async function discoverRobots() {
     renderDiscoveredRobots(testnetRobots);
   } else {
     showNoRobots();
+  }
+
+  } catch (err) {
+    console.error('Discovery error:', err);
+    status.textContent = 'Discovery error — showing known robots';
+    status.style.color = '#fca5a5';
+    // Last resort: show known robots without wallet verification
+    discoveredRobots = KNOWN_ROBOTS.map(function(kr) {
+      return {
+        agent_id: kr.agent_id, chain_id: kr.chain_id, chain_name: kr.chain_name,
+        name: kr.name, description: kr.description, active: kr.active,
+        x402_support: false, mcp_endpoint: kr.mcp_endpoint, mcp_tools: kr.mcp_tools,
+        owner: '', payment: { usdc_wallet: null, wallet_chain_id: null, stripe_connect_id: null },
+      };
+    });
+    renderDiscoveredRobots(discoveredRobots);
   }
 }
 
