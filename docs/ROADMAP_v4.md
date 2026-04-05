@@ -176,7 +176,7 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 ### What's blocking
 - [ ] Production Stripe account + `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
 - [ ] One operator completes Stripe Connect Express onboarding
-- [ ] `PINATA_JWT` worker secret for IPFS uploads
+- [x] ~~`PINATA_JWT` worker secret for IPFS uploads~~ — DONE (verified working, real CID returned)
 - [ ] 8004 team: `robot_submit_bid` + `robot_execute_task` MCP tools (plan reviewed in PR #5)
 - [ ] Robot registered on Base mainnet (8004 team — multi-chain Stage 6 in their plan)
 - [ ] After 8004 PR #4 merges: unskip 4 fakerover bid tests
@@ -186,6 +186,35 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - ~~Splits.org for demo~~ — direct transfer simpler; Splits for production scale
 - ~~Wallet funding before auction~~ — payment is the climax, not the prelude
 - ~~Internal wallet ledger for real payments~~ — Stripe/blockchain IS the ledger
+
+---
+
+## v1.2 — Platform Administration (PLANNED)
+
+| | |
+|---|---|
+| **Timeline** | After v1.1 demo is complete |
+| **Serves** | Platform operators (us) |
+| **Goal** | Operational runbook, key management, wallet monitoring, service health dashboard. |
+
+> **Research:** R-032 (admin console), R-033 (secret management)
+
+### Current operational inventory
+| Category | Items | Management |
+|----------|-------|-----------|
+| Worker secrets | ANTHROPIC_API_KEY, GITHUB_TOKEN, RELAY_PRIVATE_KEY, PINATA_JWT, STRIPE_SECRET_KEY (pending), STRIPE_WEBHOOK_SECRET (pending) | Cloudflare dashboard / `wrangler secret put` |
+| On-chain wallets | Platform (`0xe333...8e5`), Relay (`0x4b59...0d9`) | Manual funding, no balance alerts |
+| External services | Stripe, Pinata, Cloudflare Workers, here.now, The Graph subgraph | Separate dashboards, no unified monitoring |
+| Scheduled agents | Daily research (9am), Daily docs-sync + code review (7pm) | claude.ai/code/scheduled |
+| Domains | yakrobot.bid (here.now + Cloudflare), mcp.yakrobot.bid (tunnel, DNS pending) | Porkbun + here.now |
+
+### What's needed
+- [ ] Operational runbook: how to rotate each secret, fund wallets, deploy worker
+- [ ] Relay wallet balance monitoring (ETH runs out = payments stop)
+- [ ] Service health endpoint aggregation (/api/health on worker, subgraph status, etc.)
+- [ ] Key rotation strategy per secret (frequency, procedure, who has access)
+- [ ] Production: KMS-backed signing for relay wallet (not env var)
+- [ ] Admin dashboard or at minimum a status page
 
 ---
 

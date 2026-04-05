@@ -190,7 +190,7 @@ Browser (yakrobot.bid/mcp-demo-2)
 |-------|------|------|---------|
 | **Stripe production keys** | Add `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` to worker | 0.5 | Need production Stripe account |
 | **Operator Stripe Connect** | One operator completes Express onboarding | 0.5 | Need operator action |
-| **PINATA_JWT** | Add Pinata API key to worker for IPFS uploads | 0.5 | Need Pinata account |
+| ~~PINATA_JWT~~ | ~~Add Pinata API key to worker~~ | ~~0.5~~ | DONE — verified, real CID returned |
 | **Robot bid/execute tools** | 8004 team adds `robot_submit_bid`, `robot_execute_task` | 2-3 | Onboarding guide sent |
 | **Base mainnet registration** | Register robot on Base with `fleet_provider: yakrover` | 0.5 | 8004 team |
 | **Worker redeploy** | Deploy with all secrets configured | 0.5 | After above secrets added |

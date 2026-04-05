@@ -137,7 +137,7 @@ All four follow the [skill-creator-springett](https://github.com/bglek/skill-cre
 
 - **35 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator compliance, agreement generation, event tracking, feedback
 - **278 tests** passing (all CI checks green: lint, mypy, pytest)
-- **178 commits** across the project
+- **180 commits** across the project
 - **42 research topics** in automated research roadmap (5 completed, 23 improvement proposals)
 - **Live payment demo** at yakrobot.bid/mcp-demo-2 — schema-driven delivery QA, commit-on-hire gasless USDC, Stripe Checkout, real robot discovery, IPFS delivery
 - **3,243 line YAML** product ontology covering the entire product

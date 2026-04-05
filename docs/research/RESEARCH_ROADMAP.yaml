@@ -340,6 +340,27 @@ topics:
     estimated_sessions: 1
     depends_on: [R-027]
 
+  # ===== PLATFORM ADMINISTRATION =====
+
+  - id: R-032
+    title: "Platform admin console — key management, wallet monitoring, service health"
+    module: M34_admin_console
+    hypothesis: "The platform currently has 6 worker secrets, 2 on-chain wallets, and 5+ external service accounts scattered across Cloudflare dashboard, .env files, and browser bookmarks. A centralized admin console or at minimum a documented operational runbook would reduce the risk of key rotation failures, depleted gas wallets, and expired API tokens."
+    status: queued
+    priority: high
+    estimated_sessions: 2
+    depends_on: []
+    notes: "Current inventory: (1) Worker secrets: ANTHROPIC_API_KEY, GITHUB_TOKEN, RELAY_PRIVATE_KEY, PINATA_JWT, STRIPE_SECRET_KEY (pending), STRIPE_WEBHOOK_SECRET (pending). (2) Wallets: platform 0xe333...8e5, relay 0x4b59...0d9 — need ETH monitoring for gas. (3) External: Stripe, Pinata, Cloudflare, here.now, The Graph. Research: (a) What does a production admin dashboard need? (b) Key rotation strategy for each secret. (c) Wallet balance alerting (relay runs out of ETH = payments stop). (d) Health check endpoints for each service. (e) Runbook vs dashboard — what's appropriate at current scale?"
+
+  - id: R-033
+    title: "Secret management and key rotation for production marketplace"
+    module: M34_admin_console
+    hypothesis: "Cloudflare Worker secrets have no rotation mechanism — changing a key means running wrangler secret put again. For production with real money, we may need: (a) automated key rotation, (b) audit log of who changed what, (c) separation of duties (deploy key vs payment key), (d) KMS-backed signing for the relay wallet."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-032]
+
   # ===== COMPETITIVE / ADJACENT PRODUCTS =====
 
   - id: R-026
