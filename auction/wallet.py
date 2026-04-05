@@ -31,7 +31,7 @@ except ImportError:
     pass
 
 # Valid entry_type values
-VALID_ENTRY_TYPES = frozenset(["reservation_25", "delivery_75", "release", "credit", "refund", "fund"])
+VALID_ENTRY_TYPES = frozenset(["payment", "credit", "refund", "fund", "reservation_25", "delivery_75", "release"])
 
 
 # ---------------------------------------------------------------------------

@@ -5,7 +5,7 @@ and orchestrates the full auction lifecycle: post -> bid -> accept ->
 execute -> deliver -> verify -> settle.
 
 v0.5 additions: re-pooling on rejection/abandonment/provider-cancel,
-wallet ledger integration (25%/75% split), reputation tracking,
+wallet ledger integration, reputation tracking,
 auto-accept timer, and SLA timeout enforcement.
 
 v1.0 additions: optional SQLite persistence (SyncTaskStore), optional
@@ -405,10 +405,8 @@ class AuctionEngine:
             raise KeyError(f"Unknown request_id: {request_id}")
         return self._tasks[request_id]
 
-    @staticmethod
-    def _reservation(price: Decimal) -> Decimal:
-        """Calculate 25% reservation amount with standard rounding."""
-        return (price * Decimal("0.25")).quantize(Decimal("0.01"))
+    # Reservation/escrow removed — full payment on delivery only.
+    # Reserve + escrow to be added in a later version per roadmap.
 
     # ------------------------------------------------------------------
     # Re-pooling helpers (v0.5)
@@ -424,15 +422,7 @@ class AuctionEngine:
         # Enforce max re-pool rounds (Security M-1)
         if record.bid_round >= MAX_REPOOL_ROUNDS:
             self._transition(record, TaskState.WITHDRAWN, f"max re-pool rounds ({MAX_REPOOL_ROUNDS}) exceeded")
-            # Refund any reservation
-            if self.wallet is not None:
-                try:
-                    reservation = self._reservation(record.task.budget_ceiling)
-                    self.wallet.credit(
-                        "buyer", reservation, record.request_id, "refund", note="Refund: max re-pool rounds exceeded"
-                    )
-                except Exception:
-                    pass  # Wallet may not have been debited
+            # No reservation to refund — payment only happens on delivery
             return {
                 "request_id": record.request_id,
                 "state": record.state.value,
@@ -758,7 +748,7 @@ class AuctionEngine:
     def accept_bid(self, request_id: str, robot_id: str) -> dict:
         """Accept a bid, transition BIDDING -> BID_ACCEPTED.
 
-        v0.5: If wallet is present, checks balance and debits 25%
+        Accepts the winning bid. Payment happens on delivery confirmation.
         reservation. Notifies losing bidders and starts auto-accept timer.
         """
         record = self._get_record(request_id)
@@ -779,18 +769,7 @@ class AuctionEngine:
         if not verify_bid(bid, robot.signing_key):
             raise ValueError(f"Bid signature verification failed for {robot_id}")
 
-        # Wallet balance check and 25% reservation
-        reservation = self._reservation(bid.price)
-        if self.wallet is not None:
-            if not self.wallet.check_balance("buyer", reservation):
-                raise InsufficientBalance("buyer", reservation, self.wallet.get_balance("buyer"))
-            self.wallet.debit(
-                "buyer", reservation, request_id, "reservation_25", note=f"25% reservation for {robot_id}"
-            )
-            log("PAYMENT", f"${reservation} debited (25% reservation) from buyer wallet")
-        else:
-            log("PAYMENT", f"(stub) Would debit ${reservation} (25% reservation) from buyer wallet")
-
+        # No upfront payment — full settlement on delivery confirmation
         record.winning_bid = bid
 
         # BIDDING -> BID_ACCEPTED
@@ -806,18 +785,13 @@ class AuctionEngine:
         # Start auto-accept timer
         self._start_auto_accept_timer(record)
 
-        payment_status = "debited" if self.wallet is not None else "stub_logged"
-
         return {
             "request_id": request_id,
             "state": record.state.value,
             "winning_robot": robot_id,
             "agreed_price": str(bid.price),
             "sla_commitment_seconds": bid.sla_commitment_seconds,
-            "payment_reservation": {
-                "amount": str(reservation),
-                "status": payment_status,
-            },
+            "payment": "on_delivery",
             "next_action": "Call auction_execute(request_id) to dispatch the task to the winning robot.",
             "next_tool": "auction_execute",
         }
@@ -862,15 +836,7 @@ class AuctionEngine:
             # IN_PROGRESS -> ABANDONED
             self._transition(record, TaskState.ABANDONED, f"SLA timeout ({record.task.sla_seconds}s)")
 
-            # Refund 25% reservation
-            reservation = self._reservation(winning_bid.price)
-            if self.wallet is not None:
-                self.wallet.credit(
-                    "buyer", reservation, request_id, "refund", note=f"25% refund after {winning_bid.robot_id} timeout"
-                )
-                log("PAYMENT", f"${reservation} refunded (25% reservation) to buyer wallet")
-            else:
-                log("PAYMENT", f"(stub) Would refund ${reservation} (25% reservation) to buyer wallet")
+            # No reservation to refund — payment only on delivery
 
             # Record reputation
             if self.reputation is not None:
@@ -924,7 +890,7 @@ class AuctionEngine:
     def confirm_delivery(self, request_id: str) -> dict:
         """Verify delivered payload, transition DELIVERED -> VERIFIED -> SETTLED.
 
-        v0.5: Cancels auto-accept timer, debits 75% from buyer, credits
+        Cancels auto-accept timer, debits full amount from buyer, credits
         operator, and records reputation outcome.
         """
         record = self._get_record(request_id)
@@ -963,14 +929,12 @@ class AuctionEngine:
         # DELIVERED -> VERIFIED
         self._transition(record, TaskState.VERIFIED, "agent confirmed")
 
-        # Payment — 75% delivery debit + operator credit
+        # Full payment on delivery confirmation (no upfront reservation)
         agreed_price = record.winner.price
-        delivery_payment = (agreed_price * Decimal("0.75")).quantize(Decimal("0.01"))
 
         if self.wallet is not None:
-            self.wallet.debit("buyer", delivery_payment, request_id, "delivery_75", note="75% delivery payment")
-            log("PAYMENT", f"${delivery_payment} debited (75% delivery) from buyer wallet")
-            # Credit full amount to robot operator
+            self.wallet.debit("buyer", agreed_price, request_id, "payment", note="Full payment on delivery")
+            log("PAYMENT", f"${agreed_price} debited from buyer wallet")
             try:
                 self.wallet.credit(
                     record.winner.robot_id,
@@ -980,7 +944,6 @@ class AuctionEngine:
                     note=f"Operator payment for {request_id}",
                 )
             except KeyError:
-                # Operator wallet may not exist yet — create it
                 self.wallet.create_wallet(record.winner.robot_id)
                 self.wallet.credit(
                     record.winner.robot_id,
@@ -991,8 +954,8 @@ class AuctionEngine:
                 )
             log("PAYMENT", f"${agreed_price} credited to {record.winner.robot_id} operator wallet")
         else:
-            log("PAYMENT", f"(stub) Would debit ${delivery_payment} (75% delivery) from buyer wallet")
-            log("PAYMENT", f"(stub) Would transfer ${agreed_price} to operator via Stripe Connect")
+            log("PAYMENT", f"(stub) Would debit ${agreed_price} from buyer wallet")
+            log("PAYMENT", f"(stub) Would transfer ${agreed_price} to operator")
 
         # Record reputation
         if self.reputation is not None:
@@ -1036,8 +999,7 @@ class AuctionEngine:
             },
             "qa": record.qa_result,
             "settlement": {
-                "delivery_payment": str(delivery_payment),
-                "operator_transfer": str(agreed_price),
+                "amount": str(agreed_price),
                 "status": settlement_status,
             },
         }
@@ -1058,7 +1020,7 @@ class AuctionEngine:
         """Reject a delivered payload and re-pool the task (v0.5).
 
         Transitions DELIVERED -> REJECTED -> RE_POOLED -> BIDDING.
-        Refunds 25% reservation, records rejection in reputation.
+        Records rejection in reputation.
         """
         record = self._get_record(request_id)
         if record.state != TaskState.DELIVERED:
@@ -1073,15 +1035,7 @@ class AuctionEngine:
         self._transition(record, TaskState.REJECTED, f"reason: {reason}")
         log("REJECT", f"{rejected_robot_id} | payload rejected: {reason}")
 
-        # Refund 25% reservation
-        reservation = self._reservation(record.winner.price)
-        if self.wallet is not None:
-            self.wallet.credit(
-                "buyer", reservation, request_id, "refund", note=f"25% refund after rejection of {rejected_robot_id}"
-            )
-            log("PAYMENT", f"${reservation} refunded (25% reservation) to buyer wallet")
-        else:
-            log("PAYMENT", f"(stub) Would refund ${reservation} (25% reservation) to buyer wallet")
+        # No reservation to refund — payment only on delivery
 
         # Record reputation
         if self.reputation is not None:
@@ -1115,7 +1069,7 @@ class AuctionEngine:
         Otherwise (default):
             Transitions IN_PROGRESS -> ABANDONED -> RE_POOLED -> BIDDING.
 
-        Refunds 25% reservation to buyer in both cases.
+        No payment to refund (payment only on delivery).
         """
         record = self._get_record(request_id)
 
@@ -1127,19 +1081,7 @@ class AuctionEngine:
             # BID_ACCEPTED -> PROVIDER_CANCELLED
             self._transition(record, TaskState.PROVIDER_CANCELLED, f"provider cancelled ({cancelled_robot_id})")
 
-            # Refund 25% reservation
-            reservation = self._reservation(record.winner.price)
-            if self.wallet is not None:
-                self.wallet.credit(
-                    "buyer",
-                    reservation,
-                    request_id,
-                    "refund",
-                    note=f"25% refund after provider cancel of {cancelled_robot_id}",
-                )
-                log("PAYMENT", f"${reservation} refunded (25% reservation) to buyer wallet")
-            else:
-                log("PAYMENT", f"(stub) Would refund ${reservation} (25% reservation) to buyer wallet")
+            # No reservation to refund — payment only on delivery
 
             # Record reputation
             if self.reputation is not None:
@@ -1169,15 +1111,7 @@ class AuctionEngine:
         # IN_PROGRESS -> ABANDONED
         self._transition(record, TaskState.ABANDONED, f"manually abandoned ({abandoned_robot_id} unresponsive)")
 
-        # Refund 25% reservation
-        reservation = self._reservation(record.winner.price)
-        if self.wallet is not None:
-            self.wallet.credit(
-                "buyer", reservation, request_id, "refund", note=f"25% refund after abandonment of {abandoned_robot_id}"
-            )
-            log("PAYMENT", f"${reservation} refunded (25% reservation) to buyer wallet")
-        else:
-            log("PAYMENT", f"(stub) Would refund ${reservation} (25% reservation) to buyer wallet")
+        # No reservation to refund — payment only on delivery
 
         # Record reputation
         if self.reputation is not None:
@@ -1219,18 +1153,7 @@ class AuctionEngine:
         # Cancel auto-accept timer if active
         self._cancel_auto_accept_timer(record)
 
-        # Refund 25% reservation if a bid was accepted and wallet exists
-        refunded = False
-        refund_amount = Decimal("0")
-        if record.winning_bid is not None and self.wallet is not None:
-            reservation = self._reservation(record.winner.price)
-            try:
-                self.wallet.credit("buyer", reservation, request_id, "refund", note=f"Cancellation refund: {reason}")
-                refund_amount = reservation
-                refunded = True
-                log("PAYMENT", f"${reservation} refunded (cancellation) to buyer wallet")
-            except Exception:
-                log("PAYMENT", f"Refund failed during cancellation of {request_id}")
+        # No reservation to refund — payment only on delivery
 
         # Transition to WITHDRAWN
         self._transition(record, TaskState.WITHDRAWN, f"cancelled: {reason}")
@@ -1239,8 +1162,6 @@ class AuctionEngine:
             "request_id": request_id,
             "state": record.state.value,
             "reason": reason,
-            "refunded": refunded,
-            "refund_amount": str(refund_amount),
         }
 
     # ------------------------------------------------------------------

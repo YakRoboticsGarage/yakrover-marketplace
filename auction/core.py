@@ -680,7 +680,7 @@ class LedgerEntry:
 
     wallet_id: str
     amount: Decimal
-    entry_type: str  # "reservation_25" | "delivery_75" | "release" | "credit" | "refund"
+    entry_type: str  # "payment" | "credit" | "refund" | "fund"
     request_id: str = ""
     note: str = ""
     balance_after: Decimal = Decimal("0")

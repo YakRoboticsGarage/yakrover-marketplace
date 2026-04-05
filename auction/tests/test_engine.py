@@ -377,8 +377,8 @@ class TestWalletIntegration:
     """Wallet debit/credit/refund tests for the 25%/75% split."""
 
     @pytest.mark.asyncio
-    async def test_accept_bid_debits_wallet(self):
-        """accept_bid debits 25% reservation from buyer wallet."""
+    async def test_accept_bid_no_upfront_debit(self):
+        """accept_bid does NOT debit wallet — payment happens on delivery only."""
         engine, wallet, reputation = _build_engine_with_wallet()
         post_result = engine.post_task(VALID_TASK_SPEC)
         request_id = post_result["request_id"]
@@ -390,16 +390,12 @@ class TestWalletIntegration:
         engine.accept_bid(request_id, winner)
         balance_after = wallet.get_balance("buyer")
 
-        # Find the winning bid price
-        record = engine._get_record(request_id)
-        agreed_price = record.winning_bid.price
-        reservation = (agreed_price * Decimal("0.25")).quantize(Decimal("0.01"))
-
-        assert balance_before - balance_after == reservation
+        # No debit on acceptance — full payment on delivery
+        assert balance_before == balance_after
 
     @pytest.mark.asyncio
-    async def test_confirm_delivery_debits_wallet(self):
-        """confirm_delivery debits 75% delivery payment from buyer wallet."""
+    async def test_confirm_delivery_debits_full_amount(self):
+        """confirm_delivery debits full agreed price from buyer wallet."""
         engine, wallet, reputation = _build_engine_with_wallet()
         post_result = engine.post_task(VALID_TASK_SPEC)
         request_id = post_result["request_id"]
@@ -410,7 +406,6 @@ class TestWalletIntegration:
 
         record = engine._get_record(request_id)
         agreed_price = record.winning_bid.price
-        delivery_payment = (agreed_price * Decimal("0.75")).quantize(Decimal("0.01"))
 
         with _mock_httpx_patch():
             await engine.execute(request_id)
@@ -419,7 +414,8 @@ class TestWalletIntegration:
         engine.confirm_delivery(request_id)
         balance_after = wallet.get_balance("buyer")
 
-        assert balance_before - balance_after == delivery_payment
+        # Full payment on delivery (no upfront reservation)
+        assert balance_before - balance_after == agreed_price
 
     @pytest.mark.asyncio
     async def test_confirm_delivery_credits_operator(self):
@@ -445,8 +441,8 @@ class TestWalletIntegration:
         assert operator_balance == agreed_price
 
     @pytest.mark.asyncio
-    async def test_reject_refunds_reservation(self):
-        """reject_delivery refunds 25% reservation to buyer wallet."""
+    async def test_reject_no_refund_needed(self):
+        """reject_delivery does not need to refund — no upfront payment was taken."""
         engine, wallet, reputation = _build_engine_with_wallet()
         post_result = engine.post_task(VALID_TASK_SPEC)
         request_id = post_result["request_id"]
@@ -455,11 +451,6 @@ class TestWalletIntegration:
         winner = bids_result["recommended_winner"]
         engine.accept_bid(request_id, winner)
 
-        record = engine._get_record(request_id)
-        agreed_price = record.winning_bid.price
-        reservation = (agreed_price * Decimal("0.25")).quantize(Decimal("0.01"))
-
-        # Balance after accept (25% debited)
         balance_after_accept = wallet.get_balance("buyer")
 
         with _mock_httpx_patch():
@@ -467,9 +458,9 @@ class TestWalletIntegration:
 
         engine.reject_delivery(request_id, reason="bad data")
 
-        # Reservation should be refunded
+        # No payment was taken, so no refund needed
         balance_after_reject = wallet.get_balance("buyer")
-        assert balance_after_reject == balance_after_accept + reservation
+        assert balance_after_reject == balance_after_accept
 
 
 # ---------------------------------------------------------------------------
@@ -516,19 +507,14 @@ class TestTimeoutAbandonment:
         engine.get_bids(request_id)
         engine.accept_bid(request_id, "timeout-robot")
 
-        # Get the reservation amount
-        record = engine._get_record(request_id)
-        agreed_price = record.winning_bid.price
-        reservation = (agreed_price * Decimal("0.25")).quantize(Decimal("0.01"))
-
         balance_after_accept = wallet.get_balance("buyer")
 
         # Execute will timeout
         await engine.execute(request_id)
 
-        # 25% should be refunded
+        # No refund needed — no payment was taken upfront
         balance_after_timeout = wallet.get_balance("buyer")
-        assert balance_after_timeout == balance_after_accept + reservation
+        assert balance_after_timeout == balance_after_accept
 
     @pytest.mark.asyncio
     async def test_timeout_records_reputation(self):

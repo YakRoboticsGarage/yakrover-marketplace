@@ -198,7 +198,7 @@ def register_auction_tools(
     async def auction_accept_bid(request_id: str, robot_id: str) -> dict:
         """Accept a bid from a specific robot.
 
-        Triggers 25% payment reservation and notifies losing bidders.
+        Notifies losing bidders. Payment happens on delivery confirmation.
         The task must be in "bidding" state. The robot_id must match one of
         the bids returned by auction_get_bids.
 
@@ -258,7 +258,7 @@ def register_auction_tools(
     async def auction_confirm_delivery(request_id: str) -> dict:
         """Confirm that the delivered payload is satisfactory.
 
-        Triggers 75% delivery payment, operator credit, settlement, and
+        Triggers full payment, operator credit, settlement, and
         Stripe transfer (if StripeService is configured).
 
         Valid task states for this action: "delivered".
@@ -279,7 +279,7 @@ def register_auction_tools(
     async def auction_reject_delivery(request_id: str, reason: str) -> dict:
         """Reject the delivered payload with a reason.
 
-        Refunds the 25% reservation and re-pools the task for new bids.
+        Re-pools the task for new bids (no reservation to refund).
         Valid task states for this action: "delivered".
         """
         try:
@@ -293,8 +293,8 @@ def register_auction_tools(
         """Cancel a task stuck in any non-terminal state and refund reservations.
 
         Use this to recover from a malformed spec, an unresponsive robot, or
-        any situation where the auction should not continue. Refunds any 25%
-        wallet reservation if a bid was previously accepted.
+        any situation where the auction should not continue. No payment
+        reservation to refund (payment only on delivery).
 
         Works in any state except "settled" and "withdrawn" (terminal).
         Transitions the task to "withdrawn".
