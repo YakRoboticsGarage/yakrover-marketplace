@@ -2,8 +2,8 @@
 
 **Project:** yakrover-auction-explorer
 **Owner:** Product
-**Last updated:** 2026-03-28 (rev 4.1, payment bonds + award confirmation + legal framework)
-**Status:** v1.0 built (264 tests, 35 MCP tools). v1.5 next. This roadmap is built around construction site surveying as the wedge market.
+**Last updated:** 2026-04-05 (rev 4.2, v1.1 milestone — end-to-end auction + USDC payment working)
+**Status:** v1.0 built. **v1.1 milestone reached** (265 tests, 35 MCP tools). Full auction + gasless USDC payment confirmed working end-to-end on Base Sepolia. This roadmap is built around construction site surveying as the wedge market.
 
 > All product decisions and technical constraints referenced by ID live in `docs/DECISIONS.md`.
 > Feature requirements for the next build: `docs/FEATURE_REQUIREMENTS_v15.md`.
@@ -129,14 +129,15 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 
 ---
 
-## v1.1 — Live Payment Settlement (IN PROGRESS)
+## v1.1 — Live Payment Settlement (MILESTONE REACHED 2026-04-05)
 
 | | |
 |---|---|
-| **Timeline** | ~5 days remaining |
+| **Milestone** | End-to-end auction + USDC payment confirmed working on Base Sepolia (2026-04-05) |
 | **Serves** | Marco (buyer), operators, investors (proof of real settlement) |
-| **Goal** | Real-money payment through a real auction. Both Stripe (fiat) and USDC (crypto). Production, not test mode. |
+| **Goal** | Real-money payment through a real auction. Both Stripe (fiat) and USDC (crypto). |
 | **Demo** | https://yakrobot.bid/mcp-demo-2/ |
+| **Revert tag** | `v1.1-milestone-payment-e2e` — revert to this if future UI changes break functionality |
 
 > **Detailed plan:** `docs/research/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`
 
@@ -156,10 +157,11 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - **Chain:** Base for production. Sepolia for current demo (Tumbller registered there).
 - **Feedback:** Demo → Cloudflare KV + GitHub issue → research agent processes → improvement proposals.
 
-### What's done
+### What's done (confirmed working 2026-04-05)
 - [x] Browser robot discovery (subgraph + getAgentWallet RPC)
 - [x] Gasless USDC payment (ERC-2612 permit + relay, platform pays gas)
 - [x] Commit-on-hire: buyer signs permit on award, money moves on delivery acceptance
+- [x] **End-to-end USDC payment on Base Sepolia** — permit signed, committed, released, USDC transferred to operator + platform
 - [x] Multi-wallet: Rabby, MetaMask, Coinbase Wallet
 - [x] Multi-chain: Base mainnet, Ethereum mainnet, Base Sepolia, Eth Sepolia
 - [x] Relay wallet funded (0x4b59...0d9) on all 4 chains
@@ -167,10 +169,12 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - [x] IPFS delivery upload (Pinata via worker)
 - [x] Schema-driven delivery QA: task spec includes delivery_schema, robot self-checks, QA validates same schema
 - [x] 4-level QA (buyer-configurable: none → basic/schema → standards → PLS)
+- [x] Self-contained mock fleet (sensor robots generate schema-compliant data without external simulator)
+- [x] Async-safe MCP REST API (blocking LLM calls wrapped in asyncio.to_thread)
 - [x] Feedback loop (demo → GitHub issues → research agent)
-- [x] Worker deployed with GITHUB_TOKEN + RELAY_PRIVATE_KEY
+- [x] Worker deployed with GITHUB_TOKEN + RELAY_PRIVATE_KEY + RELAY wallet funded
 - [x] Robot operator onboarding guide published
-- [x] CI fully green (lint, mypy 0 errors, 264 tests)
+- [x] CI fully green (lint, mypy 0 errors, 265 tests)
 - [x] Repo renamed to yakrover-marketplace
 
 ### What's blocking v1.1 completion

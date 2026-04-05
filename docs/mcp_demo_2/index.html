@@ -1796,8 +1796,14 @@ async function releasePayment() {
     var execData = await execRes.json();
 
     if (!execRes.ok || execData.error) {
+      console.error('Execute payment error:', execData);
       if (btn) {
-        btn.textContent = execData.error || 'Execution failed';
+        var errMsg = execData.error || 'Execution failed';
+        if (execData.debug) {
+          console.error('Debug:', JSON.stringify(execData.debug, null, 2));
+          errMsg += ' [' + (execData.debug.reason || execData.debug.msg || '').slice(0, 80) + ']';
+        }
+        btn.textContent = errMsg;
         btn.disabled = false;
       }
       return;

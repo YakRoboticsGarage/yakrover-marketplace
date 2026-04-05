@@ -1,10 +1,11 @@
 # Plan: Live Payment Settlement Demo (v4 — Implementation Status)
 
-**Date:** 2026-04-02 (updated end-of-day)
-**Status:** Core demo built. Blocked on: Stripe production keys, operator Connect onboarding, robot Base registration.
+**Date:** 2026-04-05 (v1.1 milestone)
+**Status:** USDC payment working end-to-end on Base Sepolia. Stripe working in test mode. Remaining: Stripe production keys, robot Base mainnet registration.
 **Supersedes:** v3
 **Demo:** https://yakrobot.bid/mcp-demo-2/
 **Goal:** Real money through a real robot auction. Buyer pays, operator and platform both get paid.
+**Milestone tag:** `v1.1-milestone-payment-e2e`
 
 ---
 
@@ -29,19 +30,23 @@
 - Accept/Reject buttons present
 - **Not built:** actual IPFS upload by robot, CID verification, on-chain delivery record
 
-### Step 4: Payment — BUILT (Stripe), BLOCKED (USDC)
+### Step 4: Payment — WORKING (both Stripe test + USDC on Base Sepolia)
 
-**Stripe (fiat):**
+**USDC (crypto) — CONFIRMED WORKING 2026-04-05:**
+- Two-phase commit-on-hire: buyer signs ERC-2612 permit on award (no money moves), buyer clicks Release after delivery + QA (money moves)
+- Worker endpoint `POST /api/commit-payment` stores signed permit in KV
+- Worker endpoint `POST /api/execute-payment` submits permit + 2x transferFrom on-chain
+- 88% to operator wallet, 12% to platform wallet
+- Relay wallet (`0x4b59...0d9`) pays gas (~$0.005 on Base)
+- Tested on Base Sepolia with real USDC, Rabby wallet
+- Bugs fixed during milestone: missing `balanceOf` in ABI, blocking httpx calls in async handlers, mock fleet calling missing simulator
+
+**Stripe (fiat) — WORKING (test mode):**
 - Worker endpoint `POST /api/create-checkout` creates Stripe Checkout Session
 - Uses destination charges: `application_fee_amount` (12%) stays on platform, 88% transfers to operator Connect account
 - Worker endpoint `GET /api/payment-status` polls session status
 - Worker endpoint `POST /api/stripe-webhook` handles `checkout.session.completed`
-- **Blocked on:** production Stripe keys + operator Stripe Connect onboarding
-
-**USDC (crypto):**
-- Wallet address read from on-chain `getAgentWallet()` — ready to receive
-- Payment button enabled when wallet found
-- **Blocked on:** browser wallet connect code (ethers.js/viem USDC transfer)
+- **Remaining:** production Stripe keys + operator Stripe Connect onboarding
 
 ---
 

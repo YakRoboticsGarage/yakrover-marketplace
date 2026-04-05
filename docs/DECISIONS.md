@@ -4,7 +4,7 @@
 > Other documents reference this file rather than restating these items.
 > When a decision changes, update it **only here**.
 
-**Last updated:** 2026-03-25
+**Last updated:** 2026-04-05 (v1.1 milestone — USDC payment e2e confirmed)
 
 ---
 

@@ -133,6 +133,53 @@ class MockRobot:
 # ---------------------------------------------------------------------------
 
 
+def _generate_env_sensing_data(robot_id: str, task: Task) -> DeliveryPayload:
+    """Generate schema-compliant env_sensing delivery data locally.
+
+    Produces readings matching the delivery_schema from rfp_processor:
+    readings[], summary, duration_seconds.
+    Falls back to simple temp/humidity dict for non-env_sensing tasks.
+    """
+    import random
+
+    now = datetime.now(UTC)
+    elapsed = (now - task.posted_at).total_seconds()
+    sla_met = elapsed <= task.sla_seconds
+
+    has_delivery_schema = bool(task.capability_requirements.get("delivery_schema"))
+    if task.task_category == "env_sensing" and has_delivery_schema:
+        num_waypoints = 3
+        readings = []
+        for wp in range(1, num_waypoints + 1):
+            readings.append({
+                "waypoint": wp,
+                "temperature_c": round(21.0 + random.uniform(-2.0, 3.0), 1),
+                "humidity_pct": round(45.0 + random.uniform(-5.0, 10.0), 1),
+                "timestamp": now.isoformat(),
+            })
+        data: dict[str, Any] = {
+            "readings": readings,
+            "summary": f"Environmental scan complete. {num_waypoints} waypoints measured. "
+                       f"Avg temp: {sum(r['temperature_c'] for r in readings)/len(readings):.1f}°C, "
+                       f"Avg humidity: {sum(r['humidity_pct'] for r in readings)/len(readings):.1f}%",
+            "duration_seconds": round(elapsed, 1),
+        }
+    else:
+        data = {
+            "temperature_celsius": round(22.0 + random.uniform(-1.0, 2.0), 1),
+            "humidity_percent": round(48.0 + random.uniform(-3.0, 5.0), 1),
+            "timestamp": now.isoformat(),
+        }
+
+    return DeliveryPayload(
+        request_id=task.request_id,
+        robot_id=robot_id,
+        data=data,
+        delivered_at=now,
+        sla_met=sla_met,
+    )
+
+
 class FakeRoverBay3(MockRobot):
     """Warehouse rover in Bay 3 — closest to typical task locations."""
 
@@ -157,6 +204,10 @@ class FakeRoverBay3(MockRobot):
         self._price = Decimal("0.35")
         self._sla_seconds = 180
         self._ai_confidence = 0.98
+
+    async def execute(self, task: Task) -> DeliveryPayload:
+        """Generate mock sensor data locally — no external simulator needed."""
+        return _generate_env_sensing_data(self.robot_id, task)
 
 
 # ---------------------------------------------------------------------------
@@ -188,6 +239,10 @@ class FakeRoverBay7(MockRobot):
         self._price = Decimal("0.55")
         self._sla_seconds = 300
         self._ai_confidence = 0.91
+
+    async def execute(self, task: Task) -> DeliveryPayload:
+        """Generate mock sensor data locally — no external simulator needed."""
+        return _generate_env_sensing_data(self.robot_id, task)
 
 
 # ---------------------------------------------------------------------------

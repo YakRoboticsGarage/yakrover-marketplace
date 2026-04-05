@@ -258,8 +258,8 @@ M1-M15, M19-M20, M22-M28 -- core auction, payments, compliance, frontend
 ### v1.0.2 (In Progress) -- 2 modules
 M30 (Event Log), M31 (Task Feed API) -- tracking infrastructure
 
-### v1.1 (In Progress) -- 3 modules
-M38 (Browser Wallet Connect — BUILT), M39 (Permit Relay — BUILT), M15 (Stripe production activation). Demo live at yakrobot.bid/mcp-demo-2. Blocked on: Stripe production keys, robot Base registration.
+### v1.1 (Milestone reached 2026-04-05) -- 3 modules
+M38 (Browser Wallet Connect — BUILT), M39 (Permit Relay — BUILT), M15 (Stripe test mode working). Demo live at yakrobot.bid/mcp-demo-2. **USDC payment confirmed end-to-end on Base Sepolia.** Remaining: Stripe production keys, robot Base registration.
 
 ### v1.5 (Next) -- 4 modules
 M16 (Settlement Router), M23 (Commitment Hash on-chain), M32 (Buyer Dashboard), M33 (Operator Dashboard), M34 (Admin Console)

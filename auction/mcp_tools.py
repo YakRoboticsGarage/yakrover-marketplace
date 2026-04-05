@@ -693,7 +693,9 @@ def register_auction_tools(
         try:
             from auction.rfp_processor import process_rfp
 
-            specs = process_rfp(rfp_text, jurisdiction, site_info or None)
+            specs = await asyncio.to_thread(
+                process_rfp, rfp_text, jurisdiction, site_info or None
+            )
 
             warnings = []
             if not site_info.get("coordinates"):
@@ -969,7 +971,7 @@ def register_auction_tools(
         try:
             from auction.compliance import check_sam_exclusion
 
-            return check_sam_exclusion(entity_name)
+            return await asyncio.to_thread(check_sam_exclusion, entity_name)
         except Exception as exc:
             return _error_response(exc)
 

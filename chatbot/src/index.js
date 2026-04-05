@@ -1316,6 +1316,8 @@ const RPC_ENDPOINTS = {
 const USDC_ABI = [
   "function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)",
   "function transferFrom(address from, address to, uint256 amount) returns (bool)",
+  "function balanceOf(address account) view returns (uint256)",
+  "function allowance(address owner, address spender) view returns (uint256)",
   "function nonces(address owner) view returns (uint256)",
   "function name() view returns (string)",
   "function version() view returns (string)",
@@ -1654,10 +1656,12 @@ async function handleExecutePayment(request, env, cors) {
   const platformAmount = totalBig * 12n / 100n;
   const operatorAmount = totalBig - platformAmount;
 
+  let relayAddr = "unknown";
   try {
     const { ethers } = await import("ethers");
     const provider = new ethers.JsonRpcProvider(rpcUrl);
     const relayWallet = new ethers.Wallet(env.RELAY_PRIVATE_KEY, provider);
+    relayAddr = relayWallet.address;
 
     const usdc = new ethers.Contract(usdcAddr, USDC_ABI, relayWallet);
 
@@ -1678,8 +1682,20 @@ async function handleExecutePayment(request, env, cors) {
     }
 
     // Execute: permit + two transfers
+    // Log values for debugging
+    console.log("PAYMENT DEBUG:", JSON.stringify({
+      owner, spender: relayWallet.address, value: totalBig.toString(),
+      operatorAmount: operatorAmount.toString(), platformAmount: platformAmount.toString(),
+      operator_wallet, platform_wallet, deadline, v, r, s,
+      chain_id, usdcAddr,
+    }));
+
     const permitTx = await usdc.permit(owner, relayWallet.address, totalBig, deadline, v, r, s);
     await permitTx.wait();
+
+    // Check allowance after permit to verify it was set correctly
+    const allowanceAfterPermit = await usdc.allowance(owner, relayWallet.address);
+    console.log("ALLOWANCE AFTER PERMIT:", allowanceAfterPermit.toString(), "NEED:", totalBig.toString());
 
     const opTx = await usdc.transferFrom(owner, operator_wallet, operatorAmount);
     const opReceipt = await opTx.wait();
@@ -1721,13 +1737,31 @@ async function handleExecutePayment(request, env, cors) {
     await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: Math.max(commitment.deadline - now, 60) });
 
     const msg = err.message || String(err);
+    const reason = err.reason || "";
+    const code = err.code || "";
+
+    // Try to read allowance for diagnostics
+    let allowanceDiag = "unknown";
+    try {
+      const { ethers: eth2 } = await import("ethers");
+      const diag = new eth2.JsonRpcProvider(rpcUrl);
+      const diagUsdc = new eth2.Contract(usdcAddr, USDC_ABI, diag);
+      const a = await diagUsdc.allowance(owner, relayAddr);
+      allowanceDiag = a.toString();
+    } catch (_) {}
+
     const safeMsg = msg.includes("insufficient funds") ? "Relay wallet has insufficient ETH for gas"
       : msg.includes("expired") ? "Permit has expired"
-      : msg.includes("invalid signature") ? "Invalid permit signature — buyer may need to re-sign"
+      : msg.includes("invalid signature") || reason.includes("invalid signature") ? "Invalid permit signature — buyer may need to re-sign"
       : msg.includes("nonce") ? "Permit nonce mismatch — a newer permit may have been signed"
-      : "Payment execution failed — will retry on next attempt";
+      : `Payment execution failed: ${reason || msg.slice(0, 200)}`;
     return new Response(
-      JSON.stringify({ error: safeMsg, retryable: true }),
+      JSON.stringify({ error: safeMsg, retryable: true, debug: {
+        code, reason, msg: msg.slice(0, 300),
+        relay: relayAddr, chain: chain_id, usdc: usdcAddr,
+        total: total_amount, opAmt: operatorAmount.toString(), platAmt: platformAmount.toString(),
+        allowance: allowanceDiag,
+      }}),
       { status: 502, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
