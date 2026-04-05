@@ -568,7 +568,7 @@ Requirements:
 - Temperature sensor (range: 15-40°C, accuracy: ±1°C)
 - Humidity sensor (range: 20-80% RH)
 - Remote operation via MCP endpoint
-- Budget: $0.50
+- Budget: $1.00
 - Deadline: 1 hour</textarea>
 
     <label style="margin-top: 16px;">Site Info</label>
@@ -1436,13 +1436,13 @@ function showPaymentCard(container) {
   card.className = 'payment-card';
   card.id = 'paymentCard';
 
-  var amountCents = 50;
+  var amountCents = 100; // $1.00 — minimum for EUR operator accounts
   var feeCents = Math.round(amountCents * 0.12);
   var operatorCents = amountCents - feeCents;
 
   // Find operator payment info from discovered robots
   var operatorName = 'Robot Operator';
-  var stripeAccountId = null;
+  var stripeAccountId = 'acct_1TEjjLC2lXDckgmS'; // Default operator Stripe Connect account
   var usdcWallet = null;
 
   if (discoveredRobots.length > 0) {
@@ -1984,8 +1984,8 @@ async function showPaymentSuccess(sessionId) {
   card.className = 'payment-success';
 
   if (status.status === 'paid') {
-    const amountStr = status.amount_cents ? '$' + (status.amount_cents / 100).toFixed(2) : '$0.50';
-    const feeCents = Math.round((status.amount_cents || 50) * 0.12);
+    const amountStr = status.amount_cents ? '$' + (status.amount_cents / 100).toFixed(2) : '$1.00';
+    const feeCents = Math.round((status.amount_cents || 100) * 0.12);
     const operatorCents = (status.amount_cents || 50) - feeCents;
     const operatorName = status.operator_name || 'Robot Operator';
 
