@@ -796,7 +796,7 @@ async function discoverRobots() {
 
 async function querySubgraph(url, chainId) {
   // Query for agents with fleet_provider="yakrover" (hex: 0x79616b726f766572)
-  var robotMetaQuery = '{ agentMetadata_collection(where: {key: "fleet_provider", value: "' + YAKROVER_HEX + '"}, first: 50) { agent { id agentId registrationFile { name description active mcpEndpoint mcpTools } } } }';
+  var robotMetaQuery = '{ agentMetadata_collection(where: {key: "fleet_provider", value: "' + YAKROVER_HEX + '"}, first: 50) { agent { id agentId owner registrationFile { name description active mcpEndpoint mcpTools } metadata(first: 20) { key value } } } }';
 
   var chainName = chainId === 8453 ? 'Base' : chainId === 11155111 ? 'Sepolia' : chainId === 1 ? 'Ethereum' : 'Chain ' + chainId;
 
@@ -834,6 +834,14 @@ async function querySubgraph(url, chainId) {
       } else if (rf.mcpTools && typeof rf.mcpTools === 'string') {
         tools = rf.mcpTools.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
       }
+      // Extract agentWallet from metadata (ERC-8004 stores it as metadata key)
+      var walletFromMeta = null;
+      if (a.metadata && Array.isArray(a.metadata)) {
+        var walletEntry = a.metadata.filter(function(md) { return md.key === 'agentWallet'; })[0];
+        if (walletEntry && walletEntry.value) {
+          walletFromMeta = walletEntry.value;
+        }
+      }
       return {
         agent_id: a.agentId || a.id,
         chain_id: chainId,
@@ -844,9 +852,9 @@ async function querySubgraph(url, chainId) {
         x402_support: false,
         mcp_endpoint: rf.mcpEndpoint || '',
         mcp_tools: tools,
-        owner: '',
+        owner: a.owner || '',
         payment: {
-          usdc_wallet: null,
+          usdc_wallet: walletFromMeta || null,
           wallet_chain_id: null,
           stripe_connect_id: null,
         },
@@ -991,7 +999,8 @@ async function testTunnel() {
   btn.textContent = 'Test';
 }
 
-async function runDemo() {
+// Phase 1: Run auction only (stops after award)
+async function runAuction() {
   const tunnelUrl = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
   if (!tunnelUrl) {
     document.getElementById('tunnelStatus').textContent = 'Enter the MCP server URL first';
@@ -1010,14 +1019,13 @@ async function runDemo() {
   feed.innerHTML = '';
   errorMsg.classList.remove('visible');
   btn.disabled = true;
-  btn.textContent = 'Processing...';
+  btn.textContent = 'Running auction...';
   progressBar.classList.add('visible');
   progressFill.style.width = '0%';
   progressText.textContent = 'Sending RFP to auction engine...';
 
-  // Remove any existing summary
-  const oldSummary = document.querySelector('.summary-card');
-  if (oldSummary) oldSummary.remove();
+  // Remove old cards
+  document.querySelectorAll('.summary-card,.delivery-card,.payment-card,.payment-success,.delivery-result-card').forEach(function(el) { el.remove(); });
 
   // Build prompt
   const rfpText = document.getElementById('rfpText').value.trim();
@@ -1028,7 +1036,6 @@ async function runDemo() {
     terrain: document.getElementById('siteTerrain').value.trim()
   };
 
-  // Build prompt with discovered robot info
   var robotContext = '';
   if (discoveredRobots.length > 0) {
     var robotList = discoveredRobots.map(function(r) {
@@ -1045,7 +1052,6 @@ async function runDemo() {
   const prompt = rfpText + '\n\nSite Info: ' + JSON.stringify(siteInfo) + robotContext + deliverySchemaContext;
 
   try {
-    // Admin key from URL param bypasses rate limit (e.g. ?admin=SECRET)
     var adminKey = new URLSearchParams(window.location.search).get('admin') || '';
     var headers = { 'Content-Type': 'application/json' };
     if (adminKey) headers['X-Admin-Key'] = adminKey;
@@ -1053,7 +1059,7 @@ async function runDemo() {
     const response = await fetch(WORKER_URL, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({ prompt, tunnel_url: tunnelUrl })
+      body: JSON.stringify({ prompt, tunnel_url: tunnelUrl, phase: 'auction' })
     });
 
     if (response.status === 429) {
@@ -1077,7 +1083,7 @@ async function runDemo() {
       return;
     }
 
-    // Play back steps with animation
+    // Play back auction steps
     const steps = data.steps || [];
     const toolSteps = steps.filter(s => s.type === 'tool_call');
     const totalToolSteps = toolSteps.length || 1;
@@ -1097,18 +1103,118 @@ async function runDemo() {
       appendStep(step, i);
     }
 
-    // Show summary
     progressFill.style.width = '100%';
-    progressText.textContent = 'Complete';
+    progressText.textContent = 'Auction complete — winner selected';
+
+    // Extract request_id from award step
+    var awardStep = steps.filter(function(s) { return s.tool_name === 'auction_award_with_confirmation'; })[0];
+    var auctionRequestId = awardStep && awardStep.result && awardStep.result.result ? awardStep.result.result.request_id : null;
+    window._awardedRequestId = auctionRequestId;
+    window._tunnelUrl = tunnelUrl;
+
+    // Extract winner info from bids/award steps
+    var winnerName = 'Operator';
+    var winnerPrice = '';
+    var bidStep = steps.filter(function(s) { return s.tool_name === 'auction_get_bids'; })[0];
+    if (bidStep && bidStep.result && bidStep.result.result) {
+      var bidsResult = bidStep.result.result;
+      winnerName = bidsResult.recommended_winner || winnerName;
+      var winnerBid = (bidsResult.bids || []).filter(function(b) { return b.robot_id === bidsResult.recommended_winner; })[0];
+      if (winnerBid) winnerPrice = '$' + winnerBid.price;
+    }
 
     await delay(500);
-    showSummary(data.final_text);
+    showWinnerCard(data.final_text, winnerName, winnerPrice);
 
   } catch (err) {
     showError('Network error. Check your connection and try again.');
   }
 
   resetBtn();
+}
+
+// Backward compat alias
+var runDemo = runAuction;
+
+// Phase 2: Execute task + confirm delivery (called after payment commitment)
+async function runExecution() {
+  var requestId = window._awardedRequestId;
+  var tunnelUrl = window._tunnelUrl;
+  if (!requestId || !tunnelUrl) {
+    console.error('No request_id or tunnel_url for execution phase');
+    return;
+  }
+
+  var commitCard = document.getElementById('commitmentCard');
+  if (commitCard) {
+    commitCard.querySelector('h3').textContent = 'Payment Committed — Robot Executing';
+    var statusEl = commitCard.querySelector('.commit-status');
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--orange)">Robot is executing the task...</span>';
+  }
+
+  var progressFill = document.getElementById('progressFill');
+  var progressText = document.getElementById('progressText');
+  if (progressFill) progressFill.style.width = '60%';
+  if (progressText) progressText.textContent = 'Robot executing task...';
+
+  try {
+    var adminKey = new URLSearchParams(window.location.search).get('admin') || '';
+    var headers = { 'Content-Type': 'application/json' };
+    if (adminKey) headers['X-Admin-Key'] = adminKey;
+
+    var response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        phase: 'execute',
+        request_id: requestId,
+        tunnel_url: tunnelUrl,
+      })
+    });
+
+    var data = await response.json();
+
+    if (data.error) {
+      if (commitCard) {
+        commitCard.innerHTML += '<div style="color:#ef4444;font-size:12px;margin-top:8px">Execution failed: ' + escapeHtml(data.error) + '</div>' +
+          '<button class="pay-btn" style="background:var(--orange);font-size:12px;padding:8px 12px;margin-top:8px" onclick="runExecution()">Retry</button>';
+      }
+      return;
+    }
+
+    // Render execution steps in the feed
+    var steps = data.steps || [];
+    var feed = document.getElementById('stepFeed');
+    var baseIndex = feed ? feed.children.length : 0;
+
+    for (var i = 0; i < steps.length; i++) {
+      await delay(800);
+      appendStep(steps[i], baseIndex + i);
+    }
+
+    if (progressFill) progressFill.style.width = '100%';
+    if (progressText) progressText.textContent = 'Delivery confirmed — review QA results';
+
+    // Extract delivery data from confirm_delivery step
+    var confirmStep = steps.filter(function(s) { return s.tool_name === 'auction_confirm_delivery'; })[0];
+    var deliveryData = null;
+    var qaResult = null;
+    if (confirmStep && confirmStep.result && confirmStep.result.result) {
+      var cr = confirmStep.result.result;
+      deliveryData = cr.delivery ? cr.delivery.data : null;
+      qaResult = cr.qa || null;
+    }
+
+    await delay(500);
+    showDeliveryResult(deliveryData, qaResult);
+
+  } catch (err) {
+    console.error('Execution phase error:', err);
+    if (commitCard) {
+      commitCard.innerHTML += '<div style="color:#ef4444;font-size:12px;margin-top:8px">Network error during execution</div>' +
+        '<button class="pay-btn" style="background:var(--orange);font-size:12px;padding:8px 12px;margin-top:8px" onclick="runExecution()">Retry</button>';
+    }
+  }
 }
 
 function appendStep(step, index) {
@@ -1148,19 +1254,62 @@ function toggleJson(id) {
   if (el) el.classList.toggle('expanded');
 }
 
-function showSummary(text) {
-  const container = document.querySelector('.container');
+function showWinnerCard(text, winnerName, winnerPrice) {
+  var container = document.querySelector('.container');
 
-  // Summary card
-  const card = document.createElement('div');
+  var card = document.createElement('div');
   card.className = 'summary-card';
-  card.innerHTML =
-    '<h3>Auction Complete</h3>' +
-    '<div class="summary-text">' + formatStepText(text || 'Demo run completed.') + '</div>';
-  container.insertBefore(card, document.querySelector('.footer'));
 
-  // Show delivery verification card
-  setTimeout(function() { showDeliveryCard(container); }, 800);
+  // Payment destination: use on-chain discovered robot's wallet (real robot gets paid)
+  // Auction winner is from the mock fleet, but payment goes to the on-chain operator
+  var operatorName = winnerName || 'Robot Operator';
+  var stripeAccountId = 'acct_1TEjjLC2lXDckgmS';
+  var usdcWallet = null;
+  var onChainRobot = null;
+
+  if (discoveredRobots.length > 0) {
+    onChainRobot = discoveredRobots[0];
+    if (onChainRobot.payment) {
+      stripeAccountId = onChainRobot.payment.stripe_connect_id || stripeAccountId;
+      usdcWallet = onChainRobot.payment.usdc_wallet || null;
+    }
+  }
+
+  var stripeEnabled = !!stripeAccountId;
+  var usdcEnabled = !!usdcWallet;
+  var amountCents = 100;
+
+  // Show on-chain robot as payment recipient if different from auction winner
+  var paymentRecipientHtml = '';
+  if (onChainRobot && usdcWallet) {
+    paymentRecipientHtml =
+      '<div class="payment-row"><span class="payment-label">Payment to</span><span class="payment-value" style="color:var(--orange)">' + escapeHtml(onChainRobot.name) + ' (' + escapeHtml(onChainRobot.chain_name) + ')</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Wallet</span><span class="payment-value" style="font-family:monospace;font-size:11px">' + escapeHtml(usdcWallet.slice(0,6) + '...' + usdcWallet.slice(-4)) + '</span></div>';
+  }
+
+  card.innerHTML =
+    '<h3>Winner Selected</h3>' +
+    '<div class="summary-text">' + formatStepText(text || 'Auction complete.') + '</div>' +
+    '<div style="max-width:320px;margin:16px auto;text-align:left;padding:12px;background:var(--navy);border-radius:6px">' +
+      '<div class="payment-row"><span class="payment-label">Winner</span><span class="payment-value" style="color:var(--green)">' + escapeHtml(winnerName) + '</span></div>' +
+      (winnerPrice ? '<div class="payment-row"><span class="payment-label">Bid price</span><span class="payment-value">' + escapeHtml(winnerPrice) + '</span></div>' : '') +
+      paymentRecipientHtml +
+    '</div>' +
+    '<div style="font-size:13px;color:var(--slate-light);margin:16px 0 12px">Commit payment to hire this operator. No money moves until you approve the delivery.</div>' +
+    '<div class="payment-buttons">' +
+      '<button class="pay-btn pay-btn-stripe" onclick="payWithStripe(' + amountCents + ',\'' + escapeHtml(stripeAccountId || '') + '\')" ' +
+        (stripeEnabled ? '' : 'disabled title="Operator has no Stripe Connect account"') + '>' +
+        'Pay $' + (amountCents / 100).toFixed(2) + ' with Card' +
+      '</button>' +
+      '<button class="pay-btn pay-btn-usdc" onclick="payWithUSDC(\'' + escapeHtml(usdcWallet || '') + '\')" ' +
+        (usdcEnabled ? 'title="Gasless — platform pays gas."' : 'disabled title="Operator has no USDC wallet"') + '>' +
+        'Commit $0.01 USDC' +
+      '</button>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--slate);margin-top:8px">Signing a permit authorizes the platform to transfer USDC after delivery is accepted. No gas cost for buyer.</div>';
+
+  container.insertBefore(card, document.querySelector('.footer'));
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // Client-side schema validator — same logic as server-side validate_delivery_schema()
@@ -1227,148 +1376,65 @@ function validateSchema(data, schema, path) {
   return issues;
 }
 
-async function showDeliveryCard(container) {
-  var card = document.createElement('div');
-  card.className = 'delivery-card';
+function showDeliveryResult(deliveryData, qaResult) {
+  var container = document.querySelector('.container');
 
-  // Check if a real delivery IPFS CID is available (future: from auction result)
-  var hasIpfs = false; // Will be true when real robots deliver via IPFS
-  var sampleCid = 'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi'; // placeholder
-
-  // Try to upload delivery data to IPFS via worker
-  var ipfsCid = null;
-  var ipfsUrl = null;
-  try {
-    var uploadRes = await fetch(WORKER_BASE + '/api/upload-delivery', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        request_id: 'demo_' + Date.now(),
-        robot_id: discoveredRobots.length > 0 ? discoveredRobots[0].agent_id : 'mock',
-        robot_name: discoveredRobots.length > 0 ? discoveredRobots[0].name : 'Simulated Operator',
-        delivery_data: {
-          readings: [
-            { waypoint: 1, temperature_c: 22.4, humidity_pct: 45.2, timestamp: new Date().toISOString() },
-            { waypoint: 2, temperature_c: 23.1, humidity_pct: 43.8, timestamp: new Date().toISOString() },
-            { waypoint: 3, temperature_c: 21.9, humidity_pct: 46.5, timestamp: new Date().toISOString() },
-          ],
-          summary: 'All readings within spec. Temperature range: 21.9-23.1°C. Humidity range: 43.8-46.5% RH.',
-          duration_seconds: 245,
-        },
-      }),
-    });
-    if (uploadRes.ok) {
-      var uploadData = await uploadRes.json();
-      if (uploadData.ipfs_cid) {
-        ipfsCid = uploadData.ipfs_cid;
-        ipfsUrl = uploadData.ipfs_url;
-        hasIpfs = true;
-      }
-    }
-  } catch (e) { console.warn('IPFS upload failed:', e.message); }
-
-  // Run schema validation on the delivery data
-  var sampleDelivery = {
-    readings: [
-      { waypoint: 1, temperature_c: 22.4, humidity_pct: 45.2, timestamp: new Date().toISOString() },
-      { waypoint: 2, temperature_c: 23.1, humidity_pct: 43.8, timestamp: new Date().toISOString() },
-      { waypoint: 3, temperature_c: 21.9, humidity_pct: 46.5, timestamp: new Date().toISOString() },
-    ],
-    summary: 'All readings within spec. Temperature range: 21.9-23.1°C. Humidity range: 43.8-46.5% RH.',
-    duration_seconds: 245,
-  };
-  var schemaIssues = validateSchema(sampleDelivery, DELIVERY_SCHEMA);
-  var schemaStatus = schemaIssues.length === 0 ? 'PASS' : 'FAIL';
-  var schemaChecks = (DELIVERY_SCHEMA.required || []).length;
-
-  var schemaResultHtml =
-    '<div style="margin:12px 0;padding:10px;background:var(--navy);border-radius:4px;border-left:3px solid ' + (schemaStatus === 'PASS' ? 'var(--green)' : '#ef4444') + '">' +
-      '<div style="font-size:12px;font-weight:600;color:' + (schemaStatus === 'PASS' ? 'var(--green)' : '#ef4444') + ';margin-bottom:4px">Schema Validation: ' + schemaStatus + '</div>' +
-      '<div style="font-size:11px;color:var(--slate-light)">' +
-        'Checked against task delivery spec: ' + schemaChecks + ' required fields, ' +
-        (DELIVERY_SCHEMA.properties.readings.minItems || '?') + ' readings required, ' +
-        'sensor ranges validated.' +
-      '</div>' +
-      (schemaIssues.length > 0 ? '<div style="font-size:11px;color:#fca5a5;margin-top:4px">' + schemaIssues.join('<br>') + '</div>' : '') +
-      '<div style="font-size:10px;color:var(--slate);margin-top:6px">The robot received this same spec before starting work — no surprises.</div>' +
-    '</div>';
-
-  // QA level selector (buyer override)
-  var qaSelector =
-    '<div style="margin:16px 0;padding:12px;background:var(--navy);border-radius:4px">' +
-      '<div style="font-size:12px;font-weight:600;color:var(--slate-light);margin-bottom:8px">Quality Assurance Level</div>' +
-      '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
-        '<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--slate-light);cursor:pointer;padding:4px 8px;border:1px solid var(--navy-mid);border-radius:3px" title="Accept as-is, no checks">' +
-          '<input type="radio" name="qaLevel" value="0" style="accent-color:var(--orange)"> None' +
-        '</label>' +
-        '<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--slate-light);cursor:pointer;padding:4px 8px;border:1px solid var(--orange);border-radius:3px;background:var(--navy-mid)" title="Data exists, format valid, fields present, plausibility">' +
-          '<input type="radio" name="qaLevel" value="1" checked style="accent-color:var(--orange)"> Basic' +
-        '</label>' +
-        '<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--slate-light);cursor:pointer;padding:4px 8px;border:1px solid var(--navy-mid);border-radius:3px" title="CRS, ASPRS accuracy, USGS point density, deliverable list">' +
-          '<input type="radio" name="qaLevel" value="2" style="accent-color:var(--orange)"> Standards' +
-        '</label>' +
-        '<label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--slate-light);cursor:pointer;padding:4px 8px;border:1px solid var(--navy-mid);border-radius:3px" title="All checks + PLS stamp required">' +
-          '<input type="radio" name="qaLevel" value="3" style="accent-color:var(--orange)"> PLS Required' +
-        '</label>' +
-      '</div>' +
-      '<div style="font-size:10px;color:var(--slate);margin-top:6px" id="qaLevelDesc">Checks: data exists, format valid, required fields present, sensor plausibility.</div>' +
-    '</div>';
-
-  if (hasIpfs) {
-    card.innerHTML =
-      '<h3>Step 3 — Verify Delivery</h3>' +
-      '<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">The operator uploaded deliverables to IPFS. Review the data and select your QA level before releasing payment.</div>' +
-      '<div class="file-manifest">' +
-        '<div class="file-row"><span class="file-name">delivery.json</span><span class="file-size">Sensor readings (3 waypoints)</span></div>' +
-        '<div class="file-row"><span class="file-name">temperature</span><span class="file-size">21.9 - 23.1°C</span></div>' +
-        '<div class="file-row"><span class="file-name">humidity</span><span class="file-size">43.8 - 46.5% RH</span></div>' +
-      '</div>' +
-      '<div style="font-size:12px;margin-top:8px">' +
-        '<span style="color:var(--slate)">IPFS CID:</span> ' +
-        '<a href="' + (ipfsUrl || 'https://ipfs.io/ipfs/' + ipfsCid) + '" target="_blank" style="color:var(--orange);font-family:monospace;font-size:11px;text-decoration:none">' + ipfsCid + '</a>' +
-        ' <a href="https://ipfs.io/ipfs/' + ipfsCid + '" target="_blank" style="color:var(--slate);font-size:10px;text-decoration:none">[public gateway]</a>' +
-      '</div>' +
-      schemaResultHtml +
-      qaSelector +
-      '<div style="margin-top:12px">' +
-        '<button class="pay-btn" style="background:var(--green);font-size:12px;padding:8px 16px" onclick="acceptDelivery()">Accept Delivery &amp; Proceed to Payment</button>' +
-        '<button class="pay-btn" style="background:#7f1d1d;font-size:12px;padding:8px 16px;margin-left:8px" onclick="rejectDelivery()">Reject</button>' +
-      '</div>';
-  } else {
-    // No IPFS delivery — using simulated fleet
-    card.innerHTML =
-      '<h3>Step 3 — Delivery Verification</h3>' +
-      '<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">' +
-        'Survey data delivered by simulated operator. In production, deliverables are uploaded to IPFS with a content-addressed hash (CID) that the buyer can independently verify before releasing payment.' +
-      '</div>' +
-      '<div style="font-size:12px;color:var(--slate);margin-bottom:12px;padding:10px;background:var(--navy);border-radius:4px">' +
-        '<strong style="color:var(--slate-light)">What will change with real robots:</strong><br>' +
-        '1. Robot uploads LAS/GeoTIFF/DXF to IPFS after survey<br>' +
-        '2. IPFS CID recorded on-chain (immutable proof of delivery)<br>' +
-        '3. You download and verify data quality before paying<br>' +
-        '4. Payment release is gated on your verification' +
-      '</div>' +
-      schemaResultHtml +
-      qaSelector;
-
-    // Check if payment is possible
-    var paymentReady = discoveredRobots.some(function(r) {
-      return r.payment && (r.payment.stripe_connect_id || r.payment.usdc_wallet);
-    });
-
-    if (paymentReady) {
-      card.innerHTML += '<button class="pay-btn" style="background:var(--green);font-size:12px;padding:8px 16px" onclick="acceptDelivery()">Accept &amp; Proceed to Payment</button>';
-    } else {
-      card.innerHTML +=
-        '<div style="margin-top:12px;font-size:12px;color:#fcd34d;padding:8px;background:#78350f22;border-radius:4px">' +
-          'Payment settlement unavailable. ' +
-          (discoveredRobots.length > 0
-            ? 'Registered robots have no payment address in their agent card. Operators need to add a Stripe Connect account or USDC wallet.'
-            : 'No robots registered on Base. Using simulated fleet — real payment requires ERC-8004 registered robots with payment addresses.') +
-        '</div>' +
-        '<button class="pay-btn" style="background:var(--green);font-size:12px;padding:8px 16px;margin-top:12px" onclick="acceptDelivery()">Accept Delivery (payment demo)</button>';
-    }
+  // Update commitment card
+  var commitCard = document.getElementById('commitmentCard');
+  if (commitCard) {
+    commitCard.querySelector('h3').textContent = 'Payment Committed — Delivery Received';
+    var statusEl = commitCard.querySelector('.commit-status');
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--green)">Delivery received. Review QA results below.</span>';
   }
+
+  var card = document.createElement('div');
+  card.className = 'delivery-result-card';
+  card.style.cssText = 'background:var(--navy-deep);border:1px solid var(--navy-mid);border-radius:8px;padding:20px;margin-top:16px;text-align:center';
+
+  // QA result display
+  var qaStatus = qaResult ? qaResult.status : 'N/A';
+  var qaLevel = qaResult ? qaResult.level : 0;
+  var qaChecks = qaResult ? (qaResult.checks_run || []) : [];
+  var qaIssues = qaResult ? (qaResult.issues || []) : [];
+  var qaColor = qaStatus === 'PASS' ? 'var(--green)' : '#ef4444';
+
+  var qaHtml =
+    '<div style="margin:12px 0;padding:12px;background:var(--navy);border-radius:6px;border-left:3px solid ' + qaColor + '">' +
+      '<div style="font-size:14px;font-weight:600;color:' + qaColor + ';margin-bottom:6px">QA Validation: ' + qaStatus + '</div>' +
+      '<div style="font-size:11px;color:var(--slate-light)">' +
+        'Level ' + qaLevel + ' | Checks: ' + (qaChecks.length > 0 ? qaChecks.join(', ') : 'basic validation') +
+      '</div>' +
+      (qaIssues.length > 0 ? '<div style="font-size:11px;color:#fca5a5;margin-top:4px">' + qaIssues.map(escapeHtml).join('<br>') + '</div>' : '') +
+      '<div style="font-size:10px;color:var(--slate);margin-top:6px">The robot received the same delivery spec before starting work — no surprises.</div>' +
+    '</div>';
+
+  // Blurred data payload (revealed after payment release)
+  var dataPreviewHtml = '';
+  if (deliveryData) {
+    var readings = deliveryData.readings || [];
+    var summary = deliveryData.summary || '';
+    dataPreviewHtml =
+      '<div id="deliveryPayload" style="margin:12px 0;padding:12px;background:var(--navy);border-radius:6px;filter:blur(4px);user-select:none;pointer-events:none;transition:filter 0.3s">' +
+        '<div style="font-size:11px;font-weight:600;color:var(--slate-light);margin-bottom:6px">Delivery Payload (' + readings.length + ' waypoints)</div>' +
+        '<pre style="font-size:10px;color:var(--slate);overflow:auto;max-height:150px;margin:0">' + escapeHtml(JSON.stringify(deliveryData, null, 2)) + '</pre>' +
+      '</div>' +
+      '<div id="payloadBlurNotice" style="font-size:11px;color:var(--slate);margin-bottom:12px">Data payload revealed after payment release.</div>';
+  }
+
+  card.innerHTML =
+    '<h3 style="color:var(--white)">Delivery Received</h3>' +
+    '<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">' +
+      'The robot has completed the task and delivered results. QA validation has been run against the delivery schema.' +
+    '</div>' +
+    qaHtml +
+    dataPreviewHtml +
+    (qaStatus === 'PASS'
+      ? '<div style="margin-top:16px">' +
+          '<button class="pay-btn pay-btn-usdc release-payment-btn" onclick="releasePayment()" style="font-size:13px;padding:10px 20px">Release Payment</button>' +
+          '<div style="font-size:11px;color:var(--slate);margin-top:8px">QA passed. Release USDC to complete the transaction. Platform submits on-chain — no gas from your wallet.</div>' +
+        '</div>'
+      : '<div style="margin-top:16px;color:#ef4444;font-size:12px">QA failed. Payment cannot be released. Task would be re-pooled in production.</div>'
+    );
 
   container.insertBefore(card, document.querySelector('.footer'));
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1736,8 +1802,6 @@ async function payWithUSDC(operatorWallet) {
 
 function showPaymentCommitted(data, chainName) {
   var container = document.querySelector('.container');
-  var pc = document.getElementById('paymentCard');
-  if (pc) pc.remove();
 
   var card = document.createElement('div');
   card.className = 'payment-card';
@@ -1749,28 +1813,25 @@ function showPaymentCommitted(data, chainName) {
   var platAmount = (Number(BigInt(data.platform_amount)) / 1000000).toFixed(4);
 
   card.innerHTML =
-    '<h3 style="color:var(--orange)">Payment Committed</h3>' +
+    '<h3 style="color:var(--orange)">Payment Committed — Dispatching Task</h3>' +
     '<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">' +
       'Your payment is authorized but <strong>no money has moved</strong>. ' +
-      'Funds remain in your wallet until you accept the delivery.' +
+      'The robot is now being dispatched to execute the task.' +
     '</div>' +
     '<div style="max-width:320px;margin:0 auto 12px;text-align:left">' +
-      '<div class="payment-row"><span class="payment-label">Status</span><span class="payment-value" style="color:var(--orange)">Committed (pending delivery)</span></div>' +
+      '<div class="payment-row"><span class="payment-label">Status</span><span class="payment-value commit-status" style="color:var(--orange)">Dispatching robot...</span></div>' +
       '<div class="payment-row"><span class="payment-label">Amount</span><span class="payment-value">$' + (Number(data.total_amount) / 1000000).toFixed(4) + ' USDC</span></div>' +
       '<div class="payment-row"><span class="payment-label">Operator will receive</span><span class="payment-value">$' + opAmount + '</span></div>' +
       '<div class="payment-row"><span class="payment-label">Platform commission</span><span class="payment-value">$' + platAmount + '</span></div>' +
       '<div class="payment-row"><span class="payment-label">Chain</span><span class="payment-value">' + escapeHtml(chainName) + '</span></div>' +
       '<div class="payment-row"><span class="payment-label">Expires in</span><span class="payment-value">' + timeRemaining + ' minutes</span></div>' +
-    '</div>' +
-    '<div style="font-size:11px;color:var(--slate);margin-bottom:12px">' +
-      'The robot will now execute the task. After delivery and QA validation, click "Release Payment" to complete the transaction.' +
-    '</div>' +
-    '<div style="padding:10px;background:var(--navy);border-radius:4px;font-size:11px;color:var(--slate)">' +
-      'Waiting for delivery + QA verification before payment can be released...' +
     '</div>';
 
   container.insertBefore(card, document.querySelector('.footer'));
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Auto-trigger execution after a brief pause
+  setTimeout(function() { runExecution(); }, 1000);
 }
 
 async function releasePayment() {
@@ -1831,8 +1892,9 @@ async function releasePayment() {
 
 function showUsdcSuccess(data) {
   var container = document.querySelector('.container');
-  var pc = document.getElementById('paymentCard');
-  if (pc) pc.remove();
+  // Remove commitment card
+  var cc = document.getElementById('commitmentCard');
+  if (cc) cc.remove();
 
   var card = document.createElement('div');
   card.className = 'payment-success';
@@ -1856,6 +1918,16 @@ function showUsdcSuccess(data) {
 
   container.insertBefore(card, document.querySelector('.footer'));
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Reveal the blurred delivery payload
+  var payload = document.getElementById('deliveryPayload');
+  if (payload) {
+    payload.style.filter = 'none';
+    payload.style.userSelect = 'auto';
+    payload.style.pointerEvents = 'auto';
+  }
+  var notice = document.getElementById('payloadBlurNotice');
+  if (notice) notice.textContent = 'Payment released. Full delivery data:';
 
   // Show feedback prompt after payment
   setTimeout(function() {
@@ -2047,7 +2119,7 @@ function showError(msg) {
 function resetBtn() {
   const btn = document.getElementById('runBtn');
   btn.disabled = false;
-  btn.textContent = 'Run Live Demo';
+  btn.textContent = 'Run Auction';
 }
 
 function formatToolName(name) {

@@ -541,6 +541,35 @@ const DEMO_TOOLS = [
   }
 ];
 
+// Phase 1: Auction only — stops after award. Execution happens after buyer commits payment.
+const DEMO_SYSTEM_AUCTION = `You are demonstrating the YAK ROBOTICS robot task marketplace.
+
+A buyer has submitted a task request. Run the auction to find the best operator:
+1. Process the RFP to extract task specs (auction_process_rfp)
+2. Post each task to the marketplace (auction_post_task for each)
+3. Collect bids from operators (auction_get_bids for each)
+4. Review bids and identify winners (auction_review_bids)
+5. Award to recommended operator (auction_award_with_confirmation)
+
+STOP after awarding. Do NOT execute or confirm delivery — the buyer must commit payment first.
+
+After each tool call, briefly explain what happened in 1-2 sentences. Be concise.
+End with a summary: the winning operator's name, their bid price, and the task they will perform.
+
+If the prompt includes "Discovered robots" — these are REAL robots found on-chain via ERC-8004. Reference them by name. When a real robot wins, note it was discovered on-chain.
+
+If a Delivery Schema is provided, mention that the robot will receive this spec and QA will validate against it.`;
+
+// Phase 2: Execute + deliver �� runs after buyer has committed payment.
+const DEMO_SYSTEM_EXECUTE = `You are completing a robot task that was already awarded in an auction.
+The buyer has committed payment. Now dispatch the robot and confirm delivery:
+1. Execute the task (auction_execute)
+2. Confirm delivery and run QA validation (auction_confirm_delivery)
+
+After each tool call, briefly explain what happened. Be concise.
+Mention the QA validation result (PASS/FAIL) and what was checked.`;
+
+// Legacy: full flow in one shot (kept for backward compat, not used by demo)
 const DEMO_SYSTEM = `You are demonstrating the YAK ROBOTICS robot task marketplace.
 
 A buyer has submitted a task request. Your job is to run the full auction lifecycle:
@@ -558,6 +587,16 @@ Use the site_info provided. This is a real auction engine with real and simulate
 If the prompt includes "Discovered robots" — these are REAL robots found on-chain via ERC-8004. Reference them by name in your narration. They bid alongside the simulated operators. When a real robot wins, note that it was discovered on-chain.
 
 If a Delivery Schema is provided, mention that the robot received this spec and QA will validate against it.`;
+
+// Tool names for each phase
+const AUCTION_PHASE_TOOLS = new Set([
+  "auction_process_rfp", "auction_post_task", "auction_get_bids",
+  "auction_review_bids", "auction_verify_bond", "auction_award_with_confirmation",
+  "auction_generate_agreement", "auction_list_tasks",
+]);
+const EXECUTE_PHASE_TOOLS = new Set([
+  "auction_execute", "auction_confirm_delivery",
+]);
 
 function demoRateLimitKey(ip) {
   const date = new Date().toISOString().slice(0, 10);
@@ -637,30 +676,56 @@ async function handleDemo(request, env, cors) {
     );
   }
 
-  const { prompt, tunnel_url } = body;
-  if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+  const { prompt, tunnel_url, phase, request_id: execRequestId } = body;
+  const demoPhase = phase || "auction";
+
+  if (demoPhase === "auction") {
+    if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: "prompt is required" }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+    if (prompt.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: "Prompt too long (max 5000 characters)" }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+    // Only count auction phase toward rate limit
+    await incrementDemoRateLimit(env, ip);
+  } else if (demoPhase === "execute") {
+    if (!execRequestId) {
+      return new Response(
+        JSON.stringify({ error: "request_id is required for execute phase" }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+    // Execute phase does not count toward rate limit
+  } else {
     return new Response(
-      JSON.stringify({ error: "prompt is required" }),
+      JSON.stringify({ error: "Invalid phase. Use 'auction' or 'execute'." }),
       { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
 
-  if (prompt.length > 5000) {
-    return new Response(
-      JSON.stringify({ error: "Prompt too long (max 5000 characters)" }),
-      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
-    );
-  }
+  // Select system prompt and tools based on phase
+  const systemPrompt = demoPhase === "execute"
+    ? DEMO_SYSTEM_EXECUTE + `\n\nThe task request_id is: ${execRequestId}`
+    : DEMO_SYSTEM_AUCTION;
+  const phaseToolFilter = demoPhase === "execute" ? EXECUTE_PHASE_TOOLS : AUCTION_PHASE_TOOLS;
+  const phaseTools = DEMO_TOOLS.filter(t => phaseToolFilter.has(t.name));
+  const maxIterations = demoPhase === "execute" ? 4 : 8;
 
-  // Increment rate limit
-  await incrementDemoRateLimit(env, ip);
+  const userMessage = demoPhase === "execute"
+    ? `Execute task ${execRequestId} and confirm delivery.`
+    : prompt;
 
   const steps = [];
-  const messages = [{ role: "user", content: prompt }];
-  const MAX_ITERATIONS = 8;
+  const messages = [{ role: "user", content: userMessage }];
 
   try {
-    for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+    for (let iteration = 0; iteration < maxIterations; iteration++) {
       // Call Anthropic Messages API (non-streaming)
       const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -672,9 +737,9 @@ async function handleDemo(request, env, cors) {
         body: JSON.stringify({
           model: env.MODEL || "claude-haiku-4-5-20251001",
           max_tokens: 4096,
-          system: DEMO_SYSTEM,
+          system: systemPrompt,
           messages,
-          tools: DEMO_TOOLS,
+          tools: phaseTools,
         }),
       });
 
@@ -1306,9 +1371,9 @@ const USDC_CONTRACTS = {
 };
 
 const RPC_ENDPOINTS = {
-  8453:     "https://mainnet.base.org",
-  1:        "https://ethereum-rpc.publicnode.com",
-  84532:    "https://sepolia.base.org",
+  8453:     "https://1rpc.io/base",
+  1:        "https://1rpc.io/eth",
+  84532:    "https://base-sepolia-rpc.publicnode.com",
   11155111: "https://ethereum-sepolia-rpc.publicnode.com",
 };
 
@@ -1681,49 +1746,68 @@ async function handleExecutePayment(request, env, cors) {
       );
     }
 
-    // Execute: permit + two transfers
-    // Log values for debugging
-    console.log("PAYMENT DEBUG:", JSON.stringify({
-      owner, spender: relayWallet.address, value: totalBig.toString(),
-      operatorAmount: operatorAmount.toString(), platformAmount: platformAmount.toString(),
-      operator_wallet, platform_wallet, deadline, v, r, s,
-      chain_id, usdcAddr,
-    }));
+    // Resume-safe execution: track which steps already completed.
+    // Previous attempts may have partially succeeded (permit ok, first transfer ok, second failed).
+    const txHashes = commitment.tx_hashes || {};
+    const existingAllowance = await usdc.allowance(owner, relayWallet.address);
 
-    const permitTx = await usdc.permit(owner, relayWallet.address, totalBig, deadline, v, r, s);
-    await permitTx.wait();
+    // Step 1: Permit (skip if relay already has sufficient allowance)
+    if (!txHashes.permit && existingAllowance < totalBig) {
+      const permitTx = await usdc.permit(owner, relayWallet.address, totalBig, deadline, v, r, s);
+      await permitTx.wait();
+      txHashes.permit = permitTx.hash;
+      // Save progress in case next step fails
+      commitment.tx_hashes = txHashes;
+      await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
+    } else if (!txHashes.permit) {
+      txHashes.permit = "skipped_existing_allowance";
+    }
 
-    // Check allowance after permit to verify it was set correctly
-    const allowanceAfterPermit = await usdc.allowance(owner, relayWallet.address);
-    console.log("ALLOWANCE AFTER PERMIT:", allowanceAfterPermit.toString(), "NEED:", totalBig.toString());
+    // Step 2: Transfer to operator (skip if already done)
+    if (!txHashes.operator) {
+      // Re-check allowance to determine the right amount to transfer
+      const currentAllowance = await usdc.allowance(owner, relayWallet.address);
+      // If allowance covers operator amount, do it
+      if (currentAllowance >= operatorAmount) {
+        const opTx = await usdc.transferFrom(owner, operator_wallet, operatorAmount);
+        const opReceipt = await opTx.wait();
+        txHashes.operator = opReceipt.hash;
+        commitment.tx_hashes = txHashes;
+        await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
+      } else {
+        throw new Error(`Allowance too low for operator transfer: have ${currentAllowance}, need ${operatorAmount}`);
+      }
+    }
 
-    const opTx = await usdc.transferFrom(owner, operator_wallet, operatorAmount);
-    const opReceipt = await opTx.wait();
-
-    const platTx = await usdc.transferFrom(owner, platform_wallet, platformAmount);
-    const platReceipt = await platTx.wait();
+    // Step 3: Transfer to platform (skip if already done)
+    if (!txHashes.platform) {
+      const currentAllowance = await usdc.allowance(owner, relayWallet.address);
+      if (currentAllowance >= platformAmount) {
+        const platTx = await usdc.transferFrom(owner, platform_wallet, platformAmount);
+        const platReceipt = await platTx.wait();
+        txHashes.platform = platReceipt.hash;
+      } else {
+        throw new Error(`Allowance too low for platform transfer: have ${currentAllowance}, need ${platformAmount}`);
+      }
+    }
 
     const explorers = { 8453: "https://basescan.org", 1: "https://etherscan.io", 84532: "https://sepolia.basescan.org", 11155111: "https://sepolia.etherscan.io" };
     const explorer = explorers[chain_id] || "https://etherscan.io";
 
-    // Update commitment to executed
+    // All 3 steps complete
     commitment.status = "executed";
     commitment.executed_at = new Date().toISOString();
-    commitment.tx_hashes = {
-      permit: permitTx.hash,
-      operator: opReceipt.hash,
-      platform: platReceipt.hash,
-    };
-    await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: 86400 * 30 }); // Keep for 30 days
+    commitment.tx_hashes = txHashes;
+    await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: 86400 * 30 });
 
     return new Response(
       JSON.stringify({
         success: true,
         request_id,
         chain_id,
-        permit_tx: permitTx.hash,
-        operator_tx: opReceipt.hash,
-        platform_tx: platReceipt.hash,
+        permit_tx: txHashes.permit,
+        operator_tx: txHashes.operator,
+        platform_tx: txHashes.platform,
         operator_amount: operatorAmount.toString(),
         platform_amount: platformAmount.toString(),
         explorer,
@@ -1732,9 +1816,10 @@ async function handleExecutePayment(request, env, cors) {
     );
   } catch (err) {
     console.error("Payment execution error:", err);
-    // Reset status so it can be retried
+    // Reset to committed for retry, but PRESERVE tx_hashes so we can resume
     commitment.status = "committed";
     await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: Math.max(commitment.deadline - now, 60) });
+    console.log("Payment progress saved:", JSON.stringify(commitment.tx_hashes));
 
     const msg = err.message || String(err);
     const reason = err.reason || "";

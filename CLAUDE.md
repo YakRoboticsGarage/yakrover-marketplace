@@ -6,7 +6,7 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 
 **Wedge market:** Construction site surveying (pre-bid topo, GPR subsurface, progress monitoring). Typical tasks: $1,000-$10,000. Full project lifecycle: $25,000-$72,000+.
 **v1.0 status:** Built. 278 tests, 35 MCP tools, ~16,400 LOC. 180 commits.
-**v1.1 status:** Milestone reached (2026-04-05). End-to-end USDC payment on Base Sepolia confirmed. Schema-driven delivery QA, commit-on-hire gasless USDC, Stripe Checkout (test mode), robot discovery, IPFS delivery. Tag: `v1.1-milestone-payment-e2e`.
+**v1.1 status:** Milestone 2 reached (2026-04-05). USDC payment on **Base mainnet** with real on-chain robot (ERC-8004). Two-phase demo: auction → commit → execute → QA → release. Correct user journey. Tags: `v1.1-milestone-payment-e2e` (Sepolia), `v1.1-milestone-base-mainnet` (mainnet).
 **Next:** v1.5 (settlement abstraction + construction task specs + privacy foundation). See `docs/FEATURE_REQUIREMENTS_v15.md`.
 **Live sites:** [yakrobot.bid](https://yakrobot.bid), [yakrobot.bid/mcp-demo](https://yakrobot.bid/mcp-demo/), [yakrobot.bid/mcp-demo-2](https://yakrobot.bid/mcp-demo-2/) (payment demo), [yakrobot.bid/yaml](https://yakrobot.bid/yaml), [yakrobot.bid/pitch](https://yakrobot.bid/pitch)
 
