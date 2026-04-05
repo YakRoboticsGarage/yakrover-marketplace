@@ -93,7 +93,7 @@ def build_engine():
     for r in fleet:
         name = getattr(r, "name", r.robot_id)
         sensors = r.capability_metadata.get("sensors", [])
-        sensor_str = ", ".join(sensors[:3])
+        sensor_str = ", ".join(s if isinstance(s, str) else s.get("type", str(s)) for s in sensors[:3])
         log("FLEET", f"  {name} ({r.robot_id}) — {sensor_str}")
 
     # Event tracking
