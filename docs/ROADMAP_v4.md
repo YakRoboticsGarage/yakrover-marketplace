@@ -181,12 +181,20 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - [x] Robot operator onboarding guide published
 - [x] CI fully green (lint, mypy 0 errors, 265 tests)
 - [x] Repo renamed to yakrover-marketplace
+- [x] Stripe Payment Element (inline authorize/capture, no redirect)
+- [x] Demo-3 redesigned: light theme, phase breadcrumbs, sidebar feed, payment mode selector
+- [x] MCPRobotAdapter: marketplace calls real robot MCP endpoints for bid + execute
+- [x] On-chain robot discovery at MCP server startup (subgraph query, mock fleet excluded when real robots available)
+- [x] 3 FakeRover-Berlin robots registered on Base mainnet (#38918, #38919, #38921)
+- [x] Payment amount from robot's actual bid price (not hardcoded)
+- [x] Payment routed to auction winner's on-chain wallet (not hardcoded first robot)
 
 ### What's blocking v1.1 completion
-- [x] ~~Robot registered on Base or Ethereum mainnet~~ — FakeRover-Finland-01 on Base (agent #38801)
-- [ ] 8004 team: `robot_submit_bid` + `robot_execute_task` MCP tools (plan reviewed in PR #5)
-- [ ] End-to-end test: real robot bids → real execution → real sensor data → IPFS upload → schema QA → USDC payment
+- [x] ~~Robot registered on Base or Ethereum mainnet~~ — FakeRover-Finland-01 (#38801) + 3 Berlin rovers (#38918, #38919, #38921) on Base
+- [x] ~~8004 team: `robot_submit_bid` + `robot_execute_task` MCP tools~~ — Anuraj delivered (Stages 1-5), merged to main. Marketplace calls them via MCPRobotAdapter.
+- [x] ~~End-to-end test: real robot bids → real execution → real sensor data → schema QA → USDC payment~~ — Confirmed 2026-04-06. Berlin robots bid $0.50 via MCP, execute via fakerover simulator, QA PASS, USDC settled on Base mainnet.
 - [ ] After 8004 PR #4 merges: unskip 4 fakerover bid tests
+- [ ] IPFS upload of delivery data from real robot execution (currently mock upload)
 
 ### Deferred to next phase
 - [ ] **Stable tunnel URLs** — Replace random `trycloudflare.com` with named Cloudflare tunnels (`mcp.yakrobot.bid`, `fleet.yakrobot.bid`). Currently every session requires new tunnel URLs, on-chain metadata updates, and manual paste into demo. See `docs/research/PLAN_REAL_ROBOT_INTEGRATION.md` "Open: Stable Tunnel URLs" section.
