@@ -43,22 +43,22 @@ background-size:1200px 900px}
 
 /* ===== LAYOUT: 2-column (sidebar + main) ===== */
 .app-shell{position:relative;z-index:1;display:grid;grid-template-columns:300px 1fr;grid-template-rows:auto 1fr auto;min-height:100vh;gap:0}
-/* Combined sticky header block (brand + breadcrumbs, no gap) */
-.app-top{grid-column:1/-1;position:sticky;top:0;z-index:100}
-.app-header{background:var(--navy);color:#fff;padding:10px 24px;display:flex;align-items:center;gap:16px}
-.header-logo{font-size:12px;font-weight:800;letter-spacing:3px;color:var(--accent);text-transform:uppercase}
-.header-title{font-size:15px;font-weight:600;color:#fff}
+/* Single header bar (brand + breadcrumbs) */
+.app-top{grid-column:1/-1;position:sticky;top:0;z-index:100;background:var(--navy);display:flex;align-items:center;padding:0 24px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.app-header{display:flex;align-items:center;gap:12px;padding:10px 0;flex-shrink:0}
+.header-logo{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+.header-sep{width:1px;height:20px;background:rgba(255,255,255,0.15);margin:0 8px}
 .header-spacer{flex:1}
-.header-link{font-size:12px;color:rgba(255,255,255,0.6);text-decoration:none}
+.header-link{font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none}
 .header-link:hover{color:#fff}
 
-/* Breadcrumbs — seamless under header, no gap */
-.breadcrumbs-bar{background:var(--bg-subtle);border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:0}
-.phase{display:inline-flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:1px;padding:4px 14px;border-radius:3px;color:var(--text-3);background:transparent;text-transform:uppercase;cursor:default;transition:all 0.2s}
+/* Breadcrumbs — inline in the header */
+.breadcrumbs-bar{display:flex;align-items:center;gap:0;padding:0;margin-left:auto}
+.phase{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:3px;color:rgba(255,255,255,0.35);background:transparent;text-transform:uppercase;cursor:default;transition:all 0.2s}
 .phase.active{background:var(--accent);color:#fff}
-.phase.done{background:var(--green-bg);color:var(--green);cursor:pointer}
-.phase.done:hover{background:#d1fae5}
-.phase-chevron{width:20px;text-align:center;color:var(--border);font-size:14px;user-select:none}
+.phase.done{background:rgba(26,125,78,0.2);color:var(--green);cursor:pointer}
+.phase.done:hover{background:rgba(26,125,78,0.3)}
+.phase-chevron{width:14px;text-align:center;color:rgba(255,255,255,0.2);font-size:12px;user-select:none}
 
 /* Sidebar: fixed settings top, scrollable feed bottom */
 .sidebar{grid-column:1;grid-row:2;border-right:1px solid var(--border);padding:0;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;height:calc(100vh - 82px)}
@@ -226,7 +226,10 @@ background-size:1200px 900px}
 .feed-detail.expanded{display:block}
 
 /* Footer */
-.app-footer{grid-column:1/-1;grid-row:3;text-align:center;padding:16px;font-size:11px;color:var(--text-3);border-top:1px solid var(--border)}
+.app-footer{grid-column:1/-1;grid-row:3;display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 24px;font-size:11px;color:var(--text-3);border-top:1px solid var(--border);flex-shrink:0}
+.app-footer a{color:var(--accent);text-decoration:none}
+.app-footer a:hover{text-decoration:underline}
+.footer-sep{color:var(--border)}
 
 /* ===== MOBILE: hamburger + responsive ===== */
 .hamburger{display:none;background:none;border:none;color:#fff;cursor:pointer;padding:4px}
@@ -242,7 +245,8 @@ background-size:1200px 900px}
   .hamburger{display:flex;align-items:center}
   .main-content{padding:16px;max-width:100%}
   .field-grid{grid-template-columns:1fr}
-  .breadcrumbs-bar{top:48px;padding:8px 16px;overflow-x:auto}
+  .app-top{flex-wrap:wrap;padding:0 12px}
+  .breadcrumbs-bar{width:100%;padding:6px 0;overflow-x:auto;margin-left:0}
   .btn-group{flex-direction:column}
 }
 </style>
@@ -251,16 +255,14 @@ background-size:1200px 900px}
 
 <div class="app-shell">
 
-  <!-- STICKY TOP (header + breadcrumbs, seamless) -->
+  <!-- SINGLE HEADER BAR -->
   <div class="app-top">
     <header class="app-header">
       <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <span class="header-logo">YAK ROBOTICS</span>
-      <span class="header-title">Hire a Robot</span>
-      <span class="header-spacer"></span>
-      <a class="header-link" href="https://yakrobot.bid" target="_blank">yakrobot.bid</a>
+      <span class="header-sep"></span>
     </header>
     <nav class="breadcrumbs-bar" id="breadcrumbs">
       <span class="phase active" data-phase="setup">SETUP</span>
@@ -286,7 +288,7 @@ background-size:1200px 900px}
 
     <div class="sidebar-top">
       <div class="sidebar-section">
-        <div class="sidebar-label">Payment Mode</div>
+        <div class="sidebar-label">Payment</div>
         <select class="field-input" id="demoMode" onchange="onDemoModeChange()" style="font-size:12px;padding:6px 8px">
           <option value="base">Base Mainnet (USDC)</option>
           <option value="base-sepolia">Base Sepolia (USDC testnet)</option>
@@ -296,6 +298,13 @@ background-size:1200px 900px}
           <option value="stripe-test">Stripe Test (card 4242...)</option>
         </select>
         <div class="tunnel-status" id="demoModeHint">Real USDC on Base. Buyer wallet needs USDC.</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Fleet</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer">
+          <input type="checkbox" id="simulatorOnly" onchange="onSimulatorToggle()" style="accent-color:var(--accent)">
+          Simulators only (skip real robots)
+        </label>
       </div>
     </div>
 
@@ -415,8 +424,18 @@ Requirements:
 
   <!-- FOOTER -->
   <footer class="app-footer">
-    Powered by Claude Haiku 4.5 + YAK ROBOTICS auction engine (34 MCP tools) + Stripe Connect + Base
-    <span id="buildStamp" style="display:block;margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);opacity:0.6"></span>
+    <a href="https://yakrobot.bid" target="_blank">yakrobot.bid</a>
+    <span class="footer-sep">&middot;</span>
+    <a href="https://yakrobot.bid/pitch/" target="_blank">Pitch</a>
+    <span class="footer-sep">&middot;</span>
+    <a href="https://yakrobot.bid/yaml/" target="_blank">Product</a>
+    <span class="footer-sep">&middot;</span>
+    <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace" target="_blank">GitHub</a>
+    <span class="footer-sep">&middot;</span>
+    <span>Robots on <a href="https://8004scan.io" target="_blank">ERC-8004</a></span>
+    <span class="footer-sep">&middot;</span>
+    <span>Payments on <a href="https://basescan.org" target="_blank">Base</a></span>
+    <span id="buildStamp" style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9px;opacity:0.4"></span>
   </footer>
 
 </div>
@@ -449,6 +468,11 @@ function onDemoModeChange() {
   var mode = DEMO_MODES[demoMode];
   var hint = document.getElementById('demoModeHint');
   if (hint) hint.textContent = mode.hint;
+}
+
+var simulatorOnly = false;
+function onSimulatorToggle() {
+  simulatorOnly = document.getElementById('simulatorOnly').checked;
 }
 
 function getDemoChainId() {
@@ -1412,7 +1436,7 @@ async function runAuction() {
     var response = await fetch(WORKER_URL, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({ prompt: prompt, tunnel_url: tunnelUrl, phase: 'auction' })
+      body: JSON.stringify({ prompt: prompt, tunnel_url: tunnelUrl, phase: 'auction', simulator_only: simulatorOnly })
     });
 
     if (response.status === 429) {

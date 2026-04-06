@@ -688,7 +688,7 @@ async function handleDemo(request, env, cors) {
     );
   }
 
-  const { prompt, tunnel_url, phase, request_id: execRequestId } = body;
+  const { prompt, tunnel_url, phase, request_id: execRequestId, simulator_only } = body;
   const demoPhase = phase || "auction";
 
   if (demoPhase === "auction") {
@@ -722,9 +722,13 @@ async function handleDemo(request, env, cors) {
   }
 
   // Select system prompt and tools based on phase
-  const systemPrompt = demoPhase === "execute"
+  let systemPrompt = demoPhase === "execute"
     ? DEMO_SYSTEM_EXECUTE + `\n\nThe task request_id is: ${execRequestId}`
     : DEMO_SYSTEM_AUCTION;
+
+  if (simulator_only && demoPhase === "auction") {
+    systemPrompt += "\n\nIMPORTANT: Only use FakeRover simulator robots for this demo. If a real robot (e.g. Tumbller) wins the auction, award to a FakeRover instead.";
+  }
   const phaseToolFilter = demoPhase === "execute" ? EXECUTE_PHASE_TOOLS : AUCTION_PHASE_TOOLS;
   const phaseTools = DEMO_TOOLS.filter(t => phaseToolFilter.has(t.name));
   const maxIterations = demoPhase === "execute" ? 4 : 8;
