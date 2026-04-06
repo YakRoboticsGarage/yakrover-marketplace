@@ -74,11 +74,20 @@ background-size:1200px 900px}
 .tunnel-status{font-size:11px;color:var(--text-3);margin-top:6px}
 
 /* Robot list (compact feed style) */
-.robot-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;border-bottom:1px solid var(--bg-subtle)}
-.robot-item:last-child{border-bottom:none}
+/* Robot drawer (same pattern as feed) */
+.robot-panel{border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;max-height:40%}
+.robot-panel.collapsed .robot-list{display:none}
+.robot-panel.collapsed .feed-toggle{transform:rotate(-90deg)}
+.robot-list{overflow-y:auto;padding:8px 12px}
+.robot-item{display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:12px;cursor:pointer;border-radius:4px}
+.robot-item:hover{background:var(--bg-hover)}
 .robot-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .robot-dot-active{background:var(--green)}
 .robot-dot-inactive{background:var(--text-3)}
+.robot-detail{display:none;padding:10px 12px;margin:0 4px 6px;background:var(--bg-subtle);border-radius:var(--radius);font-size:11px;line-height:1.6;color:var(--text-2)}
+.robot-detail.expanded{display:block}
+.robot-detail a{color:var(--accent);text-decoration:none}
+.robot-detail a:hover{text-decoration:underline}
 .robot-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:500}
 .robot-chain{font-size:10px;color:var(--text-3);flex-shrink:0;font-family:'JetBrains Mono',monospace}
 .badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:0.3px}
@@ -213,7 +222,7 @@ background-size:1200px 900px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 .feed-text{flex:1;min-width:0;font-size:12px;color:var(--text-2);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .feed-time{font-size:10px;color:var(--text-3);white-space:nowrap;flex-shrink:0;font-family:'JetBrains Mono',monospace}
-.feed-detail{display:none;padding:8px 12px;margin:0 4px 8px;background:var(--bg-subtle);border-radius:var(--radius);font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.5;color:var(--text-3);max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+.feed-detail{display:none;padding:12px;margin:4px 0 10px;background:var(--bg-subtle);border-radius:var(--radius);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--text-2);max-height:300px;overflow:auto;white-space:pre-wrap;word-break:break-word}
 .feed-detail.expanded{display:block}
 
 /* Footer */
@@ -277,15 +286,6 @@ background-size:1200px 900px}
 
     <div class="sidebar-top">
       <div class="sidebar-section">
-        <div class="sidebar-label">MCP Server</div>
-        <div class="tunnel-row">
-          <input class="tunnel-input" type="text" id="tunnelUrl" value="https://yakrover-marketplace.fly.dev" placeholder="https://yakrover-marketplace.fly.dev">
-          <button class="tunnel-btn" id="testBtn" onclick="testTunnel()">Test</button>
-        </div>
-        <div class="tunnel-status" id="tunnelStatus">Enter the URL shown when you start mcp_server.py</div>
-      </div>
-
-      <div class="sidebar-section">
         <div class="sidebar-label">Payment Mode</div>
         <select class="field-input" id="demoMode" onchange="onDemoModeChange()" style="font-size:12px;padding:6px 8px">
           <option value="base">Base Mainnet (USDC)</option>
@@ -297,21 +297,24 @@ background-size:1200px 900px}
         </select>
         <div class="tunnel-status" id="demoModeHint">Real USDC on Base. Buyer wallet needs USDC.</div>
       </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-label" style="display:flex;justify-content:space-between;align-items:center">
-          Robots
-          <button class="tunnel-btn" onclick="discoverRobots()" style="padding:2px 8px;font-size:10px">Refresh</button>
-        </div>
-        <div class="discovery-status" id="discoveryStatus">Searching...</div>
-        <div id="robotCards"></div>
-      </div>
     </div>
 
-    <!-- Activity Feed (collapsible) -->
+    <!-- Hidden MCP server URL (stable, no need for UI input) -->
+    <input type="hidden" id="tunnelUrl" value="https://yakrover-marketplace.fly.dev">
+
+    <!-- Robots drawer -->
+    <div class="robot-panel" id="robotPanel">
+      <div class="feed-header" onclick="toggleRobots()">
+        Robots <span id="discoveryStatus" style="font-weight:400;text-transform:none;letter-spacing:0">searching...</span>
+        <span class="feed-toggle">&#9660;</span>
+      </div>
+      <div class="robot-list" id="robotCards"></div>
+    </div>
+
+    <!-- Activity Feed drawer -->
     <div class="feed-panel" id="feedPanel">
       <div class="feed-header" onclick="toggleFeed()">
-        Activity Feed <span id="feedCount"></span>
+        Activity <span id="feedCount" style="font-weight:400;text-transform:none;letter-spacing:0"></span>
         <span class="feed-toggle">&#9660;</span>
       </div>
       <div class="feed-list" id="feedList"></div>
@@ -917,6 +920,11 @@ function toggleFeed() {
   if (panel) panel.classList.toggle('collapsed');
 }
 
+function toggleRobots() {
+  var panel = document.getElementById('robotPanel');
+  if (panel) panel.classList.toggle('collapsed');
+}
+
 var feedCounter = 0;
 
 function appendFeedItem(step, index) {
@@ -968,20 +976,47 @@ function renderRobotsSidebar(robots) {
   var status = document.getElementById('discoveryStatus');
   var cards = document.getElementById('robotCards');
 
-  status.innerHTML = '<span style="color:var(--green)">' + robots.length + ' found</span>';
+  status.textContent = robots.length + ' found';
+  status.style.color = 'var(--green)';
 
-  robots.forEach(function(robot) {
+  robots.forEach(function(robot, idx) {
     var hasPayment = robot.payment && (robot.payment.stripe_connect_id || robot.payment.usdc_wallet);
+    var walletAddr = (robot.payment && robot.payment.usdc_wallet) || '';
+    var walletShort = walletAddr ? walletAddr.slice(0, 6) + '...' + walletAddr.slice(-4) : 'none';
     var explorerBase = robot.chain_id === 8453 ? 'https://basescan.org' : robot.chain_id === 11155111 ? 'https://sepolia.etherscan.io' : 'https://etherscan.io';
+    var chainName = robot.chain_id === 8453 ? 'Base' : robot.chain_id === 11155111 ? 'Sepolia' : robot.chain_id === 1 ? 'Ethereum' : 'Chain ' + robot.chain_id;
     var chainShort = robot.chain_id === 8453 ? 'Base' : robot.chain_id === 11155111 ? 'Sep' : robot.chain_id === 1 ? 'Eth' : '#' + robot.chain_id;
+    var detailId = 'robot-detail-' + idx;
+    var tools = (robot.mcp_tools || []).slice(0, 4).join(', ') || 'MCP tools available';
 
     var item = document.createElement('div');
     item.className = 'robot-item';
+    item.onclick = function() {
+      var det = document.getElementById(detailId);
+      if (det) det.classList.toggle('expanded');
+    };
     item.innerHTML =
       '<div class="robot-dot ' + (robot.active ? 'robot-dot-active' : 'robot-dot-inactive') + '"></div>' +
-      '<a href="' + explorerBase + '/nft/0x8004A818BFB912233c491871b3d84c89A494BD9e/' + escapeHtml(String(robot.agent_id)) + '" target="_blank" class="robot-name" style="color:var(--text);text-decoration:none" title="' + escapeHtml(robot.description || '') + '">' + escapeHtml(robot.name) + '</a>' +
-      '<span class="robot-chain">' + chainShort + (hasPayment ? ' $' : '') + '</span>';
+      '<span class="robot-name" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">' + escapeHtml(robot.name) + '</span>' +
+      '<span class="robot-chain" style="font-size:10px;color:var(--text-3);font-family:\'JetBrains Mono\',monospace">' + chainShort + (hasPayment ? ' $' : '') + '</span>';
     cards.appendChild(item);
+
+    var detail = document.createElement('div');
+    detail.className = 'robot-detail';
+    detail.id = detailId;
+    detail.innerHTML =
+      '<div><strong>' + escapeHtml(robot.name) + '</strong></div>' +
+      '<div style="margin-top:4px">' + escapeHtml(robot.description || 'No description') + '</div>' +
+      '<div style="margin-top:6px;font-family:\'JetBrains Mono\',monospace;font-size:10px">' +
+        'Agent #' + escapeHtml(String(robot.agent_id)) + ' on ' + chainName + '<br>' +
+        'Wallet: ' + walletShort + '<br>' +
+        'Tools: ' + escapeHtml(tools) +
+      '</div>' +
+      '<div style="margin-top:6px">' +
+        '<a href="' + explorerBase + '/nft/0x8004A818BFB912233c491871b3d84c89A494BD9e/' + escapeHtml(String(robot.agent_id)) + '" target="_blank">View on explorer</a>' +
+        ' &middot; <a href="https://8004scan.io/agents/base/' + escapeHtml(String(robot.agent_id)) + '" target="_blank">8004scan</a>' +
+      '</div>';
+    cards.appendChild(detail);
   });
 
   // Auto-set payment mode based on first robot's chain
@@ -1308,26 +1343,16 @@ function toggleSidebar() {
 
 async function testTunnel() {
   var url = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
-  var status = document.getElementById('tunnelStatus');
-  var btn = document.getElementById('testBtn');
-  if (!url) { status.textContent = 'Enter a URL first'; return; }
-  btn.textContent = '...';
-  status.textContent = 'Testing connection...';
+  if (!url) return;
   try {
     var r = await fetch(url + '/health', {mode:'cors'});
     if (r.ok) {
       var data = await r.json();
-      status.textContent = 'Connected: ' + data.tools + ' tools, ' + data.fleet + ' operators, wallet $' + data.wallet;
-      status.style.color = 'var(--green)';
-    } else {
-      status.textContent = 'Server returned ' + r.status;
-      status.style.color = 'var(--red)';
+      console.log('MCP server: ' + data.tools + ' tools, ' + data.fleet + ' operators');
     }
   } catch(e) {
-    status.textContent = 'Cannot reach server. Is mcp_server.py running? (' + e.message + ')';
-    status.style.color = 'var(--red)';
+    console.warn('MCP server unreachable:', e.message);
   }
-  btn.textContent = 'Test';
 }
 
 
@@ -1336,8 +1361,8 @@ async function testTunnel() {
 async function runAuction() {
   var tunnelUrl = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
   if (!tunnelUrl) {
-    document.getElementById('tunnelStatus').textContent = 'Enter the MCP server URL first';
-    document.getElementById('tunnelStatus').style.color = 'var(--red)';
+    showError('MCP server URL not configured');
+    console.error('tunnelUrl is empty');
     return;
   }
 
