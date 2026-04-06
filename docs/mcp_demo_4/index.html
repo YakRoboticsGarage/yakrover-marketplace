@@ -1444,6 +1444,15 @@ async function runAuction() {
     return;
   }
 
+  // Set fleet mode on server before auction (simulator_only toggle)
+  try {
+    await fetch(tunnelUrl + '/api/fleet-mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ simulator_only: simulatorOnly }),
+    });
+  } catch (e) { console.warn('Fleet mode set failed:', e.message); }
+
   var btn = document.getElementById('runBtn');
   var errorMsg = document.getElementById('errorMsg');
   var progressLabel = document.getElementById('auctionProgress');

@@ -161,6 +161,7 @@ def build_engine():
 
     # Lazy discovery: runs once on first auction request, then caches
     engine._discovery_done = False
+    engine._simulator_only = False
 
     def discover_and_swap_fleet():
         """Discover on-chain robots, probe liveness, hot-swap the engine fleet."""
@@ -175,11 +176,19 @@ def build_engine():
                 log("DISCOVERY", "No on-chain robots found — keeping mock fleet")
                 return
 
+            # Pre-wake Fly fleet server (cold starts take 10-15s)
+            try:
+                import httpx as _httpx
+                _httpx.get("https://yakrover-fleet.fly.dev/", timeout=20.0)
+                log("PROBE", "Fleet server warmed up")
+            except Exception:
+                log("PROBE", "Fleet server warm-up failed (may be starting)")
+
             log("PROBE", f"Probing {len(discovered)} robot(s) in parallel...")
             import concurrent.futures
 
             def _probe(adapter):
-                return adapter, adapter.is_reachable(timeout=8.0)
+                return adapter, adapter.is_reachable(timeout=15.0)
 
             real_online, sim_online = [], []
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(discovered)) as pool:
@@ -200,7 +209,7 @@ def build_engine():
                         log("PROBE", f"  ✗ {adapter.robot_id} ({kind})")
 
             from auction.mock_fleet import create_construction_fleet
-            if real_online:
+            if real_online and not engine._simulator_only:
                 new_fleet = create_construction_fleet() + real_online
                 label = f"{len(real_online)} real robot(s) — simulators excluded"
             elif sim_online:
@@ -385,6 +394,24 @@ Start by asking the user what survey they need, or process an RFP they provide."
             log("FEEDBACK", f"On-chain feedback failed: {e}")
             return JSONResponse({"error": str(e)}, status_code=500)
 
+    async def handle_fleet_mode(request: Request) -> JSONResponse:
+        """Set fleet mode: simulator_only=true excludes real robots."""
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+
+        sim_only = body.get("simulator_only", False)
+        old_mode = engine._simulator_only
+        engine._simulator_only = sim_only
+
+        # Force re-discovery if mode changed
+        if sim_only != old_mode:
+            engine._discovery_done = False
+            log("SERVER", f"Fleet mode changed: simulator_only={sim_only} — re-discovery on next request")
+
+        return JSONResponse({"ok": True, "simulator_only": sim_only})
+
     # Build combined app: REST routes + MCP mount
     mcp_starlette = mcp.streamable_http_app()
 
@@ -393,6 +420,7 @@ Start by asking the user what survey they need, or process an RFP they provide."
             Route("/health", handle_health, methods=["GET"]),
             Route("/api/tools", handle_tool_list, methods=["GET"]),
             Route("/api/tool/{name}", handle_tool_call, methods=["POST"]),
+            Route("/api/fleet-mode", handle_fleet_mode, methods=["POST"]),
             Route("/api/feedback-onchain", handle_feedback_onchain, methods=["POST"]),
             Mount("/mcp", app=mcp_starlette),
         ],
