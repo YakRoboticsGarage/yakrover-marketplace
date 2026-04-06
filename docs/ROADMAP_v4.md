@@ -2,8 +2,8 @@
 
 **Project:** yakrover-auction-explorer
 **Owner:** Product
-**Last updated:** 2026-04-06 (rev 4.5, v1.1 milestone 4 — real on-chain robots via MCP endpoints)
-**Status:** v1.0 built. **v1.1 milestone 4 reached** (265 tests, 35 MCP tools). On-chain robots bid + execute via MCP. Mock fleet replaced. Demo-3 at yakrobot.bid/mcp-demo-3.
+**Last updated:** 2026-04-06 (rev 4.6, v1.1 milestone 5 — real Tumbller live execution)
+**Status:** v1.0 built. **v1.1 milestone 5 reached** (273 tests, 35 MCP tools). Real Tumbller moves + reads sensors at waypoints via MCP. Full pipeline end-to-end. Demo-3 at yakrobot.bid/mcp-demo-3.
 
 > All product decisions and technical constraints referenced by ID live in `docs/DECISIONS.md`.
 > Feature requirements for the next build: `docs/FEATURE_REQUIREMENTS_v15.md`.
@@ -188,20 +188,25 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - [x] 3 FakeRover-Berlin robots registered on Base mainnet (#38918, #38919, #38921)
 - [x] Payment amount from robot's actual bid price (not hardcoded)
 - [x] Payment routed to auction winner's on-chain wallet (not hardcoded first robot)
+- [x] Real Tumbller live execution: move forward → read sensor → repeat at 3 waypoints (real SHT3x data from Finland)
+- [x] Liveness probe with real-robot preference (Tumbller online → FakeRovers excluded)
+- [x] Bearer token auth for robot MCP endpoints (FLEET_MCP_TOKEN)
+- [x] Waypoint-by-waypoint execution: adapter calls tumbller_move + tumbller_get_temperature_humidity per waypoint
 
-### What's blocking v1.1 completion
+### v1.1 blockers — ALL RESOLVED
 - [x] ~~Robot registered on Base or Ethereum mainnet~~ — FakeRover-Finland-01 (#38801) + 3 Berlin rovers (#38918, #38919, #38921) on Base
 - [x] ~~8004 team: `robot_submit_bid` + `robot_execute_task` MCP tools~~ — Anuraj delivered (Stages 1-5), merged to main. Marketplace calls them via MCPRobotAdapter.
 - [x] ~~End-to-end test: real robot bids → real execution → real sensor data → schema QA → USDC payment~~ — Confirmed 2026-04-06. Berlin robots bid $0.50 via MCP, execute via fakerover simulator, QA PASS, USDC settled on Base mainnet.
 - [x] ~~IPFS upload of delivery data from real robot execution~~ — demo-3 uploads via `/api/upload-delivery` after execution, CID shown after payment release
 - [x] ~~Unskip fakerover bid tests~~ — rewritten for new bid format (8 tests, 0 skipped, all pass)
 
-### Deferred to next phase
-- [ ] **Stable tunnel URLs** — Replace random `trycloudflare.com` with named Cloudflare tunnels (`mcp.yakrobot.bid`, `fleet.yakrobot.bid`). Currently every session requires new tunnel URLs, on-chain metadata updates, and manual paste into demo. See `docs/research/PLAN_REAL_ROBOT_INTEGRATION.md` "Open: Stable Tunnel URLs" section.
-- [ ] Stripe Connect per robot: operator Stripe Connect ID in ERC-8004 metadata (`stripe_connect_id`). Currently hardcoded to platform test account — USDC path is the one where robots actually get paid. See `docs/research/PLAN_REAL_ROBOT_INTEGRATION.md` "Open: Stripe Payments" section.
-- [ ] Production Stripe: switch `sk_test_` → `sk_live_`, operator completes real Connect onboarding
-- [ ] Stripe payment confirmation visible to robot/operator (robot doesn't currently verify payment)
-- [ ] Stripe webhook for payment status tracking
+### Next phase
+- [ ] **Stable tunnel URLs** — Replace random `trycloudflare.com` with named Cloudflare tunnels (`mcp.yakrobot.bid`, `fleet.yakrobot.bid`). See `docs/research/PLAN_REAL_ROBOT_INTEGRATION.md`.
+- [ ] **8004scan feedback** — Broadcast auction feedback (rating, comment) to the robot's on-chain profile at https://8004scan.io/agents/base/{agentId}?tab=feedback. Buyers rate the robot after delivery, visible to future buyers.
+- [ ] Stripe Connect per robot: operator Stripe Connect ID in ERC-8004 metadata.
+- [ ] Production Stripe: switch `sk_test_` → `sk_live_`, operator Connect onboarding.
+- [ ] Stripe payment confirmation visible to robot/operator.
+- [ ] Stripe webhook for payment status tracking.
 
 ### Dropped from earlier plans
 - ~~x402 middleware~~ — wrong tool for marketplace settlement (pay-to-access, not escrow)

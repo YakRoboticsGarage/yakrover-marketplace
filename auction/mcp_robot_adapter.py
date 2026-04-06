@@ -255,86 +255,113 @@ class MCPRobotAdapter:
     # ------------------------------------------------------------------
 
     async def execute(self, task: Task) -> DeliveryPayload:
-        """Call robot_execute_task via MCP and convert to DeliveryPayload."""
-        result = await self._mcp_call("tools/call", {
-            "name": "robot_execute_task",
-            "arguments": {
-                "task_id": task.request_id,
-                "task_description": task.description,
-                "parameters": task.capability_requirements,
-            },
-        })
+        """Execute by moving the robot to waypoints and reading sensors at each.
+
+        For each waypoint: move forward → read temperature + humidity.
+        Uses the robot's individual MCP tools (tumbller_move,
+        tumbller_get_temperature_humidity) for real sensor data.
+        Falls back to robot_execute_task if individual tools fail.
+        """
+        import asyncio
+
+        start = datetime.now(UTC)
+        num_waypoints = 3
+        readings = []
+
+        # Try real waypoint-by-waypoint execution
+        for wp in range(1, num_waypoints + 1):
+            # Move forward one step (tool name varies by robot type)
+            move_tool = "tumbller_move" if "tumbller" in self.robot_id.lower() else "fakerover_move"
+            move_result = await self._mcp_call("tools/call", {
+                "name": move_tool,
+                "arguments": {"direction": "forward"},
+            })
+            move_ok = move_result and not move_result.get("isError")
+            if move_ok:
+                log.info("Waypoint %d: moved forward", wp)
+            else:
+                log.warning("Waypoint %d: move failed, reading at current position", wp)
+
+            # Brief pause for robot to settle
+            await asyncio.sleep(1.0)
+
+            # Read sensor
+            sensor_tool = "tumbller_get_temperature_humidity" if "tumbller" in self.robot_id.lower() else "fakerover_get_temperature_humidity"
+            sensor_result = await self._mcp_call("tools/call", {
+                "name": sensor_tool,
+                "arguments": {},
+            })
+
+            if sensor_result and not sensor_result.get("isError"):
+                sensor_data = sensor_result.get("structuredContent") or {}
+                if not sensor_data and sensor_result.get("content"):
+                    import json
+                    for block in sensor_result["content"]:
+                        if block.get("type") == "text":
+                            try:
+                                sensor_data = json.loads(block["text"])
+                            except (json.JSONDecodeError, KeyError):
+                                pass
+
+                readings.append({
+                    "waypoint": wp,
+                    "temperature_c": round(float(sensor_data.get("temperature", 0)), 1),
+                    "humidity_pct": round(float(sensor_data.get("humidity", 0)), 1),
+                    "timestamp": datetime.now(UTC).isoformat(),
+                })
+                log.info("Waypoint %d: %.1f°C, %.1f%%",
+                         wp, readings[-1]["temperature_c"], readings[-1]["humidity_pct"])
+            else:
+                log.warning("Waypoint %d: sensor read failed", wp)
 
         now = datetime.now(UTC)
-        elapsed = (now - task.posted_at).total_seconds()
-        sla_met = elapsed <= task.sla_seconds
+        elapsed = (now - start).total_seconds()
+        sla_met = (now - task.posted_at).total_seconds() <= task.sla_seconds
 
-        if not result:
-            return DeliveryPayload(
-                request_id=task.request_id,
-                robot_id=self.robot_id,
-                data={"error": "MCP call failed", "readings": [], "summary": "Execution failed", "duration_seconds": 0},
-                delivered_at=now,
-                sla_met=sla_met,
-            )
-
-        # Parse structured content
-        content = result
-        if "structuredContent" in result:
-            content = result["structuredContent"]
-        elif "content" in result and isinstance(result["content"], list):
-            import json
-            for block in result["content"]:
-                if block.get("type") == "text":
-                    try:
-                        content = json.loads(block["text"])
-                    except (json.JSONDecodeError, KeyError):
-                        pass
-
-        delivery_data = content.get("delivery_data", content)
-
-        # Ensure delivery_data has the schema-expected fields
-        # The fakerover returns {readings: [{type, value, unit}], summary, ...}
-        # The marketplace QA expects {readings: [{waypoint, temperature_c, humidity_pct, timestamp}], summary, duration_seconds}
-        readings = delivery_data.get("readings", [])
-        normalized_readings = []
-        for i, r in enumerate(readings):
-            if "waypoint" in r:
-                normalized_readings.append(r)
-            else:
-                # Convert fakerover format to marketplace schema format
-                normalized = {"waypoint": i + 1, "timestamp": now.isoformat()}
-                if r.get("type") == "temperature":
-                    normalized["temperature_c"] = r.get("value", 0)
-                    normalized["humidity_pct"] = 0
-                elif r.get("type") == "humidity":
-                    normalized["humidity_pct"] = r.get("value", 0)
-                    normalized["temperature_c"] = 0
-                normalized_readings.append(normalized)
-
-        # Merge temperature and humidity readings if they're separate
-        if len(normalized_readings) >= 2 and normalized_readings[0].get("humidity_pct", 0) == 0:
-            merged = {
-                "waypoint": 1,
-                "temperature_c": normalized_readings[0].get("temperature_c", 0),
-                "humidity_pct": normalized_readings[1].get("humidity_pct", 0) if len(normalized_readings) > 1 else 0,
-                "timestamp": now.isoformat(),
-            }
-            # Create 3 waypoints with slight variation for schema compliance
-            import random
-            normalized_readings = []
-            for wp in range(1, 4):
-                normalized_readings.append({
-                    "waypoint": wp,
-                    "temperature_c": round(merged["temperature_c"] + random.uniform(-0.5, 0.5), 1),
-                    "humidity_pct": round(merged["humidity_pct"] + random.uniform(-1.0, 1.0), 1),
+        # If no readings at all, fall back to robot_execute_task
+        if not readings:
+            log.warning("No waypoint readings — falling back to robot_execute_task")
+            fallback = await self._mcp_call("tools/call", {
+                "name": "robot_execute_task",
+                "arguments": {
+                    "task_id": task.request_id,
+                    "task_description": task.description,
+                    "parameters": task.capability_requirements,
+                },
+            })
+            content = {}
+            if fallback:
+                content = fallback.get("structuredContent") or {}
+                if not content and fallback.get("content"):
+                    import json
+                    for block in fallback["content"]:
+                        if block.get("type") == "text":
+                            try:
+                                content = json.loads(block["text"])
+                            except (json.JSONDecodeError, KeyError):
+                                pass
+            dd = content.get("delivery_data", {})
+            # Parse single reading into waypoint format
+            for r in dd.get("readings", []):
+                readings.append({
+                    "waypoint": len(readings) + 1,
+                    "temperature_c": round(float(r.get("value", 0)), 1) if r.get("type") == "temperature" else 0,
+                    "humidity_pct": round(float(r.get("value", 0)), 1) if r.get("type") == "humidity" else 0,
                     "timestamp": now.isoformat(),
                 })
 
+        temps = [r["temperature_c"] for r in readings if r.get("temperature_c")]
+        humids = [r["humidity_pct"] for r in readings if r.get("humidity_pct")]
+        summary = (
+            f"{len(readings)} waypoints measured by {self.robot_id}. "
+            f"Temp: {min(temps, default=0):.1f}-{max(temps, default=0):.1f}°C, "
+            f"Humidity: {min(humids, default=0):.1f}-{max(humids, default=0):.1f}%"
+        )
+
         data = {
-            "readings": normalized_readings,
-            "summary": delivery_data.get("summary", f"Sensor data from {self.robot_id}"),
-            "duration_seconds": delivery_data.get("duration_seconds", round(elapsed, 1)),
+            "readings": readings,
+            "summary": summary,
+            "duration_seconds": round(elapsed, 1),
         }
 
         return DeliveryPayload(
