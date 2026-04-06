@@ -1,7 +1,7 @@
 # Plan: Stable Infrastructure — From "5 Terminals" to "Always On"
 
 **Date:** 2026-04-06
-**Status:** Planning
+**Status:** Partially complete — Fly.io deployed, remaining issues below
 **Goal:** Demo runs without anyone at a terminal. Visitor opens yakrobot.bid/mcp-demo-3, everything works.
 
 ---
