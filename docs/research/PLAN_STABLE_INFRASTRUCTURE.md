@@ -147,6 +147,14 @@ End state:
 See `docs/DECISIONS.md` FD-1 (settlement abstraction) for architectural context.
 
 ### 6. Feedback goes to GitHub Issues only
-**Status:** Demo feedback (stars + comment) creates a GitHub issue via the worker. Not posted to 8004scan or on-chain.
-**Impact:** Medium — robot reputation isn't visible to future buyers on 8004scan.
-**Fix (next):** POST feedback to 8004scan's feedback API for the winning robot's agent profile.
+**Status:** RESOLVED — Demo now posts to GitHub AND submits on-chain via agent0-sdk `giveFeedback()`. Visible on 8004scan feedback tab.
+**Note:** Self-feedback blocked (signer wallet can't rate its own robots). Works for Tumbller (different owner).
+
+### 7. Mobile USDC wallet connect
+**Status:** Not implemented. Desktop uses `window.ethereum` (browser extensions). Mobile doesn't have this.
+**Impact:** Medium — USDC payment path doesn't work on mobile phones. Stripe works fine on mobile.
+**Options for later:**
+1. **WalletConnect v2** — Add WalletConnect SDK. Shows QR code on desktop, deep link on mobile. User connects any wallet app. Industry standard but significant integration (new SDK, modal, session management).
+2. **Mobile wallet in-app browser** — Show guidance: "Open this page in MetaMask/Rabby mobile app's browser." Zero code changes, relies on user knowing to do this.
+3. **Coinbase Smart Wallet** — Popup/redirect flow, no extension needed. Partial ethers.js support.
+**Recommendation:** For MVP, show mobile guidance + default to Stripe on mobile. Add WalletConnect for v1.2.
