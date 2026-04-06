@@ -18,11 +18,13 @@ stripe = ["stripe>=10.0"]
 persistence = ["aiosqlite>=0.20"]
 ed25519 = ["eth-account>=0.13"]
 mcp = ["fastmcp>=2.14"]
+feedback = ["agent0-sdk>=0.1"]
 all = [
     "stripe>=10.0",
     "aiosqlite>=0.20",
     "eth-account>=0.13",
     "fastmcp>=2.14",
+    "agent0-sdk>=0.1",
 ]
 dev = [
     "pytest>=9.0",

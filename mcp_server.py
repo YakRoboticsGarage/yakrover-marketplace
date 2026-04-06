@@ -140,16 +140,9 @@ def build_engine():
     else:
         log("SERVER", "SQLite: in-memory (set AUCTION_DB_PATH for persistence)")
 
-    # Start with mock fleet immediately (fast startup), then discover on-chain robots in background
+    # Start with mock fleet (fast startup)
     fleet = create_full_fleet()
-    log("SERVER", f"Fleet: {len(fleet)} operators (mock fleet — discovery in background)")
-
-    log("SERVER", f"Fleet: {len(fleet)} operators")
-    for r in fleet:
-        name = getattr(r, "name", r.robot_id)
-        sensors = r.capability_metadata.get("sensors", [])
-        sensor_str = ", ".join(s if isinstance(s, str) else s.get("type", str(s)) for s in sensors[:3])
-        log("FLEET", f"  {name} ({r.robot_id}) — {sensor_str}")
+    log("SERVER", f"Fleet: {len(fleet)} operators (mock fleet — on-chain discovery on first request)")
 
     # Event tracking
     from auction.events import EventEmitter
@@ -166,10 +159,15 @@ def build_engine():
         events=events,
     )
 
-    # Background discovery: probe on-chain robots and swap fleet after startup
-    import threading
+    # Lazy discovery: runs once on first auction request, then caches
+    engine._discovery_done = False
 
-    def _background_discover():
+    def discover_and_swap_fleet():
+        """Discover on-chain robots, probe liveness, hot-swap the engine fleet."""
+        if engine._discovery_done:
+            return
+        engine._discovery_done = True
+
         try:
             from auction.mcp_robot_adapter import MCPRobotAdapter
             discovered = _discover_onchain_robots()
@@ -177,7 +175,7 @@ def build_engine():
                 log("DISCOVERY", "No on-chain robots found — keeping mock fleet")
                 return
 
-            log("PROBE", f"Probing {len(discovered)} robot(s)...")
+            log("PROBE", f"Probing {len(discovered)} robot(s) in parallel...")
             import concurrent.futures
 
             def _probe(adapter):
@@ -204,15 +202,15 @@ def build_engine():
                 log("DISCOVERY", "No robots reachable — keeping mock fleet")
                 return
 
-            # Hot-swap the engine's fleet
             engine.robots = new_fleet
             engine._robots_by_id = {r.robot_id: r for r in new_fleet}
             log("SERVER", f"Fleet updated: {len(new_fleet)} operators ({label})")
 
         except Exception as e:
-            log("DISCOVERY", f"Background discovery failed: {e}")
+            log("DISCOVERY", f"Discovery failed: {e}")
+            engine._discovery_done = False  # Allow retry on next request
 
-    threading.Thread(target=_background_discover, daemon=True).start()
+    engine._discover = discover_and_swap_fleet
 
     return engine, wallet, stripe_service
 
@@ -259,6 +257,12 @@ Start by asking the user what survey they need, or process an RFP they provide."
     async def handle_tool_call(request: Request) -> JSONResponse:
         """REST endpoint: POST /api/tool/{name} — calls an MCP tool by name."""
         tool_name = request.path_params["name"]
+
+        # Lazy discovery: run on first auction-related call
+        if tool_name in ("auction_post_task", "auction_process_rfp") and hasattr(engine, "_discover"):
+            import asyncio
+            await asyncio.to_thread(engine._discover)
+
         try:
             body = await request.json()
         except Exception:
