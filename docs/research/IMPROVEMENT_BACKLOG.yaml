@@ -1,6 +1,6 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-05'
+  last_updated: '2026-04-06'
   source: Automated daily research agent + weekly synthesis
 proposals:
 - id: IMP-001
@@ -531,6 +531,48 @@ proposals:
   module: M18_x402
   research_source: R-034
   evidence: docs/research/automated/R-034_erc2612_permit_relay_security.md
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-06'
+  decision_date: null
+  decision_notes: null
+- id: IMP-032
+  title: Remove dead add_cors() helper in auction/api.py
+  description: 'add_cors() is defined at api.py:231 but never called anywhere in the codebase — not in api.py,
+    serve_with_auction.py, or tests. CORS is handled at the Cloudflare layer. Delete to avoid misleading readers
+    who might assume it is active. Verify CORS headers are covered at the CDN edge before removing.'
+  module: M2_api
+  research_source: code-review-2026-04-06
+  evidence: auction/api.py:231 — defined, zero call sites
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-06'
+  decision_date: null
+  decision_notes: null
+- id: IMP-033
+  title: Add tests for AuctionEngine.abandon_task() or remove it
+  description: 'abandon_task() at engine.py:1110 has no test coverage and no external call sites. Marked v0.5 in
+    a comment. Either add tests (happy path + wrong-state guard) and wire to an MCP tool, or remove if superseded
+    by cancel_task(). Untested state-machine transitions are a reliability risk.'
+  module: M1_engine
+  research_source: code-review-2026-04-06
+  evidence: auction/engine.py:1107-1165 — no tests, no call sites outside engine
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-06'
+  decision_date: null
+  decision_notes: null
+- id: IMP-034
+  title: Deduplicate _load_reference() double-definition in rfp_processor.py
+  description: '_load_reference() is defined twice in rfp_processor.py (lines 26 and 348) with a # type:ignore[no-redef]
+    suppressor. The second definition shadows the first under a conditional import path. Refactor to a single definition
+    or clearly separate into distinct helpers. The type:ignore hides a real structural issue from mypy.'
+  module: M33_rfp_processor
+  research_source: code-review-2026-04-06
+  evidence: auction/rfp_processor.py:26 and 348 — type:ignore[no-redef] suppressor
   effort: small
   priority: medium
   status: proposed

@@ -2544,7 +2544,7 @@ roadmap:
       label: "Auction Engine (Warehouse + Fiat)"
       status: built
       personas: [persona:sarah, persona:claude_agent]
-      stats: {tests: 278, mcp_tools: 35, loc: 16524}
+      stats: {tests: 280, mcp_tools: 35, loc: 17009}
       resolves: []
       capabilities_unlocked:
         - "Auction core: Task, Bid, AuctionResult, score_bids()"
