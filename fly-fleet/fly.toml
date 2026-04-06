@@ -1,0 +1,20 @@
+app = 'yakrover-fleet'
+primary_region = 'ams'
+
+[build]
+
+[env]
+  PYTHONPATH = 'src'
+  FAKEROVER_URL = 'http://localhost:8080'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
