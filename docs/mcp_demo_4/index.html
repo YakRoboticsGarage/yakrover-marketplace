@@ -2171,8 +2171,15 @@ async function submitFeedback(robotId, robotName, paymentMethod, paymentTx) {
           var onchainData = await onchainRes.json();
           if (onchainData.ok) {
             status.innerHTML = 'Thank you! Feedback recorded on-chain. <a href="' + onchainData['8004scan_url'] + '" target="_blank" style="color:var(--accent);text-decoration:none">View on 8004scan</a>';
+          } else {
+            // On-chain failed (e.g. self-feedback) — GitHub feedback still saved
+            console.warn('On-chain feedback:', onchainData.error);
+            status.innerHTML = 'Thank you! Feedback saved.' + (data.issue_url ? ' <a href="' + data.issue_url + '" target="_blank" style="color:var(--accent);text-decoration:none">View on GitHub</a>' : '');
           }
-        } catch (e) { console.warn('On-chain feedback failed:', e); }
+        } catch (e) {
+          console.warn('On-chain feedback failed:', e);
+          status.innerHTML = 'Thank you! Feedback saved.' + (data.issue_url ? ' <a href="' + data.issue_url + '" target="_blank" style="color:var(--accent);text-decoration:none">View on GitHub</a>' : '');
+        }
       }
     } else {
       btn.textContent = 'Error — try again';
