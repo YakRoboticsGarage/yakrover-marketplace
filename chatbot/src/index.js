@@ -1733,7 +1733,6 @@ async function handleRelayUsdc(request, env, cors) {
         operator_amount: operatorAmount.toString(),
         platform_amount: platformAmount.toString(),
         explorer,
-        relay_address: relayWallet.address,
       }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
     );
