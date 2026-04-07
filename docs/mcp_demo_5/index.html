@@ -1,0 +1,2496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAK ROBOTICS — Hire a Robot</title>
+<link rel="icon" href="yak-icon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg-subtle:#F0F2F5;--bg-card:#ffffff;--bg-hover:#f1f3f5;
+  --border:#CBD5E0;--border-focus:#2D5F8A;
+  --text:#1A1F26;--text-2:#4A5568;--text-3:#6B7280;
+  --accent:#E8792B;--accent-light:#FEF0E3;--accent-hover:#C4611E;
+  --green:#1A7D4E;--green-bg:#E6F5ED;
+  --amber:#C27B1A;--amber-bg:#fef3c7;
+  --red:#dc2626;
+  --link:#2D5F8A;
+  --navy:#1B3A5C;--navy-light:#2D5F8A;
+  --stripe:#635bff;--stripe-hover:#5046e5;
+  --usdc:#2775ca;--usdc-hover:#1d5fa0;
+  --radius:6px;--radius-lg:6px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06);
+  --shadow-lg:0 2px 8px rgba(0,0,0,0.08);
+}
+html{font-size:16px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;position:relative}
+
+/* Topo watermark: I-94 corridor Detroit terrain */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.12;background-image:
+  linear-gradient(rgba(27,58,92,0.3) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(27,58,92,0.3) 1px, transparent 1px),
+  linear-gradient(rgba(27,58,92,0.1) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(27,58,92,0.1) 1px, transparent 1px);
+background-size: 200px 200px, 200px 200px, 50px 50px, 50px 50px}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.09;background-image:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='900' viewBox='0 0 1200 900'%3E%3Cstyle%3Epath%7Bfill:none;stroke:%231B3A5C%7D.idx%7Bstroke-width:1.2%7D.int%7Bstroke-width:0.5%7D.lbl%7Bfont:7px sans-serif;fill:%231B3A5C%7D%3C/style%3E%3Cg%3E%3Cpath class='idx' d='M0,95 C80,88 160,82 280,78 C400,74 520,80 640,92 C760,104 880,98 1000,86 C1080,78 1140,82 1200,88'/%3E%3Ctext class='lbl' x='20' y='90'%3E620%3C/text%3E%3Cpath class='int' d='M0,125 C90,116 190,108 310,105 C430,102 540,112 660,128 C780,144 890,134 1010,118 C1090,108 1150,112 1200,120'/%3E%3Cpath class='int' d='M0,158 C100,148 200,140 330,138 C460,136 570,148 680,166 C800,184 900,172 1020,154 C1100,142 1160,148 1200,156'/%3E%3Cpath class='int' d='M0,195 C110,184 210,176 340,174 C490,172 580,186 700,205 C820,224 910,210 1030,192 C1110,180 1170,186 1200,194'/%3E%3Cpath class='int' d='M0,238 C120,225 220,218 350,216 C510,214 600,230 720,250 C840,270 920,254 1040,234 C1120,222 1180,228 1200,236'/%3E%3Cpath class='idx' d='M0,285 C130,270 230,264 360,262 C530,260 620,278 740,298 C860,318 930,300 1050,280 C1130,268 1185,274 1200,282'/%3E%3Ctext class='lbl' x='365' y='256'%3E610%3C/text%3E%3Cpath style='stroke:%231B3A5C;stroke-width:0.3;stroke-dasharray:8,4' d='M0,290 L1200,290'/%3E%3Cpath class='int' d='M0,335 C100,325 200,318 360,315 C520,312 640,328 760,348 C880,368 940,350 1060,330 C1140,318 1190,324 1200,332'/%3E%3Cpath class='int' d='M0,388 C90,376 190,370 350,368 C510,366 650,382 770,402 C890,422 950,404 1070,384 C1150,372 1195,378 1200,386'/%3E%3Cpath class='int' d='M0,445 C80,432 180,426 340,425 C500,424 660,440 780,460 C900,480 960,462 1080,442 C1160,430 1198,436 1200,444'/%3E%3Cpath class='int' d='M0,505 C70,492 170,486 330,485 C490,484 670,500 790,520 C910,540 970,524 1090,504 C1170,492 1200,498 1200,504'/%3E%3Cpath class='idx' d='M0,570 C60,556 160,550 320,548 C480,546 680,564 800,584 C920,604 980,590 1100,570 C1180,558 1200,564 1200,570'/%3E%3Ctext class='lbl' x='325' y='542'%3E600%3C/text%3E%3Cpath class='int' d='M0,640 C50,628 150,622 310,618 C470,614 690,630 810,648 C930,666 990,654 1110,638 C1190,628 1200,634 1200,640'/%3E%3Cpath class='int' d='M0,708 C45,698 145,692 300,688 C460,684 700,698 820,714 C940,730 1000,720 1120,706 C1195,698 1200,704 1200,708'/%3E%3Cpath class='int' d='M0,772 C40,764 140,758 290,756 C450,754 710,768 830,782 C950,796 1010,786 1130,774 C1198,766 1200,770 1200,772'/%3E%3Cpath class='idx' d='M0,840 C35,834 135,828 280,826 C440,824 720,836 840,848 C960,860 1020,852 1140,842 C1200,836 1200,840 1200,840'/%3E%3Ctext class='lbl' x='285' y='820'%3E590%3C/text%3E%3Ccircle cx='200' cy='200' r='3' fill='none' stroke='%231B3A5C' stroke-width='0.8'/%3E%3Cline x1='194' y1='200' x2='206' y2='200' stroke='%231B3A5C' stroke-width='0.5'/%3E%3Cline x1='200' y1='194' x2='200' y2='206' stroke='%231B3A5C' stroke-width='0.5'/%3E%3Ccircle cx='600' cy='285' r='3' fill='none' stroke='%231B3A5C' stroke-width='0.8'/%3E%3Cline x1='594' y1='285' x2='606' y2='285' stroke='%231B3A5C' stroke-width='0.5'/%3E%3Cline x1='600' y1='279' x2='600' y2='291' stroke='%231B3A5C' stroke-width='0.5'/%3E%3Ccircle cx='1000' cy='400' r='3' fill='none' stroke='%231B3A5C' stroke-width='0.8'/%3E%3Cline x1='994' y1='400' x2='1006' y2='400' stroke='%231B3A5C' stroke-width='0.5'/%3E%3Cline x1='1000' y1='394' x2='1000' y2='406' stroke='%231B3A5C' stroke-width='0.5'/%3E%3C/g%3E%3C/svg%3E");
+background-size:1200px 900px}
+
+/* ===== LAYOUT: 2-column (sidebar + main) ===== */
+.app-shell{position:relative;z-index:1;display:grid;grid-template-columns:300px 1fr;grid-template-rows:auto 1fr auto;height:100vh;gap:0;overflow:hidden}
+/* Single header bar (brand + breadcrumbs) */
+.app-top{grid-column:1/-1;position:sticky;top:0;z-index:100;background:var(--navy);display:flex;align-items:center;padding:0 24px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.app-header{display:flex;align-items:center;gap:12px;padding:10px 0;flex-shrink:0}
+.header-logo{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+.header-sep{width:1px;height:20px;background:rgba(255,255,255,0.15);margin:0 8px}
+.header-spacer{flex:1}
+.header-link{font-size:11px;color:rgba(255,255,255,0.5);text-decoration:none}
+.header-link:hover{color:#fff}
+
+/* Breadcrumbs — inline in the header */
+.breadcrumbs-bar{display:flex;align-items:center;gap:0;padding:0;margin-left:auto}
+.phase{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:3px;color:rgba(255,255,255,0.35);background:transparent;text-transform:uppercase;cursor:default;transition:all 0.2s}
+.phase.active{background:var(--accent);color:#fff}
+.phase.done{background:rgba(26,125,78,0.2);color:var(--green);cursor:pointer}
+.phase.done:hover{background:rgba(26,125,78,0.3)}
+.phase-chevron{width:14px;text-align:center;color:rgba(255,255,255,0.2);font-size:12px;user-select:none}
+
+/* Sidebar: fixed settings top, scrollable feed bottom */
+.sidebar{grid-column:1;grid-row:2;border-right:1px solid var(--border);padding:0;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
+.sidebar-top{padding:16px;flex-shrink:0;overflow-y:auto;max-height:30%}
+.sidebar-action{padding:12px 16px;flex-shrink:0}
+.sidebar-section{margin-bottom:20px}
+.sidebar-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin-bottom:8px}
+.tunnel-row{display:flex;gap:6px}
+.tunnel-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:8px 10px}
+.tunnel-input:focus{outline:none;border-color:var(--accent)}
+.tunnel-btn{background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text-2);white-space:nowrap}
+.tunnel-btn:hover{background:var(--bg-hover)}
+.tunnel-status{font-size:11px;color:var(--text-3);margin-top:6px}
+
+/* Robot list (compact feed style) */
+/* Robot drawer (same pattern as feed) */
+.robot-panel{border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;max-height:20%}
+.robot-panel.collapsed .robot-list{display:none}
+.robot-panel.collapsed .feed-toggle{transform:rotate(-90deg)}
+.robot-list{overflow-y:auto;padding:8px 12px}
+.robot-item{display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:12px;cursor:pointer;border-radius:4px}
+.robot-item:hover{background:var(--bg-hover)}
+.robot-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.robot-dot-active{background:var(--green)}
+.robot-dot-inactive{background:var(--text-3)}
+.robot-detail{display:none;padding:10px 12px;margin:0 4px 6px;background:var(--bg-subtle);border-radius:var(--radius);font-size:11px;line-height:1.6;color:var(--text-2)}
+.robot-detail.expanded{display:block}
+.robot-detail a{color:var(--accent);text-decoration:none}
+.robot-detail a:hover{text-decoration:underline}
+.robot-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:500}
+.robot-chain{font-size:10px;color:var(--text-3);flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:0.3px}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-yellow{background:var(--amber-bg);color:var(--amber)}
+.badge-blue{background:#E8F0FE;color:#2D5F8A}
+
+.discovery-status{font-size:12px;color:var(--text-2);padding:6px 0}
+.discovery-empty{text-align:center;padding:20px 12px;border:1px dashed var(--border);border-radius:var(--radius);color:var(--text-3);font-size:12px;line-height:1.6}
+.discovery-empty a{color:var(--accent);text-decoration:none}
+.discovery-empty a:hover{text-decoration:underline}
+
+/* Admin controls */
+.admin-btn{display:block;width:100%;padding:8px;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;text-align:center;margin-top:6px}
+.admin-btn:hover{background:var(--bg-hover)}
+.admin-btn.cta{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:700}
+.admin-btn.cta:hover{background:var(--navy-light)}
+
+/* Main content */
+.main-content{grid-column:2;grid-row:2;padding:0;overflow:hidden;min-width:0;max-width:720px;margin:0 auto;width:100%;position:relative;display:flex;flex-direction:column}
+
+/* Sticky action bar — primary user action always visible */
+.action-bar{position:fixed;bottom:0;left:300px;right:0;background:var(--bg);border-top:1px solid var(--border);padding:12px 40px;z-index:50;display:none;box-shadow:0 -2px 8px rgba(0,0,0,0.06)}
+.action-bar.visible{display:flex;align-items:center;justify-content:center;gap:12px}
+.action-bar .btn-primary,.action-bar .pay-btn{margin:0}
+.phase-view{display:none;flex:1;overflow-y:auto;padding:24px 40px 32px}
+.phase-view.active{display:flex;flex-direction:column}
+.phase-heading{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.phase-subheading{font-size:14px;color:var(--text-2);margin-bottom:20px;line-height:1.5}
+
+/* Cards */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.card-accent{border-left:3px solid var(--accent)}
+.card-green{border-left:3px solid var(--green)}
+.card-blue{border-left:3px solid var(--navy-light)}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin-bottom:10px}
+.card h3{font-size:15px;font-weight:700;margin-bottom:10px}
+
+/* Form elements */
+.form-textarea{width:100%;min-height:140px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;padding:12px;resize:vertical}
+.form-textarea:focus{outline:none;border-color:var(--accent)}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field-label{font-size:11px;color:var(--text-3);margin-bottom:4px;font-weight:500}
+.field-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px}
+.field-input:focus{outline:none;border-color:var(--accent)}
+
+/* Key-value rows */
+.kv-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--bg-subtle)}
+.kv-row:last-child{border-bottom:none}
+.kv-label{color:var(--text-3)}
+.kv-value{font-weight:600;color:var(--text)}
+.kv-value-green{color:var(--green)}
+.kv-value-accent{color:var(--accent)}
+.kv-value-mono{font-family:'JetBrains Mono',monospace;font-size:11px}
+
+/* Buttons */
+.btn-primary{display:block;width:100%;padding:14px;background:var(--accent);color:#fff;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer;transition:background 0.15s}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-primary.reset{background:var(--text-3);color:#fff}
+.btn-primary.reset:hover{background:var(--text-2)}
+
+/* Back link for phase navigation */
+.phase-back{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text-3);text-decoration:none;cursor:pointer;margin-bottom:12px}
+.phase-back:hover{color:var(--accent)}
+
+/* Continue button after auction */
+.btn-continue{display:inline-block;margin-top:16px;padding:12px 24px;background:var(--accent);color:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer}
+.btn-continue:hover{background:var(--accent-hover)}
+
+.btn-group{display:flex;gap:12px;margin-top:16px}
+.pay-btn{padding:12px 24px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer;transition:background 0.15s,transform 0.1s}
+.pay-btn:hover{transform:translateY(-1px)}
+.pay-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.pay-btn-stripe{background:var(--stripe);color:#fff}
+.pay-btn-stripe:hover{background:var(--stripe-hover)}
+.pay-btn-usdc{background:var(--usdc);color:#fff}
+.pay-btn-usdc:hover{background:var(--usdc-hover)}
+.pay-btn-release{background:var(--usdc);color:#fff}
+.pay-btn-release:hover{background:var(--usdc-hover)}
+
+.explainer{font-size:12px;color:var(--text-3);margin-top:8px;line-height:1.5}
+
+/* Winner card */
+.winner-card{background:var(--bg-card);border:1px solid var(--accent);border-left:3px solid var(--accent);border-radius:var(--radius);padding:20px;margin-top:16px}
+.winner-card h3{color:var(--accent);font-size:16px;margin-bottom:12px}
+.winner-narration{font-size:13px;line-height:1.7;color:var(--text-2);margin-bottom:16px}
+.winner-narration p{margin:0 0 8px}
+.winner-narration p:last-child{margin-bottom:0}
+.winner-narration strong{color:var(--text);font-weight:600}
+.winner-narration ul,.winner-narration ol{margin:6px 0 8px 20px;padding:0}
+.winner-narration li{margin-bottom:4px}
+.winner-narration li::marker{color:var(--accent)}
+
+/* QA badge */
+.qa-badge{display:inline-block;font-size:12px;font-weight:700;padding:4px 12px;border-radius:3px;text-transform:uppercase;letter-spacing:0.5px}
+.qa-pass{background:var(--green-bg);color:var(--green)}
+.qa-fail{background:#FEE2E2;color:var(--red)}
+
+/* Blurred payload */
+.payload-blurred{filter:blur(4px);user-select:none;pointer-events:none;transition:filter 0.3s}
+.payload-revealed{filter:none;user-select:auto;pointer-events:auto}
+
+/* Receipt */
+.receipt-card{background:var(--bg-card);border:1px solid var(--green);border-left:3px solid var(--green);border-radius:var(--radius);padding:20px}
+.receipt-card h3{color:var(--green);font-size:16px;margin-bottom:12px}
+.receipt-link{color:var(--accent);font-weight:600;text-decoration:none;font-size:13px}
+.receipt-link:hover{text-decoration:underline}
+
+/* Stars */
+.star-row{font-size:24px;cursor:pointer;margin-bottom:8px}
+.star-row span{color:var(--text-3);transition:color 0.1s}
+
+/* Delivery data card */
+.data-card{background:var(--bg-subtle);border-radius:var(--radius);padding:8px;margin:8px 0}
+.data-card pre{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-2);overflow:auto;max-height:120px;margin:0;white-space:pre-wrap;word-break:break-all}
+
+/* Progress label */
+.progress-label{font-size:13px;color:var(--text-2);padding:8px 0;display:none}
+.progress-label.visible{display:block}
+
+/* Error message */
+.error-msg{background:#FEE2E2;border:1px solid #FECACA;border-radius:var(--radius);padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:none}
+.error-msg.visible{display:block}
+
+/* ===== FEED (inside sidebar, scrolls independently) ===== */
+.feed-panel{border-top:1px solid var(--border);display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.feed-header{padding:10px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.feed-header:hover{background:var(--bg-hover)}
+.feed-toggle{display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--text-3);transition:transform 0.2s}
+.feed-panel.collapsed .feed-toggle{transform:rotate(-90deg)}
+.feed-panel.collapsed .feed-list{display:none}
+.feed-list{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column}
+.feed-item{display:flex;align-items:flex-start;gap:8px;padding:6px 4px;cursor:pointer;border-radius:4px;opacity:0;transform:translateY(-8px);animation:slideIn 0.3s ease forwards}
+.feed-item:hover{background:var(--bg-hover)}
+@keyframes slideIn{to{opacity:1;transform:translateY(0)}}
+.feed-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.feed-dot-blue{background:var(--navy-light)}
+.feed-dot-green{background:var(--green)}
+.feed-dot-accent{background:var(--accent)}
+.feed-dot-processing{background:var(--navy-light);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.feed-text{flex:1;min-width:0;font-size:12px;color:var(--text-2);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed-time{font-size:10px;color:var(--text-3);white-space:nowrap;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+/* Feed detail: renders as overlay on main content area, not cramped in sidebar */
+.feed-detail{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90vw;max-width:600px;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;color:var(--text-2);overflow:auto;white-space:pre-wrap;word-break:break-word;z-index:300}
+.feed-detail.expanded{display:block}
+.feed-detail-close{position:absolute;top:8px;right:12px;cursor:pointer;font-size:14px;color:var(--text-3);font-family:'Inter',sans-serif;font-weight:600}
+.feed-detail-close:hover{color:var(--text)}
+.feed-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:299}
+.feed-detail-overlay.active{display:block}
+
+/* Footer */
+.app-footer{grid-column:1/-1;grid-row:3;display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 24px;font-size:11px;color:var(--text-3);border-top:1px solid var(--border);flex-shrink:0}
+.app-footer a{color:var(--accent);text-decoration:none}
+.app-footer a:hover{text-decoration:underline}
+.footer-sep{color:var(--border)}
+
+/* ===== MOBILE: hamburger + responsive ===== */
+.hamburger{display:none;background:none;border:none;color:#fff;cursor:pointer;padding:4px}
+.hamburger svg{width:22px;height:22px}
+.sidebar-overlay{display:none}
+
+@media(max-width:768px){
+  .app-shell{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+
+  /* Header: compact, breadcrumbs scroll horizontally */
+  .app-top{flex-wrap:wrap;padding:0 12px}
+  .header-logo{font-size:10px;letter-spacing:1.5px}
+  .header-sep{display:none}
+  .breadcrumbs-bar{width:100%;padding:6px 0;overflow-x:auto;margin-left:0;-webkit-overflow-scrolling:touch}
+  .phase{padding:4px 10px;font-size:9px;min-height:32px;display:inline-flex;align-items:center}
+
+  /* Sidebar: fixed drawer overlay */
+  .sidebar{display:none;position:fixed;top:0;left:0;width:85vw;max-width:320px;height:100vh;z-index:200;background:var(--bg);border-right:1px solid var(--border);overflow-y:auto;padding-top:48px}
+  .sidebar.mobile-open{display:flex;flex-direction:column}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:199}
+  .sidebar-overlay.active{display:block}
+  .hamburger{display:flex;align-items:center}
+
+  /* Main content: single column, full width */
+  .main-content{grid-column:1;grid-row:2;padding:0;max-width:100%}
+  .phase-view{padding:16px 16px 32px}
+  .phase-heading{font-size:18px}
+  .phase-subheading{font-size:13px}
+  .field-grid{grid-template-columns:1fr}
+  .form-textarea{min-height:100px;font-size:13px}
+
+  /* Action bar: full width at bottom (critical fix — was left:300px) */
+  .action-bar{left:0;padding:12px 16px}
+  .action-bar.visible{flex-direction:column;gap:8px}
+
+  /* Buttons: full width, larger tap targets */
+  .btn-group{flex-direction:column}
+  .pay-btn{width:100%;padding:14px;font-size:15px;min-height:48px}
+  .btn-primary{min-height:48px;font-size:16px}
+
+  /* Cards: slightly less padding */
+  .card{padding:14px}
+  .winner-card{padding:16px}
+  .receipt-card{padding:16px}
+
+  /* KV rows: readable on mobile */
+  .kv-row{font-size:13px;padding:8px 0}
+
+  /* Footer: wrap links */
+  .app-footer{flex-wrap:wrap;gap:8px;padding:10px 16px;justify-content:center}
+
+  /* Mobile "Hire Operator" button — shown in main content */
+  .mobile-cta{display:block !important;margin-bottom:16px}
+
+  /* Small text floors */
+  .explainer{font-size:12px}
+  .tunnel-status{font-size:12px}
+  .feed-text{font-size:12px}
+  .robot-detail{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="feed-detail-overlay" id="feedDetailOverlay" onclick="closeAllFeedDetails()"></div>
+<div class="app-shell">
+
+  <!-- SINGLE HEADER BAR -->
+  <div class="app-top">
+    <header class="app-header">
+      <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="header-logo">YAK ROBOTICS</span>
+      <span class="header-sep"></span>
+    </header>
+    <nav class="breadcrumbs-bar" id="breadcrumbs">
+      <span class="phase active" data-phase="setup">SETUP</span>
+      <span class="phase-chevron">&rsaquo;</span>
+      <span class="phase" data-phase="auction">AUCTION</span>
+      <span class="phase-chevron">&rsaquo;</span>
+      <span class="phase" data-phase="commit">DISPATCH</span>
+      <span class="phase-chevron">&rsaquo;</span>
+      <span class="phase" data-phase="execute">EXECUTE</span>
+      <span class="phase-chevron">&rsaquo;</span>
+      <span class="phase" data-phase="settle">DONE</span>
+    </nav>
+  </div>
+
+  <!-- SIDEBAR (action + settings + robots + feed) -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Primary action — always at top -->
+    <div class="sidebar-action">
+      <button class="btn-primary" id="runBtn" onclick="runAuction()">Hire Operator</button>
+    </div>
+
+    <div class="sidebar-top">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Payment</div>
+        <select class="field-input" id="demoMode" onchange="onDemoModeChange()" style="font-size:12px;padding:6px 8px">
+          <option value="base" selected>Base Mainnet (USDC)</option>
+          <option value="base-sepolia">Base Sepolia (USDC testnet)</option>
+          <option value="eth">Ethereum Mainnet (USDC)</option>
+          <option value="eth-sepolia">Ethereum Sepolia (USDC testnet)</option>
+          <option value="stripe">Stripe Production (card)</option>
+          <option value="stripe-test">Stripe Test (card 4242...)</option>
+        </select>
+        <div class="tunnel-status" id="demoModeHint">Real USDC on Base. Buyer wallet needs USDC.</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Operators</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer">
+          <input type="checkbox" id="simulatorOnly" onchange="onSimulatorToggle()" checked style="accent-color:var(--navy)">
+          Demo operators only
+        </label>
+      </div>
+    </div>
+
+    <!-- Hidden MCP server URL (stable, no need for UI input) -->
+    <input type="hidden" id="tunnelUrl" value="https://mcp.yakrover.online">
+
+    <!-- Active Operators drawer -->
+    <div class="robot-panel" id="robotPanel">
+      <div class="feed-header" onclick="toggleRobots()">
+        Active Operators <span id="discoveryStatus" style="font-weight:400;text-transform:none;letter-spacing:0">searching...</span>
+        <span class="feed-toggle"></span>
+      </div>
+      <div class="robot-list" id="robotCards"></div>
+    </div>
+
+    <!-- Activity Feed drawer -->
+    <div class="feed-panel" id="feedPanel">
+      <div class="feed-header" onclick="toggleFeed()">
+        Activity <span id="feedCount" style="font-weight:400;text-transform:none;letter-spacing:0"></span>
+        <span class="feed-toggle"></span>
+      </div>
+      <div class="feed-list" id="feedList"></div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- SETUP PHASE -->
+    <div class="phase-view active" id="phase-setup">
+      <h2 class="phase-heading">Define Your Task</h2>
+      <p class="phase-subheading">Describe the work you need done. Available operators will compete for your job.</p>
+
+      <!-- Mobile: Hire Operator button visible without opening sidebar -->
+      <button class="btn-primary mobile-cta" id="mobileRunBtn" style="display:none" onclick="runAuction()">Hire Operator</button>
+
+      <div class="card card-accent">
+        <div class="card-label">RFP Document</div>
+        <textarea class="form-textarea" id="rfpText">ENVIRONMENTAL MONITORING REQUEST
+Indoor Climate Assessment — Server Room Inspection
+
+SCOPE: Ground robot to navigate server room and collect environmental
+readings. Robot must move to 3 waypoints and record temperature and
+humidity at each location. Deliverables: JSON sensor readings with
+timestamps and position data.
+
+Requirements:
+- Ground-based mobile robot (wheeled or tracked)
+- Temperature sensor (range: 15-40C, accuracy: +/-1C)
+- Humidity sensor (range: 20-80% RH)
+- Remote operation capability
+- Budget: $1.00
+- Deadline: 1 hour</textarea>
+      </div>
+
+      <div class="card card-blue">
+        <div class="card-label">Site Information</div>
+        <div class="field-grid">
+          <div>
+            <div class="field-label">Project</div>
+            <input class="field-input" type="text" id="siteProject" value="Server Room Climate Check">
+          </div>
+          <div>
+            <div class="field-label">Location</div>
+            <input class="field-input" type="text" id="siteLocation" value="Detroit, MI">
+          </div>
+          <div>
+            <div class="field-label">Agency</div>
+            <input class="field-input" type="text" id="siteAgency" value="YAK Robotics">
+          </div>
+          <div>
+            <div class="field-label">Terrain</div>
+            <input class="field-input" type="text" id="siteTerrain" value="Indoor, flat floor">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- AUCTION PHASE -->
+    <div class="phase-view" id="phase-auction">
+      <span class="phase-back" onclick="showPhase('setup')">Back to Setup</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 class="phase-heading" style="margin-bottom:0">Finding the Best Operator</h2>
+        <div id="auctionActionSlot"></div>
+      </div>
+      <p class="phase-subheading">Your request is being matched with available operators.</p>
+      <div class="progress-label" id="auctionProgress">Processing your request...</div>
+      <div id="winnerSlot"></div>
+    </div>
+
+    <!-- COMMIT / DISPATCH PHASE -->
+    <div class="phase-view" id="phase-commit">
+      <span class="phase-back" onclick="showPhase('auction')">Back to Auction</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 class="phase-heading" style="margin-bottom:0">Authorize Payment</h2>
+      </div>
+      <p class="phase-subheading">Place a hold to confirm your hire. You won't be charged until you approve the delivered results.</p>
+      <div id="stripeEmbedMount"></div>
+      <div id="commitSlot"></div>
+    </div>
+
+    <!-- EXECUTE PHASE -->
+    <div class="phase-view" id="phase-execute">
+      <span class="phase-back" onclick="showPhase('commit')">Back to Dispatch</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 class="phase-heading" style="margin-bottom:0">Work in Progress</h2>
+        <div id="executeActionSlot"></div>
+      </div>
+      <p class="phase-subheading">The operator is performing the task. Results will be verified before payment is released.</p>
+      <div id="commitmentStatusCard"></div>
+      <div id="deliverySlot"></div>
+    </div>
+
+    <!-- SETTLE / DONE PHASE -->
+    <div class="phase-view" id="phase-settle">
+      <span class="phase-back" onclick="showPhase('execute')">Back to Execute</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 class="phase-heading" style="margin-bottom:0">Complete</h2>
+        <div id="feedbackSlot"></div>
+      </div>
+      <p class="phase-subheading">The job is done and payment has been released to the operator.</p>
+      <div id="receiptSlot"></div>
+      <div id="revealedDataSlot"></div>
+    </div>
+
+  </main>
+
+  <!-- STICKY ACTION BAR (always visible above fold) -->
+  <div class="action-bar" id="actionBar"></div>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <a href="https://yakrobot.bid" target="_blank">yakrobot.bid</a>
+    <span class="footer-sep">&middot;</span>
+    <a href="https://yakrobot.bid/pitch/" target="_blank">Pitch</a>
+    <span class="footer-sep">&middot;</span>
+    <a href="https://yakrobot.bid/yaml/" target="_blank">Product</a>
+    <span class="footer-sep">&middot;</span>
+    <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace" target="_blank">GitHub</a>
+    <span class="footer-sep">&middot;</span>
+    <span>Robots on <a href="https://8004scan.io" target="_blank">ERC-8004</a></span>
+    <span class="footer-sep">&middot;</span>
+    <span>Payments on <a href="https://basescan.org" target="_blank">Base</a></span>
+    <span class="footer-sep">&middot;</span>
+    <span id="buildStamp" style="font-family:'JetBrains Mono',monospace;font-size:10px"></span>
+  </footer>
+
+</div>
+
+<script>
+// Build timestamp — updated each deploy
+var BUILD_STAMP = '__BUILD_TIMESTAMP__';
+
+// ===== CONSTANTS (copied verbatim from mcp-demo-2) =====
+var WORKER_URL = 'https://yakrobot-chat.rafaeldf2.workers.dev/api/demo';
+var WORKER_BASE = 'https://yakrobot-chat.rafaeldf2.workers.dev';
+
+// Global state
+var discoveredRobots = [];
+var auctionComplete = false;
+
+// Demo mode — controls payment pathway
+var DEMO_MODES = {
+  'base':         { type: 'usdc', chainId: 8453,     label: 'Crypto (Base)',       hint: 'Pay with USDC stablecoin on the Base network.' },
+  'base-sepolia': { type: 'usdc', chainId: 84532,    label: 'Crypto (testnet)',    hint: 'Test payment with testnet tokens (no real money).' },
+  'eth':          { type: 'usdc', chainId: 1,        label: 'Crypto (Ethereum)',   hint: 'Pay with USDC stablecoin on Ethereum.' },
+  'eth-sepolia':  { type: 'usdc', chainId: 11155111, label: 'Crypto (testnet)',    hint: 'Test payment with testnet tokens.' },
+  'stripe':       { type: 'stripe', chainId: null,   label: 'Card',                hint: 'Pay by credit or debit card.' },
+  'stripe-test':  { type: 'stripe', chainId: null,   label: 'Card (test mode)',    hint: 'Test payment. Use card number 4242 4242 4242 4242.' },
+};
+var demoMode = 'base';
+
+function onDemoModeChange() {
+  demoMode = document.getElementById('demoMode').value;
+  var mode = DEMO_MODES[demoMode];
+  var hint = document.getElementById('demoModeHint');
+  if (hint) hint.textContent = mode.hint;
+}
+
+var simulatorOnly = true;
+function onSimulatorToggle() {
+  simulatorOnly = document.getElementById('simulatorOnly').checked;
+}
+
+function getDemoChainId() {
+  var mode = DEMO_MODES[demoMode];
+  if (mode.type === 'usdc') return mode.chainId;
+  return null;
+}
+
+function getDemoPaymentType() {
+  return DEMO_MODES[demoMode].type;
+}
+
+// Delivery schema
+var DELIVERY_SCHEMA = {
+  description: '3 waypoint readings with temperature and humidity',
+  required: ['readings', 'summary', 'duration_seconds'],
+  properties: {
+    readings: {
+      type: 'array',
+      minItems: 3,
+      items: {
+        required: ['waypoint', 'temperature_c', 'humidity_pct', 'timestamp'],
+        properties: {
+          temperature_c: { type: 'number', minimum: -40, maximum: 85 },
+          humidity_pct: { type: 'number', minimum: 0, maximum: 100 },
+          waypoint: { type: 'integer', minimum: 1 },
+          timestamp: { type: 'string' },
+        },
+      },
+    },
+    summary: { type: 'string', minLength: 1 },
+    duration_seconds: { type: 'number', minimum: 0 },
+  },
+};
+
+// ERC-8004 contract addresses & RPC
+var IDENTITY_REGISTRY = '0x8004A818BFB912233c491871b3d84c89A494BD9e';
+var GET_AGENT_WALLET_SELECTOR = '0x00339509';
+var PLATFORM_WALLET = '0xe33356d0d16c107eac7da1fc7263350cbdb548e5';
+var RELAY_WALLET = '0x4b5974229f96ac5987d6e31065d73d6fd8e130d9';
+var RPC_URLS = {
+  1:        'https://ethereum-rpc.publicnode.com',
+  8453:     'https://mainnet.base.org',
+  84532:    'https://sepolia.base.org',
+  11155111: 'https://ethereum-sepolia-rpc.publicnode.com',
+};
+
+var SUBGRAPH_URLS = {
+  1:        'https://gateway.thegraph.com/api/7fd2e7d89ce3ef24cd0d4590298f0b2c/subgraphs/id/FV6RR6y13rsnCxBAicKuQEwDp8ioEGiNaWaZUmvr1F8k',
+  8453:     'https://gateway.thegraph.com/api/536c6d8572876cabea4a4ad0fa49aa57/subgraphs/id/43s9hQRurMGjuYnC1r2ZwS6xSQktbFyXMPMqGKUFJojb',
+  11155111: 'https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/6wQRC7geo9XYAhckfmfo8kbMRLeWU8KQd3XsJqFKmZLT',
+  84532:    'https://gateway.thegraph.com/api/536c6d8572876cabea4a4ad0fa49aa57/subgraphs/id/4yYAvQLFjBhBtdRCY7eUWo181VNoTSLLFd5M7FXQAi6u',
+};
+
+var DISCOVERY_CHAINS = [1, 8453, 11155111];
+var YAKROVER_HEX = '0x79616b726f766572';
+
+var KNOWN_ROBOTS = [
+  {
+    agent_id: '989',
+    chain_id: 11155111,
+    chain_name: 'Sepolia',
+    name: 'Tumbller Self-Balancing Robot',
+    description: 'ESP32-S3 two-wheeled robot. Temperature + humidity sensors. MCP-controllable.',
+    active: true,
+    mcp_endpoint: '',
+    mcp_tools: ['tumbller_move', 'tumbller_is_online', 'tumbller_get_temperature_humidity'],
+  },
+];
+
+var USDC_ADDRESSES = {
+  8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+  11155111: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
+};
+var CHAIN_NAMES = { 8453: 'Base', 1: 'Ethereum', 84532: 'Base Sepolia', 11155111: 'Sepolia' };
+var CHAIN_HEX = { 8453: '0x2105', 1: '0x1', 84532: '0x14a34', 11155111: '0xaa36a7' };
+
+
+// ===== UTILITY FUNCTIONS (verbatim) =====
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatStepText(str) {
+  if (!str) return '';
+  str = normalizeCase(str);
+  var html = escapeHtml(str);
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  var lines = html.split('\n');
+  var out = [];
+  var inList = false;
+  var listType = '';
+  var inTable = false;
+  var tableHeaderDone = false;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    // Horizontal rule: --- or *** or ___
+    if (line.trim().match(/^[-*_]{3,}$/)) {
+      if (inList) { out.push('</' + listType + '>'); inList = false; }
+      if (inTable) { out.push('</table>'); inTable = false; }
+      out.push('<hr style="border:none;border-top:1px solid var(--border);margin:12px 0">');
+      continue;
+    }
+    // Headers: ## or ###
+    var headerMatch = line.match(/^(#{1,4})\s+(.*)/);
+    if (headerMatch) {
+      if (inList) { out.push('</' + listType + '>'); inList = false; }
+      if (inTable) { out.push('</table>'); inTable = false; }
+      var level = Math.min(headerMatch[1].length + 1, 6); // ## -> h3, ### -> h4
+      out.push('<h' + level + ' style="font-size:' + (16 - level) + 'px;font-weight:600;margin:12px 0 6px;color:var(--text)">' + headerMatch[2] + '</h' + level + '>');
+      continue;
+    }
+    // Table: lines starting with |
+    var isTableRow = line.trim().match(/^\|(.+)\|$/);
+    var isSeparator = line.trim().match(/^\|[\s\-:|]+\|$/);
+    if (isTableRow) {
+      if (!inTable) {
+        if (inList) { out.push('</' + listType + '>'); inList = false; }
+        out.push('<table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0">');
+        inTable = true;
+        tableHeaderDone = false;
+      }
+      if (isSeparator) {
+        tableHeaderDone = true;
+        continue;
+      }
+      var cells = line.trim().split('|').filter(function(c) { return c.trim() !== ''; });
+      var tag = !tableHeaderDone ? 'th' : 'td';
+      var style = tag === 'th' ? 'style="text-align:left;padding:4px 8px;border-bottom:2px solid var(--border);font-weight:600;color:var(--text)"' : 'style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--bg-subtle)"';
+      out.push('<tr>' + cells.map(function(c) { return '<' + tag + ' ' + style + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>');
+      continue;
+    }
+    if (inTable) {
+      out.push('</table>');
+      inTable = false;
+      tableHeaderDone = false;
+    }
+    var ulMatch = line.match(/^(\s*)[-*]\s+(.*)/);
+    var olMatch = line.match(/^(\s*)\d+\.\s+(.*)/);
+    if (ulMatch) {
+      if (!inList || listType !== 'ul') {
+        if (inList) out.push('</' + listType + '>');
+        out.push('<ul>');
+        inList = true;
+        listType = 'ul';
+      }
+      out.push('<li>' + ulMatch[2] + '</li>');
+    } else if (olMatch) {
+      if (!inList || listType !== 'ol') {
+        if (inList) out.push('</' + listType + '>');
+        out.push('<ol>');
+        inList = true;
+        listType = 'ol';
+      }
+      out.push('<li>' + olMatch[2] + '</li>');
+    } else {
+      if (inList) {
+        out.push('</' + listType + '>');
+        inList = false;
+        listType = '';
+      }
+      if (line.trim() === '') {
+        if (out.length > 0 && out[out.length - 1] !== '</p><p>') {
+          out.push('</p><p>');
+        }
+      } else {
+        out.push(line);
+      }
+    }
+  }
+  if (inList) out.push('</' + listType + '>');
+  if (inTable) out.push('</table>');
+  var result = out.join('\n');
+  result = '<p>' + result + '</p>';
+  result = result.replace(/<p>\s*<\/p>/g, '');
+  result = result.replace(/\n(?!<\/?(?:ul|ol|li|p))/g, function(m, offset, s) {
+    var before = s.slice(Math.max(0, offset - 5), offset);
+    if (/<\/(ul|ol|li|p)>$/.test(before)) return '\n';
+    return '<br>';
+  });
+  result = result.replace(/<p><br>/g, '<p>');
+  result = result.replace(/<br><\/p>/g, '</p>');
+  return result;
+}
+
+function formatToolName(name) {
+  var map = {
+    'auction_process_rfp': 'Processing RFP...',
+    'auction_post_task': 'Posting task...',
+    'auction_get_bids': 'Collecting bids...',
+    'auction_review_bids': 'Reviewing bids...',
+    'auction_verify_bond': 'Verifying bond...',
+    'auction_award_with_confirmation': 'Awarding task...',
+    'auction_generate_agreement': 'Generating agreement...',
+    'auction_execute': 'Executing task...',
+    'auction_confirm_delivery': 'Confirming delivery...',
+    'auction_list_tasks': 'Listing tasks...'
+  };
+  return map[name] || name;
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+// ===== SCHEMA VALIDATOR (verbatim) =====
+
+function validateSchema(data, schema, path) {
+  path = path || '';
+  var issues = [];
+  if (!schema || typeof schema !== 'object') return issues;
+  var prefix = path ? path + ': ' : '';
+  var typeMap = { object: 'object', array: 'array', string: 'string', number: 'number', integer: 'number', boolean: 'boolean' };
+  if (schema.type && typeMap[schema.type]) {
+    var ok = false;
+    if (schema.type === 'array') ok = Array.isArray(data);
+    else if (schema.type === 'integer') ok = typeof data === 'number' && Number.isInteger(data);
+    else ok = typeof data === typeMap[schema.type] && !Array.isArray(data);
+    if (!ok) {
+      issues.push(prefix + 'Expected ' + schema.type + ', got ' + typeof data);
+      return issues;
+    }
+  }
+  if (typeof data === 'object' && !Array.isArray(data) && schema.required) {
+    schema.required.forEach(function(f) {
+      if (!(f in data)) issues.push(prefix + 'Missing required field: ' + f);
+    });
+  }
+  if (typeof data === 'object' && !Array.isArray(data) && schema.properties) {
+    Object.keys(schema.properties).forEach(function(k) {
+      if (k in data) {
+        var childPath = path ? path + '.' + k : k;
+        issues = issues.concat(validateSchema(data[k], schema.properties[k], childPath));
+      }
+    });
+  }
+  if (typeof data === 'number') {
+    if (schema.minimum !== undefined && data < schema.minimum) issues.push(prefix + data + ' below minimum ' + schema.minimum);
+    if (schema.maximum !== undefined && data > schema.maximum) issues.push(prefix + data + ' above maximum ' + schema.maximum);
+  }
+  if (typeof data === 'string' && schema.minLength !== undefined && data.length < schema.minLength) {
+    issues.push(prefix + 'String too short (length ' + data.length + ', minimum ' + schema.minLength + ')');
+  }
+  if (Array.isArray(data)) {
+    if (schema.minItems !== undefined && data.length < schema.minItems) issues.push(prefix + 'Array has ' + data.length + ' items, minimum ' + schema.minItems);
+    if (schema.maxItems !== undefined && data.length > schema.maxItems) issues.push(prefix + 'Array has ' + data.length + ' items, maximum ' + schema.maxItems);
+    if (schema.items) {
+      data.forEach(function(item, i) {
+        var childPath = path ? path + '[' + i + ']' : '[' + i + ']';
+        issues = issues.concat(validateSchema(item, schema.items, childPath));
+      });
+    }
+  }
+  return issues;
+}
+
+
+// ===== ROBOT DISCOVERY (verbatim logic, render calls updated) =====
+
+async function discoverRobots() {
+  var status = document.getElementById('discoveryStatus');
+  var cards = document.getElementById('robotCards');
+
+  status.textContent = 'Searching for available robots...';
+  cards.innerHTML = '';
+  discoveredRobots = [];
+
+  try {
+  var allRobots = [];
+
+  var subgraphPromises = DISCOVERY_CHAINS.map(function(chainId) {
+    var url = SUBGRAPH_URLS[chainId];
+    if (!url) return Promise.resolve([]);
+    return querySubgraph(url, chainId).catch(function(e) {
+      console.warn('Subgraph failed for chain ' + chainId + ':', e.message);
+      return [];
+    });
+  });
+
+  try {
+    var results = await Promise.race([
+      Promise.all(subgraphPromises),
+      new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 5000); }),
+    ]);
+    for (var i = 0; i < results.length; i++) {
+      allRobots = allRobots.concat(results[i]);
+    }
+  } catch (e) {
+    console.warn('Subgraph discovery timed out, using fallback');
+  }
+
+  if (allRobots.length === 0) {
+    status.textContent = 'Verifying registered operators...';
+    for (var k = 0; k < KNOWN_ROBOTS.length; k++) {
+      var known = KNOWN_ROBOTS[k];
+      try {
+        var wallet = await getAgentWallet(known.chain_id, known.agent_id);
+        if (wallet && wallet !== '0x0000000000000000000000000000000000000000') {
+          allRobots.push({
+            agent_id: known.agent_id,
+            chain_id: known.chain_id,
+            chain_name: known.chain_name,
+            name: known.name,
+            description: known.description,
+            active: known.active,
+            x402_support: false,
+            mcp_endpoint: known.mcp_endpoint,
+            mcp_tools: known.mcp_tools,
+            owner: '',
+            payment: {
+              usdc_wallet: wallet,
+              wallet_chain_id: null,
+              stripe_connect_id: null,
+            },
+          });
+        }
+      } catch (e) {
+        console.warn('RPC fallback failed for agent ' + known.agent_id + ':', e.message);
+      }
+    }
+  }
+
+  for (var j = 0; j < allRobots.length; j++) {
+    try {
+      var wallet = await getAgentWallet(allRobots[j].chain_id, allRobots[j].agent_id);
+      if (wallet && wallet !== '0x0000000000000000000000000000000000000000') {
+        allRobots[j].payment.usdc_wallet = wallet;
+      }
+    } catch (e) { /* ignore RPC failures */ }
+  }
+
+  discoveredRobots = allRobots;
+
+  var baseRobots = allRobots.filter(function(r) { return r.chain_id === 8453; });
+  var testnetRobots = allRobots.filter(function(r) { return r.chain_id !== 8453; });
+
+  if (baseRobots.length > 0) {
+    renderRobotsSidebar(baseRobots);
+  } else if (testnetRobots.length > 0) {
+    renderRobotsSidebar(testnetRobots);
+  } else {
+    showNoRobots();
+  }
+
+  } catch (err) {
+    console.error('Discovery error:', err);
+    status.textContent = 'Discovery error — showing known robots';
+    discoveredRobots = KNOWN_ROBOTS.map(function(kr) {
+      return {
+        agent_id: kr.agent_id, chain_id: kr.chain_id, chain_name: kr.chain_name,
+        name: kr.name, description: kr.description, active: kr.active,
+        x402_support: false, mcp_endpoint: kr.mcp_endpoint, mcp_tools: kr.mcp_tools,
+        owner: '', payment: { usdc_wallet: null, wallet_chain_id: null, stripe_connect_id: null },
+      };
+    });
+    renderRobotsSidebar(discoveredRobots);
+  }
+}
+
+async function querySubgraph(url, chainId) {
+  var robotMetaQuery = '{ agentMetadata_collection(where: {key: "fleet_provider", value: "' + YAKROVER_HEX + '"}, first: 50) { agent { id agentId owner registrationFile { name description active mcpEndpoint mcpTools } metadata(first: 20) { key value } } } }';
+  var chainName = chainId === 8453 ? 'Base' : chainId === 11155111 ? 'Sepolia' : chainId === 1 ? 'Ethereum' : 'Chain ' + chainId;
+
+  try {
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
+
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: robotMetaQuery }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+
+    if (data.errors) {
+      console.warn('Subgraph error for chain ' + chainId + ':', data.errors[0].message);
+      return [];
+    }
+
+    var metaEntries = (data.data && data.data.agentMetadata_collection) || [];
+
+    return metaEntries.filter(function(m) {
+      return m.agent && m.agent.registrationFile && m.agent.registrationFile.name;
+    }).map(function(m) {
+      var a = m.agent;
+      var rf = a.registrationFile || {};
+      var tools = [];
+      if (rf.mcpTools && Array.isArray(rf.mcpTools)) {
+        tools = rf.mcpTools;
+      } else if (rf.mcpTools && typeof rf.mcpTools === 'string') {
+        tools = rf.mcpTools.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+      }
+      var walletFromMeta = null;
+      if (a.metadata && Array.isArray(a.metadata)) {
+        var walletEntry = a.metadata.filter(function(md) { return md.key === 'agentWallet'; })[0];
+        if (walletEntry && walletEntry.value) {
+          walletFromMeta = walletEntry.value;
+        }
+      }
+      return {
+        agent_id: a.agentId || a.id,
+        chain_id: chainId,
+        chain_name: chainName,
+        name: rf.name || 'Robot #' + (a.agentId || a.id),
+        description: rf.description || '',
+        active: rf.active || false,
+        x402_support: false,
+        mcp_endpoint: rf.mcpEndpoint || '',
+        mcp_tools: tools,
+        owner: a.owner || '',
+        payment: {
+          usdc_wallet: walletFromMeta || null,
+          wallet_chain_id: null,
+          stripe_connect_id: null,
+        },
+      };
+    });
+  } catch (e) {
+    console.warn('Subgraph query failed for chain ' + chainId + ':', e.message);
+    return [];
+  }
+}
+
+async function getAgentWallet(chainId, agentId) {
+  var rpcUrl = RPC_URLS[chainId];
+  if (!rpcUrl) return null;
+  var idHex = parseInt(agentId).toString(16).padStart(64, '0');
+  var callData = GET_AGENT_WALLET_SELECTOR + idHex;
+  var res = await fetch(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'eth_call',
+      params: [{ to: IDENTITY_REGISTRY, data: callData }, 'latest'],
+      id: 1,
+    }),
+  });
+  var data = await res.json();
+  if (data.error || !data.result || data.result === '0x') return null;
+  var raw = data.result.replace('0x', '');
+  var addr = '0x' + raw.slice(24);
+  return addr;
+}
+
+
+// ===== NEW RENDER FUNCTIONS =====
+
+var _highestPhaseReached = 0;
+var _phaseNames = ['setup', 'auction', 'commit', 'execute', 'settle'];
+
+function showPhase(phaseId) {
+  var targetIndex = _phaseNames.indexOf(phaseId);
+  if (targetIndex > _highestPhaseReached) _highestPhaseReached = targetIndex;
+
+  // Hide all phase views, show target
+  document.querySelectorAll('.phase-view').forEach(function(el) { el.classList.remove('active'); });
+  var target = document.getElementById('phase-' + phaseId);
+  if (target) target.classList.add('active');
+
+  // Update breadcrumbs — completed phases are clickable
+  document.querySelectorAll('.breadcrumbs-bar .phase').forEach(function(el) {
+    var elPhase = el.getAttribute('data-phase');
+    var elIndex = _phaseNames.indexOf(elPhase);
+    el.classList.remove('active', 'done');
+    if (elIndex < targetIndex) {
+      el.classList.add('done');
+    } else if (elIndex === targetIndex) {
+      el.classList.add('active');
+    }
+    // Make completed phases clickable for review
+    if (elIndex <= _highestPhaseReached && elIndex !== targetIndex) {
+      el.onclick = function() { showPhase(elPhase); };
+    } else {
+      el.onclick = null;
+    }
+  });
+
+  // Update sidebar + mobile buttons based on phase
+  var runBtn = document.getElementById('runBtn');
+  var mobileBtn = document.getElementById('mobileRunBtn');
+  var btns = [runBtn, mobileBtn].filter(Boolean);
+  btns.forEach(function(b) {
+    if (phaseId === 'settle') {
+      b.textContent = 'Reset Demo';
+      b.classList.add('reset');
+      b.disabled = false;
+      b.onclick = function() { resetDemo(); };
+    } else if (phaseId !== 'setup') {
+      b.disabled = true;
+      b.textContent = 'Running...';
+    }
+  });
+
+  // Update sticky action bar for user actions that must be above fold
+  var actionBar = document.getElementById('actionBar');
+  if (actionBar) {
+    actionBar.innerHTML = '';
+    actionBar.classList.remove('visible');
+  }
+}
+
+// Feed drawer toggle
+function closeFeedDetail(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.remove('expanded');
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function closeAllFeedDetails() {
+  document.querySelectorAll('.feed-detail.expanded').forEach(function(el) {
+    if (el.id === 'feedbackModal' || el.id === 'summaryModal') el.remove();
+    else el.classList.remove('expanded');
+  });
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function stripMarkdown(str) {
+  if (!str) return '';
+  return str
+    .replace(/^#{1,6}\s+/gm, '')       // headers
+    .replace(/^[-*_]{3,}\s*$/gm, '')    // horizontal rules
+    .replace(/\*\*(.+?)\*\*/g, '$1')   // bold
+    .replace(/^\s*[-*]\s+/gm, '')       // unordered list markers
+    .replace(/^\s*\d+\.\s+/gm, '')      // ordered list markers
+    .replace(/^\|.*\|$/gm, '')          // table rows
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+// Convert ALL CAPS words (3+ chars) to title case for cleaner display
+function normalizeCase(str) {
+  if (!str) return '';
+  return str.replace(/\b([A-Z]{3,})\b/g, function(match) {
+    return match.charAt(0) + match.slice(1).toLowerCase();
+  });
+}
+
+function toggleFeed() {
+  var panel = document.getElementById('feedPanel');
+  if (panel) panel.classList.toggle('collapsed');
+}
+
+function toggleRobots() {
+  var panel = document.getElementById('robotPanel');
+  if (panel) panel.classList.toggle('collapsed');
+}
+
+var feedCounter = 0;
+
+function appendFeedItem(step, index) {
+  var feed = document.getElementById('feedList');
+  var item = document.createElement('div');
+  item.className = 'feed-item';
+
+  var dotClass = 'feed-dot feed-dot-green';
+  var text = '';
+  var now = new Date();
+  var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+
+  if (step.type === 'tool_call') {
+    dotClass = 'feed-dot feed-dot-accent';
+    text = formatToolName(step.tool_name);
+  } else {
+    dotClass = 'feed-dot feed-dot-blue';
+    var raw = step.claude_text || '';
+    raw = normalizeCase(stripMarkdown(raw));
+    text = raw.length > 60 ? raw.substring(0, 60) + '...' : raw;
+  }
+
+  var detailId = 'feed-detail-' + feedCounter++;
+  item.innerHTML =
+    '<div class="' + dotClass + '"></div>' +
+    '<div class="feed-text">' + escapeHtml(text) + '</div>' +
+    '<div class="feed-time">' + timeStr + '</div>';
+
+  // Click to show detail modal
+  var detailDiv = document.createElement('div');
+  detailDiv.className = 'feed-detail';
+  detailDiv.id = detailId;
+  var closeBtn = '<div class="feed-detail-close" onclick="closeFeedDetail(\'' + detailId + '\')">Close</div>';
+  if (step.type === 'tool_call') {
+    detailDiv.innerHTML = closeBtn + '<div style="margin-top:8px">// Input\n' + escapeHtml(JSON.stringify(step.input, null, 2)) + '\n\n// Result\n' + escapeHtml(JSON.stringify(step.result, null, 2)) + '</div>';
+  } else {
+    detailDiv.innerHTML = closeBtn + '<div style="margin-top:8px">' + escapeHtml(step.claude_text || '') + '</div>';
+  }
+
+  item.addEventListener('click', function() {
+    // Show as centered modal
+    detailDiv.classList.add('expanded');
+    var overlay = document.getElementById('feedDetailOverlay');
+    if (overlay) overlay.classList.add('active');
+  });
+
+  // Prepend (newest first) — detail appended to body for modal positioning
+  document.body.appendChild(detailDiv);
+  feed.insertBefore(item, feed.firstChild);
+}
+
+function renderRobotsSidebar(robots) {
+  var status = document.getElementById('discoveryStatus');
+  var cards = document.getElementById('robotCards');
+
+  status.textContent = robots.length + ' found';
+  status.style.color = 'var(--green)';
+
+  robots.forEach(function(robot, idx) {
+    var hasPayment = robot.payment && (robot.payment.stripe_connect_id || robot.payment.usdc_wallet);
+    var walletAddr = (robot.payment && robot.payment.usdc_wallet) || '';
+    var walletShort = walletAddr ? walletAddr.slice(0, 6) + '...' + walletAddr.slice(-4) : 'none';
+    var explorerBase = robot.chain_id === 8453 ? 'https://basescan.org' : robot.chain_id === 11155111 ? 'https://sepolia.etherscan.io' : 'https://etherscan.io';
+    var chainName = robot.chain_id === 8453 ? 'Base' : robot.chain_id === 11155111 ? 'Sepolia' : robot.chain_id === 1 ? 'Ethereum' : 'Chain ' + robot.chain_id;
+    var chainShort = robot.chain_id === 8453 ? 'Base' : robot.chain_id === 11155111 ? 'Sep' : robot.chain_id === 1 ? 'Eth' : '#' + robot.chain_id;
+    var detailId = 'robot-detail-' + idx;
+    var tools = (robot.mcp_tools || []).slice(0, 4).join(', ') || 'MCP tools available';
+
+    var item = document.createElement('div');
+    item.className = 'robot-item';
+    item.onclick = function() {
+      var det = document.getElementById(detailId);
+      if (det) det.classList.toggle('expanded');
+    };
+    item.innerHTML =
+      '<div class="robot-dot ' + (robot.active ? 'robot-dot-active' : 'robot-dot-inactive') + '"></div>' +
+      '<span class="robot-name" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">' + escapeHtml(robot.name) + '</span>' +
+      '<span class="robot-chain" style="font-size:10px;color:var(--text-3);font-family:\'JetBrains Mono\',monospace">' + chainShort + (hasPayment ? ' $' : '') + '</span>';
+    cards.appendChild(item);
+
+    var detail = document.createElement('div');
+    detail.className = 'robot-detail';
+    detail.id = detailId;
+    detail.innerHTML =
+      '<div><strong>' + escapeHtml(robot.name) + '</strong></div>' +
+      '<div style="margin-top:4px">' + escapeHtml(robot.description || 'No description') + '</div>' +
+      '<div style="margin-top:6px;font-family:\'JetBrains Mono\',monospace;font-size:10px">' +
+        'Agent #' + escapeHtml(String(robot.agent_id)) + ' on ' + chainName + '<br>' +
+        'Wallet: ' + walletShort + '<br>' +
+        'Tools: ' + escapeHtml(tools) +
+      '</div>' +
+      '<div style="margin-top:6px">' +
+        '<a href="' + explorerBase + '/nft/0x8004A818BFB912233c491871b3d84c89A494BD9e/' + escapeHtml(String(robot.agent_id)) + '" target="_blank">View on explorer</a>' +
+        ' &middot; <a href="https://8004scan.io/agents/base/' + escapeHtml(String(robot.agent_id)) + '" target="_blank">8004scan</a>' +
+      '</div>';
+    cards.appendChild(detail);
+  });
+
+  // Auto-set payment mode based on first robot's chain
+  if (robots.length > 0) {
+    var r = robots[0];
+    var hasWallet = r.payment && r.payment.usdc_wallet;
+    if (hasWallet) {
+      var autoMode = r.chain_id === 8453 ? 'base' : r.chain_id === 84532 ? 'base-sepolia' : r.chain_id === 1 ? 'eth' : r.chain_id === 11155111 ? 'eth-sepolia' : 'base';
+      var sel = document.getElementById('demoMode');
+      if (sel) { sel.value = autoMode; onDemoModeChange(); }
+    }
+  }
+}
+
+function showNoRobots() {
+  var status = document.getElementById('discoveryStatus');
+  status.innerHTML = '<span style="color:var(--text-3)">No robots found</span>';
+  var cards = document.getElementById('robotCards');
+  cards.innerHTML =
+    '<div class="discovery-empty">' +
+      '<p>The marketplace discovers real robots registered on-chain via <a href="https://eips.ethereum.org/EIPS/eip-8004" target="_blank">ERC-8004</a> identity.</p>' +
+      '<p style="margin-top:6px">The demo auction will use <strong>simulated operators</strong>. ' +
+      'Robot operators can register at <a href="https://github.com/YakRoboticsGarage/yakrover-8004-mcp" target="_blank">yakrover-8004-mcp</a>.</p>' +
+    '</div>';
+}
+
+function renderWinnerCard(text, winnerName, winnerPrice) {
+  var slot = document.getElementById('winnerSlot');
+
+  var onChainRobot = window._winnerRobot || (discoveredRobots.length > 0 ? discoveredRobots[0] : null);
+  var usdcWallet = (onChainRobot && onChainRobot.payment) ? onChainRobot.payment.usdc_wallet : null;
+  var walletShort = usdcWallet ? usdcWallet.slice(0,6) + '...' + usdcWallet.slice(-4) : '';
+
+  // Extract bid details from stored data
+  var bidData = window._lastBidStep;
+  var sla = '';
+  var score = '';
+  var taskDesc = '';
+  if (bidData) {
+    var winnerBid = (bidData.bids || []).filter(function(b) { return b.robot_id === winnerName; })[0];
+    if (winnerBid) {
+      sla = winnerBid.sla_commitment_seconds ? winnerBid.sla_commitment_seconds + 's' : '';
+      score = winnerBid.score ? winnerBid.score.toFixed(2) : '';
+    }
+  }
+
+  // Compact structured card — no free-form narration
+  slot.innerHTML =
+    '<div class="card card-accent">' +
+      '<h3 style="margin-bottom:12px">Operator Selected</h3>' +
+      '<div class="kv-row"><span class="kv-label">Operator</span><span class="kv-value kv-value-green">' + escapeHtml(winnerName) + '</span></div>' +
+      (winnerPrice ? '<div class="kv-row"><span class="kv-label">Bid</span><span class="kv-value">' + escapeHtml(winnerPrice) + '</span></div>' : '') +
+      (sla ? '<div class="kv-row"><span class="kv-label">SLA</span><span class="kv-value">' + escapeHtml(sla) + '</span></div>' : '') +
+      (score ? '<div class="kv-row"><span class="kv-label">Score</span><span class="kv-value">' + escapeHtml(score) + '</span></div>' : '') +
+      (walletShort ? '<div class="kv-row"><span class="kv-label">Payment Account</span><span class="kv-value kv-value-mono">' + escapeHtml(walletShort) + '</span></div>' : '') +
+      (text ? '<div style="margin-top:12px"><span style="font-size:12px;color:var(--text-3);cursor:pointer;text-decoration:underline" onclick="showSummaryPopup()">View full summary</span></div>' : '') +
+    '</div>';
+}
+
+function renderPaymentOptions(winnerName, winnerPrice) {
+  var slot = document.getElementById('commitSlot');
+  var paymentType = getDemoPaymentType();
+  var modeInfo = DEMO_MODES[demoMode];
+
+  var stripeAccountId = 'acct_1TEjjLC2lXDckgmS';
+  var usdcWallet = null;
+  var onChainRobot = window._winnerRobot || (discoveredRobots.length > 0 ? discoveredRobots[0] : null);
+
+  if (onChainRobot && onChainRobot.payment) {
+    stripeAccountId = onChainRobot.payment.stripe_connect_id || stripeAccountId;
+    usdcWallet = onChainRobot.payment.usdc_wallet || null;
+  }
+
+  // Use the robot's actual bid price (in dollars), convert to cents
+  var bidPrice = window._winnerBidPrice || 0.50;
+  var amountCents = Math.max(Math.round(bidPrice * 100), 50); // Stripe minimum $0.50
+
+  var paymentRecipientHtml = '';
+  if (onChainRobot && usdcWallet && paymentType === 'usdc') {
+    paymentRecipientHtml =
+      '<div class="kv-row"><span class="kv-label">Payment to</span><span class="kv-value kv-value-accent">' + escapeHtml(onChainRobot.name) + ' (' + escapeHtml(onChainRobot.chain_name) + ')</span></div>' +
+      '<div class="kv-row"><span class="kv-label">Payment Account</span><span class="kv-value kv-value-mono">' + escapeHtml(usdcWallet.slice(0,6) + '...' + usdcWallet.slice(-4)) + '</span></div>';
+  }
+
+  var modeLabel = '<div class="kv-row"><span class="kv-label">Payment mode</span><span class="kv-value">' + escapeHtml(modeInfo.label) + '</span></div>';
+
+  var buttonsHtml = '';
+  if (paymentType === 'stripe') {
+    buttonsHtml =
+      '<button class="pay-btn pay-btn-stripe" onclick="payWithStripe(' + amountCents + ',\'' + escapeHtml(stripeAccountId || '') + '\')" style="width:100%">' +
+        'Authorize $' + (amountCents / 100).toFixed(2) + ' (card hold)' +
+        (demoMode === 'stripe-test' ? ' — test mode' : '') +
+      '</button>';
+  } else {
+    var usdcAmount = '$' + bidPrice.toFixed(2);
+    var usdcLabel = modeInfo.chainId === 84532 || modeInfo.chainId === 11155111
+      ? 'Approve ' + usdcAmount + ' Hold (testnet USDC)'
+      : 'Approve ' + usdcAmount + ' Hold (USDC)';
+    buttonsHtml =
+      '<button class="pay-btn pay-btn-usdc" onclick="payWithUSDC(\'' + escapeHtml(usdcWallet || '') + '\')" style="width:100%" ' +
+        (usdcWallet ? '' : 'disabled title="Operator has no payment account configured"') + '>' +
+        usdcLabel +
+      '</button>';
+  }
+
+  slot.innerHTML =
+    '<div class="card card-accent">' +
+      '<div class="kv-row"><span class="kv-label">Winner</span><span class="kv-value kv-value-green">' + escapeHtml(winnerName) + '</span></div>' +
+      (winnerPrice ? '<div class="kv-row"><span class="kv-label">Bid price</span><span class="kv-value">' + escapeHtml(winnerPrice) + '</span></div>' : '') +
+      modeLabel +
+      paymentRecipientHtml +
+    '</div>' +
+    '<p class="explainer">' + escapeHtml(modeInfo.hint) + '</p>' +
+    '<div class="btn-group">' + buttonsHtml + '</div>';
+}
+
+function renderCommitmentStatus(data, chainName) {
+  var slot = document.getElementById('commitmentStatusCard');
+  var timeRemaining = Math.floor(data.time_remaining_seconds / 60);
+  var totalAmount = (Number(data.total_amount) / 1000000).toFixed(4);
+
+  slot.innerHTML =
+    '<div class="card card-accent">' +
+      '<h3 style="color:var(--accent)">Payment Authorized</h3>' +
+      '<p class="explainer" style="margin-bottom:12px">Your payment hold is active. You will not be charged until you approve the delivered results.</p>' +
+      '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">Operator working...</span></div>' +
+      '<div class="kv-row"><span class="kv-label">Amount</span><span class="kv-value">$' + totalAmount + '</span></div>' +
+      '<div class="kv-row"><span class="kv-label">Chain</span><span class="kv-value">' + escapeHtml(chainName) + '</span></div>' +
+      '<div class="kv-row"><span class="kv-label">Expires</span><span class="kv-value">' + timeRemaining + ' min</span></div>' +
+    '</div>';
+}
+
+async function renderDeliveryResult(deliveryData, qaResult) {
+  var slot = document.getElementById('deliverySlot');
+
+  // Update commitment status
+  var statusEl = document.querySelector('.commit-status');
+  if (statusEl) {
+    statusEl.innerHTML = '<span style="color:var(--green)">Results delivered. Ready for your review.</span>';
+  }
+
+  var qaStatus = qaResult ? qaResult.status : 'N/A';
+  var qaLevel = qaResult ? qaResult.level : 0;
+  var qaChecks = qaResult ? (qaResult.checks_run || []) : [];
+  var qaIssues = qaResult ? (qaResult.issues || []) : [];
+
+  // Try IPFS upload
+  var ipfsCid = null;
+  var ipfsUrl = null;
+  if (deliveryData) {
+    try {
+      var uploadRes = await fetch(WORKER_BASE + '/api/upload-delivery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          request_id: window._awardedRequestId || 'demo_' + Date.now(),
+          robot_id: window._winnerRobot ? window._winnerRobot.agent_id : 'mock',
+          robot_name: window._winnerRobot ? window._winnerRobot.name : 'Robot Operator',
+          delivery_data: deliveryData,
+        }),
+      });
+      if (uploadRes.ok) {
+        var uploadData = await uploadRes.json();
+        if (uploadData.ipfs_cid) { ipfsCid = uploadData.ipfs_cid; ipfsUrl = uploadData.ipfs_url; }
+      }
+    } catch (e) { console.warn('IPFS upload:', e.message); }
+  }
+
+  // Store IPFS info for after payment release
+  window._ipfsCid = ipfsCid;
+  window._ipfsUrl = ipfsUrl;
+
+  var qaHtml =
+    '<div class="card ' + (qaStatus === 'PASS' ? 'card-green' : '') + '" style="' + (qaStatus !== 'PASS' ? 'border-left:3px solid var(--red)' : '') + '">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
+        '<span class="qa-badge ' + (qaStatus === 'PASS' ? 'qa-pass' : 'qa-fail') + '">Quality Check: ' + qaStatus + '</span>' +
+      '</div>' +
+      (qaIssues.length > 0 ? '<div style="font-size:11px;color:var(--red);margin-top:4px">' + qaIssues.map(escapeHtml).join('<br>') + '</div>' : '') +
+      '<p class="explainer">Deliverables validated against the requirements in your request.' +
+        (deliveryData ? ' ' + (deliveryData.readings || []).length + ' waypoint readings received.' : '') +
+        ' Full data available after payment is released.</p>' +
+    '</div>';
+
+  var dataPreviewHtml = '';
+
+  // Show Release Payment button next to heading
+  if (qaStatus === 'PASS') {
+    var execAction = document.getElementById('executeActionSlot');
+    if (execAction) {
+      execAction.innerHTML = '<button class="pay-btn release-payment-btn" style="background:var(--accent);color:#fff;font-size:11px;padding:6px 12px" onclick="releasePayment()">Release Payment</button>';
+    }
+  }
+
+  slot.innerHTML =
+    '<h3 style="margin-bottom:8px">Delivery Received</h3>' +
+    qaHtml + dataPreviewHtml;
+}
+
+function renderReceipt(data) {
+  var slot = document.getElementById('receiptSlot');
+
+  if (data.method === 'stripe') {
+    slot.innerHTML =
+      '<div class="receipt-card">' +
+        '<h3>Payment Complete</h3>' +
+        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px">Your card has been charged. Payment distributed to the operator.</p>' +
+        '<div class="kv-row"><span class="kv-label">Operator received</span><span class="kv-value kv-value-green">$' + data.operator_amount.toFixed(2) + '</span></div>' +
+        (data.receipt_url ? '<div style="margin-top:12px"><a class="receipt-link" href="' + data.receipt_url + '" target="_blank">View Stripe receipt</a></div>' : '') +
+      '</div>';
+  } else {
+    slot.innerHTML =
+      '<div class="receipt-card">' +
+        '<h3>Payment Complete</h3>' +
+        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px">Payment has been released to the operator.</p>' +
+        '<div class="kv-row"><span class="kv-label">Operator received</span><span class="kv-value kv-value-green">$' + data.operator_amount.toFixed(4) + '</span></div>' +
+        '<div style="margin-top:12px">' +
+          '<a class="receipt-link" href="' + data.explorer + '/tx/' + data.operator_tx + '" target="_blank">View operator payment</a>' +
+        '</div>' +
+      '</div>';
+  }
+}
+
+function renderFeedbackForm(paymentInfo) {
+  var slot = document.getElementById('feedbackSlot');
+  var robotName = window._winnerRobot ? window._winnerRobot.name : 'Robot Operator';
+  var robotId = window._winnerRobot ? window._winnerRobot.agent_id : '';
+
+  // Store for popup use
+  window._feedbackInfo = { robotId: robotId, robotName: robotName, paymentInfo: paymentInfo };
+
+  slot.innerHTML =
+    '<button class="pay-btn" style="background:var(--bg-subtle);color:var(--text-2);border:1px solid var(--border);font-size:11px;padding:6px 12px" onclick="openFeedbackPopup()">Rate this operator</button>' +
+    '<span id="feedbackStatus" style="font-size:11px;color:var(--text-3);margin-left:8px"></span>';
+}
+
+function openFeedbackPopup() {
+  var info = window._feedbackInfo;
+  if (!info) return;
+
+  var modal = document.createElement('div');
+  modal.className = 'feed-detail expanded';
+  modal.id = 'feedbackModal';
+  modal.innerHTML =
+    '<div class="feed-detail-close" onclick="closeFeedbackPopup()">Close</div>' +
+    '<h3 style="margin:0 0 12px">Rate this operator</h3>' +
+    '<p style="font-size:13px;color:var(--text-2);margin-bottom:12px">How was your experience with ' + escapeHtml(info.robotName) + '?</p>' +
+    '<div class="star-row" id="feedbackStars" style="display:flex;gap:6px;margin-bottom:12px">' +
+      '<span data-star="1" onclick="selectStar(1)" style="width:32px;height:32px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-3)">1</span>' +
+      '<span data-star="2" onclick="selectStar(2)" style="width:32px;height:32px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-3)">2</span>' +
+      '<span data-star="3" onclick="selectStar(3)" style="width:32px;height:32px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-3)">3</span>' +
+      '<span data-star="4" onclick="selectStar(4)" style="width:32px;height:32px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-3)">4</span>' +
+      '<span data-star="5" onclick="selectStar(5)" style="width:32px;height:32px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-3)">5</span>' +
+    '</div>' +
+    '<textarea class="form-textarea" id="feedbackComment" placeholder="Optional: share what went well or what could improve..." style="min-height:60px;margin-bottom:8px;width:100%"></textarea>' +
+    '<button class="pay-btn" style="background:var(--accent);color:#fff;font-size:12px;padding:8px 16px" id="feedbackSubmitBtn" onclick="submitFeedback(\'' + escapeHtml(info.robotId) + '\',\'' + escapeHtml(info.robotName) + '\',\'' + escapeHtml(info.paymentInfo.payment_method || '') + '\',\'' + escapeHtml(info.paymentInfo.payment_tx || '') + '\')">Submit</button>' +
+    '<span id="feedbackStatus" style="font-size:11px;color:var(--text-3);margin-left:8px"></span>';
+
+  document.body.appendChild(modal);
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.add('active');
+}
+
+function showSummaryPopup() {
+  var text = window._auctionSummaryText || '';
+  var modal = document.createElement('div');
+  modal.className = 'feed-detail expanded';
+  modal.id = 'summaryModal';
+  modal.innerHTML =
+    '<div class="feed-detail-close" onclick="closeSummaryPopup()">Close</div>' +
+    '<div style="margin-top:8px;font-size:13px;line-height:1.7;color:var(--text-2)">' + formatStepText(text) + '</div>';
+  document.body.appendChild(modal);
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.add('active');
+}
+
+function closeSummaryPopup() {
+  var modal = document.getElementById('summaryModal');
+  if (modal) modal.remove();
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function closeFeedbackPopup() {
+  var modal = document.getElementById('feedbackModal');
+  if (modal) modal.remove();
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function resetDemo() {
+  // Reset state
+  auctionComplete = false;
+  window._awardedRequestId = null;
+  window._tunnelUrl = null;
+  window._paymentCommitment = null;
+  window._stripeHold = null;
+  window._winnerRobot = null;
+  window._winnerBidPrice = null;
+  window._lastBidStep = null;
+  window._auctionSummaryText = null;
+  window._feedbackInfo = null;
+  window._stripePaymentIntent = null;
+  window._stripeSessionId = null;
+  window._lastDeliveryData = null;
+  window._ipfsCid = null;
+  window._ipfsUrl = null;
+  selectedRating = 0;
+  feedCounter = 0;
+
+  // Clear all slots
+  document.getElementById('winnerSlot').innerHTML = '';
+  document.getElementById('commitSlot').innerHTML = '';
+  document.getElementById('commitmentStatusCard').innerHTML = '';
+  document.getElementById('deliverySlot').innerHTML = '';
+  document.getElementById('receiptSlot').innerHTML = '';
+  document.getElementById('revealedDataSlot').innerHTML = '';
+  document.getElementById('feedbackSlot').innerHTML = '';
+  document.getElementById('feedList').innerHTML = '';
+  var aas = document.getElementById('auctionActionSlot'); if (aas) aas.innerHTML = '';
+  var eas = document.getElementById('executeActionSlot'); if (eas) eas.innerHTML = '';
+  document.getElementById('errorMsg').classList.remove('visible');
+
+  // Reset progress
+  var prog = document.getElementById('auctionProgress');
+  if (prog) { prog.textContent = ''; prog.classList.remove('visible'); }
+
+  // Reset sidebar button
+  var btn = document.getElementById('runBtn');
+  btn.disabled = false;
+  btn.textContent = 'Hire Operator';
+  btn.classList.remove('cta', 'reset');
+  btn.onclick = function() { runAuction(); };
+
+  var mobileBtn = document.getElementById('mobileRunBtn');
+  if (mobileBtn) {
+    mobileBtn.textContent = 'Hire Operator';
+    mobileBtn.classList.remove('cta');
+    mobileBtn.disabled = false;
+    mobileBtn.onclick = function() { runAuction(); };
+  }
+
+  // Hide sticky action bar
+  var actionBar = document.getElementById('actionBar');
+  if (actionBar) { actionBar.innerHTML = ''; actionBar.classList.remove('visible'); }
+
+  // Reset phase tracking
+  _highestPhaseReached = 0;
+
+  // Back to setup
+  showPhase('setup');
+}
+
+
+// ===== SIDEBAR TOGGLE (mobile) =====
+
+function toggleSidebar() {
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('sidebarOverlay');
+  sidebar.classList.toggle('mobile-open');
+  overlay.classList.toggle('active');
+}
+
+
+// ===== TUNNEL TEST (verbatim) =====
+
+async function testTunnel() {
+  var url = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
+  if (!url) return;
+  try {
+    var r = await fetch(url + '/health', {mode:'cors'});
+    if (r.ok) {
+      var data = await r.json();
+      console.log('MCP server: ' + data.tools + ' tools, ' + data.fleet + ' operators');
+    }
+  } catch(e) {
+    console.warn('MCP server unreachable:', e.message);
+  }
+}
+
+
+// ===== RUN AUCTION (rewritten rendering, same API calls) =====
+
+async function runAuction() {
+  var tunnelUrl = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
+  if (!tunnelUrl) {
+    showError('MCP server URL not configured');
+    console.error('tunnelUrl is empty');
+    return;
+  }
+
+  // Set fleet mode on server before auction (simulator_only toggle)
+  try {
+    await fetch(tunnelUrl + '/api/fleet-mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ simulator_only: simulatorOnly }),
+    });
+  } catch (e) { console.warn('Fleet mode set failed:', e.message); }
+
+  var btn = document.getElementById('runBtn');
+  var errorMsg = document.getElementById('errorMsg');
+  var progressLabel = document.getElementById('auctionProgress');
+
+  // Reset
+  document.getElementById('feedList').innerHTML = '';
+  document.getElementById('winnerSlot').innerHTML = '';
+  errorMsg.classList.remove('visible');
+  btn.disabled = true;
+  btn.textContent = 'Running auction...';
+
+  showPhase('auction');
+  progressLabel.textContent = 'Submitting your request...';
+  progressLabel.classList.add('visible');
+
+  // Build prompt
+  var rfpText = document.getElementById('rfpText').value.trim();
+  var siteInfo = {
+    project_name: document.getElementById('siteProject').value.trim(),
+    location: document.getElementById('siteLocation').value.trim(),
+    agency: document.getElementById('siteAgency').value.trim(),
+    terrain: document.getElementById('siteTerrain').value.trim()
+  };
+
+  var robotContext = '';
+  if (discoveredRobots.length > 0) {
+    var robotList = discoveredRobots.map(function(r) {
+      var walletStr = (r.payment && r.payment.usdc_wallet) ? ', wallet: ' + r.payment.usdc_wallet : '';
+      var toolStr = (r.mcp_tools && r.mcp_tools.length > 0) ? ', tools: ' + r.mcp_tools.join(', ') : '';
+      return '- ' + r.name + ' (agent #' + r.agent_id + ' on ' + r.chain_name + walletStr + toolStr + ')';
+    }).join('\n');
+    robotContext = '\n\nDiscovered robots (registered on-chain via ERC-8004):\n' + robotList +
+      '\n\nThese are robots discovered on-chain via ERC-8004. They bid and execute tasks via their MCP endpoints. Reference them by name in your narration.';
+  }
+
+  var deliverySchemaContext = '\n\nDelivery Schema (robot receives this, QA validates against it):\n' + JSON.stringify(DELIVERY_SCHEMA, null, 2);
+  var prompt = rfpText + '\n\nSite Info: ' + JSON.stringify(siteInfo) + robotContext + deliverySchemaContext;
+
+  try {
+    var adminKey = new URLSearchParams(window.location.search).get('admin') || '';
+    var headers = { 'Content-Type': 'application/json' };
+    if (adminKey) headers['X-Admin-Key'] = adminKey;
+
+    var response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ prompt: prompt, tunnel_url: tunnelUrl, phase: 'auction', simulator_only: simulatorOnly })
+    });
+
+    if (response.status === 429) {
+      showError('Demo limit reached (5/day). Try again tomorrow.');
+      resetBtn();
+      return;
+    }
+
+    if (!response.ok) {
+      var err = await response.json().catch(function() { return { error: 'Unknown error' }; });
+      showError(err.error || 'Something went wrong. Please try again.');
+      resetBtn();
+      return;
+    }
+
+    var data = await response.json();
+
+    if (data.error) {
+      showError(data.error);
+      resetBtn();
+      return;
+    }
+
+    // Play back auction steps
+    var steps = data.steps || [];
+    var toolSteps = steps.filter(function(s) { return s.type === 'tool_call'; });
+    var totalToolSteps = toolSteps.length || 1;
+    var toolIndex = 0;
+
+    for (var i = 0; i < steps.length; i++) {
+      var step = steps[i];
+      await delay(800);
+
+      if (step.type === 'tool_call') {
+        toolIndex++;
+        progressLabel.textContent = 'Step ' + toolIndex + ' of ' + totalToolSteps + ' — ' + formatToolName(step.tool_name);
+      }
+
+      appendFeedItem(step, i);
+    }
+
+    progressLabel.textContent = 'Best operator selected';
+
+    // Extract request_id from award step
+    var awardStep = steps.filter(function(s) { return s.tool_name === 'auction_award_with_confirmation'; })[0];
+    var auctionRequestId = awardStep && awardStep.result && awardStep.result.result ? awardStep.result.result.request_id : null;
+    window._awardedRequestId = auctionRequestId;
+    window._tunnelUrl = tunnelUrl;
+
+    // Extract delivery_schema from RFP processing result (not hardcoded)
+    var rfpStep = steps.filter(function(s) { return s.tool_name === 'auction_process_rfp'; })[0];
+    if (rfpStep && rfpStep.result && rfpStep.result.result) {
+      var taskSpecs = rfpStep.result.result.task_specs || [];
+      if (taskSpecs.length > 0) {
+        var specSchema = (taskSpecs[0].capability_requirements || {}).delivery_schema;
+        if (specSchema) {
+          DELIVERY_SCHEMA = specSchema;
+          appendFeedItem({ type: 'text', claude_text: 'Delivery schema loaded from task spec' }, steps.length);
+        }
+      }
+    }
+
+    // Extract winner info and match to discovered robot
+    var winnerName = 'Operator';
+    var winnerPrice = '';
+    var bidStep = steps.filter(function(s) { return s.tool_name === 'auction_get_bids'; })[0];
+    if (bidStep && bidStep.result && bidStep.result.result) {
+      var bidsResult = bidStep.result.result;
+      window._lastBidStep = bidsResult;
+      winnerName = bidsResult.recommended_winner || winnerName;
+      var winnerBid = (bidsResult.bids || []).filter(function(b) { return b.robot_id === bidsResult.recommended_winner; })[0];
+      if (winnerBid) winnerPrice = '$' + winnerBid.price;
+    }
+
+    // Find the winning robot in discovered robots (match by name/robot_id)
+    window._winnerRobot = discoveredRobots.filter(function(r) {
+      return r.name === winnerName;
+    })[0] || discoveredRobots[0] || null;
+
+    // Store the raw bid price for payment (robot's actual ask)
+    window._winnerBidPrice = winnerBid ? parseFloat(winnerBid.price) : 0.50;
+
+    await delay(500);
+    window._auctionSummaryText = data.final_text || '';
+    renderWinnerCard(data.final_text, winnerName, winnerPrice);
+
+    // User manually proceeds — button next to heading
+    window._pendingWinner = { name: winnerName, price: winnerPrice };
+    var actionSlot = document.getElementById('auctionActionSlot');
+    if (actionSlot) {
+      actionSlot.innerHTML = '<button class="pay-btn" style="background:var(--accent);color:#fff;font-size:11px;padding:6px 12px" onclick="showPhase(\'commit\');renderPaymentOptions(window._pendingWinner.name,window._pendingWinner.price)">Proceed to Dispatch</button>';
+    }
+
+  } catch (err) {
+    showError('Network error. Check your connection and try again.');
+  }
+
+  resetBtn();
+}
+
+// Backward compat alias
+var runDemo = runAuction;
+
+
+// ===== RUN EXECUTION (rewritten rendering, same API calls) =====
+
+async function runExecution() {
+  var requestId = window._awardedRequestId;
+  var tunnelUrl = window._tunnelUrl;
+  if (!requestId || !tunnelUrl) {
+    console.error('No request_id or tunnel_url for execution phase');
+    return;
+  }
+
+  // Update commitment status
+  var statusEl = document.querySelector('.commit-status');
+  if (statusEl) statusEl.innerHTML = '<span style="color:var(--accent)">Robot is executing the task...</span>';
+
+  try {
+    var adminKey = new URLSearchParams(window.location.search).get('admin') || '';
+    var headers = { 'Content-Type': 'application/json' };
+    if (adminKey) headers['X-Admin-Key'] = adminKey;
+
+    var response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        phase: 'execute',
+        request_id: requestId,
+        tunnel_url: tunnelUrl,
+      })
+    });
+
+    var data = await response.json();
+
+    if (data.error) {
+      var csCard = document.getElementById('commitmentStatusCard');
+      if (csCard) {
+        csCard.innerHTML += '<div style="color:var(--red);font-size:12px;margin-top:8px">Execution failed: ' + escapeHtml(data.error) + '</div>' +
+          '<button class="pay-btn" style="background:var(--accent);font-size:12px;padding:8px 12px;margin-top:8px" onclick="runExecution()">Retry</button>';
+      }
+      return;
+    }
+
+    // Render execution steps in the feed
+    var steps = data.steps || [];
+    for (var i = 0; i < steps.length; i++) {
+      await delay(800);
+      appendFeedItem(steps[i], i);
+    }
+
+    // Extract delivery data
+    var confirmStep = steps.filter(function(s) { return s.tool_name === 'auction_confirm_delivery'; })[0];
+    var deliveryData = null;
+    var qaResult = null;
+    if (confirmStep && confirmStep.result && confirmStep.result.result) {
+      var cr = confirmStep.result.result;
+      deliveryData = cr.delivery ? cr.delivery.data : null;
+      qaResult = cr.qa || null;
+    }
+
+    await delay(500);
+    window._lastDeliveryData = deliveryData;
+    renderDeliveryResult(deliveryData, qaResult);
+
+  } catch (err) {
+    console.error('Execution phase error:', err);
+    var csCard = document.getElementById('commitmentStatusCard');
+    if (csCard) {
+      csCard.innerHTML += '<div style="color:var(--red);font-size:12px;margin-top:8px">Network error during execution</div>' +
+        '<button class="pay-btn" style="background:var(--accent);font-size:12px;padding:8px 12px;margin-top:8px" onclick="runExecution()">Retry</button>';
+    }
+  }
+}
+
+
+// ===== PAYMENT FUNCTIONS (verbatim logic) =====
+
+async function payWithStripe(amountCents, operatorAccountId) {
+  var btn = document.querySelector('.pay-btn-stripe');
+  btn.disabled = true;
+  btn.textContent = 'Authorizing hold...';
+
+  var operatorName = window._winnerRobot ? window._winnerRobot.name : 'Robot Operator';
+
+  try {
+    // Step 1: Create PaymentIntent with manual capture (authorize only, no charge)
+    var res = await fetch(WORKER_BASE + '/api/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount_cents: amountCents,
+        currency: 'usd',
+        operator_name: operatorName,
+        operator_account_id: operatorAccountId || undefined,
+        request_id: window._awardedRequestId || 'demo_' + Date.now(),
+      }),
+    });
+
+    var data = await res.json();
+    if (data.error) {
+      console.error('Stripe PI error:', data);
+      btn.textContent = 'Error: ' + data.error;
+      btn.disabled = false;
+      return;
+    }
+
+    // Step 2: Get publishable key
+    var stripeKey = null;
+    try {
+      var configRes = await fetch(WORKER_BASE + '/api/stripe-config');
+      var config = await configRes.json();
+      stripeKey = config.publishable_key;
+    } catch (_) {}
+
+    if (!stripeKey) {
+      btn.textContent = 'Stripe not configured (no publishable key)';
+      btn.disabled = false;
+      return;
+    }
+
+    // Step 3: Mount Payment Element inline (no redirect)
+    btn.textContent = 'Loading card form...';
+    var mountEl = document.getElementById('stripeEmbedMount');
+    if (!mountEl) { btn.textContent = 'Mount element missing'; btn.disabled = false; return; }
+
+    var stripe = Stripe(stripeKey);
+    var elements = stripe.elements({ clientSecret: data.client_secret });
+    var paymentElement = elements.create('payment');
+    mountEl.innerHTML = '';
+    paymentElement.mount(mountEl);
+
+    // Step 4: Add a submit button below the form
+    var submitBtn = document.createElement('button');
+    submitBtn.className = 'pay-btn pay-btn-stripe';
+    submitBtn.style.cssText = 'width:100%;margin-top:12px';
+    submitBtn.textContent = 'Authorize $' + (amountCents / 100).toFixed(2) + ' Hold';
+    mountEl.after(submitBtn);
+    btn.style.display = 'none'; // hide the original button
+
+    submitBtn.onclick = async function() {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Authorizing...';
+
+      // confirmPayment with redirect:'if_required' — stays on page for card payments
+      var result = await stripe.confirmPayment({
+        elements: elements,
+        confirmParams: { return_url: window.location.href.split('?')[0] },
+        redirect: 'if_required',
+      });
+
+      if (result.error) {
+        console.error('Stripe confirm error:', result.error);
+        submitBtn.textContent = result.error.message || 'Authorization failed';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      // Success — paymentIntent is authorized (requires_capture)
+      var pi = result.paymentIntent;
+      console.log('Stripe authorized:', pi.id, pi.status);
+
+      // Clean up form
+      paymentElement.destroy();
+      mountEl.innerHTML = '';
+      submitBtn.remove();
+
+      // Transition to execution (same as USDC flow)
+      showStripeHoldApproved({
+        payment_intent: pi.id,
+        amount_cents: amountCents,
+      }, amountCents, operatorName);
+    };
+
+  } catch (err) {
+    console.error('Stripe error:', err);
+    btn.textContent = 'Payment failed — try again';
+    btn.disabled = false;
+  }
+}
+
+function showStripeHoldApproved(checkoutData, amountCents, operatorName) {
+  // Store commitment info for release phase (mirrors USDC window._paymentCommitment)
+  window._stripeHold = {
+    payment_intent: checkoutData.payment_intent,
+    session_id: checkoutData.session_id,
+    amount_cents: amountCents,
+    operator_amount: amountCents / 100,
+    operator_name: operatorName,
+  };
+
+  // Show hold status and trigger execution (same pattern as USDC showPaymentCommitted)
+  showPhase('execute');
+
+  var slot = document.getElementById('commitmentStatusCard');
+  slot.innerHTML =
+    '<div class="card card-accent">' +
+      '<h3 style="color:var(--accent)">Payment Authorized</h3>' +
+      '<p class="explainer" style="margin-bottom:12px">Your card hold is active. You will not be charged until you approve the delivered results.</p>' +
+      '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">Operator working...</span></div>' +
+      '<div class="kv-row"><span class="kv-label">Amount</span><span class="kv-value">$' + (amountCents / 100).toFixed(2) + '</span></div>' +
+    '</div>';
+
+  // Auto-trigger execution after a brief pause
+  setTimeout(function() { runExecution(); }, 1000);
+}
+
+async function payWithUSDC(operatorWallet) {
+  var btn = document.querySelector('.pay-btn-usdc');
+  btn.disabled = true;
+  btn.textContent = 'Connecting wallet...';
+
+  if (!operatorWallet) {
+    btn.textContent = 'No operator wallet';
+    return;
+  }
+
+  // Chain from demo mode selector (overrides robot's chain)
+  var overrideChain = getDemoChainId();
+  var winnerChain = window._winnerRobot ? window._winnerRobot.chain_id : 8453;
+  var chainId = overrideChain || winnerChain;
+  if (chainId === 11155111) chainId = 84532; // Eth Sepolia → Base Sepolia
+  var chainName = CHAIN_NAMES[chainId] || 'Chain ' + chainId;
+  var usdcAddr = USDC_ADDRESSES[chainId];
+
+  if (!usdcAddr) {
+    btn.textContent = 'USDC not available on ' + chainName;
+    btn.disabled = false;
+    return;
+  }
+
+  try {
+    if (!window.ethereum) {
+      btn.textContent = 'No wallet found';
+      alert('Install MetaMask, Rabby, or Coinbase Wallet to pay with USDC.');
+      btn.disabled = false;
+      return;
+    }
+
+    btn.textContent = 'Requesting accounts...';
+    var provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    var signer = await provider.getSigner();
+    var buyerAddr = await signer.getAddress();
+
+    var network = await provider.getNetwork();
+    if (Number(network.chainId) !== chainId) {
+      btn.textContent = 'Switching to ' + chainName + '...';
+      try {
+        await provider.send('wallet_switchEthereumChain', [{ chainId: CHAIN_HEX[chainId] }]);
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+      } catch (switchErr) {
+        btn.textContent = 'Please switch to ' + chainName;
+        btn.disabled = false;
+        return;
+      }
+    }
+
+    // USDC amount from robot's bid price (6 decimal places)
+    var bidPrice = window._winnerBidPrice || 0.50;
+    var totalUnits = BigInt(Math.round(bidPrice * 1000000));
+    var usdcAbi = [
+      'function balanceOf(address) view returns (uint256)',
+      'function nonces(address) view returns (uint256)',
+      'function name() view returns (string)',
+      'function version() view returns (string)',
+    ];
+    var usdc = new ethers.Contract(usdcAddr, usdcAbi, provider);
+
+    btn.textContent = 'Checking USDC balance...';
+    var balance = await usdc.balanceOf(buyerAddr);
+    if (balance < totalUnits) {
+      btn.textContent = 'Insufficient USDC';
+      alert('You need at least $' + bidPrice.toFixed(2) + ' USDC on ' + chainName + '. Your balance: $' + (Number(balance) / 1000000).toFixed(6));
+      btn.disabled = false;
+      return;
+    }
+
+    var deadline = Math.floor(Date.now() / 1000) + 3600;
+    var name = await usdc.name();
+
+    var domain = {
+      name: name,
+      version: '2',
+      chainId: chainId,
+      verifyingContract: usdcAddr,
+    };
+
+    var commitRequestId = 'req_' + Date.now();
+    var commitBody = null;
+    var useEip3009 = false;
+
+    // --- EIP-3009 TransferWithAuthorization (preferred: atomic, no allowance) ---
+    try {
+      btn.textContent = 'Authorizing payment...';
+      var operatorAmount = totalUnits;
+
+      var operatorNonce = ethers.hexlify(ethers.randomBytes(32));
+
+      var transferAuthTypes = {
+        TransferWithAuthorization: [
+          { name: 'from', type: 'address' },
+          { name: 'to', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'validAfter', type: 'uint256' },
+          { name: 'validBefore', type: 'uint256' },
+          { name: 'nonce', type: 'bytes32' },
+        ],
+      };
+
+      // Sign authorization for operator payment (100%)
+      var operatorAuthValue = {
+        from: buyerAddr,
+        to: operatorWallet,
+        value: operatorAmount.toString(),
+        validAfter: 0,
+        validBefore: deadline,
+        nonce: operatorNonce,
+      };
+      var opSig = await signer.signTypedData(domain, transferAuthTypes, operatorAuthValue);
+      var opSplit = ethers.Signature.from(opSig);
+
+      commitBody = {
+        request_id: commitRequestId,
+        chain_id: chainId,
+        owner: buyerAddr,
+        operator_wallet: operatorWallet,
+        total_amount: totalUnits.toString(),
+        deadline: deadline,
+        eip3009: true,
+        operator_nonce: operatorNonce,
+        operator_v: opSplit.v,
+        operator_r: opSplit.r,
+        operator_s: opSplit.s,
+      };
+      useEip3009 = true;
+      console.log('EIP-3009 signatures obtained successfully');
+    } catch (eip3009Err) {
+      console.warn('EIP-3009 signing failed, falling back to ERC-2612 permit:', eip3009Err.message);
+      // If user rejected, don't fall back — they meant to cancel
+      if (eip3009Err.code === 4001 || eip3009Err.code === 'ACTION_REJECTED') {
+        throw eip3009Err;
+      }
+    }
+
+    // --- ERC-2612 Permit fallback ---
+    if (!useEip3009) {
+      btn.textContent = 'Authorizing payment...';
+      var nonce = await usdc.nonces(buyerAddr);
+
+      var permitTypes = {
+        Permit: [
+          { name: 'owner', type: 'address' },
+          { name: 'spender', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'nonce', type: 'uint256' },
+          { name: 'deadline', type: 'uint256' },
+        ],
+      };
+
+      var spender = RELAY_WALLET;
+
+      var permitValue = {
+        owner: buyerAddr,
+        spender: spender,
+        value: totalUnits.toString(),
+        nonce: nonce.toString(),
+        deadline: deadline,
+      };
+
+      var sig = await signer.signTypedData(domain, permitTypes, permitValue);
+      var splitSig = ethers.Signature.from(sig);
+
+      commitBody = {
+        request_id: commitRequestId,
+        chain_id: chainId,
+        owner: buyerAddr,
+        operator_wallet: operatorWallet,
+        total_amount: totalUnits.toString(),
+        deadline: deadline,
+        v: splitSig.v,
+        r: splitSig.r,
+        s: splitSig.s,
+      };
+    }
+
+    btn.textContent = 'Committing payment...';
+
+    var commitRes = await fetch(WORKER_BASE + '/api/commit-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(commitBody),
+    });
+
+    var commitData = await commitRes.json();
+
+    if (!commitRes.ok || commitData.error) {
+      btn.textContent = commitData.error || 'Commit failed';
+      btn.disabled = false;
+      return;
+    }
+
+    window._paymentCommitment = {
+      request_id: commitRequestId,
+      chain_id: chainId,
+      chain_name: chainName,
+      owner: buyerAddr,
+      operator_wallet: operatorWallet,
+      operator_amount: Number(BigInt(commitData.operator_amount)) / 1000000,
+      deadline: commitData.deadline,
+    };
+
+    showPaymentCommitted(commitData, chainName);
+
+  } catch (err) {
+    console.error('USDC payment error:', err);
+    btn.textContent = 'Payment failed — try again';
+    if (err.code === 4001 || err.code === 'ACTION_REJECTED') {
+      btn.textContent = 'Signature rejected';
+    }
+    btn.disabled = false;
+  }
+}
+
+function showPaymentCommitted(data, chainName) {
+  showPhase('execute');
+  renderCommitmentStatus(data, chainName);
+
+  // Auto-trigger execution after a brief pause
+  setTimeout(function() { runExecution(); }, 1000);
+}
+
+async function releasePayment() {
+  var btn = document.querySelector('.release-payment-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Releasing payment...'; }
+
+  var isStripe = !!window._stripeHold;
+  var isUsdc = !!window._paymentCommitment;
+
+  if (!isStripe && !isUsdc) {
+    alert('No payment hold found.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Release Payment'; }
+    return;
+  }
+
+  try {
+    var receiptData = null;
+
+    if (isStripe) {
+      // Stripe: capture the authorized payment
+      var captureRes = await fetch(WORKER_BASE + '/api/capture-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_intent_id: window._stripeHold.payment_intent }),
+      });
+      var captureData = await captureRes.json();
+
+      if (!captureRes.ok || captureData.error) {
+        console.error('Capture error:', captureData);
+        if (btn) { btn.textContent = captureData.error || 'Capture failed'; btn.disabled = false; }
+        return;
+      }
+
+      receiptData = {
+        method: 'stripe',
+        operator_amount: window._stripeHold.operator_amount,
+        receipt_url: captureData.receipt_url,
+        payment_intent: captureData.payment_intent_id,
+      };
+    } else {
+      // USDC: execute permit + transferFrom on-chain
+      var commitment = window._paymentCommitment;
+      var execRes = await fetch(WORKER_BASE + '/api/execute-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_id: commitment.request_id }),
+      });
+      var execData = await execRes.json();
+
+      if (!execRes.ok || execData.error) {
+        console.error('Execute payment error:', execData);
+        if (btn) {
+          var errMsg = execData.error || 'Execution failed';
+          if (execData.debug) {
+            console.error('Debug:', JSON.stringify(execData.debug, null, 2));
+            errMsg += ' [' + (execData.debug.reason || execData.debug.msg || '').slice(0, 80) + ']';
+          }
+          btn.textContent = errMsg;
+          btn.disabled = false;
+        }
+        return;
+      }
+
+      receiptData = {
+        method: 'usdc',
+        operator_tx: execData.operator_tx,
+        operator_amount: commitment.operator_amount,
+        explorer: execData.explorer,
+        chain_name: commitment.chain_name,
+      };
+    }
+
+    // Transition to settle/done phase
+    showPhase('settle');
+
+    // Render receipt (method-specific)
+    renderReceipt(receiptData);
+
+    // Reveal delivery data + IPFS
+    showRevealedData();
+
+    // Feedback form
+    setTimeout(function() {
+      renderFeedbackForm({
+        payment_method: receiptData.method,
+        payment_tx: receiptData.operator_tx || receiptData.payment_intent || '',
+      });
+    }, 1000);
+
+  } catch (err) {
+    console.error('Release payment error:', err);
+    if (btn) { btn.textContent = 'Network error — try again'; btn.disabled = false; }
+  }
+}
+
+function showRevealedData() {
+  var revealSlot = document.getElementById('revealedDataSlot');
+  if (!revealSlot || !window._lastDeliveryData) return;
+
+  var ipfsLinkHtml = '';
+  if (window._ipfsCid) {
+    var ipfsHref = window._ipfsUrl || 'https://ipfs.io/ipfs/' + window._ipfsCid;
+    ipfsLinkHtml =
+      '<div style="margin-bottom:12px;font-size:12px">' +
+        '<span style="color:var(--text-3)">IPFS:</span> ' +
+        '<a href="' + ipfsHref + '" target="_blank" style="color:var(--accent);font-family:\'JetBrains Mono\',monospace;text-decoration:none">' + window._ipfsCid + '</a>' +
+        ' <a href="https://ipfs.io/ipfs/' + window._ipfsCid + '" target="_blank" style="color:var(--text-3);font-size:10px;text-decoration:none">[gateway]</a>' +
+      '</div>';
+  }
+  revealSlot.innerHTML =
+    '<div class="card card-blue" style="margin-top:16px">' +
+      '<h3>Delivery Payload</h3>' +
+      ipfsLinkHtml +
+      '<div class="data-card"><pre>' + escapeHtml(JSON.stringify(window._lastDeliveryData, null, 2)) + '</pre></div>' +
+    '</div>';
+}
+
+
+// ===== FEEDBACK (verbatim) =====
+
+var selectedRating = 0;
+
+function previewStars(n) {
+  var spans = document.querySelectorAll('#feedbackStars span');
+  spans.forEach(function(s, i) {
+    if (i < n) {
+      s.style.background = 'var(--accent)';
+      s.style.color = '#fff';
+      s.style.borderColor = 'var(--accent)';
+    } else {
+      s.style.background = '';
+      s.style.color = 'var(--text-3)';
+      s.style.borderColor = 'var(--border)';
+    }
+  });
+}
+
+function resetStars() {
+  previewStars(selectedRating);
+}
+
+function selectStar(n) {
+  selectedRating = n;
+  previewStars(n);
+}
+
+async function submitFeedback(robotId, robotName, paymentMethod, paymentTx) {
+  if (selectedRating === 0) {
+    document.getElementById('feedbackStatus').textContent = 'Please select a rating';
+    return;
+  }
+
+  var btn = document.getElementById('feedbackSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  var comment = document.getElementById('feedbackComment').value.trim();
+
+  try {
+    var res = await fetch(WORKER_BASE + '/api/auction-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        request_id: 'demo_' + Date.now(),
+        role: 'buyer',
+        robot_id: robotId,
+        robot_name: robotName,
+        rating: selectedRating,
+        comment: comment,
+        payment_method: paymentMethod,
+        payment_tx: paymentTx,
+        delivery_accepted: true,
+      }),
+    });
+
+    var data = await res.json();
+    if (data.ok) {
+      btn.textContent = 'Submitted';
+      var status = document.getElementById('feedbackStatus');
+      status.style.color = 'var(--green)';
+      status.textContent = 'Thank you! ';
+      if (data.issue_url) {
+        status.innerHTML += '<a href="' + data.issue_url + '" target="_blank" style="color:var(--accent);text-decoration:none">View on GitHub</a>';
+      }
+
+      // Also submit on-chain to 8004scan reputation registry
+      var winner = window._winnerRobot;
+      if (winner && winner.agent_id && window._tunnelUrl) {
+        status.innerHTML += ' <span style="color:var(--text-3)">Recording feedback...</span>';
+        try {
+          var onchainRes = await fetch(window._tunnelUrl + '/api/feedback-onchain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              agent_id: '8453:' + winner.agent_id,
+              rating: selectedRating,
+              comment: comment,
+              task_description: document.getElementById('rfpText').value.trim().slice(0, 200),
+              payment_tx: paymentTx,
+              buyer_address: (window._paymentCommitment ? window._paymentCommitment.owner : '') || '',
+            }),
+          });
+          var onchainData = await onchainRes.json();
+          if (onchainData.ok) {
+            status.innerHTML = 'Thank you! Feedback recorded. <a href="' + onchainData['8004scan_url'] + '" target="_blank" style="color:var(--accent);text-decoration:none">View operator profile</a>';
+          } else {
+            // On-chain failed (e.g. self-feedback) — GitHub feedback still saved
+            console.warn('On-chain feedback:', onchainData.error);
+            status.innerHTML = 'Thank you! Feedback saved.' + (data.issue_url ? ' <a href="' + data.issue_url + '" target="_blank" style="color:var(--accent);text-decoration:none">View on GitHub</a>' : '');
+          }
+        } catch (e) {
+          console.warn('On-chain feedback failed:', e);
+          status.innerHTML = 'Thank you! Feedback saved.' + (data.issue_url ? ' <a href="' + data.issue_url + '" target="_blank" style="color:var(--accent);text-decoration:none">View on GitHub</a>' : '');
+        }
+      }
+    } else {
+      btn.textContent = 'Error — try again';
+      btn.disabled = false;
+    }
+  } catch (e) {
+    btn.textContent = 'Network error';
+    btn.disabled = false;
+  }
+}
+
+
+// ===== CHECK PAYMENT RETURN (verbatim) =====
+
+function checkPaymentReturn() {
+  var params = new URLSearchParams(window.location.search);
+  var payment = params.get('payment');
+  var sessionId = params.get('session_id');
+
+  if (payment === 'success' && sessionId) {
+    showPaymentSuccess(sessionId);
+    window.history.replaceState({}, '', window.location.pathname);
+  } else if (payment === 'cancelled') {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+async function showPaymentSuccess(sessionId) {
+  showPhase('settle');
+
+  var status = { status: 'pending' };
+  for (var i = 0; i < 10; i++) {
+    try {
+      var res = await fetch(WORKER_BASE + '/api/payment-status?session_id=' + sessionId);
+      status = await res.json();
+      if (status.status === 'paid') break;
+    } catch(e) {}
+    await delay(2000);
+  }
+
+  var slot = document.getElementById('receiptSlot');
+
+  if (status.status === 'paid') {
+    var amountStr = status.amount_cents ? '$' + (status.amount_cents / 100).toFixed(2) : '$1.00';
+    var operatorName = status.operator_name || 'Robot Operator';
+
+    slot.innerHTML =
+      '<div class="receipt-card">' +
+        '<h3>Payment Complete</h3>' +
+        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px">Real money moved through a real robot auction.</p>' +
+        '<div class="kv-row"><span class="kv-label">' + escapeHtml(operatorName) + ' received</span><span class="kv-value kv-value-green">' + amountStr + '</span></div>' +
+        (status.receipt_url ? '<div style="margin-top:12px"><a class="receipt-link" href="' + status.receipt_url + '" target="_blank">View Stripe receipt</a></div>' : '') +
+        '<div style="margin-top:8px"><a class="receipt-link" href="https://yakrobot.bid" target="_blank">Back to yakrobot.bid</a></div>' +
+      '</div>';
+
+    setTimeout(function() {
+      renderFeedbackForm({
+        payment_method: 'stripe',
+        payment_tx: status.payment_intent || '',
+      });
+    }, 1000);
+  } else {
+    slot.innerHTML =
+      '<div class="receipt-card">' +
+        '<h3>Payment Processing</h3>' +
+        '<p style="font-size:13px;color:var(--text-2)">Your payment is being processed. Check your email for a Stripe receipt.</p>' +
+        '<div style="margin-top:12px"><a class="receipt-link" href="https://yakrobot.bid" target="_blank">Back to yakrobot.bid</a></div>' +
+      '</div>';
+  }
+}
+
+
+// ===== ERROR HELPERS =====
+
+function showError(msg) {
+  var el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function resetBtn() {
+  var btn = document.getElementById('runBtn');
+  btn.disabled = false;
+  btn.textContent = 'Run Auction';
+}
+
+
+// ===== INIT =====
+
+setTimeout(discoverRobots, 500);
+
+// Show build stamp
+var bs = document.getElementById('buildStamp');
+if (bs && !BUILD_STAMP.includes('TIMESTAMP')) bs.textContent = 'build: ' + BUILD_STAMP;
+checkPaymentReturn();
+</script>
+
+</body>
+</html>

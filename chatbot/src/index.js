@@ -47,7 +47,7 @@ All operators are FAA Part 107 certified. All survey work is performed under a s
 4. **Fly and deliver** — Complete the task, upload deliverables. Processing pipeline handles format conversion.
 5. **Get paid** — Escrow releases to your account on delivery acceptance. No net-60 invoices.
 
-No exclusivity — keep your direct clients. No equipment purchase required. No monthly fee. Commission on completed tasks only.
+No exclusivity — keep your direct clients. No equipment purchase required. No monthly fee. No platform commission.
 
 ## Demo walkthrough
 
@@ -71,7 +71,7 @@ Pricing is market-determined through competitive bidding.
 **For GCs:**
 - Drone survey: $1,500-$3,000 for a 100-acre corridor (vs. $8,000-$10,000 for a human crew)
 - Typical pre-bid topo survey: $3,000-$15,000 depending on scope
-- Platform commission: 12% on completed tasks
+- No platform fee — 100% of payment goes to the operator
 - Payment: Escrow covers the full task cost before work begins; funds release on delivery acceptance
 
 **For operators — expected revenue by equipment tier:**
@@ -79,7 +79,7 @@ Pricing is market-determined through competitive bidding.
 - M350 RTK + L2 or P1: $2,000-$3,000/day (topo survey, volumetrics, DOT corridors)
 - Multi-sensor (LiDAR + photogrammetry + thermal): $2,500-$4,000/day (everything including as-built, inspection)
 
-Solo operator math: 12 days/month at $2,200/day average = $26,400/month gross. After commission, software, insurance, and vehicle = ~$20,000/month net.
+Solo operator math: 12 days/month at $2,200/day average = $26,400/month gross. After software, insurance, and vehicle = ~$22,000/month net.
 
 ## Frequently asked questions
 
@@ -99,7 +99,7 @@ No. No exclusivity. Use the marketplace for overflow, gap-filling, or new market
 Escrow releases on delivery acceptance. No net-60 invoices.
 
 **What commission does the platform take?**
-12% on completed tasks. If you don't work, you don't pay.
+No platform fee. 100% of payment goes to the operator.
 
 **Is this legal for MDOT work?**
 Yes. MDOT Chapter 4 requires survey work under a Michigan PLS, and the platform enforces that qualification. MDOT has integrated drone surveying since 2013.
@@ -968,9 +968,6 @@ async function handleCreateCheckout(request, env, cors) {
     );
   }
 
-  // Calculate platform commission (12%)
-  const applicationFee = Math.round(amount_cents * 0.12);
-
   // Build Stripe Checkout Session via API (no SDK in Workers)
   const stripeBody = new URLSearchParams();
   stripeBody.append("mode", "payment");
@@ -992,9 +989,8 @@ async function handleCreateCheckout(request, env, cors) {
     stripeBody.append("cancel_url", cancel_url);
   }
 
-  // If operator has a Connect account, use destination charges with application fee
+  // If operator has a Connect account, use destination charges (100% to operator)
   if (operator_account_id) {
-    stripeBody.append("payment_intent_data[application_fee_amount]", String(applicationFee));
     stripeBody.append("payment_intent_data[transfer_data][destination]", operator_account_id);
     stripeBody.append("payment_intent_data[metadata][request_id]", request_id);
   }
@@ -1043,8 +1039,7 @@ async function handleCreateCheckout(request, env, cors) {
         session_id: session.id,
         payment_intent: session.payment_intent,
         amount_cents,
-        application_fee_cents: applicationFee,
-        operator_payout_cents: amount_cents - applicationFee,
+        operator_payout_cents: amount_cents,
       }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
     );
@@ -1080,8 +1075,6 @@ async function handleCreatePaymentIntent(request, env, cors) {
     request_id = "demo",
   } = body;
 
-  const applicationFee = Math.round(amount_cents * 0.12);
-
   const piBody = new URLSearchParams();
   piBody.append("amount", String(amount_cents));
   piBody.append("currency", currency);
@@ -1090,7 +1083,6 @@ async function handleCreatePaymentIntent(request, env, cors) {
   piBody.append("metadata[operator_name]", operator_name);
 
   if (operator_account_id) {
-    piBody.append("application_fee_amount", String(applicationFee));
     piBody.append("transfer_data[destination]", operator_account_id);
   }
 
@@ -1120,8 +1112,7 @@ async function handleCreatePaymentIntent(request, env, cors) {
         payment_intent_id: pi.id,
         amount_cents: pi.amount,
         currency: pi.currency,
-        application_fee_cents: applicationFee,
-        operator_payout_cents: amount_cents - applicationFee,
+        operator_payout_cents: amount_cents,
       }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
     );
@@ -1666,17 +1657,16 @@ async function handleRelayUsdc(request, env, cors) {
   const {
     chain_id,
     owner,           // buyer address
-    operator_wallet, // 88% destination
-    platform_wallet, // 12% destination (should match PLATFORM_WALLET)
+    operator_wallet, // 100% destination
     total_amount,    // total USDC in smallest units (6 decimals)
     deadline,        // permit deadline (unix timestamp)
     v, r, s,         // permit signature components
   } = body;
 
   // Validate inputs
-  if (!chain_id || !owner || !operator_wallet || !platform_wallet || !total_amount || !deadline || v === undefined || !r || !s) {
+  if (!chain_id || !owner || !operator_wallet || !total_amount || !deadline || v === undefined || !r || !s) {
     return new Response(
-      JSON.stringify({ error: "Missing required fields: chain_id, owner, operator_wallet, platform_wallet, total_amount, deadline, v, r, s" }),
+      JSON.stringify({ error: "Missing required fields: chain_id, owner, operator_wallet, total_amount, deadline, v, r, s" }),
       { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
@@ -1699,19 +1689,9 @@ async function handleRelayUsdc(request, env, cors) {
     );
   }
 
-  // Validate platform wallet matches expected
-  const expectedPlatform = "0xe33356d0d16c107eac7da1fc7263350cbdb548e5";
-  if (platform_wallet.toLowerCase() !== expectedPlatform.toLowerCase()) {
-    return new Response(
-      JSON.stringify({ error: "Platform wallet mismatch" }),
-      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
-    );
-  }
-
-  // Calculate split (88% operator, 12% platform)
+  // 100% to operator — no platform split
   const totalBig = BigInt(total_amount);
-  const platformAmount = totalBig * 12n / 100n;
-  const operatorAmount = totalBig - platformAmount;
+  const operatorAmount = totalBig;
 
   try {
     // We need ethers for on-chain interaction — dynamically import
@@ -1735,13 +1715,9 @@ async function handleRelayUsdc(request, env, cors) {
     const permitTx = await usdc.permit(owner, relayWallet.address, totalBig, deadline, v, r, s);
     const permitReceipt = await permitTx.wait();
 
-    // Step 2: Transfer to operator (88%)
+    // Step 2: Transfer full amount to operator
     const opTx = await usdc.transferFrom(owner, operator_wallet, operatorAmount);
     const opReceipt = await opTx.wait();
-
-    // Step 3: Transfer to platform (12%)
-    const platTx = await usdc.transferFrom(owner, platform_wallet, platformAmount);
-    const platReceipt = await platTx.wait();
 
     // Determine block explorer
     const explorers = { 8453: "https://basescan.org", 1: "https://etherscan.io", 84532: "https://sepolia.basescan.org", 11155111: "https://sepolia.etherscan.io" };
@@ -1753,9 +1729,7 @@ async function handleRelayUsdc(request, env, cors) {
         chain_id,
         permit_tx: permitReceipt.hash,
         operator_tx: opReceipt.hash,
-        platform_tx: platReceipt.hash,
         operator_amount: operatorAmount.toString(),
-        platform_amount: platformAmount.toString(),
         explorer,
       }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
@@ -1807,9 +1781,8 @@ async function handleCommitPayment(request, env, cors) {
     v, r, s,
     // EIP-3009 transferWithAuthorization fields (preferred)
     eip3009,
-    operator_nonce, platform_nonce,
+    operator_nonce,
     operator_v, operator_r, operator_s,
-    platform_v, platform_r, platform_s,
   } = body;
 
   // Validate common required fields
@@ -1822,9 +1795,8 @@ async function handleCommitPayment(request, env, cors) {
 
   // Validate payment-method-specific fields
   if (eip3009) {
-    if (!operator_nonce || !platform_nonce ||
-        operator_v === undefined || !operator_r || !operator_s ||
-        platform_v === undefined || !platform_r || !platform_s) {
+    if (!operator_nonce ||
+        operator_v === undefined || !operator_r || !operator_s) {
       return new Response(
         JSON.stringify({ error: "Missing EIP-3009 signature fields" }),
         { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
@@ -1886,7 +1858,6 @@ async function handleCommitPayment(request, env, cors) {
     chain_id,
     owner: owner.toLowerCase(),
     operator_wallet: operator_wallet.toLowerCase(),
-    platform_wallet: "0xe33356d0d16c107eac7da1fc7263350cbdb548e5",
     total_amount,
     deadline,
     payment_method: eip3009 ? "eip3009" : "permit",
@@ -1896,13 +1867,9 @@ async function handleCommitPayment(request, env, cors) {
     s: eip3009 ? undefined : s,
     // EIP-3009 transferWithAuthorization fields (preferred)
     operator_nonce: eip3009 ? operator_nonce : undefined,
-    platform_nonce: eip3009 ? platform_nonce : undefined,
     operator_v: eip3009 ? operator_v : undefined,
     operator_r: eip3009 ? operator_r : undefined,
     operator_s: eip3009 ? operator_s : undefined,
-    platform_v: eip3009 ? platform_v : undefined,
-    platform_r: eip3009 ? platform_r : undefined,
-    platform_s: eip3009 ? platform_s : undefined,
     status: "committed",
     committed_at: new Date().toISOString(),
     executed_at: null,
@@ -1921,8 +1888,6 @@ async function handleCommitPayment(request, env, cors) {
   }
 
   const totalBig = BigInt(total_amount);
-  const platformAmount = totalBig * 12n / 100n;
-  const operatorAmount = totalBig - platformAmount;
 
   return new Response(
     JSON.stringify({
@@ -1931,8 +1896,7 @@ async function handleCommitPayment(request, env, cors) {
       status: "committed",
       owner,
       total_amount,
-      operator_amount: operatorAmount.toString(),
-      platform_amount: platformAmount.toString(),
+      operator_amount: total_amount,
       deadline,
       deadline_human: new Date(deadline * 1000).toISOString(),
       time_remaining_seconds: deadline - now,
@@ -2016,12 +1980,11 @@ async function handleExecutePayment(request, env, cors) {
   commitment.status = "executing";
   await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
 
-  const { chain_id, owner, operator_wallet, platform_wallet, total_amount, deadline, payment_method, v, r, s } = commitment;
+  const { chain_id, owner, operator_wallet, total_amount, deadline, payment_method, v, r, s } = commitment;
   const usdcAddr = USDC_CONTRACTS[chain_id];
   const rpcUrl = RPC_ENDPOINTS[chain_id];
   const totalBig = BigInt(total_amount);
-  const platformAmount = totalBig * 12n / 100n;
-  const operatorAmount = totalBig - platformAmount;
+  const operatorAmount = totalBig; // 100% to operator, no platform split
 
   let relayAddr = "unknown";
   try {
@@ -2066,9 +2029,9 @@ async function handleExecutePayment(request, env, cors) {
 
     if (payment_method === "eip3009") {
       // === EIP-3009 TransferWithAuthorization path (preferred) ===
-      const { operator_nonce, platform_nonce, operator_v, operator_r, operator_s, platform_v, platform_r, platform_s } = commitment;
+      const { operator_nonce, operator_v, operator_r, operator_s } = commitment;
 
-      // Step 1: Transfer to operator (skip if already done)
+      // Step 1: Transfer full amount to operator (skip if already done)
       if (!txHashes.operator) {
         // Check if nonce was already consumed (idempotency)
         const opNonceUsed = await usdc.authorizationState(owner, operator_nonce);
@@ -2081,23 +2044,6 @@ async function handleExecutePayment(request, env, cors) {
           );
           const opReceipt = await opTx.wait();
           txHashes.operator = opReceipt.hash;
-        }
-        commitment.tx_hashes = txHashes;
-        await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
-      }
-
-      // Step 2: Transfer to platform (skip if already done)
-      if (!txHashes.platform) {
-        const platNonceUsed = await usdc.authorizationState(owner, platform_nonce);
-        if (platNonceUsed) {
-          txHashes.platform = "nonce_already_consumed";
-        } else {
-          const platTx = await usdc.transferWithAuthorization(
-            owner, platform_wallet, platformAmount, 0, deadline, platform_nonce,
-            platform_v, platform_r, platform_s
-          );
-          const platReceipt = await platTx.wait();
-          txHashes.platform = platReceipt.hash;
         }
         commitment.tx_hashes = txHashes;
         await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
@@ -2147,7 +2093,7 @@ async function handleExecutePayment(request, env, cors) {
         txHashes.permit = "skipped_existing_allowance";
       }
 
-      // Step 2: Transfer to operator (skip if already done)
+      // Step 2: Transfer full amount to operator (skip if already done)
       if (!txHashes.operator) {
         const currentAllowance = await usdc.allowance(owner, relayWallet.address);
         if (currentAllowance >= operatorAmount) {
@@ -2160,24 +2106,12 @@ async function handleExecutePayment(request, env, cors) {
           throw new Error(`Allowance too low for operator transfer: have ${currentAllowance}, need ${operatorAmount}`);
         }
       }
-
-      // Step 3: Transfer to platform (skip if already done)
-      if (!txHashes.platform) {
-        const currentAllowance = await usdc.allowance(owner, relayWallet.address);
-        if (currentAllowance >= platformAmount) {
-          const platTx = await usdc.transferFrom(owner, platform_wallet, platformAmount);
-          const platReceipt = await platTx.wait();
-          txHashes.platform = platReceipt.hash;
-        } else {
-          throw new Error(`Allowance too low for platform transfer: have ${currentAllowance}, need ${platformAmount}`);
-        }
-      }
     }
 
     const explorers = { 8453: "https://basescan.org", 1: "https://etherscan.io", 84532: "https://sepolia.basescan.org", 11155111: "https://sepolia.etherscan.io" };
     const explorer = explorers[chain_id] || "https://etherscan.io";
 
-    // All 3 steps complete
+    // All steps complete
     commitment.status = "executed";
     commitment.executed_at = new Date().toISOString();
     commitment.tx_hashes = txHashes;
@@ -2189,9 +2123,7 @@ async function handleExecutePayment(request, env, cors) {
       chain_id,
       payment_method: payment_method || "permit",
       operator_tx: txHashes.operator,
-      platform_tx: txHashes.platform,
       operator_amount: operatorAmount.toString(),
-      platform_amount: platformAmount.toString(),
       explorer,
     };
     // Include permit_tx only for legacy permit flow
@@ -2233,7 +2165,7 @@ async function handleExecutePayment(request, env, cors) {
       JSON.stringify({ error: safeMsg, retryable: true, debug: {
         code, reason, msg: msg.slice(0, 300),
         relay: relayAddr, chain: chain_id, usdc: usdcAddr,
-        total: total_amount, opAmt: operatorAmount.toString(), platAmt: platformAmount.toString(),
+        total: total_amount, opAmt: operatorAmount.toString(),
         allowance: allowanceDiag,
       }}),
       { status: 502, headers: { ...cors, "Content-Type": "application/json" } }

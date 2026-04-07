@@ -1,0 +1,207 @@
+# YAK ROBOTICS — Demo 3 User Journey DSL
+# Defines every phase, screen, text, variable, and transition
+# Version: 3.0 | Date: 2026-04-05
+
+meta:
+  title: "YAK ROBOTICS — Hire a Robot"
+  slug: mcp-demo-3
+  engine: "Same worker + MCP server as mcp-demo-2"
+  theme: light
+  design_ref: "yakrobot.bid main site (demo/index.html)"
+
+tokens:
+  colors:
+    bg: "#ffffff"
+    bg_subtle: "#F0F2F5"
+    bg_card: "#ffffff"
+    border: "#CBD5E0"
+    text: "#1A1F26"
+    text_secondary: "#4A5568"
+    text_muted: "#6B7280"
+    accent: "#E8792B"
+    accent_light: "#FEF0E3"
+    green: "#1A7D4E"
+    green_bg: "#E6F5ED"
+    navy: "#1B3A5C"
+    red: "#dc2626"
+  fonts:
+    body: "Inter"
+    mono: "JetBrains Mono"
+  radius: "6px"
+
+layout:
+  type: three_column
+  header: sticky_navy_bar
+  navigation: phase_breadcrumbs
+  sidebar:
+    width: 280px
+    sections: [tunnel_config, discovered_robots, admin_controls]
+    collapses_on_mobile: true
+  main:
+    content: phase_views  # one visible at a time
+  feed_panel:
+    width: 280px
+    style: compact_masked  # yakrobot.bid feed pattern
+    moves_below_on_mobile: true
+
+variables:
+  # Inputs
+  tunnel_url: { type: string, persists: false }
+  rfp_text: { type: string, default_from: "textarea#rfpText" }
+  site_info: { type: object, fields: [project_name, location, agency, terrain] }
+
+  # Discovery
+  discovered_robots: { type: array, populated_by: "discoverRobots()" }
+
+  # Auction result
+  awarded_request_id: { type: string, set_by: "runAuction()" }
+  winner_name: { type: string, extracted_from: "auction_get_bids step" }
+  winner_price: { type: string, extracted_from: "auction_get_bids step" }
+
+  # Payment
+  payment_commitment: { type: object, set_by: "payWithUSDC()" }
+  on_chain_wallet: { type: string, from: "discoveredRobots[0].payment.usdc_wallet" }
+
+  # Delivery
+  delivery_data: { type: object, from: "auction_confirm_delivery step" }
+  qa_result: { type: object, from: "auction_confirm_delivery step" }
+
+  # Settlement
+  operator_tx: { type: string, from: "releasePayment() response" }
+  platform_tx: { type: string, from: "releasePayment() response" }
+  explorer_url: { type: string, from: "releasePayment() response" }
+
+phases:
+  - id: setup
+    index: 0
+    label: "Setup"
+    breadcrumb: "SETUP"
+    heading: "Define Your Task"
+    subheading: "Configure the MCP server connection and describe what you need."
+    sections:
+      - type: card
+        label: "RFP Document"
+        content: textarea
+        bind: rfp_text
+        default: |
+          ENVIRONMENTAL MONITORING REQUEST
+          Indoor Climate Assessment — Server Room Inspection
+          Scope: Temperature and humidity readings at 3 waypoints
+          Frequency: Single sweep
+          Deliverables: JSON with sensor readings, summary, duration
+      - type: card
+        label: "Site Information"
+        content: field_grid
+        columns: 2
+        fields:
+          - { id: siteProject, label: "Project", default: "Server Room Climate Check" }
+          - { id: siteLocation, label: "Location", default: "Detroit, MI" }
+          - { id: siteAgency, label: "Agency", default: "YAK Robotics" }
+          - { id: siteTerrain, label: "Terrain", default: "Indoor, flat floor" }
+    primary_action:
+      label: "Run Auction"
+      handler: runAuction
+      transitions_to: auction
+
+  - id: auction
+    index: 1
+    label: "Auction"
+    breadcrumb: "AUCTION"
+    heading: "Auction in Progress"
+    subheading: "Claude is orchestrating the auction using MCP tools."
+    feed_active: true  # steps appear in feed panel during this phase
+    completion:
+      card_type: winner_reveal
+      card_border: accent
+      content:
+        title: "Winner: {{winner_name}}"
+        price: "{{winner_price}}"
+        narration: "{{auction_final_text}}"
+      auto_transitions_to: commit
+
+  - id: commit
+    index: 2
+    label: "Commit"
+    breadcrumb: "COMMIT"
+    heading: "Commit Payment"
+    subheading: "Authorize payment to hire the operator. No money moves until delivery is accepted."
+    sections:
+      - type: key_value_card
+        border: accent
+        rows:
+          - { label: "Winner", value: "{{winner_name}}", emphasis: true }
+          - { label: "Bid price", value: "{{winner_price}}" }
+          - { label: "Payment to", value: "{{robot_name}} ({{chain_name}})", when: has_usdc_wallet }
+          - { label: "Wallet", value: "{{usdc_wallet_short}}", mono: true, when: has_usdc_wallet }
+      - type: explainer
+        text: "Signing a permit authorizes the platform to transfer USDC after delivery. No gas cost for you."
+      - type: button_group
+        buttons:
+          - { id: stripe, label: "Pay $1.00 with Card", style: stripe, handler: payWithStripe }
+          - { id: usdc, label: "Commit $0.01 USDC", style: usdc, handler: payWithUSDC }
+
+  - id: execute
+    index: 3
+    label: "Execute"
+    breadcrumb: "EXECUTE"
+    heading: "Task Execution"
+    subheading: "Robot is executing. Results validated against the delivery schema."
+    feed_active: true  # execution steps appear in feed
+    sections:
+      - type: status_card
+        id: commitmentStatusCard
+        border: accent
+        title: "Payment Committed — Robot Executing"
+        dynamic_status: true
+        fields:
+          - { label: "Status", value: "Dispatching robot...", updates: true }
+          - { label: "Amount", value: "{{total_usdc}} USDC" }
+          - { label: "Operator", value: "{{operator_amount}}" }
+          - { label: "Platform", value: "{{platform_amount}}" }
+          - { label: "Chain", value: "{{chain_name}}" }
+          - { label: "Expires", value: "{{expiry_minutes}} min" }
+      - type: delivery_result
+        id: deliverySlot
+        shows_when: execution_complete
+        qa_badge: { pass: green, fail: red }
+        data_payload: { blurred_until: payment_released }
+      - type: action
+        label: "Release Payment"
+        handler: releasePayment
+        shows_when: "qa_result.status === 'PASS'"
+        note: "Platform submits on-chain. No gas from your wallet."
+
+  - id: settle
+    index: 4
+    label: "Done"
+    breadcrumb: "DONE"
+    heading: "Transaction Complete"
+    subheading: "Real USDC moved through a real robot auction."
+    sections:
+      - type: receipt_card
+        border: green
+        title: "USDC Payment Complete"
+        fields:
+          - { label: "Operator received", value: "{{operator_amount}} USDC", color: green }
+          - { label: "Platform received", value: "{{platform_amount}} USDC" }
+        links:
+          - { label: "Operator tx", url: "{{explorer}}/tx/{{operator_tx}}" }
+          - { label: "Platform tx", url: "{{explorer}}/tx/{{platform_tx}}" }
+      - type: data_card
+        title: "Delivery Payload"
+        source: delivery_data
+        style: revealed  # unblurred after payment
+      - type: feedback_form
+        title: "Rate this transaction"
+        stars: 5
+        comment_placeholder: "Optional: share what went well or what could improve..."
+        handler: submitFeedback
+
+error_states:
+  network_error: { message: "Network error. Check your connection.", recovery: retry }
+  rate_limit: { message: "Demo limit reached (5/day).", recovery: "?admin=KEY or wait" }
+  no_wallet: { message: "Install MetaMask, Rabby, or Coinbase Wallet.", recovery: install }
+  insufficient_usdc: { message: "Need $0.01 USDC on {{chain_name}}.", recovery: fund }
+  execution_failed: { message: "{{error}}", recovery: retry_button }
+  qa_failed: { message: "QA failed. Payment blocked.", recovery: none }
+  permit_expired: { message: "Permit expired. Re-commit.", recovery: recommit }
