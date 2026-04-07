@@ -196,10 +196,10 @@ def build_engine():
                     kind = "simulator" if adapter.is_simulator else "real"
                     if reachable:
                         if adapter.is_simulator:
-                            # Only include simulators on our infrastructure (Fly.io = always on)
-                            if "fly.dev" in adapter.mcp_endpoint:
+                            # Only include simulators on our infrastructure (always on)
+                            if "fly.dev" in adapter.mcp_endpoint or "yakrover.online" in adapter.mcp_endpoint:
                                 sim_online.append(adapter)
-                                log("PROBE", f"  ✓ {adapter.robot_id} ({kind}, fly.dev)")
+                                log("PROBE", f"  ✓ {adapter.robot_id} ({kind})")
                             else:
                                 log("PROBE", f"  ~ {adapter.robot_id} ({kind}, external — skipped)")
                         else:
