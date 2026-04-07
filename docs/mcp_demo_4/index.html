@@ -1405,8 +1405,8 @@ function renderReceipt(data) {
   if (data.method === 'stripe') {
     slot.innerHTML =
       '<div class="receipt-card">' +
-        '<h3>Payment Captured</h3>' +
-        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px">Card charged through a real robot auction via Stripe Connect.</p>' +
+        '<h3>Payment Complete</h3>' +
+        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px">Your card has been charged. Payment distributed to the operator.</p>' +
         '<div class="kv-row"><span class="kv-label">Operator received</span><span class="kv-value kv-value-green">$' + data.operator_amount.toFixed(2) + '</span></div>' +
         '<div class="kv-row"><span class="kv-label">Platform commission</span><span class="kv-value">$' + data.platform_amount.toFixed(2) + '</span></div>' +
         (data.receipt_url ? '<div style="margin-top:12px"><a class="receipt-link" href="' + data.receipt_url + '" target="_blank">View Stripe receipt</a></div>' : '') +
@@ -1414,15 +1414,15 @@ function renderReceipt(data) {
   } else {
     slot.innerHTML =
       '<div class="receipt-card">' +
-        '<h3>USDC Payment Released</h3>' +
-        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px">USDC transferred on ' + escapeHtml(data.chain_name) + '. Gas sponsored by the platform.</p>' +
-        '<div class="kv-row"><span class="kv-label">Operator received</span><span class="kv-value kv-value-green">$' + data.operator_amount.toFixed(4) + ' USDC</span></div>' +
-        '<div class="kv-row"><span class="kv-label">Platform received</span><span class="kv-value">$' + data.platform_amount.toFixed(4) + ' USDC</span></div>' +
+        '<h3>Payment Complete</h3>' +
+        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px">Payment has been released to the operator.</p>' +
+        '<div class="kv-row"><span class="kv-label">Operator received</span><span class="kv-value kv-value-green">$' + data.operator_amount.toFixed(4) + '</span></div>' +
+        '<div class="kv-row"><span class="kv-label">Platform commission</span><span class="kv-value">$' + data.platform_amount.toFixed(4) + '</span></div>' +
         '<div style="margin-top:12px">' +
-          '<a class="receipt-link" href="' + data.explorer + '/tx/' + data.operator_tx + '" target="_blank">Operator tx: ' + data.operator_tx.slice(0, 10) + '...</a><br>' +
-          '<a class="receipt-link" href="' + data.explorer + '/tx/' + data.platform_tx + '" target="_blank" style="margin-top:4px;display:inline-block">Platform tx: ' + data.platform_tx.slice(0, 10) + '...</a>' +
+          '<a class="receipt-link" href="' + data.explorer + '/tx/' + data.operator_tx + '" target="_blank">View operator payment</a>' +
+          ' &middot; ' +
+          '<a class="receipt-link" href="' + data.explorer + '/tx/' + data.platform_tx + '" target="_blank">View platform fee</a>' +
         '</div>' +
-        '<p class="explainer" style="margin-top:12px">Both transactions verifiable on ' + escapeHtml(data.chain_name) + ' block explorer.</p>' +
       '</div>';
   }
 }
@@ -1444,7 +1444,7 @@ function renderFeedbackForm(paymentInfo) {
         '<span data-star="5" onclick="selectStar(5)" style="width:32px;height:32px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-3)">5</span>' +
       '</div>' +
       '<textarea class="form-textarea" id="feedbackComment" placeholder="Optional: share what went well or what could improve..." style="min-height:60px;margin-bottom:8px"></textarea>' +
-      '<button class="pay-btn" style="background:var(--accent);font-size:12px;padding:8px 16px" id="feedbackSubmitBtn" onclick="submitFeedback(\'' + escapeHtml(robotId) + '\',\'' + escapeHtml(robotName) + '\',\'' + escapeHtml(paymentInfo.payment_method || '') + '\',\'' + escapeHtml(paymentInfo.payment_tx || '') + '\')">Submit Feedback</button>' +
+      '<button class="pay-btn" style="background:var(--accent);color:#fff;font-size:12px;padding:8px 16px" id="feedbackSubmitBtn" onclick="submitFeedback(\'' + escapeHtml(robotId) + '\',\'' + escapeHtml(robotName) + '\',\'' + escapeHtml(paymentInfo.payment_method || '') + '\',\'' + escapeHtml(paymentInfo.payment_tx || '') + '\')">Submit Feedback</button>' +
       '<span id="feedbackStatus" style="font-size:11px;color:var(--text-3);margin-left:8px"></span>' +
     '</div>';
 }
