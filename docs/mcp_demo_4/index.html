@@ -1232,7 +1232,7 @@ function renderWinnerCard(text, winnerName, winnerPrice) {
   if (onChainRobot && usdcWallet) {
     paymentRecipientHtml =
       '<div class="kv-row"><span class="kv-label">Payment to</span><span class="kv-value kv-value-accent">' + escapeHtml(onChainRobot.name) + ' (' + escapeHtml(onChainRobot.chain_name) + ')</span></div>' +
-      '<div class="kv-row"><span class="kv-label">Wallet</span><span class="kv-value kv-value-mono">' + escapeHtml(usdcWallet.slice(0,6) + '...' + usdcWallet.slice(-4)) + '</span></div>';
+      '<div class="kv-row"><span class="kv-label">Payment Account</span><span class="kv-value kv-value-mono">' + escapeHtml(usdcWallet.slice(0,6) + '...' + usdcWallet.slice(-4)) + '</span></div>';
   }
 
   slot.innerHTML =
@@ -1269,7 +1269,7 @@ function renderPaymentOptions(winnerName, winnerPrice) {
   if (onChainRobot && usdcWallet && paymentType === 'usdc') {
     paymentRecipientHtml =
       '<div class="kv-row"><span class="kv-label">Payment to</span><span class="kv-value kv-value-accent">' + escapeHtml(onChainRobot.name) + ' (' + escapeHtml(onChainRobot.chain_name) + ')</span></div>' +
-      '<div class="kv-row"><span class="kv-label">Wallet</span><span class="kv-value kv-value-mono">' + escapeHtml(usdcWallet.slice(0,6) + '...' + usdcWallet.slice(-4)) + '</span></div>';
+      '<div class="kv-row"><span class="kv-label">Payment Account</span><span class="kv-value kv-value-mono">' + escapeHtml(usdcWallet.slice(0,6) + '...' + usdcWallet.slice(-4)) + '</span></div>';
   }
 
   var modeLabel = '<div class="kv-row"><span class="kv-label">Payment mode</span><span class="kv-value">' + escapeHtml(modeInfo.label) + '</span></div>';
@@ -1288,7 +1288,7 @@ function renderPaymentOptions(winnerName, winnerPrice) {
       : 'Approve ' + usdcAmount + ' Hold (USDC)';
     buttonsHtml =
       '<button class="pay-btn pay-btn-usdc" onclick="payWithUSDC(\'' + escapeHtml(usdcWallet || '') + '\')" style="width:100%" ' +
-        (usdcWallet ? '' : 'disabled title="No operator wallet found on-chain"') + '>' +
+        (usdcWallet ? '' : 'disabled title="Operator has no payment account configured"') + '>' +
         usdcLabel +
       '</button>';
   }
@@ -1371,7 +1371,7 @@ async function renderDeliveryResult(deliveryData, qaResult) {
         '<span style="font-size:11px;color:var(--text-3)">Level ' + qaLevel + ' | ' + (qaChecks.length > 0 ? qaChecks.join(', ') : 'basic validation') + '</span>' +
       '</div>' +
       (qaIssues.length > 0 ? '<div style="font-size:11px;color:var(--red);margin-top:4px">' + qaIssues.map(escapeHtml).join('<br>') + '</div>' : '') +
-      '<p class="explainer">Robot received the same delivery spec before starting — no surprises.</p>' +
+      '<p class="explainer">Deliverables were validated against the requirements specified in your request.</p>' +
     '</div>';
 
   var dataPreviewHtml = '';
@@ -1386,20 +1386,17 @@ async function renderDeliveryResult(deliveryData, qaResult) {
       '</details>';
   }
 
-  slot.innerHTML =
-    '<h3 style="margin-top:20px;margin-bottom:8px">Delivery Received</h3>' +
-    qaHtml + dataPreviewHtml;
-
-  // Show Release Payment in sticky action bar (above the fold)
+  var releaseHtml = '';
   if (qaStatus === 'PASS') {
-    var actionBar = document.getElementById('actionBar');
-    if (actionBar) {
-      actionBar.innerHTML =
-        '<button class="pay-btn pay-btn-release release-payment-btn" onclick="releasePayment()">Release Payment</button>' +
-        '<span class="explainer" style="margin:0">Quality check passed. Release payment to complete the transaction.</span>';
-      actionBar.classList.add('visible');
-    }
+    releaseHtml =
+      '<button class="btn-continue release-payment-btn" onclick="releasePayment()" style="margin-bottom:16px">Release Payment</button>' +
+      '<p class="explainer" style="margin-bottom:12px">Quality check passed. Release payment to complete the transaction.</p>';
   }
+
+  slot.innerHTML =
+    releaseHtml +
+    '<h3 style="margin-bottom:8px">Delivery Received</h3>' +
+    qaHtml + dataPreviewHtml;
 }
 
 function renderReceipt(data) {
