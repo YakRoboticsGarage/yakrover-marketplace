@@ -8,7 +8,7 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 **v1.0 status:** Built. 280 tests, 35 MCP tools, ~17,009 LOC.
 **v1.1 status:** Complete (2026-04-06). Real Tumbller robot moves + reads sensors via MCP. Marketplace + fleet on Fly.io (always on). Stripe inline authorize/capture. USDC gasless on Base. Demo-3 self-sustaining. Tags: `v1.1-milestone-tumbller-live`.
 **Next:** v1.5 (settlement abstraction + construction task specs + privacy foundation). See `docs/FEATURE_REQUIREMENTS_v15.md`.
-**Live sites:** [yakrobot.bid](https://yakrobot.bid), [yakrobot.bid/mcp-demo-4](https://yakrobot.bid/mcp-demo-4/) (current demo), [yakrobot.bid/yaml](https://yakrobot.bid/yaml), [yakrobot.bid/pitch](https://yakrobot.bid/pitch). Older demos archived in `docs/archive/`.
+**Live sites:** [yakrobot.bid](https://yakrobot.bid), [yakrobot.bid/mcp-demo-5](https://yakrobot.bid/mcp-demo-5/) (current demo), [yakrobot.bid/yaml](https://yakrobot.bid/yaml), [yakrobot.bid/pitch](https://yakrobot.bid/pitch). Older demos archived in `docs/archive/`.
 
 ## Architecture
 

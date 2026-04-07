@@ -1,7 +1,7 @@
 # Plan: Remove Platform Fee — Single-Signature Payment
 
 **Date:** 2026-04-07
-**Status:** Planned
+**Status:** COMPLETE — deployed as demo-5, single-sign confirmed working
 **Goal:** 100% of payment goes to operator. One wallet signature. No platform split. Ship as mcp-demo-5.
 **Preserves:** mcp-demo-4 untouched until demo-5 is proven.
 
