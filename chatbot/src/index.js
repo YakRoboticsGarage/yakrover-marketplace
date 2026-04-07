@@ -1965,7 +1965,20 @@ async function handleExecutePayment(request, env, cors) {
   let relayAddr = "unknown";
   try {
     const { ethers } = await import("ethers");
-    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    // Try primary RPC, fall back to secondary if it fails
+    let provider;
+    try {
+      provider = new ethers.JsonRpcProvider(rpcUrl);
+      await provider.getBlockNumber(); // quick connectivity check
+    } catch (rpcErr) {
+      const fallback = RPC_FALLBACKS[chain_id];
+      if (fallback) {
+        console.log("Primary RPC failed, trying fallback:", fallback);
+        provider = new ethers.JsonRpcProvider(fallback);
+      } else {
+        throw rpcErr;
+      }
+    }
     const relayWallet = new ethers.Wallet(env.RELAY_PRIVATE_KEY, provider);
     relayAddr = relayWallet.address;
 
