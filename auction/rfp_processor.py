@@ -421,12 +421,7 @@ def _build_task_spec(
 # ---------------------------------------------------------------------------
 
 
-def _load_reference(name: str) -> str:  # type: ignore[no-redef]
-    """Load a skill reference file, returning empty string if not found."""
-    path = _REFS_DIR / name
-    if path.exists():
-        return path.read_text()
-    return ""
+    # _load_reference() is defined at module level (line 26) — no redefinition needed
 
 
 def _process_rfp_with_llm(
