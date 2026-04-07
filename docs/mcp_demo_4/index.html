@@ -356,10 +356,10 @@ background-size:1200px 900px}
         <div class="tunnel-status" id="demoModeHint">Real USDC on Base. Buyer wallet needs USDC.</div>
       </div>
       <div class="sidebar-section">
-        <div class="sidebar-label">Fleet</div>
+        <div class="sidebar-label">Operators</div>
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer">
           <input type="checkbox" id="simulatorOnly" onchange="onSimulatorToggle()" checked style="accent-color:var(--navy)">
-          Simulators only (skip real robots)
+          Demo operators only
         </label>
       </div>
     </div>
@@ -395,7 +395,7 @@ background-size:1200px 900px}
     <!-- SETUP PHASE -->
     <div class="phase-view active" id="phase-setup">
       <h2 class="phase-heading">Define Your Task</h2>
-      <p class="phase-subheading">Describe what you need. Robots will bid on it.</p>
+      <p class="phase-subheading">Describe the work you need done. Available operators will compete for your job.</p>
 
       <!-- Mobile: Hire Robot button visible without opening sidebar -->
       <button class="btn-primary mobile-cta" id="mobileRunBtn" style="display:none" onclick="runAuction()">Hire Robot</button>
@@ -414,7 +414,7 @@ Requirements:
 - Ground-based mobile robot (wheeled or tracked)
 - Temperature sensor (range: 15-40C, accuracy: +/-1C)
 - Humidity sensor (range: 20-80% RH)
-- Remote operation via MCP endpoint
+- Remote operation capability
 - Budget: $1.00
 - Deadline: 1 hour</textarea>
       </div>
@@ -446,17 +446,17 @@ Requirements:
     <!-- AUCTION PHASE -->
     <div class="phase-view" id="phase-auction">
       <span class="phase-back" onclick="showPhase('setup')">Back to Setup</span>
-      <h2 class="phase-heading">Auction in Progress</h2>
-      <p class="phase-subheading">Claude is orchestrating the auction using MCP tools.</p>
-      <div class="progress-label" id="auctionProgress">Sending RFP to auction engine...</div>
+      <h2 class="phase-heading">Finding the Best Operator</h2>
+      <p class="phase-subheading">Your request is being matched with available operators. They're reviewing the scope and submitting bids.</p>
+      <div class="progress-label" id="auctionProgress">Processing your request...</div>
       <div id="winnerSlot"></div>
     </div>
 
     <!-- COMMIT / DISPATCH PHASE -->
     <div class="phase-view" id="phase-commit">
       <span class="phase-back" onclick="showPhase('auction')">Back to Auction</span>
-      <h2 class="phase-heading">Approve Hold</h2>
-      <p class="phase-subheading">Authorize a payment hold. No charge until you approve the delivery.</p>
+      <h2 class="phase-heading">Authorize Payment</h2>
+      <p class="phase-subheading">Place a hold to confirm your hire. You won't be charged until you approve the delivered results.</p>
       <div id="stripeEmbedMount"></div>
       <div id="commitSlot"></div>
     </div>
@@ -464,8 +464,8 @@ Requirements:
     <!-- EXECUTE PHASE -->
     <div class="phase-view" id="phase-execute">
       <span class="phase-back" onclick="showPhase('commit')">Back to Dispatch</span>
-      <h2 class="phase-heading">Task Execution</h2>
-      <p class="phase-subheading">Robot is executing. Results validated against the delivery schema.</p>
+      <h2 class="phase-heading">Work in Progress</h2>
+      <p class="phase-subheading">The operator is performing the task. Results will be verified before payment is released.</p>
       <div id="commitmentStatusCard"></div>
       <div id="deliverySlot"></div>
     </div>
@@ -473,8 +473,8 @@ Requirements:
     <!-- SETTLE / DONE PHASE -->
     <div class="phase-view" id="phase-settle">
       <span class="phase-back" onclick="showPhase('execute')">Back to Execute</span>
-      <h2 class="phase-heading">Transaction Complete</h2>
-      <p class="phase-subheading">Payment settled through a real robot auction.</p>
+      <h2 class="phase-heading">Complete</h2>
+      <p class="phase-subheading">The job is done and payment has been released to the operator.</p>
       <div id="receiptSlot"></div>
       <div id="revealedDataSlot"></div>
       <div id="feedbackSlot"></div>
@@ -518,12 +518,12 @@ var auctionComplete = false;
 
 // Demo mode — controls payment pathway
 var DEMO_MODES = {
-  'base':         { type: 'usdc', chainId: 8453,     label: 'Base Mainnet',    hint: 'Real USDC on Base. Buyer wallet needs USDC.' },
-  'base-sepolia': { type: 'usdc', chainId: 84532,    label: 'Base Sepolia',    hint: 'Testnet USDC. Get test tokens from faucet.' },
-  'eth':          { type: 'usdc', chainId: 1,        label: 'Ethereum',        hint: 'Real USDC on Ethereum mainnet. Higher gas.' },
-  'eth-sepolia':  { type: 'usdc', chainId: 11155111, label: 'Ethereum Sepolia', hint: 'Testnet USDC on Sepolia.' },
-  'stripe':       { type: 'stripe', chainId: null,   label: 'Stripe',          hint: 'Real card charges via Stripe Connect.' },
-  'stripe-test':  { type: 'stripe', chainId: null,   label: 'Stripe Test',     hint: 'Use card 4242 4242 4242 4242, any expiry.' },
+  'base':         { type: 'usdc', chainId: 8453,     label: 'Crypto (Base)',       hint: 'Pay with USDC stablecoin on the Base network.' },
+  'base-sepolia': { type: 'usdc', chainId: 84532,    label: 'Crypto (testnet)',    hint: 'Test payment with testnet tokens (no real money).' },
+  'eth':          { type: 'usdc', chainId: 1,        label: 'Crypto (Ethereum)',   hint: 'Pay with USDC stablecoin on Ethereum.' },
+  'eth-sepolia':  { type: 'usdc', chainId: 11155111, label: 'Crypto (testnet)',    hint: 'Test payment with testnet tokens.' },
+  'stripe':       { type: 'stripe', chainId: null,   label: 'Card',                hint: 'Pay by credit or debit card.' },
+  'stripe-test':  { type: 'stripe', chainId: null,   label: 'Card (test mode)',    hint: 'Test payment. Use card number 4242 4242 4242 4242.' },
 };
 var demoMode = 'base';
 
@@ -835,7 +835,7 @@ async function discoverRobots() {
   }
 
   if (allRobots.length === 0) {
-    status.textContent = 'Verifying robots on-chain...';
+    status.textContent = 'Verifying registered operators...';
     for (var k = 0; k < KNOWN_ROBOTS.length; k++) {
       var known = KNOWN_ROBOTS[k];
       try {
@@ -1396,7 +1396,7 @@ async function renderDeliveryResult(deliveryData, qaResult) {
     if (actionBar) {
       actionBar.innerHTML =
         '<button class="pay-btn pay-btn-release release-payment-btn" onclick="releasePayment()">Release Payment</button>' +
-        '<span class="explainer" style="margin:0">QA passed. Platform submits on-chain — no gas from your wallet.</span>';
+        '<span class="explainer" style="margin:0">Quality check passed. Release payment to complete the transaction.</span>';
       actionBar.classList.add('visible');
     }
   }
@@ -1569,7 +1569,7 @@ async function runAuction() {
   btn.textContent = 'Running auction...';
 
   showPhase('auction');
-  progressLabel.textContent = 'Sending RFP to auction engine...';
+  progressLabel.textContent = 'Submitting your request...';
   progressLabel.classList.add('visible');
 
   // Build prompt
@@ -1645,7 +1645,7 @@ async function runAuction() {
       appendFeedItem(step, i);
     }
 
-    progressLabel.textContent = 'Auction complete — winner selected';
+    progressLabel.textContent = 'Best operator selected';
 
     // Extract request_id from award step
     var awardStep = steps.filter(function(s) { return s.tool_name === 'auction_award_with_confirmation'; })[0];
@@ -2012,7 +2012,7 @@ async function payWithUSDC(operatorWallet) {
 
     // --- EIP-3009 TransferWithAuthorization (preferred: atomic, no allowance) ---
     try {
-      btn.textContent = 'Signing transfer authorizations (no gas)...';
+      btn.textContent = 'Authorizing payment...';
       var operatorAmount = totalUnits * 88n / 100n;
       var platformAmount = totalUnits - operatorAmount;
       var platformWallet = '0xe33356d0d16c107eac7da1fc7263350cbdb548e5';
@@ -2084,7 +2084,7 @@ async function payWithUSDC(operatorWallet) {
 
     // --- ERC-2612 Permit fallback ---
     if (!useEip3009) {
-      btn.textContent = 'Signing permit (no gas needed)...';
+      btn.textContent = 'Authorizing payment...';
       var nonce = await usdc.nonces(buyerAddr);
 
       var permitTypes = {
@@ -2359,7 +2359,7 @@ async function submitFeedback(robotId, robotName, paymentMethod, paymentTx) {
       // Also submit on-chain to 8004scan reputation registry
       var winner = window._winnerRobot;
       if (winner && winner.agent_id && window._tunnelUrl) {
-        status.innerHTML += ' <span style="color:var(--text-3)">Broadcasting on-chain...</span>';
+        status.innerHTML += ' <span style="color:var(--text-3)">Recording feedback...</span>';
         try {
           var onchainRes = await fetch(window._tunnelUrl + '/api/feedback-onchain', {
             method: 'POST',
@@ -2375,7 +2375,7 @@ async function submitFeedback(robotId, robotName, paymentMethod, paymentTx) {
           });
           var onchainData = await onchainRes.json();
           if (onchainData.ok) {
-            status.innerHTML = 'Thank you! Feedback recorded on-chain. <a href="' + onchainData['8004scan_url'] + '" target="_blank" style="color:var(--accent);text-decoration:none">View on 8004scan</a>';
+            status.innerHTML = 'Thank you! Feedback recorded. <a href="' + onchainData['8004scan_url'] + '" target="_blank" style="color:var(--accent);text-decoration:none">View operator profile</a>';
           } else {
             // On-chain failed (e.g. self-feedback) — GitHub feedback still saved
             console.warn('On-chain feedback:', onchainData.error);
