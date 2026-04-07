@@ -627,8 +627,35 @@ function formatStepText(str) {
   var out = [];
   var inList = false;
   var listType = '';
+  var inTable = false;
+  var tableHeaderDone = false;
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i];
+    // Table: lines starting with |
+    var isTableRow = line.trim().match(/^\|(.+)\|$/);
+    var isSeparator = line.trim().match(/^\|[\s\-:|]+\|$/);
+    if (isTableRow) {
+      if (!inTable) {
+        if (inList) { out.push('</' + listType + '>'); inList = false; }
+        out.push('<table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0">');
+        inTable = true;
+        tableHeaderDone = false;
+      }
+      if (isSeparator) {
+        tableHeaderDone = true;
+        continue;
+      }
+      var cells = line.trim().split('|').filter(function(c) { return c.trim() !== ''; });
+      var tag = !tableHeaderDone ? 'th' : 'td';
+      var style = tag === 'th' ? 'style="text-align:left;padding:4px 8px;border-bottom:2px solid var(--border);font-weight:600;color:var(--text)"' : 'style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--bg-subtle)"';
+      out.push('<tr>' + cells.map(function(c) { return '<' + tag + ' ' + style + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>');
+      continue;
+    }
+    if (inTable) {
+      out.push('</table>');
+      inTable = false;
+      tableHeaderDone = false;
+    }
     var ulMatch = line.match(/^(\s*)[-*]\s+(.*)/);
     var olMatch = line.match(/^(\s*)\d+\.\s+(.*)/);
     if (ulMatch) {
@@ -663,6 +690,7 @@ function formatStepText(str) {
     }
   }
   if (inList) out.push('</' + listType + '>');
+  if (inTable) out.push('</table>');
   var result = out.join('\n');
   result = '<p>' + result + '</p>';
   result = result.replace(/<p>\s*<\/p>/g, '');
@@ -1598,16 +1626,18 @@ async function runAuction() {
     await delay(500);
     renderWinnerCard(data.final_text, winnerName, winnerPrice);
 
-    // User manually proceeds — no auto-advance
+    // User manually proceeds — button at top of winner card
     window._pendingWinner = { name: winnerName, price: winnerPrice };
     var proceedBtn = document.createElement('button');
     proceedBtn.className = 'btn-continue';
+    proceedBtn.style.marginBottom = '16px';
     proceedBtn.textContent = 'Proceed to Dispatch \u2192';
     proceedBtn.onclick = function() {
       showPhase('commit');
       renderPaymentOptions(window._pendingWinner.name, window._pendingWinner.price);
     };
-    document.getElementById('winnerSlot').appendChild(proceedBtn);
+    var slot = document.getElementById('winnerSlot');
+    slot.insertBefore(proceedBtn, slot.firstChild);
 
   } catch (err) {
     showError('Network error. Check your connection and try again.');
