@@ -2016,6 +2016,36 @@ async function handleExecutePayment(request, env, cors) {
       );
     }
 
+    // Pre-verify permit signature server-side (saves gas on invalid signatures)
+    if (!commitment.tx_hashes || !commitment.tx_hashes.permit) {
+      try {
+        const domain = { name: "USD Coin", version: "2", chainId: chain_id, verifyingContract: usdcAddr };
+        const types = {
+          Permit: [
+            { name: "owner", type: "address" },
+            { name: "spender", type: "address" },
+            { name: "value", type: "uint256" },
+            { name: "nonce", type: "uint256" },
+            { name: "deadline", type: "uint256" },
+          ],
+        };
+        const nonce = await usdc.nonces(owner);
+        const value = { owner, spender: relayWallet.address, value: totalBig, nonce, deadline };
+        const recovered = ethers.verifyTypedData(domain, types, value, { v, r, s });
+        if (recovered.toLowerCase() !== owner.toLowerCase()) {
+          commitment.status = "committed";
+          await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: Math.max(commitment.deadline - now, 60) });
+          return new Response(
+            JSON.stringify({ error: "Invalid permit signature — recovered address does not match owner. Buyer may need to re-sign.", debug: { recovered, owner } }),
+            { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+          );
+        }
+      } catch (sigErr) {
+        console.warn("Permit pre-verification failed (continuing anyway):", sigErr.message);
+        // Don't block on pre-verification failure — let the on-chain call decide
+      }
+    }
+
     // Resume-safe execution: track which steps already completed.
     // Previous attempts may have partially succeeded (permit ok, first transfer ok, second failed).
     const txHashes = commitment.tx_hashes || {};
