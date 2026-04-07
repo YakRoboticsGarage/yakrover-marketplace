@@ -1320,10 +1320,10 @@ function renderCommitmentStatus(data, chainName) {
 
   slot.innerHTML =
     '<div class="card card-accent">' +
-      '<h3 style="color:var(--accent)">Payment Hold Active — Robot Executing</h3>' +
-      '<p class="explainer" style="margin-bottom:12px">USDC hold authorized. No transfer yet. The robot is now being dispatched.</p>' +
-      '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">Dispatching robot...</span></div>' +
-      '<div class="kv-row"><span class="kv-label">Amount</span><span class="kv-value">' + totalAmount + ' USDC</span></div>' +
+      '<h3 style="color:var(--accent)">Payment Authorized</h3>' +
+      '<p class="explainer" style="margin-bottom:12px">Your payment hold is active. You will not be charged until you approve the delivered results.</p>' +
+      '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">Operator working...</span></div>' +
+      '<div class="kv-row"><span class="kv-label">Amount</span><span class="kv-value">$' + totalAmount + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Operator</span><span class="kv-value">$' + opAmount + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Platform</span><span class="kv-value">$' + platAmount + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Chain</span><span class="kv-value">' + escapeHtml(chainName) + '</span></div>' +
@@ -1337,7 +1337,7 @@ async function renderDeliveryResult(deliveryData, qaResult) {
   // Update commitment status
   var statusEl = document.querySelector('.commit-status');
   if (statusEl) {
-    statusEl.innerHTML = '<span style="color:var(--green)">Delivery received. Review QA below.</span>';
+    statusEl.innerHTML = '<span style="color:var(--green)">Results delivered. Ready for your review.</span>';
   }
 
   var qaStatus = qaResult ? qaResult.status : 'N/A';
@@ -1374,19 +1374,15 @@ async function renderDeliveryResult(deliveryData, qaResult) {
   var qaHtml =
     '<div class="card ' + (qaStatus === 'PASS' ? 'card-green' : '') + '" style="' + (qaStatus !== 'PASS' ? 'border-left:3px solid var(--red)' : '') + '">' +
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
-        '<span class="qa-badge ' + (qaStatus === 'PASS' ? 'qa-pass' : 'qa-fail') + '">QA: ' + qaStatus + '</span>' +
-        '<span style="font-size:11px;color:var(--text-3)">Level ' + qaLevel + ' | ' + (qaChecks.length > 0 ? qaChecks.join(', ') : 'basic validation') + '</span>' +
+        '<span class="qa-badge ' + (qaStatus === 'PASS' ? 'qa-pass' : 'qa-fail') + '">Quality Check: ' + qaStatus + '</span>' +
       '</div>' +
       (qaIssues.length > 0 ? '<div style="font-size:11px;color:var(--red);margin-top:4px">' + qaIssues.map(escapeHtml).join('<br>') + '</div>' : '') +
-      '<p class="explainer">Deliverables were validated against the requirements specified in your request.</p>' +
+      '<p class="explainer">Deliverables validated against the requirements in your request.' +
+        (deliveryData ? ' ' + (deliveryData.readings || []).length + ' waypoint readings received.' : '') +
+        ' Full data available after payment is released.</p>' +
     '</div>';
 
   var dataPreviewHtml = '';
-  if (deliveryData) {
-    var readings = deliveryData.readings || [];
-    dataPreviewHtml =
-      '<p class="explainer" style="margin-top:8px">' + readings.length + ' waypoint readings received. Full delivery data available after payment is released.</p>';
-  }
 
   var releaseHtml = '';
   if (qaStatus === 'PASS') {
@@ -1960,13 +1956,12 @@ function showStripeHoldApproved(checkoutData, amountCents, operatorName) {
   var slot = document.getElementById('commitmentStatusCard');
   slot.innerHTML =
     '<div class="card card-accent">' +
-      '<h3 style="color:var(--accent)">Payment Hold Active — Robot Executing</h3>' +
-      '<p class="explainer" style="margin-bottom:12px">Card authorized. No charge yet. The robot is now being dispatched.</p>' +
-      '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">Dispatching robot...</span></div>' +
+      '<h3 style="color:var(--accent)">Payment Authorized</h3>' +
+      '<p class="explainer" style="margin-bottom:12px">Your card hold is active. You will not be charged until you approve the delivered results.</p>' +
+      '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">Operator working...</span></div>' +
       '<div class="kv-row"><span class="kv-label">Hold</span><span class="kv-value">$' + (amountCents / 100).toFixed(2) + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Operator</span><span class="kv-value">$' + (operatorCents / 100).toFixed(2) + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Platform</span><span class="kv-value">$' + (feeCents / 100).toFixed(2) + '</span></div>' +
-      '<div class="kv-row"><span class="kv-label">Method</span><span class="kv-value">Stripe (card hold)</span></div>' +
     '</div>';
 
   // Auto-trigger execution after a brief pause
