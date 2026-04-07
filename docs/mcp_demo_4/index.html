@@ -1904,10 +1904,8 @@ async function payWithUSDC(operatorWallet) {
       return;
     }
 
-    btn.textContent = 'Signing permit (no gas needed)...';
-    var nonce = await usdc.nonces(buyerAddr);
-    var name = await usdc.name();
     var deadline = Math.floor(Date.now() / 1000) + 3600;
+    var name = await usdc.name();
 
     var domain = {
       name: name,
@@ -1916,36 +1914,111 @@ async function payWithUSDC(operatorWallet) {
       verifyingContract: usdcAddr,
     };
 
-    var types = {
-      Permit: [
-        { name: 'owner', type: 'address' },
-        { name: 'spender', type: 'address' },
-        { name: 'value', type: 'uint256' },
-        { name: 'nonce', type: 'uint256' },
-        { name: 'deadline', type: 'uint256' },
-      ],
-    };
-
-    var spender = RELAY_WALLET;
-
-    var permitValue = {
-      owner: buyerAddr,
-      spender: spender,
-      value: totalUnits.toString(),
-      nonce: nonce.toString(),
-      deadline: deadline,
-    };
-
-    var sig = await signer.signTypedData(domain, types, permitValue);
-    var splitSig = ethers.Signature.from(sig);
-
-    btn.textContent = 'Committing payment...';
     var commitRequestId = 'req_' + Date.now();
+    var commitBody = null;
+    var useEip3009 = false;
 
-    var commitRes = await fetch(WORKER_BASE + '/api/commit-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // --- EIP-3009 TransferWithAuthorization (preferred: atomic, no allowance) ---
+    try {
+      btn.textContent = 'Signing transfer authorizations (no gas)...';
+      var operatorAmount = totalUnits * 88n / 100n;
+      var platformAmount = totalUnits - operatorAmount;
+      var platformWallet = '0xe33356d0d16c107eac7da1fc7263350cbdb548e5';
+
+      var operatorNonce = ethers.hexlify(ethers.randomBytes(32));
+      var platformNonce = ethers.hexlify(ethers.randomBytes(32));
+
+      var transferAuthTypes = {
+        TransferWithAuthorization: [
+          { name: 'from', type: 'address' },
+          { name: 'to', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'validAfter', type: 'uint256' },
+          { name: 'validBefore', type: 'uint256' },
+          { name: 'nonce', type: 'bytes32' },
+        ],
+      };
+
+      // Sign authorization for operator payment (88%)
+      var operatorAuthValue = {
+        from: buyerAddr,
+        to: operatorWallet,
+        value: operatorAmount.toString(),
+        validAfter: 0,
+        validBefore: deadline,
+        nonce: operatorNonce,
+      };
+      var opSig = await signer.signTypedData(domain, transferAuthTypes, operatorAuthValue);
+      var opSplit = ethers.Signature.from(opSig);
+
+      // Sign authorization for platform fee (12%)
+      var platformAuthValue = {
+        from: buyerAddr,
+        to: platformWallet,
+        value: platformAmount.toString(),
+        validAfter: 0,
+        validBefore: deadline,
+        nonce: platformNonce,
+      };
+      var platSig = await signer.signTypedData(domain, transferAuthTypes, platformAuthValue);
+      var platSplit = ethers.Signature.from(platSig);
+
+      commitBody = {
+        request_id: commitRequestId,
+        chain_id: chainId,
+        owner: buyerAddr,
+        operator_wallet: operatorWallet,
+        total_amount: totalUnits.toString(),
+        deadline: deadline,
+        eip3009: true,
+        operator_nonce: operatorNonce,
+        platform_nonce: platformNonce,
+        operator_v: opSplit.v,
+        operator_r: opSplit.r,
+        operator_s: opSplit.s,
+        platform_v: platSplit.v,
+        platform_r: platSplit.r,
+        platform_s: platSplit.s,
+      };
+      useEip3009 = true;
+      console.log('EIP-3009 signatures obtained successfully');
+    } catch (eip3009Err) {
+      console.warn('EIP-3009 signing failed, falling back to ERC-2612 permit:', eip3009Err.message);
+      // If user rejected, don't fall back — they meant to cancel
+      if (eip3009Err.code === 4001 || eip3009Err.code === 'ACTION_REJECTED') {
+        throw eip3009Err;
+      }
+    }
+
+    // --- ERC-2612 Permit fallback ---
+    if (!useEip3009) {
+      btn.textContent = 'Signing permit (no gas needed)...';
+      var nonce = await usdc.nonces(buyerAddr);
+
+      var permitTypes = {
+        Permit: [
+          { name: 'owner', type: 'address' },
+          { name: 'spender', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'nonce', type: 'uint256' },
+          { name: 'deadline', type: 'uint256' },
+        ],
+      };
+
+      var spender = RELAY_WALLET;
+
+      var permitValue = {
+        owner: buyerAddr,
+        spender: spender,
+        value: totalUnits.toString(),
+        nonce: nonce.toString(),
+        deadline: deadline,
+      };
+
+      var sig = await signer.signTypedData(domain, permitTypes, permitValue);
+      var splitSig = ethers.Signature.from(sig);
+
+      commitBody = {
         request_id: commitRequestId,
         chain_id: chainId,
         owner: buyerAddr,
@@ -1955,7 +2028,15 @@ async function payWithUSDC(operatorWallet) {
         v: splitSig.v,
         r: splitSig.r,
         s: splitSig.s,
-      }),
+      };
+    }
+
+    btn.textContent = 'Committing payment...';
+
+    var commitRes = await fetch(WORKER_BASE + '/api/commit-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(commitBody),
     });
 
     var commitData = await commitRes.json();

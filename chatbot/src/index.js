@@ -1628,8 +1628,13 @@ function getFallbackRpcUrl(chainId) {
 
 // Minimal ABI for USDC permit + transferFrom
 const USDC_ABI = [
+  // ERC-2612 permit (legacy path — kept for backward compat)
   "function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)",
   "function transferFrom(address from, address to, uint256 amount) returns (bool)",
+  // EIP-3009 transferWithAuthorization (preferred — atomic, no allowance)
+  "function transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, uint8 v, bytes32 r, bytes32 s)",
+  "function authorizationState(address authorizer, bytes32 nonce) view returns (bool)",
+  // Shared
   "function balanceOf(address account) view returns (uint256)",
   "function allowance(address owner, address spender) view returns (uint256)",
   "function nonces(address owner) view returns (uint256)",
@@ -1678,7 +1683,7 @@ async function handleRelayUsdc(request, env, cors) {
   const relayNow = Math.floor(Date.now() / 1000);
   if (deadline < relayNow + 300) {
     return new Response(
-      JSON.stringify({ error: "Permit deadline too soon. Must be at least 5 minutes in the future." }),
+      JSON.stringify({ error: "Payment deadline too soon. Must be at least 5 minutes in the future." }),
       { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
@@ -1796,15 +1801,40 @@ async function handleCommitPayment(request, env, cors) {
     operator_wallet,
     total_amount,
     deadline,
+    // ERC-2612 permit fields (fallback)
     v, r, s,
+    // EIP-3009 transferWithAuthorization fields (preferred)
+    eip3009,
+    operator_nonce, platform_nonce,
+    operator_v, operator_r, operator_s,
+    platform_v, platform_r, platform_s,
   } = body;
 
-  // Validate all required fields
-  if (!request_id || !chain_id || !owner || !operator_wallet || !total_amount || !deadline || v === undefined || !r || !s) {
+  // Validate common required fields
+  if (!request_id || !chain_id || !owner || !operator_wallet || !total_amount || !deadline) {
     return new Response(
       JSON.stringify({ error: "Missing required fields" }),
       { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
     );
+  }
+
+  // Validate payment-method-specific fields
+  if (eip3009) {
+    if (!operator_nonce || !platform_nonce ||
+        operator_v === undefined || !operator_r || !operator_s ||
+        platform_v === undefined || !platform_r || !platform_s) {
+      return new Response(
+        JSON.stringify({ error: "Missing EIP-3009 signature fields" }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+  } else {
+    if (v === undefined || !r || !s) {
+      return new Response(
+        JSON.stringify({ error: "Missing permit signature fields" }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
   }
 
   // Validate chain
@@ -1822,7 +1852,7 @@ async function handleCommitPayment(request, env, cors) {
   const minDeadline = now + 300; // at least 5 min in the future
   if (deadline < minDeadline) {
     return new Response(
-      JSON.stringify({ error: "Permit deadline too soon. Must be at least 5 minutes in the future." }),
+      JSON.stringify({ error: "Payment deadline too soon. Must be at least 5 minutes in the future." }),
       { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
@@ -1848,7 +1878,7 @@ async function handleCommitPayment(request, env, cors) {
     // Continue anyway — balance may change by execution time
   }
 
-  // Store the permit commitment in KV
+  // Store the payment commitment in KV
   const commitment = {
     request_id,
     chain_id,
@@ -1857,7 +1887,20 @@ async function handleCommitPayment(request, env, cors) {
     platform_wallet: "0xe33356d0d16c107eac7da1fc7263350cbdb548e5",
     total_amount,
     deadline,
-    v, r, s,
+    payment_method: eip3009 ? "eip3009" : "permit",
+    // ERC-2612 permit fields (fallback)
+    v: eip3009 ? undefined : v,
+    r: eip3009 ? undefined : r,
+    s: eip3009 ? undefined : s,
+    // EIP-3009 transferWithAuthorization fields (preferred)
+    operator_nonce: eip3009 ? operator_nonce : undefined,
+    platform_nonce: eip3009 ? platform_nonce : undefined,
+    operator_v: eip3009 ? operator_v : undefined,
+    operator_r: eip3009 ? operator_r : undefined,
+    operator_s: eip3009 ? operator_s : undefined,
+    platform_v: eip3009 ? platform_v : undefined,
+    platform_r: eip3009 ? platform_r : undefined,
+    platform_s: eip3009 ? platform_s : undefined,
     status: "committed",
     committed_at: new Date().toISOString(),
     executed_at: null,
@@ -1956,13 +1999,13 @@ async function handleExecutePayment(request, env, cors) {
     );
   }
 
-  // Check permit hasn't expired
+  // Check authorization hasn't expired
   const now = Math.floor(Date.now() / 1000);
   if (commitment.deadline < now) {
     commitment.status = "expired";
     await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: 3600 });
     return new Response(
-      JSON.stringify({ error: "Permit has expired. Buyer must re-commit.", expired_at: new Date(commitment.deadline * 1000).toISOString() }),
+      JSON.stringify({ error: "Payment authorization has expired. Buyer must re-commit.", expired_at: new Date(commitment.deadline * 1000).toISOString() }),
       { status: 410, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
@@ -1971,7 +2014,7 @@ async function handleExecutePayment(request, env, cors) {
   commitment.status = "executing";
   await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
 
-  const { chain_id, owner, operator_wallet, platform_wallet, total_amount, deadline, v, r, s } = commitment;
+  const { chain_id, owner, operator_wallet, platform_wallet, total_amount, deadline, payment_method, v, r, s } = commitment;
   const usdcAddr = USDC_CONTRACTS[chain_id];
   const rpcUrl = RPC_ENDPOINTS[chain_id];
   const totalBig = BigInt(total_amount);
@@ -2016,78 +2059,116 @@ async function handleExecutePayment(request, env, cors) {
       );
     }
 
-    // Pre-verify permit signature server-side (saves gas on invalid signatures)
-    if (!commitment.tx_hashes || !commitment.tx_hashes.permit) {
-      try {
-        const domain = { name: "USD Coin", version: "2", chainId: chain_id, verifyingContract: usdcAddr };
-        const types = {
-          Permit: [
-            { name: "owner", type: "address" },
-            { name: "spender", type: "address" },
-            { name: "value", type: "uint256" },
-            { name: "nonce", type: "uint256" },
-            { name: "deadline", type: "uint256" },
-          ],
-        };
-        const nonce = await usdc.nonces(owner);
-        const value = { owner, spender: relayWallet.address, value: totalBig, nonce, deadline };
-        const recovered = ethers.verifyTypedData(domain, types, value, { v, r, s });
-        if (recovered.toLowerCase() !== owner.toLowerCase()) {
-          commitment.status = "committed";
-          await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: Math.max(commitment.deadline - now, 60) });
-          return new Response(
-            JSON.stringify({ error: "Invalid permit signature — recovered address does not match owner. Buyer may need to re-sign.", debug: { recovered, owner } }),
-            { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
-          );
-        }
-      } catch (sigErr) {
-        console.warn("Permit pre-verification failed (continuing anyway):", sigErr.message);
-        // Don't block on pre-verification failure — let the on-chain call decide
-      }
-    }
-
     // Resume-safe execution: track which steps already completed.
-    // Previous attempts may have partially succeeded (permit ok, first transfer ok, second failed).
     const txHashes = commitment.tx_hashes || {};
-    const existingAllowance = await usdc.allowance(owner, relayWallet.address);
 
-    // Step 1: Permit (skip if relay already has sufficient allowance)
-    if (!txHashes.permit && existingAllowance < totalBig) {
-      const permitTx = await usdc.permit(owner, relayWallet.address, totalBig, deadline, v, r, s);
-      await permitTx.wait();
-      txHashes.permit = permitTx.hash;
-      // Save progress in case next step fails
-      commitment.tx_hashes = txHashes;
-      await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
-    } else if (!txHashes.permit) {
-      txHashes.permit = "skipped_existing_allowance";
-    }
+    if (payment_method === "eip3009") {
+      // === EIP-3009 TransferWithAuthorization path (preferred) ===
+      const { operator_nonce, platform_nonce, operator_v, operator_r, operator_s, platform_v, platform_r, platform_s } = commitment;
 
-    // Step 2: Transfer to operator (skip if already done)
-    if (!txHashes.operator) {
-      // Re-check allowance to determine the right amount to transfer
-      const currentAllowance = await usdc.allowance(owner, relayWallet.address);
-      // If allowance covers operator amount, do it
-      if (currentAllowance >= operatorAmount) {
-        const opTx = await usdc.transferFrom(owner, operator_wallet, operatorAmount);
-        const opReceipt = await opTx.wait();
-        txHashes.operator = opReceipt.hash;
+      // Step 1: Transfer to operator (skip if already done)
+      if (!txHashes.operator) {
+        // Check if nonce was already consumed (idempotency)
+        const opNonceUsed = await usdc.authorizationState(owner, operator_nonce);
+        if (opNonceUsed) {
+          txHashes.operator = "nonce_already_consumed";
+        } else {
+          const opTx = await usdc.transferWithAuthorization(
+            owner, operator_wallet, operatorAmount, 0, deadline, operator_nonce,
+            operator_v, operator_r, operator_s
+          );
+          const opReceipt = await opTx.wait();
+          txHashes.operator = opReceipt.hash;
+        }
         commitment.tx_hashes = txHashes;
         await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
-      } else {
-        throw new Error(`Allowance too low for operator transfer: have ${currentAllowance}, need ${operatorAmount}`);
       }
-    }
 
-    // Step 3: Transfer to platform (skip if already done)
-    if (!txHashes.platform) {
-      const currentAllowance = await usdc.allowance(owner, relayWallet.address);
-      if (currentAllowance >= platformAmount) {
-        const platTx = await usdc.transferFrom(owner, platform_wallet, platformAmount);
-        const platReceipt = await platTx.wait();
-        txHashes.platform = platReceipt.hash;
-      } else {
-        throw new Error(`Allowance too low for platform transfer: have ${currentAllowance}, need ${platformAmount}`);
+      // Step 2: Transfer to platform (skip if already done)
+      if (!txHashes.platform) {
+        const platNonceUsed = await usdc.authorizationState(owner, platform_nonce);
+        if (platNonceUsed) {
+          txHashes.platform = "nonce_already_consumed";
+        } else {
+          const platTx = await usdc.transferWithAuthorization(
+            owner, platform_wallet, platformAmount, 0, deadline, platform_nonce,
+            platform_v, platform_r, platform_s
+          );
+          const platReceipt = await platTx.wait();
+          txHashes.platform = platReceipt.hash;
+        }
+        commitment.tx_hashes = txHashes;
+        await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
+      }
+    } else {
+      // === ERC-2612 Permit + transferFrom path (legacy fallback) ===
+
+      // Pre-verify permit signature server-side (saves gas on invalid signatures)
+      if (!txHashes.permit) {
+        try {
+          const domain = { name: "USD Coin", version: "2", chainId: chain_id, verifyingContract: usdcAddr };
+          const types = {
+            Permit: [
+              { name: "owner", type: "address" },
+              { name: "spender", type: "address" },
+              { name: "value", type: "uint256" },
+              { name: "nonce", type: "uint256" },
+              { name: "deadline", type: "uint256" },
+            ],
+          };
+          const nonce = await usdc.nonces(owner);
+          const value = { owner, spender: relayWallet.address, value: totalBig, nonce, deadline };
+          const recovered = ethers.verifyTypedData(domain, types, value, { v, r, s });
+          if (recovered.toLowerCase() !== owner.toLowerCase()) {
+            commitment.status = "committed";
+            await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: Math.max(commitment.deadline - now, 60) });
+            return new Response(
+              JSON.stringify({ error: "Invalid permit signature — recovered address does not match owner. Buyer may need to re-sign.", debug: { recovered, owner } }),
+              { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+            );
+          }
+        } catch (sigErr) {
+          console.warn("Permit pre-verification failed (continuing anyway):", sigErr.message);
+        }
+      }
+
+      const existingAllowance = await usdc.allowance(owner, relayWallet.address);
+
+      // Step 1: Permit (skip if relay already has sufficient allowance)
+      if (!txHashes.permit && existingAllowance < totalBig) {
+        const permitTx = await usdc.permit(owner, relayWallet.address, totalBig, deadline, v, r, s);
+        await permitTx.wait();
+        txHashes.permit = permitTx.hash;
+        commitment.tx_hashes = txHashes;
+        await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
+      } else if (!txHashes.permit) {
+        txHashes.permit = "skipped_existing_allowance";
+      }
+
+      // Step 2: Transfer to operator (skip if already done)
+      if (!txHashes.operator) {
+        const currentAllowance = await usdc.allowance(owner, relayWallet.address);
+        if (currentAllowance >= operatorAmount) {
+          const opTx = await usdc.transferFrom(owner, operator_wallet, operatorAmount);
+          const opReceipt = await opTx.wait();
+          txHashes.operator = opReceipt.hash;
+          commitment.tx_hashes = txHashes;
+          await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: commitment.deadline - now });
+        } else {
+          throw new Error(`Allowance too low for operator transfer: have ${currentAllowance}, need ${operatorAmount}`);
+        }
+      }
+
+      // Step 3: Transfer to platform (skip if already done)
+      if (!txHashes.platform) {
+        const currentAllowance = await usdc.allowance(owner, relayWallet.address);
+        if (currentAllowance >= platformAmount) {
+          const platTx = await usdc.transferFrom(owner, platform_wallet, platformAmount);
+          const platReceipt = await platTx.wait();
+          txHashes.platform = platReceipt.hash;
+        } else {
+          throw new Error(`Allowance too low for platform transfer: have ${currentAllowance}, need ${platformAmount}`);
+        }
       }
     }
 
@@ -2100,18 +2181,24 @@ async function handleExecutePayment(request, env, cors) {
     commitment.tx_hashes = txHashes;
     await env.RATE_LIMIT_KV.put(`permit:${request_id}`, JSON.stringify(commitment), { expirationTtl: 86400 * 30 });
 
+    const responseData = {
+      success: true,
+      request_id,
+      chain_id,
+      payment_method: payment_method || "permit",
+      operator_tx: txHashes.operator,
+      platform_tx: txHashes.platform,
+      operator_amount: operatorAmount.toString(),
+      platform_amount: platformAmount.toString(),
+      explorer,
+    };
+    // Include permit_tx only for legacy permit flow
+    if (payment_method !== "eip3009") {
+      responseData.permit_tx = txHashes.permit;
+    }
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        request_id,
-        chain_id,
-        permit_tx: txHashes.permit,
-        operator_tx: txHashes.operator,
-        platform_tx: txHashes.platform,
-        operator_amount: operatorAmount.toString(),
-        platform_amount: platformAmount.toString(),
-        explorer,
-      }),
+      JSON.stringify(responseData),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
     );
   } catch (err) {
