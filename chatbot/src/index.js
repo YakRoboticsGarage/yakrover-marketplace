@@ -1597,11 +1597,26 @@ const USDC_CONTRACTS = {
 };
 
 const RPC_ENDPOINTS = {
-  8453:     "https://1rpc.io/base",
-  1:        "https://1rpc.io/eth",
+  8453:     "https://base-mainnet.public.blastapi.io",
+  1:        "https://ethereum-rpc.publicnode.com",
   84532:    "https://base-sepolia-rpc.publicnode.com",
   11155111: "https://ethereum-sepolia-rpc.publicnode.com",
 };
+
+const RPC_FALLBACKS = {
+  8453:     "https://1rpc.io/base",
+  1:        "https://1rpc.io/eth",
+  84532:    "https://1rpc.io/base-sepolia",
+  11155111: "https://1rpc.io/sepolia",
+};
+
+function getRpcUrl(chainId) {
+  return RPC_ENDPOINTS[chainId] || RPC_FALLBACKS[chainId];
+}
+
+function getFallbackRpcUrl(chainId) {
+  return RPC_FALLBACKS[chainId] || RPC_ENDPOINTS[chainId];
+}
 
 // Minimal ABI for USDC permit + transferFrom
 const USDC_ABI = [
