@@ -232,8 +232,13 @@ background-size:1200px 900px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 .feed-text{flex:1;min-width:0;font-size:12px;color:var(--text-2);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .feed-time{font-size:10px;color:var(--text-3);white-space:nowrap;flex-shrink:0;font-family:'JetBrains Mono',monospace}
-.feed-detail{display:none;padding:12px;margin:4px 0 10px;background:var(--bg-subtle);border-radius:var(--radius);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--text-2);max-height:300px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+/* Feed detail: renders as overlay on main content area, not cramped in sidebar */
+.feed-detail{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90vw;max-width:600px;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;color:var(--text-2);overflow:auto;white-space:pre-wrap;word-break:break-word;z-index:300}
 .feed-detail.expanded{display:block}
+.feed-detail-close{position:absolute;top:8px;right:12px;cursor:pointer;font-size:14px;color:var(--text-3);font-family:'Inter',sans-serif;font-weight:600}
+.feed-detail-close:hover{color:var(--text)}
+.feed-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:299}
+.feed-detail-overlay.active{display:block}
 
 /* Footer */
 .app-footer{grid-column:1/-1;grid-row:3;display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 24px;font-size:11px;color:var(--text-3);border-top:1px solid var(--border);flex-shrink:0}
@@ -303,6 +308,7 @@ background-size:1200px 900px}
 </head>
 <body>
 
+<div class="feed-detail-overlay" id="feedDetailOverlay" onclick="closeAllFeedDetails()"></div>
 <div class="app-shell">
 
   <!-- SINGLE HEADER BAR -->
@@ -631,6 +637,22 @@ function formatStepText(str) {
   var tableHeaderDone = false;
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i];
+    // Horizontal rule: --- or *** or ___
+    if (line.trim().match(/^[-*_]{3,}$/)) {
+      if (inList) { out.push('</' + listType + '>'); inList = false; }
+      if (inTable) { out.push('</table>'); inTable = false; }
+      out.push('<hr style="border:none;border-top:1px solid var(--border);margin:12px 0">');
+      continue;
+    }
+    // Headers: ## or ###
+    var headerMatch = line.match(/^(#{1,4})\s+(.*)/);
+    if (headerMatch) {
+      if (inList) { out.push('</' + listType + '>'); inList = false; }
+      if (inTable) { out.push('</table>'); inTable = false; }
+      var level = Math.min(headerMatch[1].length + 1, 6); // ## -> h3, ### -> h4
+      out.push('<h' + level + ' style="font-size:' + (16 - level) + 'px;font-weight:600;margin:12px 0 6px;color:var(--text)">' + headerMatch[2] + '</h' + level + '>');
+      continue;
+    }
     // Table: lines starting with |
     var isTableRow = line.trim().match(/^\|(.+)\|$/);
     var isSeparator = line.trim().match(/^\|[\s\-:|]+\|$/);
@@ -1027,6 +1049,19 @@ function showPhase(phaseId) {
 }
 
 // Feed drawer toggle
+function closeFeedDetail(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.remove('expanded');
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function closeAllFeedDetails() {
+  document.querySelectorAll('.feed-detail.expanded').forEach(function(el) { el.classList.remove('expanded'); });
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
 function toggleFeed() {
   var panel = document.getElementById('feedPanel');
   if (panel) panel.classList.toggle('collapsed');
@@ -1070,22 +1105,26 @@ function appendFeedItem(step, index) {
     '<div class="feed-text">' + escapeHtml(text) + '</div>' +
     '<div class="feed-time">' + timeStr + '</div>';
 
-  // Click to expand detail
+  // Click to show detail modal
   var detailDiv = document.createElement('div');
   detailDiv.className = 'feed-detail';
   detailDiv.id = detailId;
+  var closeBtn = '<div class="feed-detail-close" onclick="closeFeedDetail(\'' + detailId + '\')">Close</div>';
   if (step.type === 'tool_call') {
-    detailDiv.textContent = '// Input\n' + JSON.stringify(step.input, null, 2) + '\n\n// Result\n' + JSON.stringify(step.result, null, 2);
+    detailDiv.innerHTML = closeBtn + '<div style="margin-top:8px">// Input\n' + escapeHtml(JSON.stringify(step.input, null, 2)) + '\n\n// Result\n' + escapeHtml(JSON.stringify(step.result, null, 2)) + '</div>';
   } else {
-    detailDiv.textContent = step.claude_text || '';
+    detailDiv.innerHTML = closeBtn + '<div style="margin-top:8px">' + escapeHtml(step.claude_text || '') + '</div>';
   }
 
   item.addEventListener('click', function() {
-    detailDiv.classList.toggle('expanded');
+    // Show as centered modal
+    detailDiv.classList.add('expanded');
+    var overlay = document.getElementById('feedDetailOverlay');
+    if (overlay) overlay.classList.add('active');
   });
 
-  // Prepend (newest first)
-  feed.insertBefore(detailDiv, feed.firstChild);
+  // Prepend (newest first) — detail appended to body for modal positioning
+  document.body.appendChild(detailDiv);
   feed.insertBefore(item, feed.firstChild);
 }
 
