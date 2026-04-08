@@ -80,7 +80,7 @@ uv run pytest auction/tests/ -q --tb=short
 PYTHONPATH=. uv run python auction/demo.py
 
 # Or connect as MCP server
-claude mcp add-json yak-robotics '{"type":"http","url":"http://localhost:8001/fleet/mcp"}'
+claude mcp add-json yakrover '{"type":"http","url":"http://localhost:8001/fleet/mcp"}'
 ```
 
 See [GETTING_STARTED.md](GETTING_STARTED.md) for full setup including Stripe and robot simulator.

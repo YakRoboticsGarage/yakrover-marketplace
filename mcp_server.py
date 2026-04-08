@@ -18,10 +18,10 @@ Usage:
     AUCTION_DB_PATH=./auction.db PYTHONPATH=. uv run python mcp_server.py
 
 Then connect Claude Code:
-    claude mcp add --transport http yak-robotics http://localhost:8001/mcp
+    claude mcp add --transport http yakrover http://localhost:8001/mcp
 
 Or Claude Desktop (add to config):
-    {"mcpServers": {"yak-robotics": {"type": "http", "url": "http://localhost:8001/mcp"}}}
+    {"mcpServers": {"yakrover": {"type": "http", "url": "http://localhost:8001/mcp"}}}
 
 Then ask:
     "I need a topographic survey for a 3-mile highway corridor in Michigan"
@@ -245,7 +245,7 @@ def create_app():
     engine, wallet, stripe_service = build_engine()
 
     mcp = FastMCP(
-        "yak-robotics",
+        "yakrover",
         instructions="""You are connected to the YAK ROBOTICS construction survey marketplace.
 
 You have 32 tools for managing the full survey lifecycle:
@@ -503,10 +503,10 @@ def main():
     print(f"    Tools:  {base_url}/api/tools")
     print()
     print("  Connect Claude Code:")
-    print(f"    claude mcp add --transport http yak-robotics {base_url}/mcp")
+    print(f"    claude mcp add --transport http yakrover {base_url}/mcp")
     print()
     print("  Connect Claude Desktop (add to config):")
-    print(f'    {{"mcpServers": {{"yak-robotics": {{"type": "http", "url": "{base_url}/mcp"}}}}}}')
+    print(f'    {{"mcpServers": {{"yakrover": {{"type": "http", "url": "{base_url}/mcp"}}}}}}')
     print()
     print("  Then ask:")
     print('    "I need a topo survey for a highway project in Michigan"')

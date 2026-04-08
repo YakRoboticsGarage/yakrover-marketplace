@@ -317,7 +317,7 @@ AUCTION_DB_PATH=./auction.db PYTHONPATH=. uv run python serve_with_auction.py
 **Connect Claude Code:**
 
 ```bash
-claude mcp add-json yak-robotics '{"type":"http","url":"http://localhost:8001/fleet/mcp"}'
+claude mcp add-json yakrover '{"type":"http","url":"http://localhost:8001/fleet/mcp"}'
 ```
 
 **Then talk naturally:**
@@ -351,7 +351,7 @@ The demo uses mock robots and Stripe test mode. Here is what changes for product
 | **Stripe keys** | `sk_test_xxx` — test mode, no real money | `sk_live_xxx` — real charges and payouts ($1K-$72K+ construction tasks) |
 | **Payment method** | Manual `.env` setup | Payment bonds (public projects), escrow (private), or prepaid credits |
 | **Operator payouts** | Stub or test transfers | Stripe Connect Express — operators complete hosted KYB onboarding (~2 min) |
-| **Agent connection** | `claude mcp add-json yak-robotics '{"type":"http","url":"http://localhost:8001/fleet/mcp"}'` | Same command with public URL |
+| **Agent connection** | `claude mcp add-json yakrover '{"type":"http","url":"http://localhost:8001/fleet/mcp"}'` | Same command with public URL |
 
 **Production checklist:**
 1. Register robots on ERC-8004 Sepolia (or mainnet) — each robot gets an on-chain identity
