@@ -198,7 +198,7 @@ Before your robot can participate in auctions:
 
 ### 1. Verify discovery
 
-Visit https://yakrobot.bid/mcp-demo-2/ — your robot should appear in Step 1 with a green "Wallet" badge.
+Visit https://yakrobot.bid/demo/ — your robot should appear in Step 1 with a green "Wallet" badge.
 
 ### 2. Test bidding locally
 
@@ -250,7 +250,7 @@ Expected response: `{"success": true, "delivery_data": {"readings": [...]}}`
 1. Start your robot's MCP server with ngrok tunnel
 2. Start the marketplace MCP server: `cd yakrover-marketplace && PYTHONPATH=. uv run python mcp_server.py`
 3. Start a tunnel: `cloudflared tunnel --url http://localhost:8001`
-4. Go to https://yakrobot.bid/mcp-demo-2/
+4. Go to https://yakrobot.bid/demo/
 5. Your robot should appear in discovery → auction runs → your robot bids → delivers → gets paid
 
 ---
@@ -353,5 +353,5 @@ Good feedback from buyers improves your reputation score, which makes your bids 
 
 - **Marketplace repo:** https://github.com/YakRoboticsGarage/yakrover-marketplace
 - **Robot framework:** https://github.com/YakRoboticsGarage/yakrover-8004-mcp
-- **Live demo:** https://yakrobot.bid/mcp-demo-2/
+- **Live demo:** https://yakrobot.bid/demo/
 - **ERC-8004 spec:** https://eips.ethereum.org/EIPS/eip-8004

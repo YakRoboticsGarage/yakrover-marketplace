@@ -3,7 +3,7 @@
 **Project:** yakrover-auction-explorer
 **Owner:** Product
 **Last updated:** 2026-04-07 (rev 4.8, v1.2 milestone — single-sign USDC, no platform fee)
-**Status:** v1.0 built. v1.1 complete. **v1.2 milestone** (284 tests, 35 MCP tools). Single-signature USDC, no platform fee, professional buyer UI. Demo at yakrobot.bid/mcp-demo.
+**Status:** v1.0 built. v1.1 complete. **v1.2 milestone** (284 tests, 35 MCP tools). Single-signature USDC, no platform fee, professional buyer UI. Demo at yakrobot.bid/demo.
 
 > All product decisions and technical constraints referenced by ID live in `docs/DECISIONS.md`.
 > Feature requirements for the next build: `docs/FEATURE_REQUIREMENTS_v15.md`.
@@ -93,7 +93,7 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - Structured error responses, `available_actions`, `next_action` patterns (per AD-13, AD-14, AD-15)
 - Standards-aligned task specs: ASPRS accuracy classes, USGS quality levels, EPSG CRS codes, structured deliverables
 - 280 passing tests, ~17,009 LOC
-- Live demo at yakrobot.bid, yakrobot.bid/mcp-demo (Claude tool_use), yakrobot.bid/yaml (ontology explorer)
+- Live demo at yakrobot.bid, yakrobot.bid/demo (Claude tool_use), yakrobot.bid/yaml (ontology explorer)
 - Chatbot worker on Cloudflare, MCP server with Cloudflare Tunnel
 
 ---
@@ -136,7 +136,7 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 | **Milestone 2** | Base mainnet USDC payment with real ERC-8004 robot + correct user journey (2026-04-05) |
 | **Serves** | Marco (buyer), operators, investors (proof of real settlement) |
 | **Goal** | Real-money payment through a real auction. Both Stripe (fiat) and USDC (crypto). |
-| **Demo** | https://yakrobot.bid/mcp-demo-2/ |
+| **Demo** | https://yakrobot.bid/demo/ |
 | **Revert tags** | `v1.1-milestone-payment-e2e` (Sepolia), `v1.1-milestone-base-mainnet` (mainnet + UX) |
 
 > **Detailed plan:** `docs/research/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`

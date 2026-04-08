@@ -248,6 +248,14 @@ export default {
       return handleCapturePayment(request, env, cors);
     }
 
+    if (url.pathname === "/api/create-ach-intent" && request.method === "POST") {
+      return handleCreateAchIntent(request, env, cors);
+    }
+
+    if (url.pathname === "/api/transfer-to-operator" && request.method === "POST") {
+      return handleTransferToOperator(request, env, cors);
+    }
+
     if (url.pathname === "/api/stripe-config" && request.method === "GET") {
       return handleStripeConfig(env, cors);
     }
@@ -1075,8 +1083,10 @@ async function handleCreatePaymentIntent(request, env, cors) {
     request_id = "demo",
   } = body;
 
+  // Minimum $1.00 — EUR-denominated Stripe accounts convert and need headroom above 50c floor.
+  const safeCents = Math.max(amount_cents, 100);
   const piBody = new URLSearchParams();
-  piBody.append("amount", String(amount_cents));
+  piBody.append("amount", String(safeCents));
   piBody.append("currency", currency);
   piBody.append("capture_method", "manual");
   piBody.append("metadata[request_id]", request_id);
@@ -1213,6 +1223,207 @@ async function handleCapturePayment(request, env, cors) {
     console.error("Capture error:", err);
     return new Response(
       JSON.stringify({ error: "Payment capture failed" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// --- ACH bank transfer PaymentIntent (no manual capture — ACH debits immediately) ---
+
+async function handleCreateAchIntent(request, env, cors) {
+  if (!env.STRIPE_SECRET_KEY) {
+    return new Response(
+      JSON.stringify({ error: "Stripe not configured" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  let body;
+  try { body = await request.json(); } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+  }
+
+  const {
+    amount_cents = 100,
+    currency = "usd",
+    operator_name = "Robot Operator",
+    operator_account_id,
+    request_id = "demo",
+  } = body;
+
+  // ACH does not support capture_method: manual — debit initiates on confirmation.
+  // Platform collects funds, then transfers to operator after delivery verified.
+  // Minimum $1.00 — EUR-denominated Stripe accounts convert and need headroom above 50c floor.
+  const safeCents = Math.max(amount_cents, 100);
+  const piBody = new URLSearchParams();
+  piBody.append("amount", String(safeCents));
+  piBody.append("currency", currency);
+  piBody.append("payment_method_types[]", "us_bank_account");
+  piBody.append("payment_method_options[us_bank_account][financial_connections][permissions][]", "payment_method");
+  piBody.append("payment_method_options[us_bank_account][financial_connections][permissions][]", "balances");
+  piBody.append("payment_method_options[us_bank_account][verification_method]", "instant");
+  piBody.append("metadata[request_id]", request_id);
+  piBody.append("metadata[operator_name]", operator_name);
+  if (operator_account_id) {
+    piBody.append("metadata[operator_account_id]", operator_account_id);
+  }
+
+  try {
+    const stripeRes = await fetch("https://api.stripe.com/v1/payment_intents", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.STRIPE_SECRET_KEY}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: piBody.toString(),
+    });
+
+    const pi = await stripeRes.json();
+
+    if (!stripeRes.ok) {
+      console.error("Stripe ACH PI error:", JSON.stringify(pi));
+      return new Response(
+        JSON.stringify({ error: pi.error?.message || "Stripe error", debug: pi.error }),
+        { status: 502, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        client_secret: pi.client_secret,
+        payment_intent_id: pi.id,
+        amount_cents: pi.amount,
+        currency: pi.currency,
+        payment_method: "ach",
+        operator_payout_cents: amount_cents,
+      }),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("ACH PaymentIntent error:", err);
+    return new Response(
+      JSON.stringify({ error: "Failed to create ACH payment intent" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+}
+
+// --- Transfer to operator (used for ACH after settlement confirmed) ---
+
+async function handleTransferToOperator(request, env, cors) {
+  if (!env.STRIPE_SECRET_KEY) {
+    return new Response(
+      JSON.stringify({ error: "Stripe not configured" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  let body;
+  try { body = await request.json(); } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+  }
+
+  const { payment_intent_id, operator_account_id } = body;
+  if (!payment_intent_id || !operator_account_id) {
+    return new Response(
+      JSON.stringify({ error: "payment_intent_id and operator_account_id required" }),
+      { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  }
+
+  try {
+    // Verify the PaymentIntent has succeeded (ACH debit settled).
+    // In test mode, ACH settles within seconds but not instantly —
+    // poll briefly to handle the processing → succeeded transition.
+    let pi;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const piRes = await fetch(
+        `https://api.stripe.com/v1/payment_intents/${payment_intent_id}`,
+        { headers: { "Authorization": `Bearer ${env.STRIPE_SECRET_KEY}` } }
+      );
+      pi = await piRes.json();
+      if (pi.status === "succeeded") break;
+      if (pi.status === "processing" && attempt < 5) {
+        await new Promise(r => setTimeout(r, 2000)); // wait 2s, retry
+        continue;
+      }
+      break;
+    }
+
+    if (pi.status !== "succeeded") {
+      return new Response(
+        JSON.stringify({
+          error: `Payment not yet settled (status: ${pi.status}). ACH transfers take 2-4 business days.`,
+          status: pi.status,
+        }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create a transfer to the operator's Connect account.
+    // source_transaction links the transfer to the original charge — ensures
+    // funds come from this specific payment, not general platform balance.
+    // Requires platform and operator to settle in the same currency (USD).
+    const transferBody = new URLSearchParams();
+    transferBody.append("amount", String(pi.amount));
+    transferBody.append("currency", pi.currency);
+    transferBody.append("destination", operator_account_id);
+    if (pi.latest_charge) {
+      transferBody.append("source_transaction", pi.latest_charge);
+    }
+    transferBody.append("metadata[payment_intent_id]", payment_intent_id);
+    transferBody.append("metadata[request_id]", pi.metadata?.request_id || "");
+
+    let transferRes = await fetch("https://api.stripe.com/v1/transfers", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.STRIPE_SECRET_KEY}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: transferBody.toString(),
+    });
+
+    let transfer = await transferRes.json();
+
+    // Fallback: if source_transaction fails (currency mismatch, insufficient funds
+    // from pre-USD-default charges), retry without it using general platform balance.
+    if (!transferRes.ok && pi.latest_charge && transfer.error) {
+      console.warn("Transfer with source_transaction failed, retrying without:", transfer.error.message);
+      transferBody.delete("source_transaction");
+      transferRes = await fetch("https://api.stripe.com/v1/transfers", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${env.STRIPE_SECRET_KEY}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: transferBody.toString(),
+      });
+      transfer = await transferRes.json();
+    }
+
+    if (!transferRes.ok) {
+      console.error("Stripe transfer error:", JSON.stringify(transfer));
+      return new Response(
+        JSON.stringify({ error: transfer.error?.message || "Transfer failed", debug: transfer.error }),
+        { status: 502, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        transfer_id: transfer.id,
+        amount_cents: transfer.amount,
+        currency: transfer.currency,
+        destination: transfer.destination,
+        operator_name: pi.metadata?.operator_name || "Robot Operator",
+      }),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("Transfer error:", err);
+    return new Response(
+      JSON.stringify({ error: "Transfer to operator failed" }),
       { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
@@ -1361,6 +1572,38 @@ async function handleStripeWebhook(request, env, cors) {
           paid_at: new Date().toISOString(),
         }),
         { expirationTtl: 86400 }
+      );
+    }
+  }
+
+  // ACH lifecycle events — track payment processing/settlement status
+  if (event.type === "payment_intent.processing" ||
+      event.type === "payment_intent.succeeded" ||
+      event.type === "payment_intent.payment_failed") {
+    const pi = event.data.object;
+    const piId = pi.id;
+    const isAch = pi.payment_method_types?.includes("us_bank_account");
+
+    if (isAch && env.RATE_LIMIT_KV) {
+      const statusMap = {
+        "payment_intent.processing": "processing",
+        "payment_intent.succeeded": "settled",
+        "payment_intent.payment_failed": "failed",
+      };
+      await env.RATE_LIMIT_KV.put(
+        `ach:${piId}`,
+        JSON.stringify({
+          status: statusMap[event.type],
+          payment_intent_id: piId,
+          amount_cents: pi.amount,
+          currency: pi.currency,
+          operator_name: pi.metadata?.operator_name,
+          operator_account_id: pi.metadata?.operator_account_id,
+          request_id: pi.metadata?.request_id,
+          updated_at: new Date().toISOString(),
+          failure_message: pi.last_payment_error?.message || null,
+        }),
+        { expirationTtl: 604800 } // 7 days
       );
     }
   }

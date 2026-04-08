@@ -9,8 +9,10 @@ chatbot/node_modules/
 chatbot/.dev.vars
 .herenow/
 
-# wrangler files
+# wrangler files (only chatbot/wrangler.toml should exist — root-level configs break deploys)
 .wrangler
+/wrangler.json
+/wrangler.jsonc
 .dev.vars*
 !.dev.vars.example
 !.env.example

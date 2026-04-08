@@ -166,6 +166,8 @@ background-size:1200px 900px}
 .pay-btn-stripe:hover{background:var(--stripe-hover)}
 .pay-btn-usdc{background:var(--usdc);color:#fff}
 .pay-btn-usdc:hover{background:var(--usdc-hover)}
+.pay-btn-ach{background:#1a6b47;color:#fff}
+.pay-btn-ach:hover{background:#15573a}
 .pay-btn-release{background:var(--usdc);color:#fff}
 .pay-btn-release:hover{background:var(--usdc-hover)}
 
@@ -345,16 +347,12 @@ background-size:1200px 900px}
 
     <div class="sidebar-top">
       <div class="sidebar-section">
-        <div class="sidebar-label">Payment</div>
-        <select class="field-input" id="demoMode" onchange="onDemoModeChange()" style="font-size:12px;padding:6px 8px">
-          <option value="base" selected>Base Mainnet (USDC)</option>
-          <option value="base-sepolia">Base Sepolia (USDC testnet)</option>
-          <option value="eth">Ethereum Mainnet (USDC)</option>
-          <option value="eth-sepolia">Ethereum Sepolia (USDC testnet)</option>
-          <option value="stripe">Stripe Production (card)</option>
-          <option value="stripe-test">Stripe Test (card 4242...)</option>
+        <div class="sidebar-label">Environment</div>
+        <select class="field-input" id="demoEnv" onchange="onDemoEnvChange()" style="font-size:12px;padding:6px 8px">
+          <option value="production">Production</option>
+          <option value="test" selected>Test Mode</option>
         </select>
-        <div class="tunnel-status" id="demoModeHint">Real USDC on Base. Buyer wallet needs USDC.</div>
+        <div class="tunnel-status" id="demoModeHint">Test mode. Card: 4242 4242 4242 4242. ACH: routing 110000000, account 000123456789. USDC: testnet tokens.</div>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-label">Operators</div>
@@ -528,21 +526,17 @@ var discoveredRobots = [];
 var auctionComplete = false;
 
 // Demo mode — controls payment pathway
-var DEMO_MODES = {
-  'base':         { type: 'usdc', chainId: 8453,     label: 'Crypto (Base)',       hint: 'Pay with USDC stablecoin on the Base network.' },
-  'base-sepolia': { type: 'usdc', chainId: 84532,    label: 'Crypto (testnet)',    hint: 'Test payment with testnet tokens (no real money).' },
-  'eth':          { type: 'usdc', chainId: 1,        label: 'Crypto (Ethereum)',   hint: 'Pay with USDC stablecoin on Ethereum.' },
-  'eth-sepolia':  { type: 'usdc', chainId: 11155111, label: 'Crypto (testnet)',    hint: 'Test payment with testnet tokens.' },
-  'stripe':       { type: 'stripe', chainId: null,   label: 'Card',                hint: 'Pay by credit or debit card.' },
-  'stripe-test':  { type: 'stripe', chainId: null,   label: 'Card (test mode)',    hint: 'Test payment. Use card number 4242 4242 4242 4242.' },
-};
-var demoMode = 'base';
+// Demo environment: 'production' or 'test'
+var demoEnv = 'test';
 
-function onDemoModeChange() {
-  demoMode = document.getElementById('demoMode').value;
-  var mode = DEMO_MODES[demoMode];
+function onDemoEnvChange() {
+  demoEnv = document.getElementById('demoEnv').value;
   var hint = document.getElementById('demoModeHint');
-  if (hint) hint.textContent = mode.hint;
+  if (hint) {
+    hint.textContent = demoEnv === 'test'
+      ? 'Test mode. Card: 4242 4242 4242 4242. ACH: routing 110000000, account 000123456789. USDC: testnet tokens.'
+      : 'Production. Real payments.';
+  }
 }
 
 var simulatorOnly = true;
@@ -550,15 +544,27 @@ function onSimulatorToggle() {
   simulatorOnly = document.getElementById('simulatorOnly').checked;
 }
 
-function getDemoChainId() {
-  var mode = DEMO_MODES[demoMode];
-  if (mode.type === 'usdc') return mode.chainId;
-  return null;
+// Returns the USDC chain based on the winning robot's chain, or fallback
+function getUsdcChainId() {
+  if (demoEnv === 'test') return 84532; // Base Sepolia for test
+  var robot = window._winnerRobot || (discoveredRobots.length > 0 ? discoveredRobots[0] : null);
+  if (robot && robot.chain_id) {
+    // Map Ethereum chains to Base equivalents for USDC
+    if (robot.chain_id === 1) return 1;         // Ethereum mainnet
+    if (robot.chain_id === 11155111) return 84532; // Sepolia → Base Sepolia
+    return robot.chain_id; // Base mainnet (8453), Base Sepolia (84532)
+  }
+  return 8453; // default: Base mainnet
 }
 
-function getDemoPaymentType() {
-  return DEMO_MODES[demoMode].type;
+function isTestMode() {
+  return demoEnv === 'test';
 }
+
+// Legacy compat — some code still calls these
+var demoMode = 'base';
+function getDemoChainId() { return getUsdcChainId(); }
+function getDemoPaymentType() { return 'all'; }
 
 // Delivery schema
 var DELIVERY_SCHEMA = {
@@ -950,10 +956,21 @@ async function querySubgraph(url, chainId) {
         tools = rf.mcpTools.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
       }
       var walletFromMeta = null;
+      var stripeConnectId = null;
       if (a.metadata && Array.isArray(a.metadata)) {
         var walletEntry = a.metadata.filter(function(md) { return md.key === 'agentWallet'; })[0];
         if (walletEntry && walletEntry.value) {
           walletFromMeta = walletEntry.value;
+        }
+        var stripeEntry = a.metadata.filter(function(md) { return md.key === 'stripe_connect_id'; })[0];
+        if (stripeEntry && stripeEntry.value) {
+          try {
+            var hex = stripeEntry.value.startsWith('0x') ? stripeEntry.value.slice(2) : stripeEntry.value;
+            stripeConnectId = '';
+            for (var i = 0; i < hex.length; i += 2) {
+              stripeConnectId += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            }
+          } catch (e) { stripeConnectId = null; }
         }
       }
       return {
@@ -970,7 +987,7 @@ async function querySubgraph(url, chainId) {
         payment: {
           usdc_wallet: walletFromMeta || null,
           wallet_chain_id: null,
-          stripe_connect_id: null,
+          stripe_connect_id: stripeConnectId,
         },
       };
     });
@@ -1206,14 +1223,14 @@ function renderRobotsSidebar(robots) {
     cards.appendChild(detail);
   });
 
-  // Auto-set payment mode based on first robot's chain
+  // Auto-detect environment from robot chain (testnet robots → test mode)
   if (robots.length > 0) {
     var r = robots[0];
-    var hasWallet = r.payment && r.payment.usdc_wallet;
-    if (hasWallet) {
-      var autoMode = r.chain_id === 8453 ? 'base' : r.chain_id === 84532 ? 'base-sepolia' : r.chain_id === 1 ? 'eth' : r.chain_id === 11155111 ? 'eth-sepolia' : 'base';
-      var sel = document.getElementById('demoMode');
-      if (sel) { sel.value = autoMode; onDemoModeChange(); }
+    var isTestChain = r.chain_id === 84532 || r.chain_id === 11155111;
+    if (isTestChain) {
+      demoEnv = 'test';
+      var sel = document.getElementById('demoEnv');
+      if (sel) { sel.value = 'test'; onDemoEnvChange(); }
     }
   }
 }
@@ -1265,10 +1282,8 @@ function renderWinnerCard(text, winnerName, winnerPrice) {
 
 function renderPaymentOptions(winnerName, winnerPrice) {
   var slot = document.getElementById('commitSlot');
-  var paymentType = getDemoPaymentType();
-  var modeInfo = DEMO_MODES[demoMode];
 
-  var stripeAccountId = 'acct_1TEjjLC2lXDckgmS';
+  var stripeAccountId = 'acct_1TJs17RdTPLY7gNp';
   var usdcWallet = null;
   var onChainRobot = window._winnerRobot || (discoveredRobots.length > 0 ? discoveredRobots[0] : null);
 
@@ -1277,47 +1292,46 @@ function renderPaymentOptions(winnerName, winnerPrice) {
     usdcWallet = onChainRobot.payment.usdc_wallet || null;
   }
 
-  // Use the robot's actual bid price (in dollars), convert to cents
   var bidPrice = window._winnerBidPrice || 0.50;
-  var amountCents = Math.max(Math.round(bidPrice * 100), 50); // Stripe minimum $0.50
+  var amountCents = Math.max(Math.round(bidPrice * 100), 100); // Stripe minimum ~$1.00 (EUR-denominated accounts convert, need headroom)
+  var amountStr = '$' + (amountCents / 100).toFixed(2);
+  var test = isTestMode();
+  var chainId = getUsdcChainId();
+  var isTestnet = chainId === 84532 || chainId === 11155111;
 
-  var paymentRecipientHtml = '';
-  if (onChainRobot && usdcWallet && paymentType === 'usdc') {
-    paymentRecipientHtml =
-      '<div class="kv-row"><span class="kv-label">Payment to</span><span class="kv-value kv-value-accent">' + escapeHtml(onChainRobot.name) + ' (' + escapeHtml(onChainRobot.chain_name) + ')</span></div>' +
-      '<div class="kv-row"><span class="kv-label">Payment Account</span><span class="kv-value kv-value-mono">' + escapeHtml(usdcWallet.slice(0,6) + '...' + usdcWallet.slice(-4)) + '</span></div>';
-  }
+  // Three payment method buttons
+  var cardBtn =
+    '<button class="pay-btn pay-btn-stripe" onclick="payWithStripe(' + amountCents + ',\'' + escapeHtml(stripeAccountId || '') + '\')" style="flex:1;min-width:0">' +
+      '<span style="display:block;font-size:13px;font-weight:600">Card</span>' +
+      '<span style="display:block;font-size:11px;color:rgba(255,255,255,0.7)">' + amountStr + '</span>' +
+    '</button>';
 
-  var modeLabel = '<div class="kv-row"><span class="kv-label">Payment mode</span><span class="kv-value">' + escapeHtml(modeInfo.label) + '</span></div>';
+  var achBtn =
+    '<button class="pay-btn pay-btn-ach" onclick="payWithACH(' + amountCents + ',\'' + escapeHtml(stripeAccountId || '') + '\')" style="flex:1;min-width:0;background:#1a6b47">' +
+      '<span style="display:block;font-size:13px;font-weight:600">Bank Transfer</span>' +
+      '<span style="display:block;font-size:11px;color:rgba(255,255,255,0.7)">' + amountStr + '</span>' +
+    '</button>';
 
-  var buttonsHtml = '';
-  if (paymentType === 'stripe') {
-    buttonsHtml =
-      '<button class="pay-btn pay-btn-stripe" onclick="payWithStripe(' + amountCents + ',\'' + escapeHtml(stripeAccountId || '') + '\')" style="width:100%">' +
-        'Authorize $' + (amountCents / 100).toFixed(2) + ' (card hold)' +
-        (demoMode === 'stripe-test' ? ' — test mode' : '') +
-      '</button>';
-  } else {
-    var usdcAmount = '$' + bidPrice.toFixed(2);
-    var usdcLabel = modeInfo.chainId === 84532 || modeInfo.chainId === 11155111
-      ? 'Approve ' + usdcAmount + ' Hold (testnet USDC)'
-      : 'Approve ' + usdcAmount + ' Hold (USDC)';
-    buttonsHtml =
-      '<button class="pay-btn pay-btn-usdc" onclick="payWithUSDC(\'' + escapeHtml(usdcWallet || '') + '\')" style="width:100%" ' +
-        (usdcWallet ? '' : 'disabled title="Operator has no payment account configured"') + '>' +
-        usdcLabel +
-      '</button>';
-  }
+  var usdcLabel = isTestnet ? 'Stablecoin (testnet)' : 'Stablecoin';
+  var usdcBtn =
+    '<button class="pay-btn pay-btn-usdc" onclick="payWithUSDC(\'' + escapeHtml(usdcWallet || '') + '\')" style="flex:1;min-width:0" ' +
+      (usdcWallet ? '' : 'disabled title="Operator has no payment account configured"') + '>' +
+      '<span style="display:block;font-size:13px;font-weight:600">' + usdcLabel + '</span>' +
+      '<span style="display:block;font-size:11px;color:rgba(255,255,255,0.7)">' + amountStr + ' USDC</span>' +
+    '</button>';
+
+  var testBadge = test ? '<div style="font-size:10px;color:var(--text-3);text-align:center;margin-top:4px">Test mode' +
+    (test ? ' — Card: 4242 4242 4242 4242 | ACH: 110000000 / 000123456789' : '') + '</div>' : '';
 
   slot.innerHTML =
     '<div class="card card-accent">' +
       '<div class="kv-row"><span class="kv-label">Winner</span><span class="kv-value kv-value-green">' + escapeHtml(winnerName) + '</span></div>' +
       (winnerPrice ? '<div class="kv-row"><span class="kv-label">Bid price</span><span class="kv-value">' + escapeHtml(winnerPrice) + '</span></div>' : '') +
-      modeLabel +
-      paymentRecipientHtml +
     '</div>' +
-    '<p class="explainer">' + escapeHtml(modeInfo.hint) + '</p>' +
-    '<div class="btn-group">' + buttonsHtml + '</div>';
+    '<p class="explainer">Choose your payment method. You will not be charged until you approve the delivered results.</p>' +
+    '<div style="display:flex;gap:8px;margin-top:8px">' + cardBtn + achBtn + usdcBtn + '</div>' +
+    testBadge +
+    '<div id="stripeEmbedMount" style="margin-top:12px"></div>';
 }
 
 function renderCommitmentStatus(data, chainName) {
@@ -1405,7 +1419,16 @@ async function renderDeliveryResult(deliveryData, qaResult) {
 function renderReceipt(data) {
   var slot = document.getElementById('receiptSlot');
 
-  if (data.method === 'stripe') {
+  if (data.method === 'ach') {
+    slot.innerHTML =
+      '<div class="receipt-card">' +
+        '<h3>Payment Complete</h3>' +
+        '<p style="font-size:13px;color:var(--text-2);margin-bottom:16px">Bank transfer processed. Payment transferred to the operator.</p>' +
+        '<div class="kv-row"><span class="kv-label">Operator received</span><span class="kv-value kv-value-green">$' + data.operator_amount.toFixed(2) + '</span></div>' +
+        '<div class="kv-row"><span class="kv-label">Method</span><span class="kv-value">ACH Bank Transfer</span></div>' +
+        (data.transfer_id ? '<div class="kv-row"><span class="kv-label">Transfer</span><span class="kv-value kv-value-mono" style="font-size:10px">' + data.transfer_id + '</span></div>' : '') +
+      '</div>';
+  } else if (data.method === 'stripe') {
     slot.innerHTML =
       '<div class="receipt-card">' +
         '<h3>Payment Complete</h3>' +
@@ -1500,6 +1523,7 @@ function resetDemo() {
   window._tunnelUrl = null;
   window._paymentCommitment = null;
   window._stripeHold = null;
+  window._achHold = null;
   window._winnerRobot = null;
   window._winnerBidPrice = null;
   window._lastBidStep = null;
@@ -1829,6 +1853,8 @@ async function runExecution() {
 // ===== PAYMENT FUNCTIONS (verbatim logic) =====
 
 async function payWithStripe(amountCents, operatorAccountId) {
+  // Hide other payment buttons
+  document.querySelectorAll('.pay-btn-ach, .pay-btn-usdc').forEach(function(b) { b.style.display = 'none'; });
   var btn = document.querySelector('.pay-btn-stripe');
   btn.disabled = true;
   btn.textContent = 'Authorizing hold...';
@@ -1931,6 +1957,139 @@ async function payWithStripe(amountCents, operatorAccountId) {
   }
 }
 
+async function payWithACH(amountCents, operatorAccountId) {
+  // Hide other payment buttons
+  document.querySelectorAll('.pay-btn-stripe, .pay-btn-usdc').forEach(function(b) { b.style.display = 'none'; });
+  var btn = document.querySelector('.pay-btn-ach');
+  btn.disabled = true;
+  btn.textContent = 'Connecting bank account...';
+
+  var operatorName = window._winnerRobot ? window._winnerRobot.name : 'Robot Operator';
+
+  try {
+    // Step 1: Create ACH PaymentIntent (no manual capture — ACH debits immediately)
+    var res = await fetch(WORKER_BASE + '/api/create-ach-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount_cents: amountCents,
+        currency: 'usd',
+        operator_name: operatorName,
+        operator_account_id: operatorAccountId || undefined,
+        request_id: window._awardedRequestId || 'demo_' + Date.now(),
+      }),
+    });
+
+    var data = await res.json();
+    if (data.error) {
+      console.error('ACH PI error:', data);
+      btn.textContent = 'Error: ' + data.error;
+      btn.disabled = false;
+      return;
+    }
+
+    // Step 2: Get publishable key
+    var stripeKey = null;
+    try {
+      var configRes = await fetch(WORKER_BASE + '/api/stripe-config');
+      var config = await configRes.json();
+      stripeKey = config.publishable_key;
+    } catch (_) {}
+
+    if (!stripeKey) {
+      btn.textContent = 'Stripe not configured (no publishable key)';
+      btn.disabled = false;
+      return;
+    }
+
+    // Step 3: Mount Payment Element (us_bank_account only)
+    btn.textContent = 'Loading bank transfer form...';
+    var mountEl = document.getElementById('stripeEmbedMount');
+    if (!mountEl) { btn.textContent = 'Mount element missing'; btn.disabled = false; return; }
+
+    var stripe = Stripe(stripeKey);
+    var elements = stripe.elements({ clientSecret: data.client_secret });
+    var paymentElement = elements.create('payment');
+    mountEl.innerHTML = '';
+    paymentElement.mount(mountEl);
+
+    // Step 4: Add a submit button below the form
+    var submitBtn = document.createElement('button');
+    submitBtn.className = 'pay-btn pay-btn-ach';
+    submitBtn.style.cssText = 'width:100%;margin-top:12px;background:#1a6b47';
+    submitBtn.textContent = 'Authorize $' + (amountCents / 100).toFixed(2) + ' Bank Transfer';
+    mountEl.after(submitBtn);
+    btn.style.display = 'none';
+
+    submitBtn.onclick = async function() {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Authorizing bank transfer...';
+
+      // confirmPayment — for ACH this initiates the debit (no hold)
+      var result = await stripe.confirmPayment({
+        elements: elements,
+        confirmParams: { return_url: window.location.href.split('?')[0] },
+        redirect: 'if_required',
+      });
+
+      if (result.error) {
+        console.error('ACH confirm error:', result.error);
+        submitBtn.textContent = result.error.message || 'Authorization failed';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      var pi = result.paymentIntent;
+      console.log('ACH confirmed:', pi.id, pi.status);
+
+      // Clean up form
+      paymentElement.destroy();
+      mountEl.innerHTML = '';
+      submitBtn.remove();
+
+      // Show ACH-specific hold status and trigger execution
+      showAchHoldApproved({
+        payment_intent: pi.id,
+        amount_cents: amountCents,
+        status: pi.status,
+      }, amountCents, operatorName, operatorAccountId);
+    };
+
+  } catch (err) {
+    console.error('ACH error:', err);
+    btn.textContent = 'Payment failed — try again';
+    btn.disabled = false;
+  }
+}
+
+function showAchHoldApproved(data, amountCents, operatorName, operatorAccountId) {
+  // Store ACH commitment info for release phase
+  window._achHold = {
+    payment_intent: data.payment_intent,
+    amount_cents: amountCents,
+    operator_amount: amountCents / 100,
+    operator_name: operatorName,
+    operator_account_id: operatorAccountId,
+    status: data.status,
+  };
+
+  showPhase('execute');
+
+  var slot = document.getElementById('commitmentStatusCard');
+  // ACH: debit initiated, not a hold — but from the buyer's perspective, the money is committed
+  var statusText = data.status === 'succeeded' ? 'Bank transfer complete.' : 'Bank transfer initiated. Processing.';
+  slot.innerHTML =
+    '<div class="card card-accent">' +
+      '<h3 style="color:var(--accent)">Payment Authorized</h3>' +
+      '<p class="explainer" style="margin-bottom:12px">Your bank transfer has been initiated. The operator will be paid after you approve the delivered results.</p>' +
+      '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">' + statusText + '</span></div>' +
+      '<div class="kv-row"><span class="kv-label">Amount</span><span class="kv-value">$' + (amountCents / 100).toFixed(2) + '</span></div>' +
+      '<div class="kv-row"><span class="kv-label">Method</span><span class="kv-value">ACH Bank Transfer</span></div>' +
+    '</div>';
+
+  setTimeout(function() { runExecution(); }, 1000);
+}
+
 function showStripeHoldApproved(checkoutData, amountCents, operatorName) {
   // Store commitment info for release phase (mirrors USDC window._paymentCommitment)
   window._stripeHold = {
@@ -1958,6 +2117,8 @@ function showStripeHoldApproved(checkoutData, amountCents, operatorName) {
 }
 
 async function payWithUSDC(operatorWallet) {
+  // Hide other payment buttons
+  document.querySelectorAll('.pay-btn-stripe, .pay-btn-ach').forEach(function(b) { b.style.display = 'none'; });
   var btn = document.querySelector('.pay-btn-usdc');
   btn.disabled = true;
   btn.textContent = 'Connecting wallet...';
@@ -2189,8 +2350,9 @@ async function releasePayment() {
 
   var isStripe = !!window._stripeHold;
   var isUsdc = !!window._paymentCommitment;
+  var isAch = !!window._achHold;
 
-  if (!isStripe && !isUsdc) {
+  if (!isStripe && !isUsdc && !isAch) {
     alert('No payment hold found.');
     if (btn) { btn.disabled = false; btn.textContent = 'Release Payment'; }
     return;
@@ -2199,7 +2361,31 @@ async function releasePayment() {
   try {
     var receiptData = null;
 
-    if (isStripe) {
+    if (isAch) {
+      // ACH: transfer from platform to operator (ACH debit already collected)
+      var transferRes = await fetch(WORKER_BASE + '/api/transfer-to-operator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payment_intent_id: window._achHold.payment_intent,
+          operator_account_id: window._achHold.operator_account_id,
+        }),
+      });
+      var transferData = await transferRes.json();
+
+      if (!transferRes.ok || transferData.error) {
+        console.error('ACH transfer error:', transferData);
+        if (btn) { btn.textContent = transferData.error || 'Transfer failed'; btn.disabled = false; }
+        return;
+      }
+
+      receiptData = {
+        method: 'ach',
+        operator_amount: window._achHold.operator_amount,
+        transfer_id: transferData.transfer_id,
+        operator_name: transferData.operator_name,
+      };
+    } else if (isStripe) {
       // Stripe: capture the authorized payment
       var captureRes = await fetch(WORKER_BASE + '/api/capture-payment', {
         method: 'POST',

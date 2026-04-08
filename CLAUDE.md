@@ -9,7 +9,8 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 **v1.1 status:** Complete (2026-04-06). Real Tumbller robot moves + reads sensors via MCP. Marketplace + fleet on Fly.io (always on). Stripe inline authorize/capture. USDC gasless on Base. Demo-3 self-sustaining. Tags: `v1.1-milestone-tumbller-live`.
 **Next:** v1.5 (settlement abstraction + construction task specs + privacy foundation). See `docs/FEATURE_REQUIREMENTS_v15.md`.
 **v1.2 status:** Demo-5 stable (2026-04-07). Single-signature USDC on Base mainnet. No platform fee. Professional buyer-facing UI. Always-on infrastructure (Fly.io + yakrover.online).
-**Live sites:** [yakrobot.bid/mcp-demo](https://yakrobot.bid/mcp-demo/) (current demo), [yakrobot.bid](https://yakrobot.bid), [yakrobot.bid/yaml](https://yakrobot.bid/yaml), [yakrobot.bid/pitch](https://yakrobot.bid/pitch). Older demos archived in `docs/archive/`.
+**v1.3 status:** ACH bank transfer + 3-method payment selector (2026-04-08). Buyer chooses Card / Bank Transfer / Stablecoin at checkout. US Stripe account. Structured deploy scripts. Tags: `v1.3-milestone-ach-payment`.
+**Live sites:** [yakrobot.bid/demo](https://yakrobot.bid/demo/) (current demo), [yakrobot.bid](https://yakrobot.bid), [yakrobot.bid/yaml](https://yakrobot.bid/yaml), [yakrobot.bid/pitch](https://yakrobot.bid/pitch). Older demos archived in `docs/archive/`.
 
 ## Architecture
 
@@ -19,7 +20,7 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 - **Fleet:** Robot/operator discovery via ERC-8004, 35 MCP tools for agent interaction
 - **Persistence:** SQLite via `SyncTaskStore`
 - **Demo site:** `demo/index.html` — interactive demo at [yakrobot.bid](https://yakrobot.bid)
-- **Live MCP demo:** `docs/mcp_demo/index.html` — Claude orchestrates real auction at [yakrobot.bid/mcp-demo](https://yakrobot.bid/mcp-demo/)
+- **Live demo:** `docs/mcp_demo_5/index.html` — Claude orchestrates real auction at [yakrobot.bid/demo](https://yakrobot.bid/demo/)
 - **Chatbot worker:** `chatbot/src/index.js` — Cloudflare Worker proxying to Anthropic API
 - **Hosting:** here.now (yakrobot.bid) + Cloudflare Workers (/api/*)
 
@@ -96,7 +97,7 @@ yakrover-marketplace/
 ├── mcp_server.py                # Standalone REST API (35 MCP tools, Cloudflare Tunnel)
 │
 ├── docs/                        # Documentation
-│   ├── mcp_demo/index.html      # Live MCP demo (yakrobot.bid/mcp-demo)
+│   ├── mcp_demo_5/index.html    # Live demo (yakrobot.bid/demo)
 │   ├── ROADMAP_v4.md            # Construction → Mining → Infra → Lunar
 │   ├── USER_JOURNEY_CONSTRUCTION_v01.md  # Marco's journey
 │   ├── FEATURE_REQUIREMENTS_v15.md       # v1.5 build spec

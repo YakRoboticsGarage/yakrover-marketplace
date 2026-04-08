@@ -2,7 +2,7 @@
 
 A marketplace where AI agents post construction survey tasks, certified robot operators bid autonomously, and the best one delivers. Starting with construction site surveying, scaling to mining, infrastructure, and lunar operations.
 
-**Live demo:** [yakrobot.bid/mcp-demo](https://yakrobot.bid/mcp-demo/) — real robots bid and execute via MCP, pay with USDC or Stripe
+**Live demo:** [yakrobot.bid/demo](https://yakrobot.bid/demo/) — real robots bid and execute via MCP, pay with Card, Bank Transfer (ACH), or USDC
 
 ## The Problem
 
@@ -107,8 +107,7 @@ Start here, in this order:
 | URL | What it is |
 |-----|-----------|
 | **[yakrobot.bid](https://yakrobot.bid)** | Interactive demo — MDOT I-94 RFQ walkthrough |
-| **[yakrobot.bid/mcp-demo](https://yakrobot.bid/mcp-demo/)** | Live auction demo — Claude orchestrates real MCP tools |
-| **[yakrobot.bid/mcp-demo-2](https://yakrobot.bid/mcp-demo-2/)** | Payment demo — real robot discovery, IPFS delivery, Stripe + USDC settlement |
+| **[yakrobot.bid/demo](https://yakrobot.bid/demo/)** | Live auction demo — Card, Bank Transfer, USDC payment, real robot discovery |
 | **[yakrobot.bid/yaml](https://yakrobot.bid/yaml)** | YAML ontology explorer — browse PRODUCT_DSL_v2 live |
 | **[yakrobot.bid/pitch](https://yakrobot.bid/pitch)** | Pitch deck — investor/partner presentation |
 
@@ -139,7 +138,7 @@ All four follow the [skill-creator-springett](https://github.com/bglek/skill-cre
 - **284 tests** passing (all CI checks green: lint, mypy, pytest)
 - **50 commits** across the project
 - **47 research topics** in automated research roadmap (8 completed, 31 improvement proposals)
-- **Live payment demo** at yakrobot.bid/mcp-demo-2 — schema-driven delivery QA, commit-on-hire gasless USDC, Stripe Checkout, real robot discovery, IPFS delivery
+- **Live demo** at yakrobot.bid/demo — Card/ACH/USDC payment, schema-driven delivery QA, real robot discovery, IPFS delivery
 - **3,243 line YAML** product ontology covering the entire product
 - **43 real MDOT RFPs** analyzed for survey requirements
 - **6 real equipment platforms** with verified specs and pricing
