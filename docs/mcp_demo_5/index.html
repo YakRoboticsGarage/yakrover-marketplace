@@ -1282,7 +1282,7 @@ async function querySubgraph(url, chainId) {
     var metaEntries = (data.data && data.data.agentMetadata_collection) || [];
 
     return metaEntries.filter(function(m) {
-      return m.agent && m.agent.registrationFile && m.agent.registrationFile.name;
+      return m.agent; // include all agents with fleet_provider metadata, even without IPFS card
     }).map(function(m) {
       var a = m.agent;
       var rf = a.registrationFile || {};
