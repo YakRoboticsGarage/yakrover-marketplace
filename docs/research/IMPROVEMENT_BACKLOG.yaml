@@ -1,12 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-08'
+  last_updated: '2026-04-09'
   total_items: 47
-  implemented: 7
+  implemented: 10
   deferred: 4
   rejected: 1
-  proposed: 35
+  proposed: 32
   source: Automated daily research agent + weekly synthesis
+  last_sync: "R-META-001 (2026-04-09) — corrected IMP-021/023/027 from proposed to implemented based on commits b76a4f1 and a58560f"
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -359,10 +360,10 @@ proposals:
   evidence: docs/research/automated/R-031_state_plane_zone_autodetect.md
   effort: small
   priority: critical
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-05'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-07'
+  decision_notes: Implemented in commit b76a4f1 "IMP-021/023: Fix EPSG codes + expand 4-state zone table". Status corrected by R-META-001 (2026-04-09) — was marked proposed despite being committed.
 - id: IMP-022
   title: Add stateplane library + _infer_state_plane_epsg() helper to rfp_processor.py
   description: 'Add pip install stateplane (pyproj wrapper, no C++ deps) to pyproject.toml
@@ -394,10 +395,10 @@ proposals:
   evidence: docs/research/automated/R-031_state_plane_zone_autodetect.md
   effort: small
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-05'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-07'
+  decision_notes: Implemented in commit b76a4f1 "IMP-021/023: Fix EPSG codes + expand 4-state zone table". Status corrected by R-META-001 (2026-04-09) — was marked proposed despite being committed.
 - id: IMP-024
   title: Remove duplicate _load_reference definition in rfp_processor.py
   description: 'auction/rfp_processor.py defines _load_reference(name: str) -> str twice:
@@ -469,10 +470,10 @@ proposals:
   evidence: docs/research/automated/R-034_erc2612_permit_relay_security.md
   effort: medium
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-07'
+  decision_notes: Partially implemented in commit a58560f "IMP-027: EIP-3009 transferWithAuthorization (preferred, permit fallback)". EIP-3009 is now preferred path; ERC-2612 permit retained as fallback. Full rewrite (drop fallback, add Multicall3 batch) tracked as IMP-035. Status corrected by R-META-001 (2026-04-09).
 - id: IMP-028
   title: Add server-side permit signature pre-verification before on-chain submission
   description: 'Before calling usdc.permit() on-chain, verify the buyer''s signature server-side

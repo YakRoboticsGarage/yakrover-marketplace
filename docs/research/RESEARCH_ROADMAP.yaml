@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-07"  # R-035 complete; IMP-035/036/037 added; R-038 spawned; feedback issues 10-11 processed (Demo-4 tests, no actionable signal)
+  last_updated: "2026-04-09"  # R-META-001 complete; duplicate IDs fixed (R-026/027/028 renamed R-039/040/041); R-007/R-027 reset to queued; IMP-021/023/027 marked implemented; R-042/043/044 spawned; R-006b/c downgraded; R-036 downgraded
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -100,36 +100,40 @@ topics:
     module: M36_pls_review
     hypothesis: "One of Checkr or MeshVerify is clearly better for PLS verification at our volume — per-check cost and state coverage will differentiate them"
     status: queued
-    priority: high
+    priority: low
     estimated_sessions: 1
     depends_on: [R-006]
+    notes: "Downgraded from high→low by R-META-001 (2026-04-09). IMP-001/002/003 deferred to v2.0+. Premature to evaluate per-credential PLS verification services before R-027 (operator identity) completes and confirms entity-level KYB is insufficient."
 
   - id: R-006c
     title: "California DCA search.dca.ca.gov undocumented JSON endpoint investigation"
     module: M36_pls_review
     hypothesis: "The California DCA license search may expose a JSON API endpoint discoverable via browser DevTools — this would unlock the largest state market"
     status: queued
-    priority: high
+    priority: low
     estimated_sessions: 1
     depends_on: [R-006]
+    notes: "Downgraded from high→low by R-META-001 (2026-04-09). Same rationale as R-006b — entity-level KYB (R-027) takes precedence."
 
   - id: R-006d
     title: "Michigan LARA bulk license data download format and freshness"
     module: M36_pls_review
     hypothesis: "Michigan LARA's License Lists and Reports page may provide a downloadable bulk CSV — enabling free nightly sync for our primary market"
     status: queued
-    priority: high
+    priority: medium
     estimated_sessions: 1
     depends_on: [R-006]
+    notes: "Downgraded from high→medium by R-META-001 (2026-04-09). Bulk sync still useful for entity-level matching even without individual PLS lookups. Michigan is primary market."
 
   - id: R-007
     title: "Electronic survey seal/stamp regulations by state"
     module: M36_pls_review
     hypothesis: "Michigan and other states may have specific regulations on electronic vs physical PLS seals — DocuSign approach may not be legal everywhere"
-    status: in_progress
+    status: queued
     priority: critical
     estimated_sessions: 1
     depends_on: [R-006]
+    notes: "Reset from in_progress→queued by R-META-001 (2026-04-09). Previous session started but produced no output file. Must be re-run from scratch."
 
   - id: R-008
     title: "ACORD 25 COI PDF field extraction methods"
@@ -325,11 +329,11 @@ topics:
     title: "Robot operator identity verification — individuals and businesses"
     module: M10_compliance
     hypothesis: "The platform should verify the operator entity (individual or business), not chase individual PLS license numbers. Business registry checks, KYC/KYB services (Middesk, Berbix, Stripe Identity, Persona), and existing compliance data (insurance COI, SAM.gov) may be sufficient to establish operator trust without per-credential verification."
-    status: in_progress
+    status: queued
     priority: critical
     estimated_sessions: 2
     depends_on: []
-    notes: "Key questions: (1) What does a GC actually need to trust an operator? Business registration? Insurance? References? (2) What KYB/KYC services exist for marketplace operator verification? Cost, coverage, API? (3) How do other construction marketplaces (Procore, BuildOps) verify contractors? (4) Can Stripe Connect Express onboarding (which already does KYC) serve as sufficient operator verification? (5) What's the minimum viable trust for the demo ($0.50) vs production ($45K)? (6) Should verification level scale with task value?"
+    notes: "Reset from in_progress→queued by R-META-001 (2026-04-09). Previous session started but produced no output file. Must be re-run from scratch. Key questions: (1) What does a GC actually need to trust an operator? Business registration? Insurance? References? (2) What KYB/KYC services exist for marketplace operator verification? Cost, coverage, API? (3) How do other construction marketplaces (Procore, BuildOps) verify contractors? (4) Can Stripe Connect Express onboarding (which already does KYC) serve as sufficient operator verification? (5) What's the minimum viable trust for the demo ($0.50) vs production ($45K)? (6) Should verification level scale with task value?"
 
   - id: R-028
     title: "Stripe Identity and Connect KYC as operator verification"
@@ -380,12 +384,29 @@ topics:
     title: "Weekly research synthesis and pipeline review"
     module: system
     hypothesis: "After 5-7 completed topics, the agent should review all findings to date, identify contradictions, cross-module patterns, coverage gaps, and re-prioritize the remaining queue"
+    status: complete
+    priority: high
+    estimated_sessions: 1
+    completed_date: "2026-04-09"
+    depends_on: []
+    recurrence: "Re-queue every 7 completed topics"
+    output_file: "docs/research/automated/R-META-001_synthesis_2026-04-09.md"
+    improvement_proposals: []
+    spawned: [R-042, R-043, R-044]
+    notes: "Run 1 complete. Identified 3 YAML duplicate ID bugs (R-026/027/028 → R-039/040/041), 2 stalled in_progress topics reset (R-007, R-027), 3 IMP status corrections (IMP-021/023/027 → implemented), 3 new topics spawned (ACH fraud, ZK privacy, WalletConnect). Priority re-ranking applied to R-006b/c/d and R-036. Next re-queue after 7 more completions (~R-045 area)."
+
+  # ===== R-META-001 RE-QUEUE =====
+
+  - id: R-META-002
+    title: "Weekly research synthesis and pipeline review (run 2)"
+    module: system
+    hypothesis: "After 7 more completed topics, review all findings to date for contradictions, cross-module patterns, coverage gaps, and re-prioritize remaining queue"
     status: queued
     priority: high
     estimated_sessions: 1
     depends_on: []
     recurrence: "Re-queue every 7 completed topics"
-    notes: "This is a recurring meta-topic. After completing, the agent should: (1) critique quality of prior research, (2) identify topics that are stale or superseded, (3) re-rank remaining topics by new evidence, (4) add newly discovered topics, (5) flag improvement proposals that should be bundled together"
+    notes: "Re-queued by R-META-001 run 1 (2026-04-09). Schedule after ~7 more completed topics. Run same process as R-META-001."
 
   # ===== SPAWNED BY DEVELOPMENT =====
   # (New topics added here when code changes raise new questions)
@@ -404,7 +425,7 @@ topics:
 
   # ===== SPAWNED BY R-024 =====
 
-  - id: R-027
+  - id: R-040
     title: "PayRam production reliability audit and fee structure confirmation"
     module: M37_splits_distribution
     hypothesis: "PayRam launched 2026-03-30 with architecture that matches our card-in/USDC-to-Splits use case. A 30-60 day follow-up should assess uptime, API documentation quality, fee transparency, and whether contract addresses (0xSplits) are supported as USDC destinations."
@@ -414,9 +435,9 @@ topics:
     depends_on: [R-024]
     spawned_from: R-024
     spawned_date: "2026-04-03"
-    notes: "Do not conduct before 2026-05-01 — give service time to stabilize. Check: fee structure at $1K-$10K, Splits contract address support, production uptime report, API documentation depth."
+    notes: "Renamed from R-027 (duplicate ID) by R-META-001 (2026-04-09). Do not conduct before 2026-05-01 — give service time to stabilize. Check: fee structure at $1K-$10K, Splits contract address support, production uptime report, API documentation depth."
 
-  - id: R-028
+  - id: R-041
     title: "Operator entity-type distribution — sole proprietors vs. LLCs in drone survey market"
     module: M37_splits_distribution
     hypothesis: "Stripe USDC payouts are limited to individuals/sole proprietors. If most drone operators operate as LLCs, this is a material blocker for the Stripe USDC payout path. FAA Part 107 data or industry surveys may reveal the distribution."
@@ -426,12 +447,13 @@ topics:
     depends_on: [R-024]
     spawned_from: R-024
     spawned_date: "2026-04-03"
+    notes: "Renamed from R-028 (duplicate ID) by R-META-001 (2026-04-09). Original R-028 = Stripe Identity and Connect KYC research (retained at R-028)."
 
   # ===== SPAWNED BY FEEDBACK LOOP (recent commits) =====
   # Onboarding commit (ac9be52) added auction_submit_feedback MCP tool and
   # GitHub issue creation for buyer/operator ratings. New research question:
 
-  - id: R-026
+  - id: R-039
     title: "Feedback signal quality — what rating data actually predicts repeat buyer behavior"
     module: M20_reputation
     hypothesis: "Raw star ratings are noisy. Delivery-linked feedback (with IPFS hash + payment proof) may be more predictive of operator quality than unverified ratings. Literature on reputation systems in gig marketplaces may reveal better signal design."
@@ -441,6 +463,7 @@ topics:
     depends_on: []
     spawned_from: "git:ac9be52 (feedback loop commit)"
     spawned_date: "2026-04-02"
+    notes: "Renamed from R-026 (duplicate ID) by R-META-001 (2026-04-09). Original R-026 = publish.new marketplace research (retained at R-026)."
 
   # ===== SPAWNED BY R-001 =====
 
@@ -547,11 +570,12 @@ topics:
     module: M18_x402
     hypothesis: "Flashbots Protect provides a private mempool that prevents MEV sandwich attacks by hiding pending transactions. Research: (1) does Flashbots Protect support Base mainnet, (2) is the Protect RPC endpoint compatible with ethers.js JsonRpcProvider in a Cloudflare Worker environment, (3) what is the latency overhead vs standard 1rpc.io/base endpoint, (4) does Protect support EIP-3009 transferWithAuthorization or only EIP-2612 permit transactions. This would be defense-in-depth even after EIP-3009 migration."
     status: queued
-    priority: medium
+    priority: low
     estimated_sessions: 1
     depends_on: [R-034]
     spawned_from: R-034
     spawned_date: "2026-04-06"
+    notes: "Downgraded from medium→low by R-META-001 (2026-04-09). EIP-3009 migration (IMP-027, commit a58560f) eliminates the primary MEV vector (no allowance window). Flashbots Protect is residual defense-in-depth — not blocking for current security posture."
 
   - id: R-038
     title: "validBefore window for commit-on-hire EIP-3009 authorizations and Multicall3 resume-safety"
@@ -563,3 +587,41 @@ topics:
     depends_on: [R-035]
     spawned_from: R-035
     spawned_date: "2026-04-07"
+
+  # ===== SPAWNED BY R-META-001 (2026-04-09) =====
+
+  - id: R-042
+    title: "ACH payment fraud patterns and risk controls for marketplace platforms"
+    module: M15_stripe_service
+    hypothesis: "ACH bank transfer (v1.3) has distinct fraud vectors vs card payments: return codes (R02 insufficient funds, R10 unauthorized, R29 corporate check), 2-3 day settlement delay, and no chargeback protection. Research should identify the fraud risk profile at $1K-$10K construction survey task prices and the appropriate Stripe-level controls."
+    status: queued
+    priority: high
+    estimated_sessions: 1
+    depends_on: []
+    spawned_from: "git:5ceaa8e (v1.3 ACH milestone)"
+    spawned_date: "2026-04-09"
+    notes: "Key questions: (1) What ACH return rates should we expect at $1K-$10K task prices? (2) Stripe ACH return handling — who bears R10 loss after delivery? (3) Should ACH be disabled for first-time buyers or tasks above a threshold? (4) What Nacha rules apply to marketplace platforms? (5) What velocity controls does Stripe apply automatically to ACH?"
+
+  - id: R-043
+    title: "Zero-knowledge proofs for construction survey data privacy (v1.5 ZK track pre-research)"
+    module: system
+    hypothesis: "Roadmap v4.9 adds a v1.5 zero-knowledge research track. ZK proofs may enable: location privacy for sensitive construction sites, bid price confidentiality during the sealed-bid phase, and operator credential verification without disclosing license numbers. Pre-research to scope feasibility and identify the right ZK system."
+    status: queued
+    priority: low
+    estimated_sessions: 1
+    depends_on: []
+    spawned_from: "git:cca6ae2 (Roadmap v4.9: v1.5 ZK track)"
+    spawned_date: "2026-04-09"
+    notes: "Key questions: (1) Practical ZK systems for off-chain attestation in 2026 (Groth16, PLONK, STARKs)? (2) Does Horizen L3 (FD-5) support ZK credential verification? (3) Existing geospatial privacy frameworks using ZK? (4) Compute cost of ZK proof for LAS point cloud metadata? Do not schedule before other critical topics are cleared."
+
+  - id: R-044
+    title: "WalletConnect v2 integration for mobile USDC payments (vanilla JS)"
+    module: M38_browser_wallet
+    hypothesis: "Mobile browsers lack window.ethereum, causing USDC payment to fail for mobile users (IMP-039). WalletConnect v2 is the standard solution. Research the integration path in a vanilla JS single-page app (no wagmi/RainbowKit), covering signTypedData_v4 support, CORS implications, and session persistence."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: []
+    spawned_from: "R-META-001 (IMP-039 proposed but unresearched)"
+    spawned_date: "2026-04-09"
+    notes: "Key questions: (1) WalletConnect v2 in vanilla JS — SDK, bundle size, setup? (2) signTypedData_v4 support (required for EIP-3009 EIP-712 messages)? (3) Cloudflare Worker CORS for WalletConnect relay calls? (4) WalletConnect vs @metamask/sdk for mobile-first single-page demo? (5) Session reconnect model across page refreshes?"
