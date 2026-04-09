@@ -1545,40 +1545,12 @@ function renderRobotsSidebar(robots) {
 
     var item = document.createElement('div');
     item.className = 'robot-item';
-    item.onclick = function() {
-      var det = document.getElementById(detailId);
-      if (det) det.classList.toggle('expanded');
-    };
+    item.onclick = function() { showRobotProfile(robot, idx); };
     item.innerHTML =
       '<div class="robot-dot ' + (robot.active ? 'robot-dot-active' : 'robot-dot-inactive') + '"></div>' +
       '<span class="robot-name">' + escapeHtml(robot.name) + '</span>' +
       '<span class="robot-chain">' + chainShort + (hasPayment ? ' $' : '') + '</span>';
     cards.appendChild(item);
-
-    var detail = document.createElement('div');
-    detail.className = 'robot-detail';
-    detail.id = detailId;
-    var stripeId = (robot.payment && robot.payment.stripe_connect_id) || '';
-    var agentUri = robot.agent_uri || '';
-    var ipfsLink = agentUri && agentUri.startsWith('ipfs://') ? 'https://gateway.pinata.cloud/ipfs/' + agentUri.replace('ipfs://', '') : '';
-    var scanPath = robot.chain_id === 8453 ? 'base' : robot.chain_id === 84532 ? 'base-sepolia' : robot.chain_id === 1 ? 'ethereum' : robot.chain_id === 11155111 ? 'ethereum-sepolia' : 'base';
-
-    detail.innerHTML =
-      '<div><strong>' + escapeHtml(robot.name) + '</strong></div>' +
-      '<div style="margin-top:4px">' + escapeHtml(robot.description || 'No description') + '</div>' +
-      '<div style="margin-top:6px;font-family:\'JetBrains Mono\',monospace;font-size:10px">' +
-        'Agent #' + escapeHtml(String(robot.agent_id)) + ' on ' + chainName + '<br>' +
-        'Wallet: ' + walletShort + '<br>' +
-        (stripeId ? 'Stripe: ' + escapeHtml(stripeId) + '<br>' : '') +
-        (agentUri ? 'IPFS: ' + escapeHtml(agentUri.slice(0, 40)) + (agentUri.length > 40 ? '...' : '') + '<br>' : 'IPFS: not set<br>') +
-        'Tools: ' + escapeHtml(tools) +
-      '</div>' +
-      '<div style="margin-top:6px">' +
-        '<a href="' + explorerBase + '/nft/0x8004A818BFB912233c491871b3d84c89A494BD9e/' + escapeHtml(String(robot.agent_id)) + '" target="_blank">Explorer</a>' +
-        ' &middot; <a href="https://8004scan.io/agents/' + scanPath + '/' + escapeHtml(String(robot.agent_id)) + '" target="_blank">8004scan</a>' +
-        (ipfsLink ? ' &middot; <a href="' + ipfsLink + '" target="_blank">Agent card</a>' : '') +
-      '</div>';
-    cards.appendChild(detail);
   });
 
   // Auto-detect environment from robot chain (testnet robots → test mode)
@@ -1863,6 +1835,65 @@ function openFeedbackPopup() {
   document.body.appendChild(modal);
   var overlay = document.getElementById('feedDetailOverlay');
   if (overlay) overlay.classList.add('active');
+}
+
+function showRobotProfile(robot, idx) {
+  _saveFocus();
+  // Remove any existing robot profile modal
+  var existing = document.getElementById('robotProfileModal');
+  if (existing) existing.remove();
+
+  var chainName = robot.chain_id === 8453 ? 'Base mainnet' : robot.chain_id === 84532 ? 'Base Sepolia' : robot.chain_id === 1 ? 'Ethereum' : robot.chain_id === 11155111 ? 'Ethereum Sepolia' : 'Chain ' + robot.chain_id;
+  var walletAddr = (robot.payment && robot.payment.usdc_wallet) || '';
+  var walletShort = walletAddr ? walletAddr.slice(0, 6) + '...' + walletAddr.slice(-4) : 'none';
+  var stripeId = (robot.payment && robot.payment.stripe_connect_id) || '';
+  var agentUri = robot.agent_uri || '';
+  var ipfsLink = agentUri && agentUri.startsWith('ipfs://') ? 'https://gateway.pinata.cloud/ipfs/' + agentUri.replace('ipfs://', '') : '';
+  var scanPath = robot.chain_id === 8453 ? 'base' : robot.chain_id === 84532 ? 'base-sepolia' : robot.chain_id === 1 ? 'ethereum' : robot.chain_id === 11155111 ? 'ethereum-sepolia' : 'base';
+  var explorerBase = robot.chain_id === 8453 ? 'https://basescan.org' : robot.chain_id === 84532 ? 'https://sepolia.basescan.org' : robot.chain_id === 11155111 ? 'https://sepolia.etherscan.io' : 'https://etherscan.io';
+  var tools = (robot.mcp_tools || []).join(', ') || 'No tools listed';
+
+  var modal = document.createElement('div');
+  modal.className = 'feed-detail expanded';
+  modal.id = 'robotProfileModal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-label', 'Robot profile: ' + robot.name);
+  modal.innerHTML =
+    '<button type="button" class="feed-detail-close" onclick="closeRobotProfile()" aria-label="Close">Close</button>' +
+    '<div style="margin-top:8px">' +
+      '<h3 style="margin:0 0 4px;font-size:16px;color:var(--text)">' + escapeHtml(robot.name) + '</h3>' +
+      '<div class="text-muted mb-12">' + escapeHtml(robot.description || 'No description') + '</div>' +
+      '<div style="border-top:1px solid var(--border);padding-top:12px">' +
+        '<div class="kv-row"><span class="kv-label">Agent ID</span><span class="kv-value kv-value-mono">#' + escapeHtml(String(robot.agent_id)) + '</span></div>' +
+        '<div class="kv-row"><span class="kv-label">Chain</span><span class="kv-value">' + escapeHtml(chainName) + '</span></div>' +
+        '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value">' + (robot.active ? '<span style="color:var(--green)">Active</span>' : '<span style="color:var(--text-3)">Inactive</span>') + '</span></div>' +
+        '<div class="kv-row"><span class="kv-label">USDC Wallet</span><span class="kv-value kv-value-mono">' + escapeHtml(walletShort) + '</span></div>' +
+        (stripeId ? '<div class="kv-row"><span class="kv-label">Stripe Connect</span><span class="kv-value kv-value-mono">' + escapeHtml(stripeId) + '</span></div>' : '') +
+        '<div class="kv-row"><span class="kv-label">IPFS Agent Card</span><span class="kv-value kv-value-mono">' +
+          (agentUri ? escapeHtml(agentUri.slice(0, 30)) + '...' : '<span style="color:var(--amber)">not set</span>') +
+        '</span></div>' +
+        '<div class="kv-row"><span class="kv-label">MCP Endpoint</span><span class="kv-value kv-value-mono">' + escapeHtml(robot.mcp_endpoint || 'not set') + '</span></div>' +
+        '<div class="kv-row"><span class="kv-label">Tools</span><span class="kv-value" style="font-size:11px">' + escapeHtml(tools) + '</span></div>' +
+      '</div>' +
+      '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
+        '<a href="' + explorerBase + '/nft/0x8004A818BFB912233c491871b3d84c89A494BD9e/' + escapeHtml(String(robot.agent_id)) + '" target="_blank" class="admin-btn" style="font-size:11px;padding:4px 10px;text-decoration:none">Explorer</a>' +
+        '<a href="https://8004scan.io/agents/' + scanPath + '/' + escapeHtml(String(robot.agent_id)) + '" target="_blank" class="admin-btn" style="font-size:11px;padding:4px 10px;text-decoration:none">8004scan</a>' +
+        (ipfsLink ? '<a href="' + ipfsLink + '" target="_blank" class="admin-btn" style="font-size:11px;padding:4px 10px;text-decoration:none">Agent Card</a>' : '') +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(modal);
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.add('active');
+}
+
+function closeRobotProfile() {
+  var modal = document.getElementById('robotProfileModal');
+  if (modal) modal.remove();
+  var overlay = document.getElementById('feedDetailOverlay');
+  if (overlay) overlay.classList.remove('active');
+  _restoreFocus();
 }
 
 function showSummaryPopup() {
@@ -3076,6 +3107,8 @@ setTimeout(discoverRobots, 500);
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     // Use dedicated close functions for named modals (they call .remove())
+    var rp = document.getElementById('robotProfileModal');
+    if (rp && rp.classList.contains('expanded')) { closeRobotProfile(); return; }
     var fb = document.getElementById('feedbackModal');
     if (fb && fb.classList.contains('expanded')) { closeFeedbackPopup(); return; }
     var sm = document.getElementById('summaryModal');
