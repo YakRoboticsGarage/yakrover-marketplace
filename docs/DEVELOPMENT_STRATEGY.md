@@ -1,7 +1,7 @@
 # Development Strategy — Code Safety & Testing for Real Money
 
-**Date:** 2026-03-27
-**Status:** Proposal — ready for review
+**Date:** 2026-03-27 (updated 2026-04-09)
+**Status:** Active. v1.3 shipped with 284 tests, 35 MCP tools. Next: v1.4 (operator registration frontend). v1.5 (settlement abstraction) gated on v1.4.
 **Applies to:** yakrover-marketplace, yakrover-8004-mcp, and all marketplace repos
 
 > This project handles real money (Stripe charges, USDC on Base). Code that touches payments, escrow, or wallet operations must meet a higher bar than typical application code. This document defines the development practices, testing strategy, and tooling that enforce that bar.

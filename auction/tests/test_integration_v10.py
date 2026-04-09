@@ -528,6 +528,7 @@ class TestMCPToolsRegistered:
                 "auction_check_sam_exclusion",
                 # Operator registration
                 "auction_register_operator",
+                "auction_register_robot_onchain",
                 "auction_add_equipment",
                 "auction_activate_operator",
                 # Phase 5: Agreement generation and project management

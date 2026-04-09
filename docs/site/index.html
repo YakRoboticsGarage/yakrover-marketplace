@@ -3,400 +3,716 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YAK ROBOTICS — Product Ontology Explorer</title>
+<title>YAK ROBOTICS — Product Brief</title>
 <link rel="icon" href="yak-icon.png">
 <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#fff;--bg2:#f5f6f8;--bg3:#ebedf2;
-  --border:#d1d5db;--border2:#e5e7eb;
-  --text:#1a1f26;--text2:#4a5568;--text3:#6b7280;
-  --navy:#1b3a5c;--navy2:#2d5f8a;
-  --accent:#e8792b;--accent2:#fef0e3;
-  --green:#1a7d4e;--green2:#e6f5ed;
-  --blue:#2563eb;--blue2:#eff6ff;
-  --red:#dc2626;--red2:#fef2f2;
-  --amber:#c27b1a;--amber2:#fef3c7;
-  --r:6px;
+:root {
+  --ink: #0f1419;
+  --ink2: #3d4854;
+  --ink3: #6e7a86;
+  --paper: #fafaf8;
+  --paper2: #f0efeb;
+  --paper3: #e6e4df;
+  --rule: #d4d1ca;
+  --rust: #b44d2d;
+  --rust-bg: #fdf3ef;
+  --teal: #1a7a6d;
+  --teal-bg: #eef8f6;
+  --slate: #3d5a80;
+  --slate-bg: #edf2f7;
+  --warm: #8b6914;
+  --warm-bg: #fdf8ec;
+  --r: 3px;
+  --font: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', 'Menlo', monospace;
 }
-html{font-size:15px}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg2);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
 
-/* Header */
-.header{background:var(--navy);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
-.header img{width:24px;height:24px;border-radius:3px}
-.header h1{font-size:0.85rem;font-weight:600;letter-spacing:0.02em}
-.header h1 span{color:rgba(255,255,255,0.5);font-weight:400}
-.search-box{margin-left:auto;position:relative;width:260px}
-.search-box input{width:100%;padding:6px 12px 6px 30px;border:1px solid rgba(255,255,255,0.2);border-radius:var(--r);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.78rem;outline:none}
-.search-box input::placeholder{color:rgba(255,255,255,0.4)}
-.search-box input:focus{border-color:var(--accent);background:rgba(255,255,255,0.15)}
-.search-box::before{content:'';position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-radius:50%;z-index:1;pointer-events:none}
-.search-box::after{content:'';position:absolute;left:22px;top:calc(50% + 5px);width:2px;height:6px;background:rgba(255,255,255,0.4);transform:rotate(-45deg);z-index:1;pointer-events:none}
-.menu-toggle{display:none;background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;padding:4px 8px}
+html { font-size: 15px; scroll-behavior: smooth }
+body { font-family: var(--font); background: var(--paper); color: var(--ink); line-height: 1.55; -webkit-font-smoothing: antialiased }
 
-/* Stats bar */
-.stats{background:var(--bg);border-bottom:1px solid var(--border2);padding:8px 20px;display:flex;gap:20px;font-size:0.7rem;color:var(--text3);overflow-x:auto}
-.stat{white-space:nowrap}
-.stat strong{color:var(--text);font-weight:600;margin-right:3px}
+/* ---- NAV ---- */
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(250,250,248,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule);
+  padding: 0 24px;
+  display: flex; align-items: center; gap: 24px;
+  height: 48px; overflow-x: auto;
+}
+.topnav-brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0 }
+.topnav-brand img { width: 22px; height: 22px; border-radius: 3px }
+.topnav-brand span { font-weight: 700; font-size: 0.8rem; letter-spacing: 0.04em; color: var(--ink) }
+.topnav-links { display: flex; gap: 2px; flex-shrink: 0 }
+.topnav-links a {
+  font-size: 0.73rem; font-weight: 500; color: var(--ink3);
+  text-decoration: none; padding: 6px 10px; border-radius: var(--r);
+  transition: all 0.15s; white-space: nowrap;
+}
+.topnav-links a:hover { color: var(--ink); background: var(--paper2) }
+.topnav-links a.active { color: var(--rust); background: var(--rust-bg) }
+.topnav-search { margin-left: auto; flex-shrink: 0 }
+.topnav-search input {
+  width: 200px; padding: 5px 10px; border: 1px solid var(--rule);
+  border-radius: var(--r); background: var(--paper); font: inherit;
+  font-size: 0.73rem; color: var(--ink); outline: none;
+}
+.topnav-search input:focus { border-color: var(--rust); box-shadow: 0 0 0 2px var(--rust-bg) }
+.topnav-search input::placeholder { color: var(--ink3) }
 
-/* Layout */
-.layout{display:flex;flex:1;overflow:hidden}
+/* ---- LAYOUT ---- */
+.wrap { max-width: 920px; margin: 0 auto; padding: 0 24px }
+section { padding: 48px 0 32px; border-bottom: 1px solid var(--rule) }
+section:last-child { border-bottom: none }
+.sec-label { font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink3); margin-bottom: 6px }
+.sec-title { font-size: 1.5rem; font-weight: 700; line-height: 1.2; margin-bottom: 6px }
+.sec-sub { font-size: 0.85rem; color: var(--ink2); max-width: 560px; margin-bottom: 24px }
 
-/* Sidebar */
-.sidebar{width:240px;background:var(--bg);border-right:1px solid var(--border2);overflow-y:auto;flex-shrink:0;padding:8px 0}
-.nav-group{padding:4px 0}
-.nav-group-label{font-size:0.62rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;padding:8px 16px 4px}
-.nav-item{display:flex;align-items:center;gap:8px;padding:6px 16px;font-size:0.78rem;color:var(--text2);cursor:pointer;border-left:3px solid transparent;transition:all 0.12s}
-.nav-item:hover{background:var(--bg2);color:var(--text)}
-.nav-item.active{background:var(--accent2);color:var(--accent);border-left-color:var(--accent);font-weight:600}
-.nav-icon{font-size:0.85rem;width:20px;text-align:center;flex-shrink:0}
+/* ---- HERO ---- */
+.hero { padding: 56px 0 40px; text-align: center; border-bottom: 1px solid var(--rule) }
+.hero .mantra { font-size: 1.9rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; max-width: 600px; margin: 0 auto 12px }
+.hero .tagline { font-size: 0.9rem; color: var(--ink2); max-width: 480px; margin: 0 auto 28px; font-style: italic }
+.hero-stats { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap }
+.hero-stat { text-align: center }
+.hero-stat .num { font-size: 1.6rem; font-weight: 700; color: var(--rust); line-height: 1.1 }
+.hero-stat .lbl { font-size: 0.62rem; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500 }
 
-/* Main content */
-.main{flex:1;overflow-y:auto;padding:20px 24px}
-.section-title{font-size:1.1rem;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
-.section-desc{font-size:0.78rem;color:var(--text3);margin-bottom:16px}
+/* ---- GRID helpers ---- */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px }
+@media(max-width:640px){ .g2,.g3 { grid-template-columns: 1fr } }
 
-/* Cards */
-.card{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
-.card-header{padding:10px 14px;font-size:0.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}
-.card-header:hover{background:var(--bg2)}
-.card-header .chevron{margin-left:auto;font-size:0.7rem;color:var(--text3);transition:transform 0.15s}
-.card.open .chevron{transform:rotate(90deg)}
-.card-body{display:none;padding:10px 14px;border-top:1px solid var(--border2);font-size:0.78rem}
-.card.open .card-body{display:block}
+/* ---- CARDS ---- */
+.card {
+  background: #fff; border: 1px solid var(--rule); border-radius: var(--r);
+  padding: 16px; transition: box-shadow 0.15s;
+}
+.card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.04) }
+.card-sm { padding: 12px }
+.card h3 { font-size: 0.82rem; font-weight: 600; margin-bottom: 4px }
+.card p, .card li { font-size: 0.78rem; color: var(--ink2); line-height: 1.5 }
+.card ul { padding-left: 16px; margin-top: 4px }
+.card ul li { margin-bottom: 2px }
+.card .meta { font-size: 0.68rem; color: var(--ink3); margin-top: 6px }
 
-/* Key-value rows */
-.kv{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--bg2)}
-.kv:last-child{border-bottom:none}
-.kv-key{color:var(--text3);font-weight:500;min-width:120px;flex-shrink:0;font-size:0.72rem}
-.kv-val{color:var(--text);word-break:break-word}
-.kv-val.mono{font-family:'JetBrains Mono',monospace;font-size:0.72rem}
+/* ---- BADGES ---- */
+.badge {
+  display: inline-block; font-size: 0.58rem; font-weight: 600;
+  padding: 2px 6px; border-radius: 2px; text-transform: uppercase;
+  letter-spacing: 0.04em; vertical-align: middle;
+}
+.b-built { background: var(--teal-bg); color: var(--teal) }
+.b-next { background: var(--warm-bg); color: var(--warm) }
+.b-future { background: var(--paper2); color: var(--ink3) }
+.b-high { background: #fde8e8; color: #b91c1c }
+.b-med { background: var(--warm-bg); color: var(--warm) }
+.b-low { background: var(--teal-bg); color: var(--teal) }
 
-/* Badges */
-.badge{display:inline-block;font-size:0.62rem;font-weight:600;padding:1px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:0.04em}
-.badge-green{background:var(--green2);color:var(--green)}
-.badge-blue{background:var(--blue2);color:var(--blue)}
-.badge-red{background:var(--red2);color:var(--red)}
-.badge-amber{background:var(--amber2);color:var(--amber)}
-.badge-gray{background:var(--bg3);color:var(--text3)}
+/* ---- CONFIDENCE BAR ---- */
+.conf { display: flex; align-items: center; gap: 8px; margin-top: 6px }
+.conf-track { flex: 1; height: 4px; background: var(--paper2); border-radius: 2px; max-width: 100px }
+.conf-fill { height: 100%; background: var(--teal); border-radius: 2px }
+.conf-pct { font-family: var(--mono); font-size: 0.68rem; font-weight: 500; color: var(--ink2) }
 
-/* Gravity effect */
-.gravity{background:var(--accent2);border-left:3px solid var(--accent);padding:8px 12px;margin:6px 0;font-size:0.75rem;color:var(--accent);border-radius:0 var(--r) var(--r) 0;font-style:italic}
+/* ---- TIMELINE ---- */
+.timeline { position: relative; padding-left: 20px }
+.timeline::before { content: ''; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 1px; background: var(--rule) }
+.tl-item { position: relative; padding-bottom: 20px }
+.tl-item:last-child { padding-bottom: 0 }
+.tl-dot {
+  position: absolute; left: -20px; top: 3px; width: 11px; height: 11px;
+  border-radius: 50%; border: 2px solid var(--rule); background: var(--paper);
+}
+.tl-item.done .tl-dot { background: var(--teal); border-color: var(--teal) }
+.tl-item.active .tl-dot { background: var(--rust); border-color: var(--rust); box-shadow: 0 0 0 3px var(--rust-bg) }
+.tl-title { font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; gap: 8px }
+.tl-body { font-size: 0.75rem; color: var(--ink2); margin-top: 3px }
+.tl-body ul { padding-left: 16px; margin-top: 2px }
+.tl-body li { margin-bottom: 1px }
 
-/* Confidence bar */
-.conf-bar{display:flex;align-items:center;gap:8px}
-.conf-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;max-width:120px}
-.conf-fill{height:100%;background:var(--green);border-radius:3px}
-.conf-val{font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:500}
+/* ---- TABLE ---- */
+.tbl { width: 100%; border-collapse: collapse; font-size: 0.75rem }
+.tbl th { text-align: left; font-weight: 600; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); padding: 6px 10px; border-bottom: 2px solid var(--rule) }
+.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--paper2); vertical-align: top; color: var(--ink2) }
+.tbl tr:last-child td { border-bottom: none }
+.tbl td:first-child { color: var(--ink); font-weight: 500 }
 
-/* Cross-ref */
-.xref{color:var(--navy2);font-weight:500;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
-.xref:hover{color:var(--accent)}
+/* ---- SEARCH RESULTS ---- */
+.search-results { padding: 32px 0 }
+.sr-item { padding: 10px 0; border-bottom: 1px solid var(--paper2) }
+.sr-item:last-child { border-bottom: none }
+.sr-path { font-family: var(--mono); font-size: 0.65rem; color: var(--ink3) }
+.sr-val { font-size: 0.78rem; color: var(--ink2); margin-top: 2px }
+.sr-val mark { background: var(--rust-bg); color: var(--rust); padding: 0 2px; border-radius: 1px }
 
-/* List items */
-.list-item{padding:8px 12px;border-bottom:1px solid var(--bg2);font-size:0.78rem}
-.list-item:last-child{border-bottom:none}
-.list-num{display:inline-block;width:22px;color:var(--text3);font-size:0.68rem;font-weight:600}
+/* ---- DETAIL TOGGLE ---- */
+details { margin-top: 8px }
+details summary {
+  font-size: 0.72rem; color: var(--ink3); cursor: pointer; user-select: none;
+  font-weight: 500; list-style: none;
+}
+details summary::before { content: '+ '; font-family: var(--mono) }
+details[open] summary::before { content: '- ' }
+details .detail-body { margin-top: 6px; padding-left: 12px; border-left: 1px solid var(--rule); font-size: 0.75rem; color: var(--ink2) }
 
-/* Search highlight */
-mark{background:var(--accent2);color:var(--accent);padding:0 2px;border-radius:2px}
+/* ---- PERSONA CARDS ---- */
+.persona-card .persona-detail { display: none; }
+.persona-card.expanded .persona-detail { display: block; }
+.persona-card.expanded .persona-chevron { transform: rotate(180deg); }
+.persona-header:hover { opacity: 0.8 }
 
-/* Empty state */
-.empty{text-align:center;padding:60px 20px;color:var(--text3)}
-.empty .icon{font-size:2rem;margin-bottom:8px}
+.jtbd-block { background: var(--paper2); border-radius: var(--r); padding: 10px 12px }
+.jtbd-row { display: flex; gap: 8px; padding: 3px 0; font-size: 0.75rem }
+.jtbd-label { flex-shrink: 0; width: 60px; font-weight: 600; color: var(--ink3); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.04em; padding-top: 1px }
+.jtbd-text { color: var(--ink2) }
 
-/* Mobile */
-@media(max-width:768px){
-  .sidebar{position:fixed;left:-260px;top:0;bottom:0;z-index:99;transition:left 0.2s;padding-top:52px}
-  .sidebar.open{left:0;box-shadow:4px 0 20px rgba(0,0,0,0.15)}
-  .menu-toggle{display:block}
-  .search-box{width:160px}
-  .main{padding:14px}
-  .stats{padding:6px 14px;gap:12px}
+.evidence-row { display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--paper2); font-size: 0.73rem }
+.evidence-row:last-child { border-bottom: none }
+.evidence-source { flex-shrink: 0; width: 200px; font-family: var(--mono); font-size: 0.65rem; color: var(--ink3); word-break: break-all }
+.evidence-finding { color: var(--ink2) }
+@media(max-width:640px){
+  .evidence-row { flex-direction: column; gap: 2px }
+  .evidence-source { width: auto }
+  .jtbd-row { flex-direction: column; gap: 2px }
+  .jtbd-label { width: auto }
+}
+
+/* ---- MISC ---- */
+.mono { font-family: var(--mono) }
+.muted { color: var(--ink3) }
+.accent { color: var(--rust) }
+.text-sm { font-size: 0.75rem }
+.text-xs { font-size: 0.68rem }
+.mt-16 { margin-top: 16px }
+.mt-8 { margin-top: 8px }
+.mb-8 { margin-bottom: 8px }
+.hidden { display: none }
+
+@media(max-width:640px){
+  .topnav { padding: 0 12px; gap: 12px }
+  .topnav-links a { padding: 6px 6px; font-size: 0.68rem }
+  .topnav-search input { width: 120px }
+  .wrap { padding: 0 16px }
+  .hero .mantra { font-size: 1.4rem }
+  .hero-stats { gap: 20px }
+  section { padding: 32px 0 24px }
 }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#9776;</button>
-  <img src="yak-icon.png" alt="Yak">
-  <h1>YAK ROBOTICS <span>Product Ontology v2.0</span></h1>
-  <div class="search-box">
-    <input type="text" id="search" placeholder="Search everything..." oninput="doSearch(this.value)">
-  </div>
-</div>
+<nav class="topnav">
+  <div class="topnav-brand"><img src="yak-icon.png" alt=""><span>YAK ROBOTICS</span></div>
+  <div class="topnav-links" id="nav"></div>
+  <div class="topnav-search"><input type="text" id="search" placeholder="Search..." oninput="doSearch(this.value)"></div>
+</nav>
 
-<div class="stats" id="stats"></div>
-
-<div class="layout">
-  <nav class="sidebar" id="sidebar"></nav>
-  <main class="main" id="main">
-    <div class="empty"><div class="icon">&#128203;</div>Loading product ontology...</div>
-  </main>
+<div id="app">
+  <div class="wrap" style="padding:80px 24px;text-align:center;color:var(--ink3)">Loading product ontology...</div>
 </div>
 
 <script>
-var DATA=null;
-var CURRENT_KEY=null;
+var D = null;
 
-var NAV_GROUPS=[
-  {label:'Overview',icon:'&#128200;',keys:['meta','executive_summary','vision','mantra','essence']},
-  {label:'Strategy',icon:'&#127919;',keys:['bet_chain','validation_register','unknowns']},
-  {label:'Users',icon:'&#128101;',keys:['personas','journeys','demo_screen_map']},
-  {label:'Market',icon:'&#127758;',keys:['market','supply_side','gtm']},
-  {label:'Legal',icon:'&#9878;',keys:['legal','constitutional']},
-  {label:'Technical',icon:'&#9881;',keys:['architecture','features','transfer_map','roadmap']},
-  {label:'Reference',icon:'&#128218;',keys:['types','relationships','glossary','feedback_synthesis']},
-  {label:'Meta',icon:'&#128300;',keys:['talisman_metadata','usage']}
+var SECTIONS = [
+  { id:'overview', label:'Overview' },
+  { id:'bets', label:'Bets' },
+  { id:'users', label:'Users' },
+  { id:'market', label:'Market' },
+  { id:'roadmap', label:'Roadmap' },
+  { id:'equipment', label:'Equipment' },
+  { id:'payment', label:'Payment' },
+  { id:'risks', label:'Risks' },
 ];
 
-var KEY_ICONS={meta:'&#128196;',executive_summary:'&#128161;',vision:'&#127775;',mantra:'&#128172;',essence:'&#128142;',
-bet_chain:'&#127922;',validation_register:'&#128300;',unknowns:'&#10067;',
-personas:'&#128100;',journeys:'&#128736;',demo_screen_map:'&#128187;',
-market:'&#128200;',supply_side:'&#128230;',gtm:'&#128640;',
-legal:'&#9878;',constitutional:'&#128737;',
-architecture:'&#9881;',features:'&#10004;',transfer_map:'&#127761;',roadmap:'&#128197;',
-types:'&#128288;',relationships:'&#128279;',glossary:'&#128214;',feedback_synthesis:'&#128172;',
-talisman_metadata:'&#128142;',usage:'&#128214;'};
-
-// Fetch and parse
-fetch('product.yaml').then(r=>r.text()).then(function(txt){
-  DATA=jsyaml.load(txt);
-  renderSidebar();
-  renderStats(txt);
-  showSection('executive_summary');
+fetch('product.yaml').then(r=>r.text()).then(function(t){
+  D = jsyaml.load(t);
+  buildNav();
+  render();
 }).catch(function(e){
-  document.getElementById('main').innerHTML='<div class="empty"><div class="icon">&#9888;</div>Failed to load: '+e.message+'</div>';
+  document.getElementById('app').innerHTML='<div class="wrap" style="padding:80px 24px;text-align:center;color:#b91c1c">Failed to load: '+esc(e.message)+'</div>';
 });
 
-function renderStats(txt){
-  var lines=txt.split('\n').length;
-  var keys=Object.keys(DATA).length;
-  var bets=DATA.bet_chain&&DATA.bet_chain.bets?DATA.bet_chain.bets.length:0;
-  var unknowns=DATA.unknowns&&DATA.unknowns.register?DATA.unknowns.register.length:0;
-  var personas=Array.isArray(DATA.personas)?DATA.personas.length:0;
-  var features=Array.isArray(DATA.features)?DATA.features.length:0;
-  var journeys=Array.isArray(DATA.journeys)?DATA.journeys.length:0;
-  document.getElementById('stats').innerHTML=
-    '<div class="stat"><strong>'+lines.toLocaleString()+'</strong>lines</div>'+
-    '<div class="stat"><strong>'+keys+'</strong>root keys</div>'+
-    '<div class="stat"><strong>'+bets+'</strong>bets</div>'+
-    '<div class="stat"><strong>'+unknowns+'</strong>unknowns</div>'+
-    '<div class="stat"><strong>'+personas+'</strong>personas</div>'+
-    '<div class="stat"><strong>'+journeys+'</strong>journeys</div>'+
-    '<div class="stat"><strong>'+features+'</strong>features</div>';
-}
-
-function renderSidebar(){
-  var html='';
-  NAV_GROUPS.forEach(function(g){
-    html+='<div class="nav-group"><div class="nav-group-label">'+g.label+'</div>';
-    g.keys.forEach(function(k){
-      if(DATA[k]!==undefined){
-        var icon=KEY_ICONS[k]||'&#128196;';
-        html+='<div class="nav-item" data-key="'+k+'" onclick="showSection(\''+k+'\')"><span class="nav-icon">'+icon+'</span>'+formatKeyName(k)+'</div>';
+function buildNav(){
+  var h='';
+  SECTIONS.forEach(function(s){
+    h+='<a href="#'+s.id+'">'+s.label+'</a>';
+  });
+  document.getElementById('nav').innerHTML=h;
+  // Scroll spy
+  var links=document.querySelectorAll('.topnav-links a');
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        links.forEach(function(l){l.classList.toggle('active',l.getAttribute('href')==='#'+en.target.id)});
       }
     });
-    html+='</div>';
+  },{rootMargin:'-48px 0px -70% 0px'});
+  // Will observe after render
+  setTimeout(function(){
+    SECTIONS.forEach(function(s){
+      var el=document.getElementById(s.id);
+      if(el) obs.observe(el);
+    });
+  },100);
+}
+
+function render(){
+  var h='';
+  h+=renderHero();
+  h+='<div class="wrap">';
+  h+=renderOverview();
+  h+=renderBets();
+  h+=renderUsers();
+  h+=renderMarket();
+  h+=renderRoadmap();
+  h+=renderEquipment();
+  h+=renderPayment();
+  h+=renderRisks();
+  h+='</div>';
+  document.getElementById('app').innerHTML=h;
+}
+
+// ---- HERO ----
+function renderHero(){
+  var v=D.vision||{};
+  var es=D.executive_summary||{};
+  return '<div class="hero"><div class="wrap">'+
+    '<div class="mantra">'+ esc(es.one_line || v.north_star || '') +'</div>'+
+    '<div class="tagline">'+ esc(v.tagline||'') +'</div>'+
+  '</div></div>';
+}
+function stat(n,l){ return '<div class="hero-stat"><div class="num">'+n+'</div><div class="lbl">'+l+'</div></div>' }
+
+// ---- OVERVIEW ----
+function renderOverview(){
+  var es=D.executive_summary||{};
+  var v=D.vision||{};
+  var h='<section id="overview">';
+  h+='<div class="sec-label">Overview</div>';
+  h+='<div class="sec-title">What is this?</div>';
+  h+='<div class="sec-sub">'+esc((es.central_answer||[])[0]||'')+'</div>';
+
+  // Three problems
+  h+='<div class="g3">';
+  (es.core_problem||[]).forEach(function(p){
+    h+='<div class="card card-sm"><p>'+esc(p)+'</p></div>';
   });
-  document.getElementById('sidebar').innerHTML=html;
-}
+  h+='</div>';
 
-function formatKeyName(k){
-  return k.replace(/_/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase()});
-}
-
-function showSection(key){
-  CURRENT_KEY=key;
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.key===key)});
-  document.querySelector('.sidebar').classList.remove('open');
-  var val=DATA[key];
-  var icon=KEY_ICONS[key]||'&#128196;';
-  var html='<div class="section-title">'+icon+' '+formatKeyName(key)+'</div>';
-  html+='<div class="section-desc">'+getDesc(key)+'</div>';
-  html+=renderValue(val,0);
-  document.getElementById('main').innerHTML=html;
-  document.getElementById('main').scrollTop=0;
-  // Open first card
-  var first=document.querySelector('.main .card');
-  if(first)first.classList.add('open');
-}
-
-function getDesc(key){
-  var descs={
-    meta:'Project identity and schema metadata',
-    executive_summary:'The compressed core — read this in 30 seconds',
-    vision:'North star, thesis, and positioning',
-    mantra:'One-line anchor statement',
-    essence:'What this document is',
-    bet_chain:'Dependent strategic bets with confidence and falsification conditions',
-    validation_register:'Experiments designed to test the foundational bets',
-    unknowns:'Things we don\'t know, with severity and resolution deadlines',
-    personas:'Every user type including AI agents',
-    journeys:'Pipeline-stage model with actor handoffs',
-    demo_screen_map:'Every screen in the live demo mapped to entities',
-    market:'Competitive landscape, TAM, wedge logic, geographies, partnerships',
-    supply_side:'Operator economics, equipment catalog, onboarding',
-    gtm:'Go-to-market: first customers, channels, messaging',
-    legal:'Contracts, bonds, insurance, compliance — moats vs overhead',
-    constitutional:'System invariants, policies, and agent governance rules',
-    architecture:'Product capabilities, MCP tools, settlement, execution stack',
-    features:'12 features for v1.5 with IDs and status',
-    transfer_map:'Earth → Lunar capability transfer matrix',
-    roadmap:'Phases and condition-gated milestones',
-    types:'Closed enums and type definitions for schema consistency',
-    relationships:'Typed edges between entities across domains',
-    glossary:'Domain terms defined for LLM and human clarity',
-    feedback_synthesis:'Key findings from 21 feedback documents',
-    talisman_metadata:'Self-description per thejaymo.net Knowledge Object patterns',
-    usage:'How to use this document'
-  };
-  return descs[key]||'';
-}
-
-function renderValue(val,depth){
-  if(val===null||val===undefined) return '<span class="text3">null</span>';
-  if(typeof val==='string') return renderString(val);
-  if(typeof val==='number') return renderNumber(val);
-  if(typeof val==='boolean') return '<span class="badge '+(val?'badge-green':'badge-gray')+'">'+(val?'true':'false')+'</span>';
-  if(Array.isArray(val)) return renderArray(val,depth);
-  if(typeof val==='object') return renderObject(val,depth);
-  return String(val);
-}
-
-function renderString(s){
-  // Check for cross-references
-  if(s.match(/^(persona|bet|equipment|phase|feature|journey|unknown|component|cap|pol|inv):/)){
-    return '<span class="xref" onclick="jumpToRef(\''+s+'\')">'+esc(s)+'</span>';
+  // Thesis
+  if(v.thesis){
+    h+='<div class="card mt-16"><h3>Thesis <span class="badge b-next">Confidence '+Math.round((v.thesis.confidence||0)*100)+'%</span></h3>';
+    h+='<p>'+esc(v.thesis.claim||'')+'</p>';
+    if(v.thesis.evidence){
+      h+='<details><summary>Evidence</summary><div class="detail-body"><ul>';
+      v.thesis.evidence.forEach(function(e){ h+='<li>'+esc(e)+'</li>' });
+      h+='</ul></div></details>';
+    }
+    h+='</div>';
   }
-  // Check for status values
-  if(s==='implemented') return '<span class="badge badge-green">IMPLEMENTED</span>';
-  if(s==='planned') return '<span class="badge badge-blue">PLANNED</span>';
-  if(s==='gap'||s==='blocked') return '<span class="badge badge-red">'+s.toUpperCase()+'</span>';
-  if(s==='high'||s==='critical') return '<span class="badge badge-red">'+s.toUpperCase()+'</span>';
-  if(s==='medium') return '<span class="badge badge-amber">MEDIUM</span>';
-  if(s==='low') return '<span class="badge badge-green">LOW</span>';
-  return '<span>'+esc(s)+'</span>';
-}
 
-function renderNumber(n){
-  // Confidence values
-  if(n>=0&&n<=1&&n!==0&&n!==1){
-    var pct=Math.round(n*100);
-    return '<div class="conf-bar"><div class="conf-track"><div class="conf-fill" style="width:'+pct+'%"></div></div><span class="conf-val">'+pct+'%</span></div>';
+  // Positioning
+  if(v.positioning){
+    h+='<div class="mt-16 mb-8" style="font-size:0.82rem;font-weight:600">Positioning vs. Adjacents</div>';
+    h+='<table class="tbl"><thead><tr><th>Competitor</th><th>Distinction</th></tr></thead><tbody>';
+    var pos=v.positioning;
+    Object.keys(pos).forEach(function(k){
+      if(k==='sources'||k==='direct_competitors') return;
+      h+='<tr><td>'+esc(k.replace(/^vs_/,'').replace(/_/g,' '))+'</td><td>'+esc(pos[k])+'</td></tr>';
+    });
+    h+='</tbody></table>';
   }
-  return '<span class="mono">'+n+'</span>';
+
+  h+='</section>';
+  return h;
 }
 
-function renderArray(arr,depth){
-  if(arr.length===0) return '<span class="text3">[]</span>';
-  // Simple string array
-  if(arr.every(function(x){return typeof x==='string'})){
-    return '<div>'+arr.map(function(s,i){return '<div class="list-item"><span class="list-num">'+(i+1)+'.</span> '+renderString(s)+'</div>'}).join('')+'</div>';
-  }
-  // Object array — each as a card
-  return arr.map(function(item,i){
-    var label=item.id||item.name||item.title||item.claim||item.rule||('Item '+(i+1));
-    if(typeof label==='string'&&label.length>80) label=label.substring(0,77)+'...';
-    var id=item.id||'';
-    var statusBadge='';
-    if(item.status) statusBadge=' '+renderString(item.status);
-    if(item.severity) statusBadge=' '+renderString(item.severity);
-    return '<div class="card"><div class="card-header" onclick="this.parentElement.classList.toggle(\'open\')">'+
-      (id?'<span class="badge badge-gray">'+esc(id)+'</span> ':'')+
-      '<span>'+esc(typeof label==='string'?label:String(label))+'</span>'+statusBadge+
-      '<span class="chevron">&#9654;</span></div>'+
-      '<div class="card-body">'+renderObject(item,depth+1)+'</div></div>';
-  }).join('');
-}
+// ---- BETS ----
+function renderBets(){
+  var bc=D.bet_chain||{};
+  var bets=bc.bets||[];
+  var h='<section id="bets">';
+  h+='<div class="sec-label">Strategy</div>';
+  h+='<div class="sec-title">Bet Chain</div>';
+  h+='<div class="sec-sub">Dependent strategic bets. Each must hold for the next to matter.</div>';
 
-function renderObject(obj,depth){
-  var keys=Object.keys(obj);
-  if(keys.length===0) return '<span class="text3">{}</span>';
-  var html='';
-  keys.forEach(function(k){
-    var v=obj[k];
-    // Special rendering for gravity_effect
-    if(k==='gravity_effect'&&typeof v==='string'){
-      html+='<div class="gravity">&#9888; '+esc(v)+'</div>';
-      return;
+  bets.forEach(function(b){
+    var pct=Math.round((b.confidence||0)*100);
+    h+='<div class="card" style="margin-bottom:10px">';
+    h+='<h3>'+esc(shortId(b.id||''))+'</h3>';
+    h+='<p>'+esc(b.claim||'')+'</p>';
+    h+='<div class="conf"><div class="conf-track"><div class="conf-fill" style="width:'+pct+'%"></div></div><span class="conf-pct">'+pct+'%</span></div>';
+    if(b.depends_on&&b.depends_on.length){
+      h+='<div class="meta">Depends on: '+b.depends_on.map(function(d){return esc(shortId(d))}).join(', ')+'</div>';
     }
-    // Special rendering for confidence
-    if(k==='confidence'&&typeof v==='number'){
-      html+='<div class="kv"><div class="kv-key">'+esc(k)+'</div><div class="kv-val">'+renderNumber(v)+'</div></div>';
-      return;
+    if(b.enables&&b.enables.length){
+      h+='<div class="meta">Enables: '+b.enables.map(function(d){return esc(shortId(d))}).join(', ')+'</div>';
     }
-    // Nested objects/arrays — sub-card
-    if(typeof v==='object'&&v!==null&&!Array.isArray(v)&&Object.keys(v).length>3&&depth<3){
-      html+='<div class="card"><div class="card-header" onclick="this.parentElement.classList.toggle(\'open\')">'+
-        '<span>'+formatKeyName(k)+'</span><span class="badge badge-gray">'+Object.keys(v).length+' keys</span>'+
-        '<span class="chevron">&#9654;</span></div>'+
-        '<div class="card-body">'+renderObject(v,depth+1)+'</div></div>';
-      return;
-    }
-    if(Array.isArray(v)&&v.length>0&&typeof v[0]==='object'){
-      html+='<div class="card"><div class="card-header" onclick="this.parentElement.classList.toggle(\'open\')">'+
-        '<span>'+formatKeyName(k)+'</span><span class="badge badge-gray">'+v.length+' items</span>'+
-        '<span class="chevron">&#9654;</span></div>'+
-        '<div class="card-body">'+renderArray(v,depth+1)+'</div></div>';
-      return;
-    }
-    // Simple key-value
-    html+='<div class="kv"><div class="kv-key">'+esc(k)+'</div><div class="kv-val">'+renderValue(v,depth+1)+'</div></div>';
+    h+='<details><summary>Evidence &amp; falsification</summary><div class="detail-body">';
+    if(b.evidence_for){h+='<div class="mb-8"><strong style="font-size:0.7rem">For:</strong><ul>';b.evidence_for.forEach(function(e){h+='<li>'+esc(e)+'</li>'});h+='</ul></div>';}
+    if(b.evidence_against){h+='<div class="mb-8"><strong style="font-size:0.7rem">Against:</strong><ul>';b.evidence_against.forEach(function(e){h+='<li>'+esc(e)+'</li>'});h+='</ul></div>';}
+    if(b.falsified_by) h+='<div class="mb-8"><strong style="font-size:0.7rem">Falsified by:</strong> '+esc(b.falsified_by)+'</div>';
+    if(b.validated_by) h+='<div><strong style="font-size:0.7rem">Validated by:</strong> '+esc(b.validated_by)+'</div>';
+    h+='</div></details>';
+    h+='</div>';
   });
-  return html;
+
+  h+='</section>';
+  return h;
 }
 
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+// ---- USERS ----
+function renderUsers(){
+  var personas=D.personas||[];
+  var h='<section id="users">';
+  h+='<div class="sec-label">Users</div>';
+  h+='<div class="sec-title">Who is this for?</div>';
+  h+='<div class="sec-sub">Every feature traces back to one of these personas.</div>';
 
-function jumpToRef(ref){
-  var parts=ref.split(':');
-  if(parts.length<2) return;
-  var domain=parts[0];
-  // Map domain to root key
-  var keyMap={persona:'personas',bet:'bet_chain',equipment:'supply_side',phase:'roadmap',
-    feature:'features',journey:'journeys',unknown:'unknowns',component:'architecture',
-    cap:'architecture',pol:'constitutional',inv:'constitutional'};
-  var rootKey=keyMap[domain];
-  if(rootKey&&DATA[rootKey]) showSection(rootKey);
+  personas.forEach(function(p){
+    var phaseLabel='';
+    if(p.phase){
+      var ps=p.phase.replace('phase:','');
+      var built=ps==='v1.0'||ps==='v1.1'||ps==='v1.2'||ps==='v1.3';
+      phaseLabel=' <span class="badge '+(built?'b-built':'b-future')+'">'+esc(ps)+'</span>';
+    }
+    var roleLabel=' <span class="badge" style="background:var(--slate-bg);color:var(--slate)">'+esc(p.role||'')+'</span>';
+
+    h+='<div class="card persona-card" style="margin-bottom:10px">';
+
+    // Header row — always visible
+    h+='<div class="persona-header" onclick="this.parentElement.classList.toggle(\'expanded\')" style="cursor:pointer;display:flex;align-items:baseline;gap:8px">';
+    h+='<h3 style="flex:1">'+esc(p.name||'')+roleLabel+phaseLabel+'</h3>';
+    h+='<span class="persona-chevron" style="font-size:0.65rem;color:var(--ink3);transition:transform 0.15s">&#9660;</span>';
+    h+='</div>';
+
+    // Summary line — always visible
+    var summary='';
+    if(p.pain) summary=p.pain;
+    else if(typeof p.jtbd==='string') summary=p.jtbd;
+    else if(Array.isArray(p.jtbd)&&p.jtbd[0]&&p.jtbd[0].motivation) summary=p.jtbd[0].motivation;
+    if(summary) h+='<p class="mt-8" style="font-size:0.78rem;color:var(--ink2)">'+esc(summary)+'</p>';
+
+    // Expandable detail
+    h+='<div class="persona-detail">';
+
+    if(p.company) h+='<div class="text-xs mt-8" style="color:var(--ink3)">'+esc(p.company)+'</div>';
+
+    // JTBD structured
+    var jobs=Array.isArray(p.jtbd)?p.jtbd:(typeof p.jtbd==='string'?[{situation:p.jtbd}]:[]);
+    jobs.forEach(function(j){
+      if(!j.situation&&!j.motivation&&!j.outcome) return;
+      h+='<div class="jtbd-block mt-16">';
+      if(j.situation) h+='<div class="jtbd-row"><span class="jtbd-label">When</span><span class="jtbd-text">'+esc(j.situation)+'</span></div>';
+      if(j.motivation) h+='<div class="jtbd-row"><span class="jtbd-label">I want to</span><span class="jtbd-text">'+esc(j.motivation)+'</span></div>';
+      if(j.outcome) h+='<div class="jtbd-row"><span class="jtbd-label">So that</span><span class="jtbd-text">'+esc(j.outcome)+'</span></div>';
+      h+='</div>';
+    });
+
+    // Capabilities (agent)
+    if(p.capabilities&&p.capabilities.length){
+      h+='<div class="mt-16"><div class="text-xs" style="font-weight:600;color:var(--ink3);margin-bottom:4px">CAPABILITIES</div><ul style="padding-left:16px;font-size:0.75rem;color:var(--ink2)">';
+      p.capabilities.forEach(function(c){ h+='<li>'+esc(c)+'</li>' });
+      h+='</ul></div>';
+    }
+
+    // Failure modes (agent)
+    if(p.failure_modes&&p.failure_modes.length){
+      h+='<div class="mt-8"><div class="text-xs" style="font-weight:600;color:var(--ink3);margin-bottom:4px">FAILURE MODES</div><ul style="padding-left:16px;font-size:0.75rem;color:var(--ink2)">';
+      p.failure_modes.forEach(function(f){ h+='<li>'+esc(f)+'</li>' });
+      h+='</ul></div>';
+    }
+
+    // Authorization (agent)
+    if(p.authorization){
+      var a=p.authorization;
+      h+='<div class="mt-8"><div class="text-xs" style="font-weight:600;color:var(--ink3);margin-bottom:4px">AUTHORIZATION</div>';
+      h+='<div style="font-size:0.75rem;color:var(--ink2)">Spending limit: $'+Number(a.spending_limit_per_task_usd||0).toLocaleString()+'/task. Auto-approve under $'+Number(a.auto_approve_under_usd||0).toLocaleString()+'. Configured by '+esc(shortId(a.configurable_by||''))+'.</div></div>';
+    }
+
+    // Equipment
+    if(p.equipment&&p.equipment.length){
+      h+='<div class="mt-8"><div class="text-xs" style="font-weight:600;color:var(--ink3);margin-bottom:4px">EQUIPMENT</div>';
+      h+='<div style="font-size:0.75rem;color:var(--ink2)">'+p.equipment.map(function(e){return esc(shortId(e))}).join(', ')+'</div></div>';
+    }
+
+    // Evidence with source links
+    if(p.evidence&&p.evidence.length){
+      h+='<div class="mt-16"><div class="text-xs" style="font-weight:600;color:var(--ink3);margin-bottom:6px">EVIDENCE</div>';
+      p.evidence.forEach(function(e){
+        h+='<div class="evidence-row"><span class="evidence-source">'+esc(e.source||'')+'</span><span class="evidence-finding">'+esc(e.finding||'')+'</span></div>';
+      });
+      h+='</div>';
+    }
+
+    // Sources
+    if(p.sources&&p.sources.length){
+      h+='<div class="mt-8"><div class="text-xs muted">Sources: '+p.sources.map(function(s){return esc(s.path||'')}).join(', ')+'</div></div>';
+    }
+
+    h+='</div>'; // .persona-detail
+    h+='</div>'; // .card
+  });
+
+  h+='</section>';
+  return h;
 }
 
+// ---- MARKET ----
+function renderMarket(){
+  var m=D.market||{};
+  var w=m.wedge||{};
+  var cl=m.competitive_landscape||{};
+  var g=D.gtm||{};
+  var h='<section id="market">';
+  h+='<div class="sec-label">Market</div>';
+  h+='<div class="sec-title">Construction Site Surveying</div>';
+  h+='<div class="sec-sub">'+esc(g.messaging&&g.messaging.to_buyers||'')+'</div>';
+
+  // TAM
+  h+='<div class="g3 mb-8">';
+  if(w.tam) h+='<div class="card card-sm"><div class="text-xs muted mb-8">TAM</div><div style="font-size:1.2rem;font-weight:700;color:var(--rust)">'+fmtUSD(w.tam.amount_usd)+'</div><div class="text-xs muted">'+esc(w.tam.description||'')+'</div></div>';
+  if(w.wedge_tam) h+='<div class="card card-sm"><div class="text-xs muted mb-8">Wedge TAM</div><div style="font-size:1.2rem;font-weight:700;color:var(--rust)">'+fmtUSD(w.wedge_tam.amount_usd)+'</div><div class="text-xs muted">'+esc(w.wedge_tam.description||'')+'</div></div>';
+  if(w.raas_market) h+='<div class="card card-sm"><div class="text-xs muted mb-8">RaaS Market</div><div style="font-size:1.2rem;font-weight:700;color:var(--rust)">'+fmtUSD(w.raas_market.amount_usd)+'</div><div class="text-xs muted">'+w.raas_market.cagr_pct+'% CAGR to '+fmtUSD(w.raas_market.projected_usd)+' ('+w.raas_market.projected_year+')</div></div>';
+  h+='</div>';
+
+  // Competitors
+  var adj=cl.closest_adjacents||[];
+  if(adj.length){
+    h+='<div class="mt-16 mb-8" style="font-size:0.82rem;font-weight:600">Competitive Landscape <span class="text-xs muted" style="font-weight:400;text-transform:none"> &mdash; No direct competitor exists</span></div>';
+    h+='<table class="tbl"><thead><tr><th>Company</th><th>Model</th><th>Threat</th></tr></thead><tbody>';
+    adj.forEach(function(c){
+      var tb=c.threat==='high'?'b-high':(c.threat==='medium'?'b-med':'b-low');
+      h+='<tr><td>'+esc(c.name||'')+'</td><td>'+esc(c.model||'')+'</td><td><span class="badge '+tb+'">'+esc(c.threat||'')+'</span></td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+
+  // Geos
+  var geos=m.geographies||{};
+  if(geos.primary&&geos.primary.length){
+    h+='<div class="mt-16 mb-8" style="font-size:0.82rem;font-weight:600">Target Geographies</div>';
+    h+='<div class="g2">';
+    geos.primary.forEach(function(g){
+      h+='<div class="card card-sm"><h3>'+esc(g.state||'')+' <span class="badge b-built">Primary</span></h3>';
+      if(g.cities) h+='<p>'+g.cities.map(esc).join(', ')+'</p>';
+      if(g.rationale) h+='<div class="meta">'+esc(g.rationale)+'</div>';
+      h+='</div>';
+    });
+    (geos.secondary||[]).forEach(function(g){
+      h+='<div class="card card-sm"><h3>'+esc(g.state||'')+' <span class="badge b-future">Secondary</span></h3>';
+      if(g.cities) h+='<p>'+g.cities.map(esc).join(', ')+'</p>';
+      if(g.rationale) h+='<div class="meta">'+esc(g.rationale)+'</div>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+
+  h+='</section>';
+  return h;
+}
+
+// ---- ROADMAP ----
+function renderRoadmap(){
+  var rm=D.roadmap||{};
+  var phases=rm.phases||[];
+  var h='<section id="roadmap">';
+  h+='<div class="sec-label">Roadmap</div>';
+  h+='<div class="sec-title">Build Sequence</div>';
+  h+='<div class="sec-sub">Each phase is gated by conditions, not dates.</div>';
+
+  h+='<div class="timeline">';
+  phases.forEach(function(p){
+    var done=p.status==='built';
+    var next=p.status==='next';
+    var cls=done?'done':(next?'active':'');
+    var sb=done?'b-built':(next?'b-next':'b-future');
+    h+='<div class="tl-item '+cls+'">';
+    h+='<div class="tl-dot"></div>';
+    h+='<div class="tl-title">'+esc(p.id?p.id.replace('phase:',''):'')+' &mdash; '+esc(p.label||'')+' <span class="badge '+sb+'">'+esc(p.status||'')+'</span></div>';
+    h+='<div class="tl-body">';
+    if(p.timeline) h+='<div class="muted">'+esc(p.timeline)+'</div>';
+    if(p.date) h+='<div class="muted">Completed '+esc(p.date)+'</div>';
+    if(p.entry_gate) h+='<div style="margin-top:3px"><strong style="font-size:0.7rem">Gate:</strong> '+esc(p.entry_gate)+'</div>';
+    var caps=p.capabilities_unlocked||[];
+    if(caps.length){
+      h+='<details><summary>'+caps.length+' capabilities</summary><div class="detail-body"><ul>';
+      caps.forEach(function(c){ h+='<li>'+esc(c)+'</li>' });
+      h+='</ul></div></details>';
+    }
+    h+='</div></div>';
+  });
+  h+='</div>';
+
+  h+='</section>';
+  return h;
+}
+
+// ---- EQUIPMENT ----
+function renderEquipment(){
+  var ss=D.supply_side||{};
+  var catalog=ss.equipment_catalog||[];
+  var econ=ss.economics||{};
+  var h='<section id="equipment">';
+  h+='<div class="sec-label">Supply Side</div>';
+  h+='<div class="sec-title">Equipment Catalog</div>';
+  h+='<div class="sec-sub">Real platforms and sensors with verified specs and pricing.</div>';
+
+  if(catalog.length){
+    h+='<table class="tbl"><thead><tr><th>Platform</th><th>Type</th><th>Price</th><th>Key Spec</th></tr></thead><tbody>';
+    catalog.forEach(function(e){
+      var price='';
+      if(e.price) price=fmtUSD(e.price.min_usd)+' &ndash; '+fmtUSD(e.price.max_usd);
+      var spec='';
+      if(e.flight_time_min) spec=e.flight_time_min+'min flight';
+      else if(e.accuracy_h_cm) spec=e.accuracy_h_cm+'cm H / '+e.accuracy_v_cm+'cm V';
+      else if(e.lidar_range_m) spec='LiDAR '+e.lidar_range_m+'m';
+      else if(e.resolution_mp) spec=e.resolution_mp+'MP';
+      else if(e.runtime_min) spec=e.runtime_min+'min runtime, '+e.payload_kg+'kg payload';
+      h+='<tr><td>'+esc((e.manufacturer||'')+' '+(e.model||''))+'</td><td>'+esc(e.type||'')+'</td><td class="mono">'+price+'</td><td>'+esc(spec)+'</td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+
+  // Operator tiers
+  var tiers=[econ.tier_1_budget, econ.tier_2_professional, econ.tier_3_multi_sensor].filter(Boolean);
+  if(tiers.length){
+    h+='<div class="mt-16 mb-8" style="font-size:0.82rem;font-weight:600">Operator Economics</div>';
+    h+='<div class="g3">';
+    tiers.forEach(function(t){
+      h+='<div class="card card-sm">';
+      h+='<h3>'+esc(t.label||'')+'</h3>';
+      h+='<div style="font-size:1rem;font-weight:700;color:var(--rust)">'+esc(t.all_in_cost_usd||'')+'</div>';
+      h+='<p>'+esc(t.equipment||'')+'</p>';
+      h+='<div class="meta">Revenue: '+esc(t.monthly_revenue_range_usd||'')+'/mo &middot; Breakeven: '+esc(t.breakeven_months||'')+' months</div>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+
+  h+='</section>';
+  return h;
+}
+
+// ---- PAYMENT ----
+function renderPayment(){
+  var arch=D.architecture||{};
+  var sett=arch.settlement||{};
+  var modes=sett.modes||[];
+  var split=sett.payment_split||{};
+  var vp=(D.supply_side||{}).value_propositions||[];
+  var h='<section id="payment">';
+  h+='<div class="sec-label">Settlement</div>';
+  h+='<div class="sec-title">How Money Moves</div>';
+  h+='<div class="sec-sub">Three payment methods. Buyer commits at hire, operator gets paid on verified delivery.</div>';
+
+  // Payment split
+  if(split.mechanism){
+    h+='<div class="card mb-8"><h3>Payment Model</h3>';
+    h+='<p>'+esc(split.mechanism)+'</p>';
+    h+='</div>';
+  }
+
+  // Settlement modes
+  if(modes.length){
+    h+='<table class="tbl"><thead><tr><th>Mode</th><th>Timing</th><th>Privacy</th><th>Chain</th><th>Version</th></tr></thead><tbody>';
+    modes.forEach(function(m){
+      var ver=m.version_implemented||m.version_designed||'--';
+      var sb=m.version_implemented?'b-built':'b-future';
+      h+='<tr><td>'+esc(shortId(m.id||''))+'</td><td>'+esc(m.timing||'')+'</td><td>'+esc(m.privacy||'')+'</td><td>'+esc(m.chain||'TBD')+'</td><td><span class="badge '+sb+'">'+esc(ver)+'</span></td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+
+  // Value props
+  if(vp.length){
+    h+='<div class="mt-16 mb-8" style="font-size:0.82rem;font-weight:600">Operator Value Propositions</div>';
+    vp.forEach(function(v){
+      h+='<div class="card" style="margin-bottom:10px"><h3>'+esc(v.claim||'')+'</h3>';
+      if(v.magnitude) h+='<p style="color:var(--teal);font-weight:500">'+esc(v.magnitude)+'</p>';
+      if(v.who_benefits_most) h+='<p>'+esc(v.who_benefits_most)+'</p>';
+      h+='<details><summary>Status quo &amp; evidence</summary><div class="detail-body">';
+      if(v.status_quo) h+='<div class="mb-8">'+esc(v.status_quo).replace(/\n/g,'<br>')+'</div>';
+      if(v.evidence)(Array.isArray(v.evidence)?v.evidence:[]).forEach(function(e){
+        h+='<div class="text-xs" style="margin-bottom:3px"><span class="mono muted">'+esc(e.source||'')+':</span> '+esc(e.finding||'')+'</div>';
+      });
+      h+='</div></details>';
+      h+='</div>';
+    });
+  }
+
+  h+='</section>';
+  return h;
+}
+
+// ---- RISKS ----
+function renderRisks(){
+  var unk=(D.unknowns||{}).register||[];
+  var h='<section id="risks">';
+  h+='<div class="sec-label">Risk Register</div>';
+  h+='<div class="sec-title">Open Questions</div>';
+  h+='<div class="sec-sub">'+unk.length+' unknowns tracked with severity and resolution targets.</div>';
+
+  var sevOrder={'blocks_launch':0,'degrades_experience':1,'limits_scale':2};
+  var sorted=unk.slice().sort(function(a,b){ return (sevOrder[a.severity]||9)-(sevOrder[b.severity]||9) });
+
+  sorted.forEach(function(u){
+    var sb=u.severity==='blocks_launch'?'b-high':(u.severity==='degrades_experience'?'b-med':'b-low');
+    h+='<div class="card" style="margin-bottom:8px"><h3>'+esc(u.question||'')+'</h3>';
+    h+='<div class="mt-8"><span class="badge '+sb+'">'+esc((u.severity||'').replace(/_/g,' '))+'</span>';
+    if(u.resolve_by) h+=' <span class="text-xs muted">Resolve by '+esc(u.resolve_by.replace('phase:',''))+'</span>';
+    if(u.resolution_status) h+=' <span class="badge b-built">'+esc(u.resolution_status.replace(/_/g,' '))+'</span>';
+    h+='</div>';
+    if(u.mitigation) h+='<p class="mt-8">'+esc(u.mitigation)+'</p>';
+    if(u.threatens&&u.threatens.length) h+='<div class="meta">Threatens: '+u.threatens.map(function(t){return esc(shortId(t))}).join(', ')+'</div>';
+    h+='</div>';
+  });
+
+  h+='</section>';
+  return h;
+}
+
+
+// ---- SEARCH ----
 function doSearch(q){
-  if(!q||q.length<2){if(CURRENT_KEY)showSection(CURRENT_KEY);return}
+  if(!q||q.length<2){ if(D) render(); return }
   q=q.toLowerCase();
   var results=[];
-  function searchObj(obj,path){
+  function walk(obj,path){
     if(!obj) return;
-    if(typeof obj==='string'&&obj.toLowerCase().indexOf(q)!==-1){
-      results.push({path:path,val:obj});
+    if(typeof obj==='string'){
+      if(obj.toLowerCase().indexOf(q)!==-1) results.push({path:path,val:obj});
+    } else if(Array.isArray(obj)){
+      obj.forEach(function(v,i){ walk(v,path+'['+i+']') });
     } else if(typeof obj==='object'){
-      var keys=Array.isArray(obj)?obj.map(function(_,i){return i}):Object.keys(obj);
-      keys.forEach(function(k){
-        var kStr=String(k);
-        if(kStr.toLowerCase().indexOf(q)!==-1) results.push({path:path+'.'+kStr,val:String(obj[k]).substring(0,200)});
-        searchObj(obj[k],path+'.'+kStr);
+      Object.keys(obj).forEach(function(k){
+        if(k.toLowerCase().indexOf(q)!==-1) results.push({path:path+'.'+k,val:String(obj[k]).substring(0,300)});
+        walk(obj[k],path+'.'+k);
       });
     }
   }
-  Object.keys(DATA).forEach(function(k){searchObj(DATA[k],k)});
-  var html='<div class="section-title">&#128269; Search: "'+esc(q)+'"</div>';
-  html+='<div class="section-desc">'+results.length+' matches found</div>';
-  results.slice(0,50).forEach(function(r){
+  Object.keys(D).forEach(function(k){ walk(D[k],k) });
+  var h='<div class="wrap"><div class="search-results">';
+  h+='<div class="sec-title">Search: "'+esc(q)+'"</div>';
+  h+='<div class="sec-sub">'+results.length+' matches</div>';
+  results.slice(0,40).forEach(function(r){
     var highlighted=esc(r.val).replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>');
-    html+='<div class="card"><div class="card-header" onclick="showSection(\''+r.path.split('.')[0]+'\')">'+
-      '<span class="badge badge-gray">'+esc(r.path.split('.')[0])+'</span>'+
-      '<span style="font-size:0.7rem;color:var(--text3)">'+esc(r.path)+'</span>'+
-      '<span class="chevron">&#9654;</span></div>'+
-      '<div class="card-body" style="display:block">'+highlighted+'</div></div>';
+    h+='<div class="sr-item"><div class="sr-path">'+esc(r.path)+'</div><div class="sr-val">'+highlighted+'</div></div>';
   });
-  if(results.length>50) html+='<div style="text-align:center;padding:12px;color:var(--text3);font-size:0.75rem">Showing first 50 of '+results.length+' results</div>';
-  if(results.length===0) html+='<div class="empty"><div class="icon">&#128269;</div>No matches for "'+esc(q)+'"</div>';
-  document.getElementById('main').innerHTML=html;
+  if(results.length>40) h+='<div class="text-xs muted" style="padding:12px 0">Showing 40 of '+results.length+'</div>';
+  if(!results.length) h+='<div class="muted" style="padding:32px 0;text-align:center">No matches</div>';
+  h+='</div></div>';
+  document.getElementById('app').innerHTML=h;
 }
+
+// ---- UTILS ----
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function shortId(s){ return s.replace(/^(bet|persona|equipment|phase|feature|journey|unknown|component|cap|settlement|prop):/,'') }
+function fmtN(n){ if(!n) return '0'; if(n>=1e9) return '$'+Math.round(n/1e9)+'B'; if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M'; if(n>=1e3) return Math.round(n/1e3).toLocaleString()+'K'; return String(n) }
+function fmtUSD(n){ if(!n) return '--'; if(n>=1e9) return '$'+Math.round(n/1e9)+'B'; if(n>=1e6) return '$'+(n/1e6).toFixed(1).replace(/\.0$/,'')+'M'; if(n>=1e3) return '$'+Math.round(n/1e3).toLocaleString()+'K'; return '$'+Number(n).toLocaleString() }
 </script>
 </body>
 </html>

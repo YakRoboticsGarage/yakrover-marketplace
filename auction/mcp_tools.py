@@ -18,6 +18,7 @@ auction mode is enabled.
 from __future__ import annotations
 
 import asyncio
+import os
 from datetime import UTC
 from decimal import Decimal
 from typing import Any
@@ -1070,6 +1071,256 @@ def register_auction_tools(
             return engine._operator_registry.activate(operator_id)
         except Exception as exc:
             return _error_response(exc)
+
+    # ------------------------------------------------------------------
+    # On-chain robot registration (v1.4)
+    # ------------------------------------------------------------------
+
+    SENSOR_TO_CATEGORY = {
+        "aerial_lidar": "env_sensing",
+        "terrestrial_lidar": "env_sensing",
+        "photogrammetry": "visual_inspection",
+        "gpr": "env_sensing",
+        "rtk_gps": "env_sensing",
+        "thermal_camera": "visual_inspection",
+        "robotic_total_station": "env_sensing",
+    }
+
+    CHAIN_CONFIG = {
+        "base-mainnet": {"chain_id": 8453, "rpc": "https://mainnet.base.org"},
+        "base-sepolia": {"chain_id": 84532, "rpc": "https://sepolia.base.org"},
+        "eth-mainnet": {"chain_id": 1, "rpc": "https://ethereum-rpc.publicnode.com"},
+        "eth-sepolia": {"chain_id": 11155111, "rpc": "https://ethereum-sepolia-rpc.publicnode.com"},
+    }
+    DEFAULT_CHAINS = ["base-mainnet", "base-sepolia"]
+
+    @mcp.tool()
+    async def auction_register_robot_onchain(
+        name: str,
+        description: str,
+        company_name: str,
+        contact_email: str,
+        location: str,
+        equipment_type: str,
+        model: str,
+        min_bid_cents: int = 50,
+        bid_pct: float = 0.80,
+        operator_wallet: str = "",
+        equipment_types: list[str] | None = None,
+        chains: list[str] | None = None,
+    ) -> dict:
+        """Register a robot on-chain (ERC-8004) and add to bidding fleet.
+
+        Registers on the specified chains (default: Base mainnet + Base Sepolia).
+        Supported chains: base-mainnet, base-sepolia, eth-mainnet, eth-sepolia.
+
+        Creates an operator profile, registers the robot via agent0-sdk
+        (2 transactions per chain + IPFS upload), and hot-adds a fleet
+        robot so it can bid on tasks immediately.
+
+        Takes 30-60 seconds per chain due to on-chain transaction confirmation.
+
+        If operator_wallet is provided, token ownership is transferred to
+        that address after minting.
+        """
+        import asyncio
+
+        # Input validation
+        if not name or not name.strip():
+            return _error_response_structured("INVALID_NAME", "name is required.", "Provide a non-empty robot name.")
+        if not company_name or not company_name.strip():
+            return _error_response_structured("INVALID_COMPANY", "company_name is required.", "Provide a company or operator name.")
+        if not contact_email or "@" not in contact_email:
+            return _error_response_structured("INVALID_EMAIL", "contact_email is not a valid email.", "Use format: user@domain.com")
+        if not location or not location.strip():
+            return _error_response_structured("INVALID_LOCATION", "location is required.", "e.g. Detroit, MI")
+        if equipment_type not in SENSOR_TO_CATEGORY:
+            return _error_response_structured(
+                "INVALID_EQUIPMENT_TYPE",
+                f"Unknown equipment_type '{equipment_type}'.",
+                f"Valid types: {sorted(SENSOR_TO_CATEGORY)}",
+            )
+        if not (0.0 < bid_pct <= 1.0):
+            return _error_response_structured("INVALID_BID_PCT", "bid_pct must be between 0 (exclusive) and 1 (inclusive).", "Typical values: 0.70–0.95")
+        if min_bid_cents < 1:
+            return _error_response_structured("INVALID_MIN_BID", "min_bid_cents must be >= 1.", "Use 50 or higher.")
+
+        signer_key = os.environ.get("SIGNER_PVT_KEY")
+        pinata_jwt = os.environ.get("PINATA_JWT")
+        if not signer_key:
+            return _error_response_structured(
+                "MISSING_SIGNER_KEY",
+                "SIGNER_PVT_KEY environment variable is not set.",
+                "Set SIGNER_PVT_KEY to the platform deployer wallet private key.",
+            )
+        if not pinata_jwt:
+            return _error_response_structured(
+                "MISSING_PINATA_JWT",
+                "PINATA_JWT environment variable is not set.",
+                "Set PINATA_JWT to your Pinata v3 API JWT.",
+            )
+
+        mcp_base = os.environ.get("MCP_PUBLIC_URL", "https://mcp.yakrover.online")
+        mcp_endpoint = mcp_base + "/mcp"
+        fleet_endpoint = mcp_base + "/fleet/mcp"
+        tool_names = list(mcp._tool_manager._tools.keys())
+        all_sensor_list = equipment_types if equipment_types else [equipment_type]
+        task_categories = sorted({SENSOR_TO_CATEGORY.get(s, "env_sensing") for s in all_sensor_list})
+        task_category = ",".join(task_categories)
+
+        def _blocking_register():
+            # 1. Operator profile
+            if not hasattr(engine, "_operator_registry") or engine._operator_registry is None:
+                from auction.operator_registry import OperatorRegistry
+                engine._operator_registry = OperatorRegistry()
+
+            profile = engine._operator_registry.register(
+                company_name=company_name,
+                contact_name=company_name,
+                contact_email=contact_email,
+                location=location,
+            )
+            op_id = profile.operator_id if hasattr(profile, "operator_id") else profile.get("operator_id", "")
+            # Register all equipment types (multi-select)
+            all_sensors = equipment_types if equipment_types else [equipment_type]
+            for sensor in all_sensors:
+                engine._operator_registry.add_equipment(op_id, sensor, model)
+
+            # 2. On-chain registration on selected chains
+            target_chains = chains if chains else DEFAULT_CHAINS
+            chain_results = {}
+            for chain_name in target_chains:
+                cfg = CHAIN_CONFIG.get(chain_name)
+                if not cfg:
+                    chain_results[chain_name] = {"status": "error", "error": f"Unknown chain: {chain_name}"}
+                    continue
+                try:
+                    from agent0_sdk import SDK
+                    sdk = SDK(
+                        chainId=cfg["chain_id"],
+                        rpcUrl=cfg["rpc"],
+                        signer=signer_key,
+                        ipfs="pinata",
+                        pinataJwt=pinata_jwt,
+                    )
+
+                    agent = sdk.createAgent(name=name, description=description, image="")
+                    agent.setMCP(mcp_endpoint, auto_fetch=False)
+
+                    # Inject tool list and fleet endpoint into MCP endpoint meta
+                    mcp_ep = next(
+                        ep for ep in agent.registration_file.endpoints
+                        if hasattr(ep, "type") and str(ep.type).lower().endswith("mcp")
+                    )
+                    mcp_ep.meta["mcpTools"] = tool_names
+                    mcp_ep.meta["fleetEndpoint"] = fleet_endpoint
+
+                    agent.setTrust(reputation=True)
+                    agent.setActive(True)
+                    if hasattr(agent, "setX402Support"):
+                        agent.setX402Support(False)
+
+                    agent.setMetadata({
+                        "category": "robot",
+                        "robot_type": "survey_platform",
+                        "fleet_provider": "yakrover",
+                        "fleet_domain": "yakrobot.bid",
+                        "min_bid_price": str(min_bid_cents),
+                        "accepted_currencies": "usd,usdc",
+                        "task_categories": task_category,
+                    })
+
+                    tx = agent.registerIPFS()
+                    result = tx.wait_mined(timeout=120)
+
+                    agent_id = str(getattr(result, "agentId", ""))
+                    agent_uri = str(getattr(result, "agentURI", ""))
+
+                    chain_results[chain_name] = {
+                        "agent_id": agent_id,
+                        "agent_uri": agent_uri,
+                        "status": "ok",
+                    }
+
+                    # Transfer ownership if operator wallet provided
+                    if operator_wallet and operator_wallet.startswith("0x"):
+                        try:
+                            # Extract numeric agent ID
+                            agent_id_int = int(agent_id.split(":")[-1]) if ":" in agent_id else int(agent_id)
+                            deployer_addr = sdk.web3_client.account.address
+                            sdk.web3_client.transact_contract(
+                                sdk.identity_registry,
+                                "transferFrom",
+                                deployer_addr,
+                                operator_wallet,
+                                agent_id_int,
+                            )
+                            chain_results[chain_name]["transferred_to"] = operator_wallet
+                        except Exception as te:
+                            chain_results[chain_name]["transfer_error"] = str(te)
+
+                except Exception as exc:
+                    chain_results[chain_name] = {
+                        "status": "error",
+                        "error": str(exc),
+                    }
+
+            # 3. Check if any chain succeeded
+            any_chain_ok = any(r.get("status") == "ok" for r in chain_results.values())
+            all_chains_ok = all(r.get("status") == "ok" for r in chain_results.values())
+            failed_chains = [c for c, r in chain_results.items() if r.get("status") != "ok"]
+
+            # Only create fleet robot if at least one chain registration succeeded
+            if any_chain_ok:
+                from auction.mock_fleet import RuntimeRegisteredRobot
+                sensors = list(all_sensors)
+                capability_metadata = {
+                    "sensors": sensors,
+                    "mobility_type": "aerial" if any("aerial" in s or s == "photogrammetry" for s in sensors) else "ground",
+                    "indoor_capable": False,
+                    "equipment": [{"type": s, "model": model} for s in sensors],
+                    "coverage_area": {"base": location},
+                }
+                robot = RuntimeRegisteredRobot(
+                    robot_id=op_id,
+                    name=name,
+                    sensors=sensors,
+                    capability_metadata=capability_metadata,
+                    reputation_metadata={"completion_rate": 0.95},
+                    signing_key=f"reg_{op_id}",
+                    bid_pct=bid_pct,
+                    sla_seconds=3600,
+                    ai_confidence=0.85,
+                )
+                with engine._fleet_lock:
+                    if op_id not in engine._robots_by_id:
+                        engine.robots.append(robot)
+                    engine._robots_by_id[op_id] = robot
+
+            # Set honest top-level status
+            if all_chains_ok:
+                status = "active"
+                message = f"{name} registered on all chains and added to fleet. {len(engine.robots)} robots active."
+            elif any_chain_ok:
+                status = "partial"
+                message = f"{name} registered on-chain but {len(failed_chains)} chain(s) failed: {', '.join(failed_chains)}. Added to fleet."
+            else:
+                status = "failed"
+                message = f"On-chain registration failed on all chains: {', '.join(failed_chains)}. Robot not added to fleet."
+
+            return {
+                "operator_id": op_id,
+                "status": status,
+                "name": name,
+                "company": company_name,
+                "equipment": {"type": equipment_type, "model": model},
+                "sensors": list(all_sensors),
+                "chains": chain_results,
+                "fleet_size": len(engine.robots),
+                "message": message,
+            }
+
+        return await asyncio.to_thread(_blocking_register)
 
     # ------------------------------------------------------------------
     # Phase 5: Agreement generation and project management tools

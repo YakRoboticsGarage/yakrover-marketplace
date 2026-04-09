@@ -19,6 +19,7 @@ engine class and its TaskRecord dataclass.
 from __future__ import annotations
 
 import asyncio
+import threading
 from dataclasses import dataclass, field
 from datetime import UTC
 from decimal import Decimal
@@ -165,6 +166,7 @@ class AuctionEngine:
     ) -> None:
         self.robots = robots
         self._robots_by_id: dict[str, Any] = {r.robot_id: r for r in robots}
+        self._fleet_lock = threading.Lock()
         self._tasks: dict[str, TaskRecord] = {}
         self.wallet = wallet
         self.reputation = reputation

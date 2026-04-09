@@ -6,9 +6,10 @@
 <title>YAK ROBOTICS — Hire a Robot</title>
 <link rel="icon" href="yak-icon.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
-<script src="https://js.stripe.com/v3/"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+<script defer src="https://js.stripe.com/v3/"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -18,11 +19,12 @@
   --accent:#E8792B;--accent-light:#FEF0E3;--accent-hover:#C4611E;
   --green:#1A7D4E;--green-bg:#E6F5ED;
   --amber:#C27B1A;--amber-bg:#fef3c7;
-  --red:#dc2626;
+  --red:#dc2626;--red-bg:#FEE2E2;--red-border:#FECACA;
   --link:#2D5F8A;
   --navy:#1B3A5C;--navy-light:#2D5F8A;
   --stripe:#635bff;--stripe-hover:#5046e5;
   --usdc:#2775ca;--usdc-hover:#1d5fa0;
+  --ach:#1a6b47;--ach-hover:#15573a;
   --radius:6px;--radius-lg:6px;
   --shadow:0 1px 3px rgba(0,0,0,0.06);
   --shadow-lg:0 2px 8px rgba(0,0,0,0.08);
@@ -166,8 +168,8 @@ background-size:1200px 900px}
 .pay-btn-stripe:hover{background:var(--stripe-hover)}
 .pay-btn-usdc{background:var(--usdc);color:#fff}
 .pay-btn-usdc:hover{background:var(--usdc-hover)}
-.pay-btn-ach{background:#1a6b47;color:#fff}
-.pay-btn-ach:hover{background:#15573a}
+.pay-btn-ach{background:var(--ach);color:#fff}
+.pay-btn-ach:hover{background:var(--ach-hover)}
 .pay-btn-release{background:var(--usdc);color:#fff}
 .pay-btn-release:hover{background:var(--usdc-hover)}
 
@@ -187,7 +189,7 @@ background-size:1200px 900px}
 /* QA badge */
 .qa-badge{display:inline-block;font-size:12px;font-weight:700;padding:4px 12px;border-radius:3px;text-transform:uppercase;letter-spacing:0.5px}
 .qa-pass{background:var(--green-bg);color:var(--green)}
-.qa-fail{background:#FEE2E2;color:var(--red)}
+.qa-fail{background:var(--red-bg);color:var(--red)}
 
 /* Blurred payload */
 .payload-blurred{filter:blur(4px);user-select:none;pointer-events:none;transition:filter 0.3s}
@@ -212,7 +214,7 @@ background-size:1200px 900px}
 .progress-label.visible{display:block}
 
 /* Error message */
-.error-msg{background:#FEE2E2;border:1px solid #FECACA;border-radius:var(--radius);padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:none}
+.error-msg{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:none}
 .error-msg.visible{display:block}
 
 /* ===== FEED (inside sidebar, scrolls independently) ===== */
@@ -317,7 +319,7 @@ background-size:1200px 900px}
   <!-- SINGLE HEADER BAR -->
   <div class="app-top">
     <header class="app-header">
-      <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
+      <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open navigation menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <span class="header-logo">YAK ROBOTICS</span>
@@ -334,15 +336,23 @@ background-size:1200px 900px}
       <span class="phase-chevron">&rsaquo;</span>
       <span class="phase" data-phase="settle">DONE</span>
     </nav>
+    <nav class="breadcrumbs-bar" id="regBreadcrumbsHeader" style="display:none">
+      <span class="phase active reg-crumb" data-step="profile" onclick="showRegStep('profile')">PROFILE</span>
+      <span class="phase-chevron">&rsaquo;</span>
+      <span class="phase reg-crumb" data-step="equipment" onclick="showRegStep('equipment')">EQUIPMENT</span>
+      <span class="phase-chevron">&rsaquo;</span>
+      <span class="phase reg-crumb" data-step="payment" onclick="showRegStep('payment')">PAYMENT</span>
+    </nav>
   </div>
 
   <!-- SIDEBAR (action + settings + robots + feed) -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
   <aside class="sidebar" id="sidebar">
 
-    <!-- Primary action — always at top -->
+    <!-- Primary actions — always at top -->
     <div class="sidebar-action">
       <button class="btn-primary" id="runBtn" onclick="runAuction()">Hire Operator</button>
+      <button class="admin-btn cta" id="registerBtn" onclick="showRegistration()" style="margin-top:8px;width:100%">Register Robot</button>
     </div>
 
     <div class="sidebar-top">
@@ -355,11 +365,17 @@ background-size:1200px 900px}
         <div class="tunnel-status" id="demoModeHint">Test mode. Card: 4242 4242 4242 4242. ACH: routing 110000000, account 000123456789. USDC: testnet tokens.</div>
       </div>
       <div class="sidebar-section">
-        <div class="sidebar-label">Operators</div>
+        <div class="sidebar-label">Fleet Filter</div>
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer">
           <input type="checkbox" id="simulatorOnly" onchange="onSimulatorToggle()" checked style="accent-color:var(--navy)">
-          Demo operators only
+          Demo fleet only
         </label>
+        <div style="font-size:10px;color:var(--text-3);margin:2px 0 6px 22px">Use pre-configured FakeRover simulators. Uncheck to use only real on-chain robots.</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer">
+          <input type="checkbox" id="hideFakeRovers" onchange="onFakeRoverFilterChange()" style="accent-color:var(--navy)">
+          Hide FakeRovers
+        </label>
+        <div style="font-size:10px;color:var(--text-3);margin:2px 0 0 22px">Remove FakeRover-* robots from both the sidebar and auction bidding. Only registered robots with custom names will bid.</div>
       </div>
     </div>
 
@@ -389,15 +405,16 @@ background-size:1200px 900px}
   <!-- MAIN CONTENT -->
   <main class="main-content">
 
-    <div class="error-msg" id="errorMsg"></div>
+    <div class="error-msg" id="errorMsg" role="alert" aria-live="assertive"></div>
 
     <!-- SETUP PHASE -->
     <div class="phase-view active" id="phase-setup">
       <h2 class="phase-heading">Define Your Task</h2>
       <p class="phase-subheading">Describe the work you need done. Available operators will compete for your job.</p>
 
-      <!-- Mobile: Hire Operator button visible without opening sidebar -->
+      <!-- Mobile: action buttons visible without opening sidebar -->
       <button class="btn-primary mobile-cta" id="mobileRunBtn" style="display:none" onclick="runAuction()">Hire Operator</button>
+      <button class="admin-btn cta mobile-cta" id="mobileRegisterBtn" style="display:none;margin-top:8px" onclick="showRegistration()">Register Robot</button>
 
       <div class="card card-accent">
         <div class="card-label">RFP Document</div>
@@ -422,19 +439,19 @@ Requirements:
         <div class="card-label">Site Information</div>
         <div class="field-grid">
           <div>
-            <div class="field-label">Project</div>
+            <label class="field-label" for="siteProject">Project</label>
             <input class="field-input" type="text" id="siteProject" value="Server Room Climate Check">
           </div>
           <div>
-            <div class="field-label">Location</div>
+            <label class="field-label" for="siteLocation">Location</label>
             <input class="field-input" type="text" id="siteLocation" value="Detroit, MI">
           </div>
           <div>
-            <div class="field-label">Agency</div>
+            <label class="field-label" for="siteAgency">Agency</label>
             <input class="field-input" type="text" id="siteAgency" value="YAK Robotics">
           </div>
           <div>
-            <div class="field-label">Terrain</div>
+            <label class="field-label" for="siteTerrain">Terrain</label>
             <input class="field-input" type="text" id="siteTerrain" value="Indoor, flat floor">
           </div>
         </div>
@@ -450,7 +467,7 @@ Requirements:
         <div id="auctionActionSlot"></div>
       </div>
       <p class="phase-subheading">Your request is being matched with available operators.</p>
-      <div class="progress-label" id="auctionProgress">Processing your request...</div>
+      <div class="progress-label" id="auctionProgress" role="status" aria-live="polite">Processing your request...</div>
       <div id="winnerSlot"></div>
     </div>
 
@@ -460,8 +477,7 @@ Requirements:
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <h2 class="phase-heading" style="margin-bottom:0">Authorize Payment</h2>
       </div>
-      <p class="phase-subheading">Place a hold to confirm your hire. You won't be charged until you approve the delivered results.</p>
-      <div id="stripeEmbedMount"></div>
+      <p class="phase-subheading">Authorize payment to confirm your hire. Card payments are held until you approve delivery. Bank transfers are initiated immediately.</p>
       <div id="commitSlot"></div>
     </div>
 
@@ -489,6 +505,251 @@ Requirements:
       <div id="revealedDataSlot"></div>
     </div>
 
+    <!-- REGISTER ROBOT PHASE (separate track — not part of buyer breadcrumbs) -->
+    <div class="phase-view" id="phase-register">
+      <!-- Registration mode selector -->
+      <div class="card" style="margin-bottom:16px;padding:12px 16px">
+        <div style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Registration Method</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
+          <input type="radio" name="regMode" value="platform" checked onchange="onRegModeChange('platform')"> Platform signs (recommended)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
+          <input type="radio" name="regMode" value="wallet" onchange="onRegModeChange('wallet')"> Connect your own wallet
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="radio" name="regMode" value="mcp" onchange="onRegModeChange('mcp')"> Register via Claude Code
+        </label>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px">
+          <input class="field-input" type="password" id="regAdminKey" placeholder="Admin passcode (optional)" style="width:180px;font-size:12px;padding:5px 8px" oninput="onAdminKeyChange()">
+          <span id="regAdminStatus" style="font-size:11px;color:var(--text-3)"></span>
+        </div>
+      </div>
+
+      <!-- MCP / Claude Code instructions (hidden by default) -->
+      <div id="regMcpSection" style="display:none">
+        <div class="card card-blue">
+          <div class="card-label">Connect Claude Code to the Marketplace</div>
+          <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">Paste this command into your terminal, then tell Claude to register your robot.</p>
+          <div style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;position:relative;word-break:break-all" id="mcpCommandBlock">claude mcp add --transport http yakrover https://mcp.yakrover.online/mcp</div>
+          <button class="admin-btn" onclick="copyMcpCommand()" style="margin-top:8px" id="mcpCopyBtn">Copy Command</button>
+          <p style="font-size:12px;color:var(--text-3);margin-top:12px">Then say: <em>"Register my survey robot. I have a DJI M350 RTK with Zenmuse L2, based in Detroit MI."</em></p>
+        </div>
+      </div>
+
+      <!-- Registration form (shown for platform and wallet modes) -->
+      <div id="regFormSection">
+
+        <!-- Wallet connect (shown only for wallet mode) -->
+        <div id="regWalletSection" style="display:none;margin-bottom:16px">
+          <div class="card" style="padding:12px 16px">
+            <button class="admin-btn cta" onclick="connectOperatorWallet()" id="walletConnectBtn">Connect Wallet</button>
+            <span id="walletStatus" style="display:none;font-size:12px;margin-top:6px"></span>
+          </div>
+        </div>
+
+        <!-- ============ STEP 1: OPERATOR PROFILE ============ -->
+        <div id="regStep-profile">
+          <span class="phase-back" onclick="returnFromRegistration()">&larr; Back to Demo</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <h2 class="phase-heading" style="margin-bottom:0">Operator Profile</h2>
+            <button class="btn-continue" onclick="showRegStep('equipment')">Next: Equipment &rarr;</button>
+          </div>
+          <p class="phase-subheading">Basic information about you and your robot.</p>
+          <div class="card card-blue">
+            <div class="card-label">Identity</div>
+            <div class="field-grid">
+              <div>
+                <label class="field-label" for="regName">Robot Name <span id="regNameHint" style="font-weight:400;color:var(--text-3)">(FakeRover- prefix for demo)</span></label>
+                <input class="field-input" type="text" id="regName" placeholder="FakeRover-Acme-01" value="FakeRover-">
+              </div>
+              <div>
+                <label class="field-label" for="regCompany">Company / Operator</label>
+                <input class="field-input" type="text" id="regCompany" placeholder="Acme Survey Co.">
+              </div>
+              <div>
+                <label class="field-label" for="regEmail">Contact Email</label>
+                <input class="field-input" type="email" id="regEmail" placeholder="alex@acmesurvey.com">
+              </div>
+              <div>
+                <label class="field-label" for="regLocation">Location</label>
+                <input class="field-input" type="text" id="regLocation" placeholder="Detroit, MI">
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <div class="field-label">Description</div>
+              <textarea class="field-input" id="regDescription" rows="2" placeholder="Brief description of your robot and services" style="resize:vertical;font-family:inherit"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ STEP 2: EQUIPMENT & CERTIFICATIONS ============ -->
+        <div id="regStep-equipment" style="display:none">
+          <span class="phase-back" onclick="showRegStep('profile')">&larr; Back to Profile</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <h2 class="phase-heading" style="margin-bottom:0">Equipment &amp; Certifications</h2>
+            <button class="btn-continue" onclick="showRegStep('payment')">Next: Payment &rarr;</button>
+          </div>
+          <p class="phase-subheading">What sensors does your robot carry? These determine which tasks you can bid on.</p>
+          <div class="card card-blue">
+            <div class="card-label">Sensors &amp; Platform</div>
+            <div class="field-grid">
+              <div>
+                <div class="field-label">Sensor Capabilities (select all that apply)</div>
+                <div id="regEquipmentChecks" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="aerial_lidar" checked> Aerial LiDAR</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="photogrammetry"> Photogrammetry</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="terrestrial_lidar"> Terrestrial LiDAR</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="gpr"> GPR (Subsurface)</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="rtk_gps"> RTK GPS</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="thermal_camera"> Thermal / IR</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="robotic_total_station"> Robotic Total Station</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" value="__other_sensor__" onchange="document.getElementById('regSensorOther').style.display=this.checked?'':'none'"> Other</label>
+                </div>
+                <input class="field-input" type="text" id="regSensorOther" placeholder="e.g. multispectral, ultrasonic, eddy current" style="display:none;margin-top:6px;font-size:12px">
+              </div>
+              <div>
+                <div class="field-label">Platform / Model</div>
+                <select class="field-input" id="regModel" style="font-size:13px;padding:8px 10px" onchange="document.getElementById('regModelOther').style.display=this.value==='__other__'?'':'none'">
+                  <optgroup label="Aerial — LiDAR">
+                    <option value="DJI Matrice 350 RTK + Zenmuse L2" selected>DJI Matrice 350 RTK + Zenmuse L2</option>
+                    <option value="DJI Matrice 4E">DJI Matrice 4E</option>
+                    <option value="Skydio X10">Skydio X10</option>
+                  </optgroup>
+                  <optgroup label="Aerial — Photogrammetry">
+                    <option value="DJI Matrice 350 RTK + Zenmuse P1">DJI Matrice 350 RTK + Zenmuse P1</option>
+                    <option value="WingtraOne Gen II">WingtraOne Gen II (VTOL)</option>
+                    <option value="Autel EVO II Pro RTK">Autel EVO II Pro RTK</option>
+                  </optgroup>
+                  <optgroup label="Aerial — Confined Space">
+                    <option value="Flyability ELIOS 3">Flyability ELIOS 3</option>
+                  </optgroup>
+                  <optgroup label="Ground">
+                    <option value="Boston Dynamics Spot">Boston Dynamics Spot</option>
+                    <option value="Boston Dynamics Spot + Leica BLK ARC">Spot + Leica BLK ARC</option>
+                    <option value="Gecko Robotics TOKA">Gecko Robotics TOKA</option>
+                    <option value="ELEGOO Tumbller">ELEGOO Tumbller</option>
+                  </optgroup>
+                  <optgroup label="Other">
+                    <option value="__other__">Other (specify below)</option>
+                  </optgroup>
+                </select>
+                <input class="field-input" type="text" id="regModelOther" placeholder="Enter platform/model name" style="display:none;margin-top:6px">
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="card-label">Certifications (optional)</div>
+            <div class="field-grid">
+              <div>
+                <div class="field-label">FAA Part 107</div>
+                <input class="field-input" type="file" id="regCertPart107" accept=".pdf,.jpg,.png" style="font-size:12px;padding:6px 8px">
+              </div>
+              <div>
+                <div class="field-label">Insurance COI (ACORD 25)</div>
+                <input class="field-input" type="file" id="regCertInsurance" accept=".pdf,.jpg,.png" style="font-size:12px;padding:6px 8px">
+              </div>
+              <div>
+                <div class="field-label">PLS License</div>
+                <input class="field-input" type="file" id="regCertPLS" accept=".pdf,.jpg,.png" style="font-size:12px;padding:6px 8px">
+              </div>
+              <div>
+                <div class="field-label">Other</div>
+                <input class="field-input" type="file" id="regCertOther" accept=".pdf,.jpg,.png" style="font-size:12px;padding:6px 8px">
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:6px">Not required for bidding. Verified during award review.</div>
+          </div>
+        </div>
+
+        <!-- ============ STEP 3: PAYMENT & BIDDING ============ -->
+        <div id="regStep-payment" style="display:none">
+          <span class="phase-back" onclick="showRegStep('equipment')">&larr; Back to Equipment</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <h2 class="phase-heading" style="margin-bottom:0">Payment &amp; Bidding</h2>
+            <button class="btn-continue" id="regSubmitBtn" onclick="submitRegistration()">Register &amp; Activate</button>
+          </div>
+          <p class="phase-subheading">Configure how you get paid and how your robot bids on tasks.</p>
+
+          <div class="card card-blue">
+            <div class="card-label">Bidding Configuration</div>
+            <div class="field-grid">
+              <div>
+                <div class="field-label">Minimum Bid (cents)</div>
+                <input class="field-input" type="number" id="regMinBid" value="50" min="1">
+                <div style="font-size:11px;color:var(--text-3);margin-top:4px">Lowest price your robot will bid, regardless of task budget.</div>
+              </div>
+              <div>
+                <div class="field-label">Bid Aggressiveness: <span id="regBidPctLabel">80%</span></div>
+                <input type="range" id="regBidPct" min="70" max="95" value="80" style="width:100%;margin-top:4px" oninput="document.getElementById('regBidPctLabel').textContent=this.value+'%'">
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3)"><span>70% (aggressive)</span><span>95% (conservative)</span></div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:4px">Percentage of the task budget ceiling your robot bids. Lower = more competitive.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-blue" style="margin-top:12px">
+            <div class="card-label">Accepted Payment Channels</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">Which payment methods will you accept from buyers? Stored on-chain as <code style="font-size:11px">accepted_currencies</code>.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:14px">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="regAcceptFiat" checked onchange="onPaymentChannelChange()"> Card / Bank Transfer (USD)</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="regAcceptUsdc" checked onchange="onPaymentChannelChange()"> USDC on Base</label>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:14px">
+              <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Payment Destinations</div>
+              <div id="regFiatSection" style="margin-bottom:10px">
+                <div class="field-label">Stripe Connect Account <span style="font-weight:400;color:var(--text-3)">(card / bank transfer payouts)</span></div>
+                <input class="field-input" type="text" id="regStripeAccount" placeholder="acct_... (leave blank to set up after registration)">
+                <div style="font-size:11px;color:var(--text-3);margin-top:4px">Stripe Connect onboarding can be completed after registration.</div>
+              </div>
+              <div id="regUsdcSection">
+                <div class="field-label">USDC Wallet Address <span style="font-weight:400;color:var(--text-3)">(agentWallet on-chain)</span></div>
+                <input class="field-input" type="text" id="regUsdcWallet" placeholder="Defaults to platform deployer wallet">
+                <div style="font-size:11px;color:var(--text-3);margin-top:4px">USDC payouts go to this address on Base. Pre-filled with your connected wallet if available. Can be updated on-chain after registration.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced settings -->
+          <details style="margin-top:12px">
+            <summary style="font-size:13px;color:var(--text-3);cursor:pointer;font-weight:500">Advanced Settings</summary>
+            <div class="card" style="margin-top:8px">
+              <div class="card-label">Registration Chains</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="regChainBaseMainnet" checked> Base Mainnet</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="regChainBaseSepolia" checked> Base Sepolia</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="regChainEthMainnet"> Ethereum Mainnet</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="regChainEthSepolia"> Ethereum Sepolia</label>
+              </div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:6px">Each chain costs ~$0.005 gas. Platform wallet covers gas.</div>
+            </div>
+          </details>
+
+        </div>
+
+      </div>
+
+      <!-- Progress (hidden until submit) -->
+      <div id="regProgress" style="display:none;margin-top:16px">
+        <div class="card">
+          <div class="card-label">Registration Progress</div>
+          <div id="regProgressLines" role="status" aria-live="polite" style="font-size:13px;line-height:2"></div>
+        </div>
+      </div>
+
+      <!-- Confirmation (hidden until complete) -->
+      <div id="regConfirm" style="display:none;margin-top:16px">
+        <div class="card card-green" id="regConfirmCard"></div>
+        <details style="margin-top:12px">
+          <summary style="font-size:13px;color:var(--text-3);cursor:pointer;font-weight:500">Add Credentials (optional)</summary>
+          <div style="margin-top:8px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text-2)">
+            Uploaded documents are stored and verified during the award review process.
+            Use the MCP tool <code>auction_upload_compliance_doc</code> for programmatic upload.
+          </div>
+        </details>
+        <button class="btn-continue" onclick="returnFromRegistration()" style="margin-top:16px;width:100%">Return to Demo</button>
+      </div>
+    </div>
+
   </main>
 
   <!-- STICKY ACTION BAR (always visible above fold) -->
@@ -509,7 +770,10 @@ Requirements:
     <span>Payments on <a href="https://basescan.org" target="_blank">Base</a></span>
     <span class="footer-sep">&middot;</span>
     <span id="buildStamp" style="font-family:'JetBrains Mono',monospace;font-size:10px"></span>
+    <span class="footer-sep">&middot;</span>
+    <a href="#" onclick="openFeedbackIssue();return false" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 10px;font-size:11px;color:var(--text-3);cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block">Submit Demo Feedback</a>
   </footer>
+
 
 </div>
 
@@ -542,6 +806,46 @@ function onDemoEnvChange() {
 var simulatorOnly = true;
 function onSimulatorToggle() {
   simulatorOnly = document.getElementById('simulatorOnly').checked;
+  // Demo fleet only is incompatible with Hide FakeRovers — uncheck it
+  if (simulatorOnly) {
+    document.getElementById('hideFakeRovers').checked = false;
+  }
+  // Always re-render sidebar to apply filter
+  var robotCards = document.getElementById('robotCards');
+  if (robotCards) { robotCards.innerHTML = ''; renderRobotsSidebar(getFilteredRobots()); }
+  var tunnelUrl = document.getElementById('tunnelUrl').value;
+  fetch(tunnelUrl + '/api/fleet-mode', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ simulator_only: simulatorOnly, hide_fakerovers: false }),
+  }).catch(function() {});
+}
+
+function onFakeRoverFilterChange() {
+  var hideFake = document.getElementById('hideFakeRovers').checked;
+  // Hide FakeRovers is incompatible with Demo fleet only — uncheck it
+  if (hideFake) {
+    document.getElementById('simulatorOnly').checked = false;
+    simulatorOnly = false;
+  }
+  // Update sidebar display
+  var robotCards = document.getElementById('robotCards');
+  if (robotCards) { robotCards.innerHTML = ''; renderRobotsSidebar(getFilteredRobots()); }
+  // Update server-side fleet filter
+  var tunnelUrl = document.getElementById('tunnelUrl').value;
+  fetch(tunnelUrl + '/api/fleet-mode', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ simulator_only: simulatorOnly, hide_fakerovers: hideFake }),
+  }).catch(function() {});
+}
+
+function getFilteredRobots() {
+  var hideFake = document.getElementById('hideFakeRovers') && document.getElementById('hideFakeRovers').checked;
+  var demoOnly = document.getElementById('simulatorOnly') && document.getElementById('simulatorOnly').checked;
+  if (hideFake) return discoveredRobots.filter(function(r) { return !r.name.startsWith('FakeRover-'); });
+  if (demoOnly) return discoveredRobots.filter(function(r) { return r.name.startsWith('FakeRover-') || r.name.startsWith('Tumbller'); });
+  return discoveredRobots;
 }
 
 // Returns the USDC chain based on the winning robot's chain, or fallback
@@ -1307,7 +1611,7 @@ function renderPaymentOptions(winnerName, winnerPrice) {
     '</button>';
 
   var achBtn =
-    '<button class="pay-btn pay-btn-ach" onclick="payWithACH(' + amountCents + ',\'' + escapeHtml(stripeAccountId || '') + '\')" style="flex:1;min-width:0;background:#1a6b47">' +
+    '<button class="pay-btn pay-btn-ach" onclick="payWithACH(' + amountCents + ',\'' + escapeHtml(stripeAccountId || '') + '\')" style="flex:1;min-width:0;background:var(--ach)">' +
       '<span style="display:block;font-size:13px;font-weight:600">Bank Transfer</span>' +
       '<span style="display:block;font-size:11px;color:rgba(255,255,255,0.7)">' + amountStr + '</span>' +
     '</button>';
@@ -1533,6 +1837,7 @@ function resetDemo() {
   window._stripeSessionId = null;
   window._lastDeliveryData = null;
   window._ipfsCid = null;
+  window._registration = { operatorId: null, status: 'idle', chains: {}, operatorWallet: '' };
   window._ipfsUrl = null;
   selectedRating = 0;
   feedCounter = 0;
@@ -1610,20 +1915,32 @@ async function testTunnel() {
 
 // ===== RUN AUCTION (rewritten rendering, same API calls) =====
 
+var _auctionRunning = false;
 async function runAuction() {
+  if (_auctionRunning) return;
+  _auctionRunning = true;
+
+  // Disable both buttons immediately
+  var runBtn = document.getElementById('runBtn');
+  var mobileBtn = document.getElementById('mobileRunBtn');
+  if (runBtn) { runBtn.disabled = true; runBtn.textContent = 'Running...'; }
+  if (mobileBtn) { mobileBtn.disabled = true; mobileBtn.textContent = 'Running...'; }
+
   var tunnelUrl = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
   if (!tunnelUrl) {
     showError('MCP server URL not configured');
     console.error('tunnelUrl is empty');
+    resetBtn();
     return;
   }
 
-  // Set fleet mode on server before auction (simulator_only toggle)
+  // Set fleet mode on server before auction (simulator_only + hide_fakerovers toggles)
+  var hideFake = document.getElementById('hideFakeRovers') && document.getElementById('hideFakeRovers').checked;
   try {
     await fetch(tunnelUrl + '/api/fleet-mode', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ simulator_only: simulatorOnly }),
+      body: JSON.stringify({ simulator_only: simulatorOnly, hide_fakerovers: hideFake || false }),
     });
   } catch (e) { console.warn('Fleet mode set failed:', e.message); }
 
@@ -2016,7 +2333,7 @@ async function payWithACH(amountCents, operatorAccountId) {
     // Step 4: Add a submit button below the form
     var submitBtn = document.createElement('button');
     submitBtn.className = 'pay-btn pay-btn-ach';
-    submitBtn.style.cssText = 'width:100%;margin-top:12px;background:#1a6b47';
+    submitBtn.style.cssText = 'width:100%;margin-top:12px;background:var(--ach)';
     submitBtn.textContent = 'Authorize $' + (amountCents / 100).toFixed(2) + ' Bank Transfer';
     mountEl.after(submitBtn);
     btn.style.display = 'none';
@@ -2081,7 +2398,7 @@ function showAchHoldApproved(data, amountCents, operatorName, operatorAccountId)
   slot.innerHTML =
     '<div class="card card-accent">' +
       '<h3 style="color:var(--accent)">Payment Authorized</h3>' +
-      '<p class="explainer" style="margin-bottom:12px">Your bank transfer has been initiated. The operator will be paid after you approve the delivered results.</p>' +
+      '<p class="explainer" style="margin-bottom:12px">Your bank transfer has been initiated and your account debited. On delivery approval, funds are transferred to the operator.</p>' +
       '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">' + statusText + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Amount</span><span class="kv-value">$' + (amountCents / 100).toFixed(2) + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Method</span><span class="kv-value">ACH Bank Transfer</span></div>' +
@@ -2145,7 +2462,7 @@ async function payWithUSDC(operatorWallet) {
   try {
     if (!window.ethereum) {
       btn.textContent = 'No wallet found';
-      alert('Install MetaMask, Rabby, or Coinbase Wallet to pay with USDC.');
+      showError('Install MetaMask, Rabby, or Coinbase Wallet to pay with USDC.');
       btn.disabled = false;
       return;
     }
@@ -2185,7 +2502,7 @@ async function payWithUSDC(operatorWallet) {
     var balance = await usdc.balanceOf(buyerAddr);
     if (balance < totalUnits) {
       btn.textContent = 'Insufficient USDC';
-      alert('You need at least $' + bidPrice.toFixed(2) + ' USDC on ' + chainName + '. Your balance: $' + (Number(balance) / 1000000).toFixed(6));
+      showError('Insufficient USDC balance. Need $' + bidPrice.toFixed(2) + ' on ' + chainName + '. Your balance: $' + (Number(balance) / 1000000).toFixed(6));
       btn.disabled = false;
       return;
     }
@@ -2353,7 +2670,7 @@ async function releasePayment() {
   var isAch = !!window._achHold;
 
   if (!isStripe && !isUsdc && !isAch) {
-    alert('No payment hold found.');
+    showError('No payment hold found. Please complete the payment step first.');
     if (btn) { btn.disabled = false; btn.textContent = 'Release Payment'; }
     return;
   }
@@ -2664,7 +2981,11 @@ function showError(msg) {
 function resetBtn() {
   var btn = document.getElementById('runBtn');
   btn.disabled = false;
-  btn.textContent = 'Run Auction';
+  btn.textContent = 'Hire Operator';
+  btn.onclick = function() { runAuction(); };
+  var mobileBtn = document.getElementById('mobileRunBtn');
+  if (mobileBtn) { mobileBtn.disabled = false; mobileBtn.textContent = 'Hire Operator'; mobileBtn.onclick = function() { runAuction(); }; }
+  _auctionRunning = false;
 }
 
 
@@ -2672,10 +2993,482 @@ function resetBtn() {
 
 setTimeout(discoverRobots, 500);
 
+// ===== ROBOT REGISTRATION (v1.4) =====
+
+window._registration = { operatorId: null, status: 'idle', chains: {}, operatorWallet: '' };
+
+function showRegistration() {
+  document.querySelectorAll('.phase-view').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('phase-register').classList.add('active');
+  document.getElementById('breadcrumbs').style.display = 'none';
+  document.getElementById('regBreadcrumbsHeader').style.display = '';
+  // Reset form state
+  document.getElementById('regFormSection').style.display = '';
+  document.getElementById('regProgress').style.display = 'none';
+  document.getElementById('regConfirm').style.display = 'none';
+  var btn = document.getElementById('regSubmitBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Register & Activate'; }
+  document.getElementById('errorMsg').classList.remove('visible');
+  _regHighest = 0;
+  showRegStep('profile');
+  // Close mobile sidebar
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  var overlay = document.querySelector('.sidebar-overlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function returnFromRegistration() {
+  document.getElementById('breadcrumbs').style.display = '';
+  document.getElementById('regBreadcrumbsHeader').style.display = 'none';
+  showPhase('setup');
+}
+
+var _regSteps = ['profile', 'equipment', 'payment'];
+var _regHighest = 0;
+
+function showRegStep(step) {
+  var idx = _regSteps.indexOf(step);
+  if (idx > _regHighest) _regHighest = idx;
+  // Toggle step visibility
+  _regSteps.forEach(function(s) {
+    var el = document.getElementById('regStep-' + s);
+    if (el) el.style.display = s === step ? '' : 'none';
+  });
+  // Update header breadcrumbs (uses same .phase CSS as buyer flow)
+  document.querySelectorAll('#regBreadcrumbsHeader .reg-crumb').forEach(function(el) {
+    var s = el.getAttribute('data-step');
+    var i = _regSteps.indexOf(s);
+    el.classList.remove('active', 'done');
+    if (s === step) {
+      el.classList.add('active');
+    } else if (i < idx || i <= _regHighest) {
+      el.classList.add('done');
+    }
+    el.style.cursor = (i <= _regHighest) ? 'pointer' : 'default';
+    el.onclick = (i <= _regHighest) ? (function(ss) { return function() { showRegStep(ss); }; })(s) : null;
+  });
+  // Pre-fill USDC wallet when reaching payment step
+  if (step === 'payment') {
+    var walletField = document.getElementById('regUsdcWallet');
+    if (walletField && !walletField.value) {
+      if (window._registration.operatorWallet) {
+        walletField.value = window._registration.operatorWallet;
+        walletField.placeholder = 'Your connected wallet';
+      } else {
+        walletField.placeholder = 'Defaults to platform deployer wallet';
+      }
+    }
+  }
+  // Scroll to top of main content
+  var main = document.querySelector('.main-content');
+  if (main) main.scrollTop = 0;
+}
+
+function onRegModeChange(mode) {
+  var form = document.getElementById('regFormSection');
+  var mcp = document.getElementById('regMcpSection');
+  var wallet = document.getElementById('regWalletSection');
+  if (mode === 'mcp') {
+    form.style.display = 'none';
+    mcp.style.display = '';
+  } else {
+    form.style.display = '';
+    mcp.style.display = 'none';
+    wallet.style.display = mode === 'wallet' ? '' : 'none';
+  }
+}
+
+function isRegAdmin() {
+  var key = document.getElementById('regAdminKey');
+  return key && key.value === 'robotadmin';
+}
+
+function onAdminKeyChange() {
+  var admin = isRegAdmin();
+  var hint = document.getElementById('regNameHint');
+  var nameInput = document.getElementById('regName');
+  var status = document.getElementById('regAdminStatus');
+  if (admin) {
+    hint.textContent = '(any name allowed)';
+    hint.style.color = 'var(--green)';
+    status.textContent = 'Admin mode';
+    status.style.color = 'var(--green)';
+    if (nameInput.value === 'FakeRover-') nameInput.value = '';
+    nameInput.placeholder = 'Tumbller Self-Balancing Robot';
+  } else {
+    hint.textContent = '(FakeRover- prefix for demo)';
+    hint.style.color = 'var(--text-3)';
+    status.textContent = '';
+    if (!nameInput.value.startsWith('FakeRover-')) nameInput.value = 'FakeRover-' + nameInput.value;
+    nameInput.placeholder = 'FakeRover-Acme-01';
+  }
+}
+
+function onPaymentChannelChange() {
+  var fiat = document.getElementById('regAcceptFiat').checked;
+  var usdc = document.getElementById('regAcceptUsdc').checked;
+  document.getElementById('regFiatSection').style.display = fiat ? '' : 'none';
+  document.getElementById('regUsdcSection').style.display = usdc ? '' : 'none';
+}
+
+function copyMcpCommand() {
+  var cmd = document.getElementById('mcpCommandBlock').textContent;
+  navigator.clipboard.writeText(cmd).then(function() {
+    var btn = document.getElementById('mcpCopyBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy Command'; }, 2000);
+  });
+}
+
+function connectOperatorWallet() {
+  var statusEl = document.getElementById('walletStatus');
+  if (!window.ethereum) {
+    statusEl.style.display = 'block';
+    statusEl.textContent = 'No wallet detected. Install MetaMask or Coinbase Wallet.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+  window.ethereum.request({ method: 'eth_requestAccounts' }).then(function(accounts) {
+    if (accounts && accounts.length) {
+      window._registration.operatorWallet = accounts[0];
+      var short = accounts[0].slice(0, 6) + '...' + accounts[0].slice(-4);
+      statusEl.style.display = 'block';
+      statusEl.textContent = 'Connected: ' + short;
+      statusEl.style.color = 'var(--green)';
+      document.getElementById('walletConnectBtn').textContent = 'Connected (' + short + ')';
+      document.getElementById('walletConnectBtn').disabled = true;
+    }
+  }).catch(function(err) {
+    statusEl.style.display = 'block';
+    statusEl.textContent = 'Connection rejected.';
+    statusEl.style.color = 'var(--red)';
+  });
+}
+
+function submitRegistration() {
+  var name = document.getElementById('regName').value.trim();
+  var company = document.getElementById('regCompany').value.trim();
+  var email = document.getElementById('regEmail').value.trim();
+  var location = document.getElementById('regLocation').value.trim();
+  var modelSelect = document.getElementById('regModel').value;
+  var model = modelSelect === '__other__' ? document.getElementById('regModelOther').value.trim() : modelSelect;
+  var desc = document.getElementById('regDescription').value.trim();
+  var minBid = parseInt(document.getElementById('regMinBid').value) || 50;
+  var bidPct = parseInt(document.getElementById('regBidPct').value) / 100;
+
+  // Collect checked equipment types
+  var equipChecks = document.querySelectorAll('#regEquipmentChecks input[type=checkbox]:checked');
+  var equipTypes = [];
+  equipChecks.forEach(function(cb) {
+    if (cb.value === '__other_sensor__') {
+      var custom = document.getElementById('regSensorOther').value.trim();
+      if (custom) custom.split(',').forEach(function(s) { var t = s.trim().toLowerCase().replace(/\s+/g, '_'); if (t) equipTypes.push(t); });
+    } else {
+      equipTypes.push(cb.value);
+    }
+  });
+  var equipType = equipTypes[0] || 'aerial_lidar';
+
+  // Enforce FakeRover- prefix for demo discovery (unless admin)
+  if (!isRegAdmin() && !name.startsWith('FakeRover-')) name = 'FakeRover-' + name;
+
+  // Validate required fields
+  if (!name || name === 'FakeRover-' || !company || !email || !location) {
+    showError('Please fill in all required fields: Robot Name, Company, Email, and Location.');
+    return;
+  }
+  if (!equipTypes.length) {
+    showError('Please select at least one sensor capability.');
+    return;
+  }
+
+  // Collect selected chains
+  var selectedChains = [];
+  if (document.getElementById('regChainBaseMainnet') && document.getElementById('regChainBaseMainnet').checked) selectedChains.push('base-mainnet');
+  if (document.getElementById('regChainBaseSepolia') && document.getElementById('regChainBaseSepolia').checked) selectedChains.push('base-sepolia');
+  if (document.getElementById('regChainEthMainnet') && document.getElementById('regChainEthMainnet').checked) selectedChains.push('eth-mainnet');
+  if (document.getElementById('regChainEthSepolia') && document.getElementById('regChainEthSepolia').checked) selectedChains.push('eth-sepolia');
+  if (!selectedChains.length) selectedChains = ['base-mainnet', 'base-sepolia'];
+
+  document.getElementById('errorMsg').classList.remove('visible');
+  var btn = document.getElementById('regSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Registering...';
+
+  appendFeedItem({type: 'text', claude_text: 'Registration submitted: ' + name}, feedCounter);
+
+  // Show progress
+  document.getElementById('regFormSection').style.display = 'none';
+  document.getElementById('regProgress').style.display = '';
+  var lines = document.getElementById('regProgressLines');
+  var chainLabels = {'base-mainnet':'Base mainnet','base-sepolia':'Base Sepolia','eth-mainnet':'Ethereum mainnet','eth-sepolia':'Ethereum Sepolia'};
+  var progressHtml = '';
+  selectedChains.forEach(function(c, i) {
+    progressHtml += '<div id="regStepChain' + i + '" style="color:var(--text-3)">Registering on ' + (chainLabels[c]||c) + '...</div>';
+  });
+  progressHtml += '<div id="regStepFleet" style="color:var(--text-3)">Joining bidding fleet...</div>';
+  lines.innerHTML = progressHtml;
+
+  // Animate progress steps with estimated timing
+  selectedChains.forEach(function(c, i) {
+    setTimeout(function() { markRegStep('regStepChain' + i, 'pending'); }, 500 + i * 12000);
+  });
+
+  var tunnelUrl = document.getElementById('tunnelUrl').value;
+  fetch(tunnelUrl + '/api/tool/auction_register_robot_onchain', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: name,
+      description: desc || name + ' survey robot',
+      company_name: company,
+      contact_email: email,
+      location: location,
+      equipment_type: equipType,
+      equipment_types: equipTypes,
+      model: model,
+      min_bid_cents: minBid,
+      bid_pct: bidPct,
+      operator_wallet: window._registration.operatorWallet || '',
+      chains: selectedChains,
+    }),
+    signal: AbortSignal.timeout(120000),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var result = data.result || data;
+
+    // Check for top-level tool error (e.g. missing env vars)
+    if (result.error || result.error_code) {
+      showError(result.message || result.error || 'Registration failed.');
+      document.getElementById('regFormSection').style.display = '';
+      document.getElementById('regProgress').style.display = 'none';
+      btn.disabled = false;
+      btn.textContent = 'Register & Activate';
+      return;
+    }
+
+    // Mark per-chain progress
+    var chains = result.chains || {};
+    var successChains = [];
+    var failedChains = [];
+    selectedChains.forEach(function(c, i) {
+      var cr = chains[c] || {};
+      if (cr.status === 'ok') {
+        markRegStep('regStepChain' + i, 'done', cr.agent_id || '');
+        successChains.push(c);
+        appendFeedItem({type: 'tool_call', tool_name: 'register_' + c.replace('-','_')}, feedCounter);
+      } else {
+        markRegStep('regStepChain' + i, 'error', cr.error || 'failed');
+        failedChains.push(c);
+        appendFeedItem({type: 'text', claude_text: (chainLabels[c]||c) + ': ' + (cr.error || 'failed')}, feedCounter);
+      }
+    });
+
+    // Check if ALL chains failed
+    if (successChains.length === 0) {
+      markRegStep('regStepFleet', 'error', 'no chain succeeded');
+      appendFeedItem({type: 'text', claude_text: 'Registration failed — all chains returned errors'}, feedCounter);
+      // Show error but keep progress visible so user can see per-chain errors
+      setTimeout(function() {
+        var errorHtml = '<div style="margin-top:16px;padding:16px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);font-size:13px;color:var(--red)">';
+        errorHtml += '<strong>Registration failed.</strong> No chain registration succeeded.<br>';
+        failedChains.forEach(function(c) {
+          var cr = chains[c] || {};
+          errorHtml += '<div style="margin-top:4px">' + escapeHtml(chainLabels[c]||c) + ': ' + escapeHtml(cr.error || 'unknown error') + '</div>';
+        });
+        errorHtml += '<div style="margin-top:8px"><button class="admin-btn" onclick="document.getElementById(\'regFormSection\').style.display=\'\';document.getElementById(\'regProgress\').style.display=\'none\';showRegStep(\'payment\')" style="margin-top:4px">Back to Payment &amp; Bidding</button></div>';
+        errorHtml += '</div>';
+        document.getElementById('regProgress').insertAdjacentHTML('beforeend', errorHtml);
+        btn.disabled = false;
+        btn.textContent = 'Register & Activate';
+      }, 800);
+      return;
+    }
+
+    // At least one chain succeeded — verify on-chain before showing confirmation
+    markRegStep('regStepFleet', 'pending');
+
+    // On-chain verification: query the subgraph to confirm the agent exists
+    var verifyChain = successChains[0];
+    var verifyAgentId = (chains[verifyChain].agent_id || '').split(':').pop();
+    var subgraphUrls = {
+      'base-mainnet': 'https://gateway.thegraph.com/api/536c6d8572876cabea4a4ad0fa49aa57/subgraphs/id/43s9hQRurMGjuYnC1r2ZwS6xSQktbFyXMPMqGKUFJojb',
+      'base-sepolia': 'https://gateway.thegraph.com/api/536c6d8572876cabea4a4ad0fa49aa57/subgraphs/id/4yYAvQLFjBhBtdRCY7eUWo181VNoTSLLFd5M7FXQAi6u',
+      'eth-mainnet': 'https://gateway.thegraph.com/api/7fd2e7d89ce3ef24cd0d4590298f0b2c/subgraphs/id/FV6RR6y13rsnCxBAicKuQEwDp8ioEGiNaWaZUmvr1F8k',
+      'eth-sepolia': 'https://gateway.thegraph.com/api/00a452ad3cd1900273ea62c1bf283f93/subgraphs/id/6wQRC7geo9XYAhckfmfo8kbMRLeWU8KQd3XsJqFKmZLT',
+    };
+    var subgraphUrl = subgraphUrls[verifyChain];
+
+    function showConfirmation(verified) {
+      if (verified) {
+        markRegStep('regStepFleet', 'done', (result.fleet_size || 0) + ' robots active — verified on-chain');
+      } else {
+        markRegStep('regStepFleet', 'done', (result.fleet_size || 0) + ' robots active — subgraph pending');
+      }
+
+      window._registration.operatorId = result.operator_id;
+      window._registration.chains = chains;
+      window._registration.status = result.status;
+
+      setTimeout(function() {
+        document.getElementById('regProgress').style.display = 'none';
+        document.getElementById('regConfirm').style.display = '';
+        var card = document.getElementById('regConfirmCard');
+        var isPartial = failedChains.length > 0;
+        var scanPaths = {'base-mainnet':'base','base-sepolia':'base-sepolia','eth-mainnet':'ethereum','eth-sepolia':'ethereum-sepolia'};
+        var firstUri = '';
+        var transferAddr = '';
+        selectedChains.forEach(function(c) {
+          var cr = chains[c] || {};
+          if (cr.agent_uri && !firstUri) firstUri = cr.agent_uri;
+          if (cr.transferred_to) transferAddr = cr.transferred_to;
+        });
+
+        var h = '';
+
+        // ---- Status badge at top ----
+        if (result.status === 'active') {
+          h += '<div style="margin-bottom:16px"><span style="background:var(--green-bg);color:var(--green);padding:6px 12px;border-radius:4px;font-size:12px;font-weight:600">REGISTERED — BIDDING ENABLED</span></div>';
+        } else if (result.status === 'partial') {
+          h += '<div style="margin-bottom:16px"><span style="background:var(--amber-bg);color:var(--amber);padding:6px 12px;border-radius:4px;font-size:12px;font-weight:600">PARTIALLY REGISTERED — BIDDING ENABLED</span></div>';
+        }
+
+        // ---- Robot identity ----
+        h += '<h3 style="margin-bottom:2px">' + escapeHtml(result.name || name) + '</h3>';
+        h += '<div style="font-size:13px;color:var(--text-2);margin-bottom:16px">' + escapeHtml(result.company || company) + ' &middot; ' + escapeHtml(location) + '</div>';
+
+        h += '<div class="kv-row"><span class="kv-label">Platform</span><span class="kv-value">' + escapeHtml(model) + '</span></div>';
+        h += '<div class="kv-row"><span class="kv-label">Sensors</span><span class="kv-value">' + equipTypes.map(escapeHtml).join(', ') + '</span></div>';
+        h += '<div class="kv-row"><span class="kv-label">Bid at</span><span class="kv-value">' + Math.round(bidPct * 100) + '% of budget</span></div>';
+        if (transferAddr) {
+          h += '<div class="kv-row"><span class="kv-label">Owner</span><span class="kv-value kv-value-green">' + escapeHtml(transferAddr) + '</span></div>';
+        }
+        if (firstUri) {
+          var cid = firstUri.replace('ipfs://', '');
+          h += '<div class="kv-row"><span class="kv-label">IPFS</span><span class="kv-value kv-value-mono"><a href="https://gateway.pinata.cloud/ipfs/' + cid + '" target="_blank" style="color:var(--link)">' + escapeHtml(firstUri) + '</a></span></div>';
+        }
+
+        // ---- Chain registration results (separate section) ----
+        h += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">';
+        h += '<div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">On-Chain Registration</div>';
+
+        // Successful chains
+        selectedChains.forEach(function(c) {
+          var cr = chains[c] || {};
+          if (cr.status === 'ok' && cr.agent_id) {
+            var aid = cr.agent_id.split(':').pop();
+            var scanPath = scanPaths[c] || c;
+            h += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bg-subtle)">';
+            h += '<span style="color:var(--green);font-size:14px">&#10003;</span>';
+            h += '<span style="font-size:13px;font-weight:500;min-width:120px">' + escapeHtml(chainLabels[c]||c) + '</span>';
+            h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:12px"><a href="https://8004scan.io/agents/' + scanPath + '/' + aid + '" target="_blank" style="color:var(--link)">#' + escapeHtml(aid) + '</a></span>';
+            h += '<span style="font-size:11px;color:' + (verified ? 'var(--green)' : 'var(--amber)') + ';margin-left:auto">' + (verified ? 'verified' : 'pending indexing') + '</span>';
+            h += '</div>';
+          }
+        });
+
+        // Failed chains
+        selectedChains.forEach(function(c) {
+          var cr = chains[c] || {};
+          if (cr.status !== 'ok') {
+            h += '<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--bg-subtle)">';
+            h += '<span style="color:var(--red);font-size:14px">&#10007;</span>';
+            h += '<span style="font-size:13px;font-weight:500;min-width:120px">' + escapeHtml(chainLabels[c]||c) + '</span>';
+            h += '<span style="font-size:12px;color:var(--red)">' + escapeHtml(cr.error || 'Registration failed') + '</span>';
+            h += '</div>';
+          }
+        });
+
+        h += '</div>';
+
+        card.innerHTML = h;
+
+        // Add to sidebar only if at least one chain succeeded
+        if (successChains.length > 0) {
+          var firstOk = null;
+          successChains.forEach(function(c) { if (!firstOk && chains[c] && chains[c].agent_id) firstOk = chains[c]; });
+          discoveredRobots.push({
+            agent_id: firstOk ? firstOk.agent_id.split(':').pop() : 'new',
+            chain_id: verifyChain === 'base-mainnet' ? 8453 : verifyChain === 'base-sepolia' ? 84532 : verifyChain === 'eth-mainnet' ? 1 : 11155111,
+            chain_name: chainLabels[verifyChain] || verifyChain,
+            name: result.name || name,
+            description: desc || '',
+            active: true,
+            x402_support: false,
+            mcp_endpoint: '',
+            mcp_tools: [],
+            owner: '',
+            payment: { usdc_wallet: null, wallet_chain_id: null, stripe_connect_id: null },
+          });
+          var robotCards = document.getElementById('robotCards');
+          if (robotCards) { robotCards.innerHTML = ''; renderRobotsSidebar(getFilteredRobots()); }
+        }
+
+        appendFeedItem({type: 'text', claude_text: 'Robot registered: ' + (result.name || name) + (isPartial ? ' (partial — ' + failedChains.length + ' chain(s) failed)' : ' (' + successChains.length + ' chain(s))')}, feedCounter);
+      }, 800);
+    }
+
+    // Attempt on-chain verification via subgraph (with timeout fallback)
+    if (subgraphUrl && verifyAgentId) {
+      var verifyQuery = '{ agents(where: {agentId: "' + verifyAgentId + '"}) { agentId registrationFile { name active } } }';
+      fetch(subgraphUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: verifyQuery }),
+        signal: AbortSignal.timeout(10000),
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(sg) {
+        var agents = (sg.data && sg.data.agents) || [];
+        var found = agents.some(function(a) { return a.registrationFile && a.registrationFile.name; });
+        showConfirmation(found);
+      })
+      .catch(function() {
+        // Subgraph query failed or timed out — still show confirmation but mark as unverified
+        showConfirmation(false);
+      });
+    } else {
+      showConfirmation(false);
+    }
+  })
+  .catch(function(err) {
+    showError('Registration failed: ' + (err.message || err));
+    document.getElementById('regFormSection').style.display = '';
+    document.getElementById('regProgress').style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = 'Register & Activate';
+  });
+}
+
+function markRegStep(id, status, detail) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.replace(/^[\s✓✗⏳]*/, '').trim();
+  if (status === 'done') {
+    el.style.color = 'var(--green)';
+    el.innerHTML = '✓ ' + escapeHtml(text) + (detail ? ' <span style="font-family:\'JetBrains Mono\',monospace;font-size:11px">' + escapeHtml(String(detail)) + '</span>' : '');
+  } else if (status === 'error') {
+    el.style.color = 'var(--red)';
+    el.innerHTML = '✗ ' + escapeHtml(text) + (detail ? ' <span style="font-size:11px">(' + escapeHtml(String(detail)) + ')</span>' : '');
+  } else {
+    el.style.color = 'var(--text)';
+    el.innerHTML = '⏳ ' + escapeHtml(text);
+  }
+}
+
 // Show build stamp
 var bs = document.getElementById('buildStamp');
 if (bs && !BUILD_STAMP.includes('TIMESTAMP')) bs.textContent = 'build: ' + BUILD_STAMP;
 checkPaymentReturn();
+
+// Demo feedback — opens pre-filled GitHub issue
+function openFeedbackIssue() {
+  var title = encodeURIComponent('[Demo Feedback] ');
+  var body = encodeURIComponent('**Source:** ' + location.href + '\n**Date:** ' + new Date().toISOString().split('T')[0] + '\n\n## Feedback\n\n<!-- What worked? What didn\'t? What would make this useful for your work? -->\n\n');
+  var labels = encodeURIComponent('feedback');
+  window.open('https://github.com/YakRoboticsGarage/yakrover-marketplace/issues/new?title=' + title + '&body=' + body + '&labels=' + labels, '_blank');
+}
 </script>
 
 </body>

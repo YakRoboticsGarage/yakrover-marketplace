@@ -15,6 +15,11 @@
 | **v0.1** | 2 weeks | Seed demo — auction works end-to-end against fakerover simulator | **Built** |
 | **v0.5** | 6 weeks | Functional prototype — failure scenarios, wallet tracking, live bid engines | **Built** |
 | **v1.0** | 12 weeks | Production MVP — real Stripe payments, persistent state, real robots | **Built** (151 tests, 15 MCP tools, ~11,400 LOC) |
+| **v1.1** | +1 week | Real Tumbller robot via MCP, Fly.io always-on, Stripe authorize/capture, gasless USDC on Base | **Built** (2026-04-06) |
+| **v1.2** | +1 day | EIP-3009 USDC (replaced ERC-2612), platform fee removed, professional buyer UI | **Built** (2026-04-07) |
+| **v1.3** | +1 day | ACH bank transfer, 3-method payment selector (Card/Bank/Stablecoin), US Stripe | **Built** (2026-04-08). 284 tests, 35 MCP tools, ~17,042 LOC |
+| **v1.4** | — | Operator sign-up and registration. Production frontend for existing backend tools. | **Next** |
+| **v1.5** | 4 weeks | Settlement abstraction, construction task specs, privacy foundation | **Planned** — gated on v1.4 |
 
 ---
 

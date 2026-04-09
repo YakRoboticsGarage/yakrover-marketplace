@@ -914,3 +914,35 @@ def create_full_fleet() -> list[MockRobot]:
     Used when both sensor-reading and construction survey tasks need to work.
     """
     return create_demo_fleet() + create_construction_fleet()
+
+
+class RuntimeRegisteredRobot(ConstructionMockRobot):
+    """Robot created at runtime from operator registration form.
+
+    Accepts all fields in __init__ (unlike the hardcoded fleet subclasses).
+    Inherits bid_engine() (budget-percentage bidding with sensor filtering)
+    and execute() (mock survey deliverables) from ConstructionMockRobot.
+    """
+
+    def __init__(
+        self,
+        robot_id: str,
+        name: str,
+        sensors: list[str],
+        capability_metadata: dict,
+        reputation_metadata: dict,
+        signing_key: str,
+        bid_pct: float = 0.80,
+        sla_seconds: int = 3600,
+        ai_confidence: float = 0.85,
+    ):
+        self.robot_id = robot_id
+        self.name = name
+        self.operator_company = name
+        self.capability_metadata = capability_metadata
+        self.reputation_metadata = reputation_metadata
+        self.signing_key = signing_key
+        self._bid_pct = bid_pct
+        self._sla_seconds = sla_seconds
+        self._ai_confidence = ai_confidence
+        self._price = Decimal("1")  # unused by ConstructionMockRobot.bid_engine() but required on base

@@ -40,7 +40,6 @@ load_dotenv()
 from auction.engine import AuctionEngine
 from auction.wallet import WalletLedger
 from auction.reputation import ReputationTracker
-from auction.mock_fleet import create_full_fleet
 from auction.mcp_tools import register_auction_tools
 from auction.core import log
 
@@ -140,9 +139,9 @@ def build_engine():
     else:
         log("SERVER", "SQLite: in-memory (set AUCTION_DB_PATH for persistence)")
 
-    # Start with mock fleet (fast startup)
-    fleet = create_full_fleet()
-    log("SERVER", f"Fleet: {len(fleet)} operators (mock fleet — on-chain discovery on first request)")
+    # Start with empty fleet — on-chain discovery populates it on first request
+    fleet = []
+    log("SERVER", "Fleet: empty (on-chain discovery on first auction request)")
 
     # Event tracking
     from auction.events import EventEmitter
@@ -162,6 +161,7 @@ def build_engine():
     # Lazy discovery: runs once on first auction request, then caches
     engine._discovery_done = False
     engine._simulator_only = False
+    engine._hide_fakerovers = False
 
     def discover_and_swap_fleet():
         """Discover on-chain robots, probe liveness, hot-swap the engine fleet."""
@@ -208,20 +208,28 @@ def build_engine():
                     else:
                         log("PROBE", f"  --{adapter.robot_id} ({kind})")
 
-            from auction.mock_fleet import create_construction_fleet
+            # On-chain robots only — no mock fleet
             if real_online and not engine._simulator_only:
-                new_fleet = create_construction_fleet() + real_online
-                label = f"{len(real_online)} real robot(s) — simulators excluded"
+                new_fleet = real_online
+                label = f"{len(real_online)} real robot(s)"
             elif sim_online:
-                new_fleet = create_construction_fleet() + sim_online
-                label = f"{len(sim_online)} simulator(s) — no real robots"
+                new_fleet = sim_online
+                label = f"{len(sim_online)} simulator(s)"
             else:
-                log("DISCOVERY", "No robots reachable — keeping mock fleet")
+                log("DISCOVERY", "No on-chain robots reachable — fleet unchanged")
                 return
 
-            engine.robots = new_fleet
-            engine._robots_by_id = {r.robot_id: r for r in new_fleet}
-            log("SERVER", f"Fleet updated: {len(new_fleet)} operators ({label})")
+            # Preserve runtime-registered robots (from operator registration form)
+            from auction.mock_fleet import RuntimeRegisteredRobot
+            with engine._fleet_lock:
+                registered = [r for r in engine.robots if isinstance(r, RuntimeRegisteredRobot)]
+                if engine._hide_fakerovers:
+                    registered = [r for r in registered if not getattr(r, 'name', '').startswith('FakeRover-')]
+                if registered:
+                    new_fleet = new_fleet + registered
+                engine.robots = new_fleet
+                engine._robots_by_id = {r.robot_id: r for r in new_fleet}
+            log("SERVER", f"Fleet updated: {len(new_fleet)} operators ({label}, +{len(registered)} registered)")
 
         except Exception as e:
             log("DISCOVERY", f"Discovery failed: {e}")
@@ -400,22 +408,24 @@ Start by asking the user what survey they need, or process an RFP they provide."
             return JSONResponse({"error": str(e)}, status_code=500)
 
     async def handle_fleet_mode(request: Request) -> JSONResponse:
-        """Set fleet mode: simulator_only=true excludes real robots."""
+        """Set fleet mode: simulator_only excludes real robots, hide_fakerovers excludes FakeRover mock fleet."""
         try:
             body = await request.json()
         except Exception:
             return JSONResponse({"error": "Invalid JSON"}, status_code=400)
 
         sim_only = body.get("simulator_only", False)
-        old_mode = engine._simulator_only
+        hide_fake = body.get("hide_fakerovers", False)
+        old_mode = (engine._simulator_only, engine._hide_fakerovers)
         engine._simulator_only = sim_only
+        engine._hide_fakerovers = hide_fake
 
         # Force re-discovery if mode changed
-        if sim_only != old_mode:
+        if (sim_only, hide_fake) != old_mode:
             engine._discovery_done = False
-            log("SERVER", f"Fleet mode changed: simulator_only={sim_only} — re-discovery on next request")
+            log("SERVER", f"Fleet mode changed: simulator_only={sim_only}, hide_fakerovers={hide_fake} — re-discovery on next request")
 
-        return JSONResponse({"ok": True, "simulator_only": sim_only})
+        return JSONResponse({"ok": True, "simulator_only": sim_only, "hide_fakerovers": hide_fake})
 
     # Build combined app: REST routes + MCP mount
     mcp_starlette = mcp.streamable_http_app()

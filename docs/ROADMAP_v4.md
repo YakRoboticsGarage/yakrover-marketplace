@@ -2,8 +2,8 @@
 
 **Project:** yakrover-auction-explorer
 **Owner:** Product
-**Last updated:** 2026-04-08 (rev 4.9, v1.3 milestone — ACH + 3-method payment selector)
-**Status:** v1.0 built. v1.1 complete. v1.2 complete. **v1.3 milestone** (284 tests, 35 MCP tools). ACH bank transfer, 3-method buyer payment selector, US Stripe, deploy scripts. Demo at yakrobot.bid/demo.
+**Last updated:** 2026-04-09 (rev 5.0, v1.4 next — operator sign-up and registration)
+**Status:** v1.0 built. v1.1 complete. v1.2 complete. v1.3 complete (284 tests, 35 MCP tools). **v1.4 next** — production operator sign-up and registration. Demo at yakrobot.bid/demo.
 
 > All product decisions and technical constraints referenced by ID live in `docs/DECISIONS.md`.
 > Feature requirements for the next build: `docs/FEATURE_REQUIREMENTS_v15.md`.
@@ -23,11 +23,12 @@ Every feature on this roadmap exists to serve a named user. If a feature cannot 
 | **v1.0 (built)** | Sarah — Facilities Manager | Buyer | Warehouse sensor readings via AI assistant |
 | | Robot Operator (fleet) | Operator | Registers fleet, configures pricing, receives payouts |
 | | Claude (AI Agent) | Agent | Translates intent to structured tasks, runs auctions |
+| **v1.4 (next)** | Alex — Independent Operator | Operator | Signs up, registers equipment, uploads credentials, receives Stripe Connect payouts |
+| | Controller / AP Manager | Controller | Configures company account, payment methods, agent spending limits |
 | **v1.5** | Marco — Senior Estimator | Buyer | Pre-bid surveys, progress monitoring via AI assistant |
 | | Drone/Robot Operator (regional) | Operator | Bids on construction survey tasks, uploads data |
 | | Platform Administrator | Admin | Monitors health, manages payouts |
 | **v2.0** | Marco (multi-robot) | Buyer | Compound surveys: aerial + ground + GPR in one job |
-| | Alex — Independent Operator | Operator | Onboards robot, earns revenue, sees demand heatmap |
 | | Diane — Program Manager | Buyer | Classified inspections with encrypted specs |
 | **v2.5** | Mine Surveyor | Buyer | Volumetric stockpile surveys, highwall inspections |
 | **v3.0** | Bridge Program Manager | Buyer | Federally mandated bridge inspections |
@@ -266,37 +267,58 @@ ACH does not support authorize/capture. Card uses Stripe manual capture (real ho
 
 ---
 
-## v1.4 — Demo Polish + Livestream + Platform Admin (PLANNED)
+## v1.4 — Operator Sign-Up and Registration (NEXT)
 
 | | |
 |---|---|
 | **Timeline** | After v1.3 |
-| **Serves** | Demo audiences, investors, Marco (buyer) |
-| **Goal** | Livestream of robot execution. Operational tooling. Demo credibility for fundraising. |
+| **Serves** | Alex (independent operator), Controller (AP manager) |
+| **Goal** | Production operator registration, credential verification, and Stripe Connect onboarding. First real operator onboarded. |
+| **Gate for v1.5** | At least 1 operator registered and activated |
+| **Robot verification** | Liveness probe on registration (MCP endpoint reachable). See PLAN_OPERATOR_REGISTRATION.md for v1.5+ verification roadmap (capability attestation, signed telemetry, delivery cross-verification). |
 
-### Robot execution livestream
+### What exists (backend — all implemented)
 
-Embed a live camera feed in the Execute phase so demo audiences see the robot physically move and take sensor readings. Simplest viable path: MJPEG stream over HTTP tunnel.
+All 6 MCP tools for operator management are built and tested:
 
-```
-Camera (MJPEG) → Cloudflare tunnel → <img> tag in Execute phase
-```
+| Tool | Function |
+|------|----------|
+| `auction_register_operator` | Create operator profile (company, contact, location, coverage area) |
+| `auction_add_equipment` | Register drone/sensor with specs, mapped to eligible task categories |
+| `auction_activate_operator` | Activate for bidding (requires Part 107 + CGL insurance + 1 equipment item) |
+| `auction_onboard_operator` | Stripe Connect Express onboarding — operator completes hosted KYB |
+| `auction_verify_operator_compliance` | Check Part 107, insurance COI, PLS license, SAM.gov exclusion |
+| `auction_upload_compliance_doc` | Upload and verify compliance documents |
 
-| Component | What's needed |
-|-----------|--------------|
-| Camera hardware | ESP32-CAM, IP camera, or USB webcam pointed at robot |
-| Stream tunnel | Add to yakrover.online Cloudflare tunnel (e.g. `camera.yakrover.online`) |
-| Frontend | `<img src="stream_url">` in Execute phase, show/hide with robot execution state |
-| Robot metadata | Optional: `camera_endpoint` in on-chain metadata for per-robot camera discovery |
+### What needs to be built (frontend + deployment)
 
-**Effort:** ~30 minutes for MJPEG. ~2 hours if HLS via YouTube/Cloudflare Stream is needed for scale.
+- **Registration page** — form-based operator sign-up (company name, contact, location, coverage states, max range)
+- **Equipment wizard** — operator selects drone/sensor type, marketplace maps to eligible task categories
+- **Credential upload** — Part 107 certificate, ACORD 25 insurance COI, PLS license. Automated verification with status indicators.
+- **Stripe Connect onboarding** — embedded Express onboarding flow for operator payout capability
+- **Operator dashboard** — registration progress, compliance checklist (green/yellow/red), equipment inventory
+- **Operator profile view** — visible to buyers at bid review: equipment, certifications, coverage area, compliance status
+- **Deployment** — production hosting for the registration flow (Cloudflare Workers or Fly.io)
 
-### Platform administration (carried from v1.2 plan)
+### Done (v1.4 build progress)
 
-- Operational runbook: secret rotation, wallet funding, worker deploy
-- Relay wallet balance monitoring
-- Service health endpoint aggregation
-- Deploy scripts (done in v1.3)
+- Mock fleet archived — auction engine starts empty, uses only on-chain discovered robots
+- `auction_register_robot_onchain` MCP tool — registers on Base mainnet + Sepolia, hot-adds to fleet
+- 3-step registration UI in demo (Profile → Equipment → Payment & Bidding)
+- Three registration modes: platform signs, operator wallet, Claude Code / MCP
+- FakeRover- prefix enforcement for demo, admin passcode bypass for real robots
+- Hide FakeRovers toggle — filters both sidebar display and server-side auction fleet
+
+### Next steps (v1.4 remaining)
+
+- **Remove `RuntimeRegisteredRobot` dependency on `mock_fleet.py`.** Currently inherits `bid_engine()` and `execute()` from `ConstructionMockRobot`. Should implement its own ~30 lines each, or be replaced entirely by `MCPRobotAdapter` once operators run their own MCP servers. This decouples registration from the mock fleet — `mock_fleet.py` becomes a test-only utility.
+- **Refactor tests to use `RuntimeRegisteredRobot`.** 274 tests currently import `create_demo_fleet()` / `create_construction_fleet()` directly. Not blocking but adds unnecessary coupling to archived mock fleet.
+- **Base Sepolia registration debugging.** Berlin-04 registered on Base mainnet but Sepolia failed silently. Investigate SDK timeout or gas issue on Sepolia.
+
+### Deferred to later milestones
+
+- Robot execution livestream (MJPEG/HLS camera feed) — moved to post-v1.4
+- Platform administration tooling (relay wallet monitoring, health aggregation) — partially done in v1.3 deploy scripts
 
 ---
 

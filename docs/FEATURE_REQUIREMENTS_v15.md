@@ -1,10 +1,10 @@
 # Feature Requirements — v1.5 Crypto Rail (with Privacy-Aware Foundation)
 
 **Version:** 1.5
-**Last updated:** 2026-03-26
-**Status:** Ready for build
+**Last updated:** 2026-04-09
+**Status:** Planned — gated on v1.4 completion (operator registration in production)
 **Timeline:** Weeks 13-16 (4 weeks)
-**Depends on:** v1.0 (BUILT — 151 tests, 15 MCP tools, ~11,400 LOC)
+**Depends on:** v1.4 (operator sign-up and registration in production, at least 1 operator onboarded). Build base: v1.3 (284 tests, 35 MCP tools, ~17,042 LOC).
 
 > **Goal:** USDC on Base accepted alongside Stripe. Settlement abstraction designed for future privacy (Diane) and lunar (Kenji) modes. Three privacy-aware changes ship to prevent architectural debt. Horizen L3 on Base identified as Mode 2 candidate for v2.1-P.
 
