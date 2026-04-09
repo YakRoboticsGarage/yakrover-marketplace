@@ -807,7 +807,7 @@ Requirements:
 
 <script>
 // Build timestamp — updated each deploy
-var BUILD_STAMP = '__BUILD_TIMESTAMP__';
+var BUILD_STAMP = '__BUILD_TIMESTAMP__'; // replaced by deploy-demo.sh; fallback below if unreplaced
 
 // ===== CONSTANTS (copied verbatim from mcp-demo-2) =====
 var WORKER_URL = 'https://yakrobot-chat.rafaeldf2.workers.dev/api/demo';
@@ -3581,7 +3581,24 @@ function markRegStep(id, status, detail) {
 
 // Show build stamp
 var bs = document.getElementById('buildStamp');
-if (bs) bs.textContent = BUILD_STAMP.includes('TIMESTAMP') ? 'local dev' : 'build: ' + BUILD_STAMP;
+if (bs) {
+  if (!BUILD_STAMP.includes('TIMESTAMP')) {
+    bs.textContent = 'build: ' + BUILD_STAMP;
+  } else {
+    // Fallback: fetch last commit date from GitHub API (lightweight, cached by CDN)
+    fetch('https://api.github.com/repos/YakRoboticsGarage/yakrover-marketplace/commits/main', { headers: { Accept: 'application/vnd.github.v3+json' } })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.commit && d.commit.committer && d.commit.committer.date) {
+          var dt = new Date(d.commit.committer.date);
+          bs.textContent = 'build: ' + dt.toISOString().split('T')[0] + ' ' + dt.toISOString().split('T')[1].slice(0,5) + ' UTC';
+        } else {
+          bs.textContent = 'build: ' + new Date().toISOString().split('T')[0];
+        }
+      })
+      .catch(function() { bs.textContent = 'build: ' + new Date().toISOString().split('T')[0]; });
+  }
+}
 checkPaymentReturn();
 
 // Demo feedback — opens pre-filled GitHub issue
