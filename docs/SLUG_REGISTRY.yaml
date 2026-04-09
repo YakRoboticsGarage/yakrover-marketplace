@@ -1,0 +1,38 @@
+# Slug Registry — canonical mapping of here.now slugs to yakrobot.bid URLs
+#
+# This is the single source of truth for which slug serves which page.
+# Deploy scripts should read from this file rather than hardcoding slugs.
+#
+# Format: url → slug + source directory
+# Updated: 2026-04-09
+
+sites:
+  - url: "https://yakrobot.bid/"
+    slug: gleaming-sierra-28gb
+    source: demo/index.html
+    description: Main interactive demo — MDOT I-94 RFQ walkthrough
+
+  - url: "https://yakrobot.bid/demo/"
+    slug: sturdy-riddle-vvar
+    source: docs/mcp_demo_5/index.html
+    description: Live auction demo — Claude orchestrates real MCP tools, 3-method payment, operator registration
+
+  - url: "https://yakrobot.bid/yaml/"
+    slug: wistful-mantra-9vnz
+    source: docs/site/
+    description: Product brief — curated view of PRODUCT_DSL_v2.yaml
+
+  - url: "https://yakrobot.bid/pitch/"
+    slug: bronze-osprey-nsj6
+    source: docs/pitch/
+    description: Pitch deck — investor/partner presentation
+
+# Archived slugs (no longer actively deployed)
+archived:
+  - slug: quartz-quail-vcrz
+    was: docs/archive/mcp_demo_v2/
+    note: MCP demo v2 (superseded by sturdy-riddle-vvar)
+
+  - slug: ubuntu-ledger-w4t9
+    was: chatbot/
+    note: Early chatbot deploy (superseded by Cloudflare Worker)

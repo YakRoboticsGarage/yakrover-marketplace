@@ -9,6 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Slug from docs/SLUG_REGISTRY.yaml — yakrobot.bid/demo/
 SLUG="sturdy-riddle-vvar"
 DEMO_DIR="${1:-$REPO_ROOT/docs/mcp_demo_5}"
 

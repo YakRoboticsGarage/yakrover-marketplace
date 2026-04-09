@@ -1969,8 +1969,9 @@ async function runAuction() {
   };
 
   var robotContext = '';
-  if (discoveredRobots.length > 0) {
-    var robotList = discoveredRobots.map(function(r) {
+  var filteredForPrompt = getFilteredRobots();
+  if (filteredForPrompt.length > 0) {
+    var robotList = filteredForPrompt.map(function(r) {
       var walletStr = (r.payment && r.payment.usdc_wallet) ? ', wallet: ' + r.payment.usdc_wallet : '';
       var toolStr = (r.mcp_tools && r.mcp_tools.length > 0) ? ', tools: ' + r.mcp_tools.join(', ') : '';
       return '- ' + r.name + ' (agent #' + r.agent_id + ' on ' + r.chain_name + walletStr + toolStr + ')';
@@ -2974,8 +2975,17 @@ async function showPaymentSuccess(sessionId) {
 
 function showError(msg) {
   var el = document.getElementById('errorMsg');
-  el.textContent = msg;
+  el.innerHTML =
+    '<div style="display:flex;align-items:flex-start;gap:8px">' +
+      '<span style="flex:1">' + escapeHtml(msg) + '</span>' +
+      '<span style="display:flex;gap:4px;flex-shrink:0">' +
+        '<button onclick="navigator.clipboard.writeText(\'' + escapeHtml(msg).replace(/'/g, "\\'") + '\');this.textContent=\'Copied\';setTimeout(function(){this.textContent=\'Copy\'},1500)" style="background:none;border:1px solid var(--red-border);border-radius:3px;padding:2px 8px;font-size:10px;color:var(--red);cursor:pointer;font-family:inherit">Copy</button>' +
+        '<button onclick="openFeedbackIssue()" style="background:none;border:1px solid var(--red-border);border-radius:3px;padding:2px 8px;font-size:10px;color:var(--red);cursor:pointer;font-family:inherit">Report</button>' +
+      '</span>' +
+    '</div>';
   el.classList.add('visible');
+  // Auto-scroll to make error visible
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function resetBtn() {
