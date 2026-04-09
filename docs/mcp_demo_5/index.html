@@ -153,6 +153,12 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
 .btn-sub-label{display:block;font-size:11px;color:rgba(255,255,255,0.7)}
 .star-btn{width:32px;height:32px;border-radius:4px;border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-3);background:none;padding:0;font-family:inherit;transition:all 0.1s}
 .star-btn:hover{border-color:var(--accent);color:var(--accent)}
+.link-subtle{font-size:12px;color:var(--text-3);cursor:pointer;text-decoration:underline}
+.link-subtle:hover{color:var(--accent)}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.status-dot-green{background:var(--green)}
+.status-dot-amber{background:var(--amber)}
+.status-dot-accent{background:var(--accent)}
 
 /* Key-value rows */
 .kv-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--bg-subtle)}
@@ -1619,14 +1625,14 @@ function renderWinnerCard(text, winnerName, winnerPrice) {
   // Compact structured card — no free-form narration
   slot.innerHTML =
     '<div class="card card-accent">' +
-      '<h3 style="margin-bottom:12px">Operator Selected</h3>' +
+      '<h3 class="mb-12">Operator Selected</h3>' +
       '<div class="kv-row"><span class="kv-label">Operator</span><span class="kv-value kv-value-green">' + escapeHtml(winnerName) + '</span></div>' +
       (winnerPrice ? '<div class="kv-row"><span class="kv-label">Bid</span><span class="kv-value">' + escapeHtml(winnerPrice) + '</span></div>' : '') +
       (sla ? '<div class="kv-row"><span class="kv-label">SLA</span><span class="kv-value">' + escapeHtml(sla) + '</span></div>' : '') +
       (score ? '<div class="kv-row"><span class="kv-label">Score</span><span class="kv-value">' + escapeHtml(score) + '</span></div>' : '') +
       (stripeConnectId ? '<div class="kv-row"><span class="kv-label">Stripe Connect</span><span class="kv-value kv-value-mono">' + escapeHtml(stripeConnectId) + '</span></div>' : '') +
       (walletShort ? '<div class="kv-row"><span class="kv-label">USDC Wallet</span><span class="kv-value kv-value-mono">' + escapeHtml(walletShort) + '</span></div>' : '') +
-      (text ? '<div style="margin-top:12px"><span style="font-size:12px;color:var(--text-3);cursor:pointer;text-decoration:underline" onclick="showSummaryPopup()">View full summary</span></div>' : '') +
+      (text ? '<div class="mt-12"><span class="link-subtle" onclick="showSummaryPopup()">View full summary</span></div>' : '') +
     '</div>';
 }
 
@@ -1694,8 +1700,8 @@ function renderCommitmentStatus(data, chainName) {
 
   slot.innerHTML =
     '<div class="card card-accent">' +
-      '<h3 style="color:var(--accent)">Payment Authorized</h3>' +
-      '<p class="explainer" style="margin-bottom:12px">Your payment hold is active. You will not be charged until you approve the delivered results.</p>' +
+      '<h3 style="color:var(--accent)" class="mb-8">Payment Authorized</h3>' +
+      '<p class="explainer mb-12">Your payment hold is active. You will not be charged until you approve the delivered results.</p>' +
       '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">Operator working...</span></div>' +
       '<div class="kv-row"><span class="kv-label">Amount</span><span class="kv-value">$' + totalAmount + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Chain</span><span class="kv-value">' + escapeHtml(chainName) + '</span></div>' +
@@ -1772,7 +1778,7 @@ async function renderDeliveryResult(deliveryData, qaResult) {
   }
 
   slot.innerHTML =
-    '<h3 style="margin-bottom:8px">Delivery Received</h3>' +
+    '<h3 class="mb-8">Delivery Received</h3>' +
     qaHtml + dataPreviewHtml;
 }
 
@@ -1794,7 +1800,7 @@ function renderReceipt(data) {
         '<h3>Payment Complete</h3>' +
         '<p class="explainer mb-16">Your card has been charged. Payment distributed to the operator.</p>' +
         '<div class="kv-row"><span class="kv-label">Operator received</span><span class="kv-value kv-value-green">$' + data.operator_amount.toFixed(2) + '</span></div>' +
-        (data.receipt_url ? '<div style="margin-top:12px"><a class="receipt-link" href="' + data.receipt_url + '" target="_blank">View Stripe receipt</a></div>' : '') +
+        (data.receipt_url ? '<div class="mt-12"><a class="receipt-link" href="' + data.receipt_url + '" target="_blank">View Stripe receipt</a></div>' : '') +
       '</div>';
   } else {
     slot.innerHTML =
@@ -1802,7 +1808,7 @@ function renderReceipt(data) {
         '<h3>Payment Complete</h3>' +
         '<p class="explainer mb-16">Payment has been released to the operator.</p>' +
         '<div class="kv-row"><span class="kv-label">Operator received</span><span class="kv-value kv-value-green">$' + data.operator_amount.toFixed(4) + '</span></div>' +
-        '<div style="margin-top:12px">' +
+        '<div class="mt-12">' +
           '<a class="receipt-link" href="' + data.explorer + '/tx/' + data.operator_tx + '" target="_blank">View operator payment</a>' +
         '</div>' +
       '</div>';
@@ -2487,8 +2493,8 @@ function showAchHoldApproved(data, amountCents, operatorName, operatorAccountId)
   var statusText = data.status === 'succeeded' ? 'Bank transfer complete.' : 'Bank transfer initiated. Processing.';
   slot.innerHTML =
     '<div class="card card-accent">' +
-      '<h3 style="color:var(--accent)">Payment Authorized</h3>' +
-      '<p class="explainer" style="margin-bottom:12px">Your bank transfer has been initiated and your account debited. On delivery approval, funds are transferred to the operator.</p>' +
+      '<h3 style="color:var(--accent)" class="mb-8">Payment Authorized</h3>' +
+      '<p class="explainer mb-12">Your bank transfer has been initiated and your account debited. On delivery approval, funds are transferred to the operator.</p>' +
       '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">' + statusText + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Amount</span><span class="kv-value">$' + (amountCents / 100).toFixed(2) + '</span></div>' +
       '<div class="kv-row"><span class="kv-label">Method</span><span class="kv-value">ACH Bank Transfer</span></div>' +
@@ -2513,8 +2519,8 @@ function showStripeHoldApproved(checkoutData, amountCents, operatorName) {
   var slot = document.getElementById('commitmentStatusCard');
   slot.innerHTML =
     '<div class="card card-accent">' +
-      '<h3 style="color:var(--accent)">Payment Authorized</h3>' +
-      '<p class="explainer" style="margin-bottom:12px">Your card hold is active. You will not be charged until you approve the delivered results.</p>' +
+      '<h3 style="color:var(--accent)" class="mb-8">Payment Authorized</h3>' +
+      '<p class="explainer mb-12">Your card hold is active. You will not be charged until you approve the delivered results.</p>' +
       '<div class="kv-row"><span class="kv-label">Status</span><span class="kv-value kv-value-accent commit-status">Operator working...</span></div>' +
       '<div class="kv-row"><span class="kv-label">Amount</span><span class="kv-value">$' + (amountCents / 100).toFixed(2) + '</span></div>' +
     '</div>';
