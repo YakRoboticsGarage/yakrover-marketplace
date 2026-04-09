@@ -162,12 +162,15 @@ def build_engine():
     engine._discovery_done = False
     engine._simulator_only = False
     engine._hide_fakerovers = False
+    import threading as _threading
+    _discovery_lock = _threading.Lock()
 
     def discover_and_swap_fleet():
         """Discover on-chain robots, probe liveness, hot-swap the engine fleet."""
-        if engine._discovery_done:
-            return
-        engine._discovery_done = True
+        with _discovery_lock:
+            if engine._discovery_done:
+                return
+            engine._discovery_done = True
 
         try:
             from auction.mcp_robot_adapter import MCPRobotAdapter
@@ -442,7 +445,7 @@ Start by asking the user what survey they need, or process an RFP they provide."
         middleware=[
             Middleware(
                 CORSMiddleware,
-                allow_origins=["https://yakrobot.bid", "https://yakrover.online", "http://localhost:*", "https://*.here.now"],
+                allow_origins=["https://yakrobot.bid", "https://yakrover.online"],  # wildcards handled by allow_origin_regex below
                 allow_methods=["GET", "POST", "OPTIONS"],
                 allow_headers=["*"],
                 allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.here\.now|https://yakrobot\.bid|https://.*\.yakrover\.online",

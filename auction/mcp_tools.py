@@ -1209,9 +1209,12 @@ def register_auction_tools(
 
                     # Inject tool list and fleet endpoint into MCP endpoint meta
                     mcp_ep = next(
-                        ep for ep in agent.registration_file.endpoints
-                        if hasattr(ep, "type") and str(ep.type).lower().endswith("mcp")
+                        (ep for ep in agent.registration_file.endpoints
+                         if hasattr(ep, "type") and str(ep.type).lower().endswith("mcp")),
+                        None,
                     )
+                    if mcp_ep is None:
+                        raise ValueError("agent0-sdk did not create an MCP endpoint — check SDK version")
                     mcp_ep.meta["mcpTools"] = tool_names
                     mcp_ep.meta["fleetEndpoint"] = fleet_endpoint
 
@@ -1243,6 +1246,7 @@ def register_auction_tools(
                     }
 
                     # Transfer ownership if operator wallet provided
+                    # (uses same sdk instance before cleanup)
                     if operator_wallet and operator_wallet.startswith("0x"):
                         try:
                             # Extract numeric agent ID
@@ -1259,10 +1263,12 @@ def register_auction_tools(
                         except Exception as te:
                             chain_results[chain_name]["transfer_error"] = str(te)
 
+                    del sdk  # release HTTP connections
+
                 except Exception as exc:
                     chain_results[chain_name] = {
                         "status": "error",
-                        "error": str(exc),
+                        "error": str(exc)[:200],  # truncate to avoid leaking RPC URLs or keys
                     }
 
             # 3. Check if any chain succeeded
@@ -1320,7 +1326,10 @@ def register_auction_tools(
                 "message": message,
             }
 
-        return await asyncio.to_thread(_blocking_register)
+        try:
+            return await asyncio.to_thread(_blocking_register)
+        except Exception as exc:
+            return _error_response(exc)
 
     # ------------------------------------------------------------------
     # Phase 5: Agreement generation and project management tools

@@ -1494,7 +1494,7 @@ function renderRobotsSidebar(robots) {
     var hasPayment = robot.payment && (robot.payment.stripe_connect_id || robot.payment.usdc_wallet);
     var walletAddr = (robot.payment && robot.payment.usdc_wallet) || '';
     var walletShort = walletAddr ? walletAddr.slice(0, 6) + '...' + walletAddr.slice(-4) : 'none';
-    var explorerBase = robot.chain_id === 8453 ? 'https://basescan.org' : robot.chain_id === 11155111 ? 'https://sepolia.etherscan.io' : 'https://etherscan.io';
+    var explorerBase = robot.chain_id === 8453 ? 'https://basescan.org' : robot.chain_id === 84532 ? 'https://sepolia.basescan.org' : robot.chain_id === 11155111 ? 'https://sepolia.etherscan.io' : robot.chain_id === 1 ? 'https://etherscan.io' : 'https://basescan.org';
     var chainName = robot.chain_id === 8453 ? 'Base' : robot.chain_id === 11155111 ? 'Sepolia' : robot.chain_id === 1 ? 'Ethereum' : 'Chain ' + robot.chain_id;
     var chainShort = robot.chain_id === 8453 ? 'Base' : robot.chain_id === 11155111 ? 'Sep' : robot.chain_id === 1 ? 'Eth' : '#' + robot.chain_id;
     var detailId = 'robot-detail-' + idx;
@@ -1525,13 +1525,15 @@ function renderRobotsSidebar(robots) {
       '</div>' +
       '<div style="margin-top:6px">' +
         '<a href="' + explorerBase + '/nft/0x8004A818BFB912233c491871b3d84c89A494BD9e/' + escapeHtml(String(robot.agent_id)) + '" target="_blank">View on explorer</a>' +
-        ' &middot; <a href="https://8004scan.io/agents/base/' + escapeHtml(String(robot.agent_id)) + '" target="_blank">8004scan</a>' +
+        ' &middot; <a href="https://8004scan.io/agents/' + (robot.chain_id === 8453 ? 'base' : robot.chain_id === 84532 ? 'base-sepolia' : robot.chain_id === 1 ? 'ethereum' : robot.chain_id === 11155111 ? 'ethereum-sepolia' : 'base') + '/' + escapeHtml(String(robot.agent_id)) + '" target="_blank">8004scan</a>' +
       '</div>';
     cards.appendChild(detail);
   });
 
   // Auto-detect environment from robot chain (testnet robots → test mode)
-  if (robots.length > 0) {
+  // Only on initial discovery, not on filter re-renders
+  if (robots.length > 0 && !window._envAutoDetectDone) {
+    window._envAutoDetectDone = true;
     var r = robots[0];
     var isTestChain = r.chain_id === 84532 || r.chain_id === 11155111;
     if (isTestChain) {
@@ -2077,13 +2079,20 @@ async function runAuction() {
     // Extract winner info and match to discovered robot
     var winnerName = 'Operator';
     var winnerPrice = '';
+    var winnerBid = null;
     var bidStep = steps.filter(function(s) { return s.tool_name === 'auction_get_bids'; })[0];
     if (bidStep && bidStep.result && bidStep.result.result) {
       var bidsResult = bidStep.result.result;
       window._lastBidStep = bidsResult;
       winnerName = bidsResult.recommended_winner || winnerName;
-      var winnerBid = (bidsResult.bids || []).filter(function(b) { return b.robot_id === bidsResult.recommended_winner; })[0];
+      winnerBid = (bidsResult.bids || []).filter(function(b) { return b.robot_id === bidsResult.recommended_winner; })[0];
       if (winnerBid) winnerPrice = '$' + winnerBid.price;
+    }
+
+    if (!winnerBid) {
+      showError('Auction completed but no valid bid was returned. The server may not have any matching robots in the fleet. Try registering a robot first.');
+      resetBtn();
+      return;
     }
 
     // Find the winning robot in discovered robots (match by name/robot_id)
@@ -2092,7 +2101,7 @@ async function runAuction() {
     })[0] || discoveredRobots[0] || null;
 
     // Store the raw bid price for payment (robot's actual ask)
-    window._winnerBidPrice = winnerBid ? parseFloat(winnerBid.price) : 0.50;
+    window._winnerBidPrice = parseFloat(winnerBid.price);
 
     await delay(500);
     window._auctionSummaryText = data.final_text || '';
@@ -2107,9 +2116,9 @@ async function runAuction() {
 
   } catch (err) {
     showError('Network error. Check your connection and try again.');
+    resetBtn();
   }
-
-  resetBtn();
+  // Don't resetBtn on success — button stays disabled until resetDemo()
 }
 
 // Backward compat alias
@@ -2537,10 +2546,12 @@ async function payWithUSDC(operatorWallet) {
 
     var deadline = Math.floor(Date.now() / 1000) + 3600;
     var name = await usdc.name();
+    var version = '2';
+    try { version = await usdc.version(); } catch (_) {} // fallback to '2' if version() not available
 
     var domain = {
       name: name,
-      version: '2',
+      version: version,
       chainId: chainId,
       verifyingContract: usdcAddr,
     };
