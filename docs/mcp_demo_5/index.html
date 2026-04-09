@@ -152,12 +152,15 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
 .btn-primary{display:block;width:100%;padding:14px;background:var(--accent);color:#fff;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer;transition:background 0.15s}
 .btn-primary:hover{background:var(--accent-hover)}
 .btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-primary:focus-visible,.btn-continue:focus-visible,.pay-btn:focus-visible,.admin-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.phase:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:3px}
 .btn-primary.reset{background:var(--text-3);color:#fff}
 .btn-primary.reset:hover{background:var(--text-2)}
 
 /* Back link for phase navigation */
-.phase-back{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text-3);text-decoration:none;cursor:pointer;margin-bottom:12px}
+.phase-back{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text-3);text-decoration:none;cursor:pointer;margin-bottom:12px;background:none;border:none;padding:0;font-family:inherit}
 .phase-back:hover{color:var(--accent)}
+.phase-back:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 
 /* Continue button after auction */
 /* btn-continue and pay-btn share the same sizing — consolidate in a future refactor */
@@ -332,22 +335,22 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
       <span class="header-sep"></span>
     </header>
     <nav class="breadcrumbs-bar" id="breadcrumbs">
-      <span class="phase active" data-phase="setup">SETUP</span>
+      <span class="phase active" data-phase="setup" role="button" tabindex="0">SETUP</span>
       <span class="phase-chevron">&rsaquo;</span>
-      <span class="phase" data-phase="auction">AUCTION</span>
+      <span class="phase" data-phase="auction" role="button" tabindex="0">AUCTION</span>
       <span class="phase-chevron">&rsaquo;</span>
-      <span class="phase" data-phase="commit">DISPATCH</span>
+      <span class="phase" data-phase="commit" role="button" tabindex="0">DISPATCH</span>
       <span class="phase-chevron">&rsaquo;</span>
-      <span class="phase" data-phase="execute">EXECUTE</span>
+      <span class="phase" data-phase="execute" role="button" tabindex="0">EXECUTE</span>
       <span class="phase-chevron">&rsaquo;</span>
-      <span class="phase" data-phase="settle">DONE</span>
+      <span class="phase" data-phase="settle" role="button" tabindex="0">DONE</span>
     </nav>
     <nav class="breadcrumbs-bar" id="regBreadcrumbsHeader" style="display:none">
-      <span class="phase active reg-crumb" data-step="profile">PROFILE</span>
+      <span class="phase active reg-crumb" data-step="profile" role="button" tabindex="0">PROFILE</span>
       <span class="phase-chevron">&rsaquo;</span>
-      <span class="phase reg-crumb" data-step="equipment">EQUIPMENT</span>
+      <span class="phase reg-crumb" data-step="equipment" role="button" tabindex="0">EQUIPMENT</span>
       <span class="phase-chevron">&rsaquo;</span>
-      <span class="phase reg-crumb" data-step="payment">PAYMENT</span>
+      <span class="phase reg-crumb" data-step="payment" role="button" tabindex="0">PAYMENT</span>
     </nav>
   </div>
 
@@ -467,47 +470,47 @@ Requirements:
 
     <!-- AUCTION PHASE -->
     <div class="phase-view" id="phase-auction">
-      <span class="phase-back" onclick="showPhase('setup')">Back to Setup</span>
+      <button type="button" class="phase-back" onclick="showPhase('setup')">Back to Setup</button>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <h2 class="phase-heading" style="margin-bottom:0">Finding the Best Operator</h2>
         <div id="auctionActionSlot"></div>
       </div>
       <p class="phase-subheading">Your request is being matched with available operators.</p>
       <div class="progress-label" id="auctionProgress" role="status" aria-live="polite">Processing your request...</div>
-      <div id="winnerSlot"></div>
+      <div id="winnerSlot" aria-live="polite"></div>
     </div>
 
     <!-- COMMIT / DISPATCH PHASE -->
     <div class="phase-view" id="phase-commit">
-      <span class="phase-back" onclick="showPhase('auction')">Back to Auction</span>
+      <button type="button" class="phase-back" onclick="showPhase('auction')">Back to Auction</button>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <h2 class="phase-heading" style="margin-bottom:0">Authorize Payment</h2>
       </div>
       <p class="phase-subheading">Authorize payment to confirm your hire. Card payments are held until you approve delivery. Bank transfers are initiated immediately.</p>
-      <div id="commitSlot"></div>
+      <div id="commitSlot" aria-live="polite"></div>
     </div>
 
     <!-- EXECUTE PHASE -->
     <div class="phase-view" id="phase-execute">
-      <span class="phase-back" onclick="showPhase('commit')">Back to Dispatch</span>
+      <button type="button" class="phase-back" onclick="showPhase('commit')">Back to Dispatch</button>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <h2 class="phase-heading" style="margin-bottom:0">Work in Progress</h2>
         <div id="executeActionSlot"></div>
       </div>
       <p class="phase-subheading">The operator is performing the task. Results will be verified before payment is released.</p>
       <div id="commitmentStatusCard"></div>
-      <div id="deliverySlot"></div>
+      <div id="deliverySlot" aria-live="polite"></div>
     </div>
 
     <!-- SETTLE / DONE PHASE -->
     <div class="phase-view" id="phase-settle">
-      <span class="phase-back" onclick="showPhase('execute')">Back to Execute</span>
+      <button type="button" class="phase-back" onclick="showPhase('execute')">Back to Execute</button>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <h2 class="phase-heading" style="margin-bottom:0">Complete</h2>
         <div id="feedbackSlot"></div>
       </div>
       <p class="phase-subheading">The job is done and payment has been released to the operator.</p>
-      <div id="receiptSlot"></div>
+      <div id="receiptSlot" aria-live="polite"></div>
       <div id="revealedDataSlot"></div>
     </div>
 
@@ -555,7 +558,7 @@ Requirements:
 
         <!-- ============ STEP 1: OPERATOR PROFILE ============ -->
         <div id="regStep-profile">
-          <span class="phase-back" onclick="returnFromRegistration()">&larr; Back to Demo</span>
+          <button type="button" class="phase-back" onclick="returnFromRegistration()">&larr; Back to Demo</button>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <h2 class="phase-heading" style="margin-bottom:0">Operator Profile</h2>
             <button class="btn-continue" onclick="showRegStep('equipment')">Next: Equipment &rarr;</button>
@@ -590,7 +593,7 @@ Requirements:
 
         <!-- ============ STEP 2: EQUIPMENT & CERTIFICATIONS ============ -->
         <div id="regStep-equipment" style="display:none">
-          <span class="phase-back" onclick="showRegStep('profile')">&larr; Back to Profile</span>
+          <button type="button" class="phase-back" onclick="showRegStep('profile')">&larr; Back to Profile</button>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <h2 class="phase-heading" style="margin-bottom:0">Equipment &amp; Certifications</h2>
             <button class="btn-continue" onclick="showRegStep('payment')">Next: Payment &rarr;</button>
@@ -614,7 +617,7 @@ Requirements:
                 <input class="field-input" type="text" id="regSensorOther" placeholder="e.g. multispectral, ultrasonic, eddy current" style="display:none;margin-top:6px;font-size:12px">
               </div>
               <div>
-                <div class="field-label">Platform / Model</div>
+                <label class="field-label" for="regModel">Platform / Model</label>
                 <select class="field-input" id="regModel" style="font-size:13px;padding:8px 10px" onchange="document.getElementById('regModelOther').style.display=this.value==='__other__'?'':'none'">
                   <optgroup label="Aerial — LiDAR">
                     <option value="DJI Matrice 350 RTK + Zenmuse L2" selected>DJI Matrice 350 RTK + Zenmuse L2</option>
@@ -669,7 +672,7 @@ Requirements:
 
         <!-- ============ STEP 3: PAYMENT & BIDDING ============ -->
         <div id="regStep-payment" style="display:none">
-          <span class="phase-back" onclick="showRegStep('equipment')">&larr; Back to Equipment</span>
+          <button type="button" class="phase-back" onclick="showRegStep('equipment')">&larr; Back to Equipment</button>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <h2 class="phase-heading" style="margin-bottom:0">Payment &amp; Bidding</h2>
             <button class="btn-continue" id="regSubmitBtn" onclick="submitRegistration()">Register &amp; Activate</button>
@@ -680,7 +683,7 @@ Requirements:
             <div class="card-label">Bidding Configuration</div>
             <div class="field-grid">
               <div>
-                <div class="field-label">Minimum Bid (cents)</div>
+                <label class="field-label" for="regMinBid">Minimum Bid (cents)</label>
                 <input class="field-input" type="number" id="regMinBid" value="50" min="1">
                 <div style="font-size:11px;color:var(--text-3);margin-top:4px">Lowest price your robot will bid, regardless of task budget.</div>
               </div>
@@ -703,12 +706,12 @@ Requirements:
             <div style="border-top:1px solid var(--border);padding-top:14px">
               <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Payment Destinations</div>
               <div id="regFiatSection" style="margin-bottom:10px">
-                <div class="field-label">Stripe Connect Account <span style="font-weight:400;color:var(--text-3)">(card / bank transfer payouts)</span></div>
+                <label class="field-label" for="regStripeAccount">Stripe Connect Account <span style="font-weight:400;color:var(--text-3)">(card / bank transfer payouts)</span></label>
                 <input class="field-input" type="text" id="regStripeAccount" placeholder="acct_... (leave blank to set up after registration)">
                 <div style="font-size:11px;color:var(--text-3);margin-top:4px">Stripe Connect onboarding can be completed after registration.</div>
               </div>
               <div id="regUsdcSection">
-                <div class="field-label">USDC Wallet Address <span style="font-weight:400;color:var(--text-3)">(agentWallet on-chain)</span></div>
+                <label class="field-label" for="regUsdcWallet">USDC Wallet Address <span style="font-weight:400;color:var(--text-3)">(agentWallet on-chain)</span></label>
                 <input class="field-input" type="text" id="regUsdcWallet" placeholder="Defaults to platform deployer wallet">
                 <div style="font-size:11px;color:var(--text-3);margin-top:4px">USDC payouts go to this address on Base. Pre-filled with your connected wallet if available. Can be updated on-chain after registration.</div>
               </div>
@@ -872,7 +875,6 @@ function isTestMode() {
 }
 
 // Legacy compat — some code still calls these
-var demoMode = 'base';
 function getDemoChainId() { return getUsdcChainId(); }
 function getDemoPaymentType() { return 'all'; }
 
@@ -976,7 +978,8 @@ function formatStepText(str) {
       if (inList) { out.push('</' + listType + '>'); inList = false; }
       if (inTable) { out.push('</table>'); inTable = false; }
       var level = Math.min(headerMatch[1].length + 1, 6); // ## -> h3, ### -> h4
-      out.push('<h' + level + ' style="font-size:' + (16 - level) + 'px;font-weight:600;margin:12px 0 6px;color:var(--text)">' + headerMatch[2] + '</h' + level + '>');
+      var hSizes = {1:18, 2:16, 3:15, 4:14, 5:13, 6:12};
+      out.push('<h' + level + ' style="font-size:' + (hSizes[level] || 14) + 'px;font-weight:600;margin:12px 0 6px;color:var(--text)">' + headerMatch[2] + '</h' + level + '>');
       continue;
     }
     // Table: lines starting with |
@@ -1196,7 +1199,7 @@ async function discoverRobots() {
       if (wallet && wallet !== '0x0000000000000000000000000000000000000000') {
         allRobots[j].payment.usdc_wallet = wallet;
       }
-    } catch (e) { /* ignore RPC failures */ }
+    } catch (e) { console.warn('RPC wallet check failed for robot:', kr.name, e.message || e); }
   }
 
   discoveredRobots = allRobots;
@@ -2995,6 +2998,18 @@ function resetBtn() {
 
 setTimeout(discoverRobots, 500);
 
+// Global Escape key handler for modals
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    // Close any open feed detail
+    var openDetail = document.querySelector('.feed-detail.expanded');
+    if (openDetail) { closeFeedDetail(openDetail.id); return; }
+    // Close feedback popup
+    var overlay = document.getElementById('feedDetailOverlay');
+    if (overlay && overlay.classList.contains('active')) { closeAllFeedDetails(); return; }
+  }
+});
+
 // ===== ROBOT REGISTRATION (v1.4) =====
 
 window._registration = { operatorId: null, status: 'idle', chains: {}, operatorWallet: '' };
@@ -3464,7 +3479,7 @@ function markRegStep(id, status, detail) {
 
 // Show build stamp
 var bs = document.getElementById('buildStamp');
-if (bs && !BUILD_STAMP.includes('TIMESTAMP')) bs.textContent = 'build: ' + BUILD_STAMP;
+if (bs) bs.textContent = BUILD_STAMP.includes('TIMESTAMP') ? 'local dev' : 'build: ' + BUILD_STAMP;
 checkPaymentReturn();
 
 // Demo feedback — opens pre-filled GitHub issue
