@@ -241,7 +241,7 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
 .progress-label.visible{display:block}
 
 /* Error message */
-.error-msg{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);padding:12px 16px;font-size:13px;color:var(--red);display:none;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.error-msg{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);padding:12px 16px;font-size:13px;color:var(--red);display:none;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow-wrap:break-word;word-break:break-word;max-height:120px;overflow-y:auto}
 .error-msg.visible{display:block}
 
 /* ===== FEED (inside sidebar, scrolls independently) ===== */
@@ -3382,7 +3382,7 @@ function submitRegistration() {
         successChains.push(c);
         appendFeedItem({type: 'tool_call', tool_name: 'register_' + c.replace('-','_')}, feedCounter);
       } else {
-        markRegStep('regStepChain' + i, 'error', cr.error || 'failed');
+        markRegStep('regStepChain' + i, 'error', (cr.error || 'failed').slice(0, 100));
         failedChains.push(c);
         appendFeedItem({type: 'text', claude_text: (chainLabels[c]||c) + ': ' + (cr.error || 'failed')}, feedCounter);
       }
@@ -3398,7 +3398,7 @@ function submitRegistration() {
         errorHtml += '<strong>Registration failed.</strong> No chain registration succeeded.<br>';
         failedChains.forEach(function(c) {
           var cr = chains[c] || {};
-          errorHtml += '<div style="margin-top:4px">' + escapeHtml(chainLabels[c]||c) + ': ' + escapeHtml(cr.error || 'unknown error') + '</div>';
+          errorHtml += '<div style="margin-top:4px;overflow-wrap:break-word">' + escapeHtml(chainLabels[c]||c) + ': ' + escapeHtml((cr.error || 'unknown error').slice(0, 150)) + '</div>';
         });
         errorHtml += '<div style="margin-top:8px"><button class="admin-btn" onclick="document.getElementById(\'regFormSection\').style.display=\'\';document.getElementById(\'regProgress\').style.display=\'none\';showRegStep(\'payment\')" style="margin-top:4px">Back to Payment &amp; Bidding</button></div>';
         errorHtml += '</div>';
@@ -3493,7 +3493,7 @@ function submitRegistration() {
             h += '<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--bg-subtle)">';
             h += '<span style="color:var(--red);font-size:14px">&#10007;</span>';
             h += '<span style="font-size:13px;font-weight:500;min-width:120px">' + escapeHtml(chainLabels[c]||c) + '</span>';
-            h += '<span style="font-size:12px;color:var(--red)">' + escapeHtml(cr.error || 'Registration failed') + '</span>';
+            h += '<span style="font-size:12px;color:var(--red);overflow-wrap:break-word;word-break:break-word;min-width:0">' + escapeHtml((cr.error || 'Registration failed').slice(0, 150)) + '</span>';
             h += '</div>';
           }
         });
