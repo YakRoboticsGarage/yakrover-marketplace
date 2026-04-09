@@ -3445,8 +3445,6 @@ function submitRegistration() {
         h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:12px"><a href="https://8004scan.io/agents/' + scanPath + '/' + aid + '" target="_blank" style="color:var(--link)">#' + escapeHtml(aid) + '</a></span>';
         h += '<span style="font-size:11px;color:' + (verified ? 'var(--green)' : 'var(--amber)') + ';margin-left:auto">' + (verified ? 'verified' : 'pending indexing') + '</span>';
         h += '</div>';
-            h += '<span style="font-size:12px;color:var(--red);overflow-wrap:break-word;word-break:break-word;min-width:0">' + escapeHtml((cr.error || 'Registration failed').slice(0, 150)) + '</span>';
-            h += '</div>';
         if (cr.warning) {
           h += '<div class="field-hint" style="margin-top:4px">' + escapeHtml(cr.warning) + '</div>';
         }

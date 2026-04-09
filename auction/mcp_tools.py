@@ -1274,7 +1274,7 @@ def register_auction_tools(
                         "status": "ok",
                         "agent_id": str(agent.registration_file.agentId),
                         "agent_uri": str(getattr(agent.registration_file, "agentURI", "") or ""),
-                        "warning": f"Minted but post-registration step failed: {error_msg}",
+                        "warning": f"Registered on-chain. Metadata update pending: {error_msg}",
                     }
                 else:
                     chain_result = {"status": "error", "error": error_msg}
