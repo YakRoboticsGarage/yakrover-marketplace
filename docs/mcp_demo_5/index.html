@@ -241,7 +241,7 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
 .progress-label.visible{display:block}
 
 /* Error message */
-.error-msg{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:none}
+.error-msg{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);padding:12px 16px;font-size:13px;color:var(--red);display:none;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
 .error-msg.visible{display:block}
 
 /* ===== FEED (inside sidebar, scrolls independently) ===== */
@@ -3020,19 +3020,32 @@ function checkPaymentReturn() {
 
 // ===== ERROR HELPERS =====
 
+var _errorCounter = 0;
 function showError(msg) {
+  _errorCounter++;
+  var errorId = 'ERR-' + Date.now().toString(36).toUpperCase() + '-' + _errorCounter;
   var el = document.getElementById('errorMsg');
+  var fullMsg = errorId + ': ' + msg;
+  var issueTitle = encodeURIComponent('[Demo Error] ' + errorId);
+  var issueBody = encodeURIComponent(
+    '**Error ID:** `' + errorId + '`\n' +
+    '**Message:** ' + msg + '\n' +
+    '**URL:** ' + location.href + '\n' +
+    '**Date:** ' + new Date().toISOString() + '\n' +
+    '**User-Agent:** ' + navigator.userAgent + '\n\n' +
+    '## Steps to Reproduce\n\n1. \n2. \n3. \n\n## Expected Behavior\n\n\n'
+  );
+  var issueUrl = 'https://github.com/YakRoboticsGarage/yakrover-marketplace/issues/new?title=' + issueTitle + '&body=' + issueBody + '&labels=' + encodeURIComponent('bug,demo');
   el.innerHTML =
     '<div style="display:flex;align-items:flex-start;gap:8px">' +
-      '<span style="flex:1">' + escapeHtml(msg) + '</span>' +
+      '<span style="flex:1"><strong style="font-family:\'JetBrains Mono\',monospace;font-size:11px">' + errorId + '</strong> ' + escapeHtml(msg) + '</span>' +
       '<span style="display:flex;gap:4px;flex-shrink:0">' +
-        '<button onclick="navigator.clipboard.writeText(\'' + escapeHtml(msg).replace(/'/g, "\\'") + '\');this.textContent=\'Copied\';setTimeout(function(){this.textContent=\'Copy\'},1500)" style="background:none;border:1px solid var(--red-border);border-radius:3px;padding:2px 8px;font-size:10px;color:var(--red);cursor:pointer;font-family:inherit">Copy</button>' +
-        '<button onclick="openFeedbackIssue()" style="background:none;border:1px solid var(--red-border);border-radius:3px;padding:2px 8px;font-size:10px;color:var(--red);cursor:pointer;font-family:inherit">Report</button>' +
+        '<button onclick="navigator.clipboard.writeText(\'' + escapeHtml(fullMsg).replace(/'/g, "\\'") + '\');this.textContent=\'Copied\';setTimeout(function(){this.textContent=\'Copy\'},1500)" style="background:none;border:1px solid var(--red-border);border-radius:3px;padding:2px 8px;font-size:10px;color:var(--red);cursor:pointer;font-family:inherit">Copy</button>' +
+        '<button onclick="window.open(\'' + issueUrl.replace(/'/g, "\\'") + '\',\'_blank\')" style="background:none;border:1px solid var(--red-border);border-radius:3px;padding:2px 8px;font-size:10px;color:var(--red);cursor:pointer;font-family:inherit">Report</button>' +
+        '<button onclick="document.getElementById(\'errorMsg\').classList.remove(\'visible\')" style="background:none;border:none;padding:2px 6px;font-size:14px;color:var(--red);cursor:pointer;font-family:inherit;line-height:1">&times;</button>' +
       '</span>' +
     '</div>';
   el.classList.add('visible');
-  // Auto-scroll to make error visible
-  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function resetBtn() {
