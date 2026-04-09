@@ -337,11 +337,11 @@ background-size:1200px 900px}
       <span class="phase" data-phase="settle">DONE</span>
     </nav>
     <nav class="breadcrumbs-bar" id="regBreadcrumbsHeader" style="display:none">
-      <span class="phase active reg-crumb" data-step="profile" onclick="showRegStep('profile')">PROFILE</span>
+      <span class="phase active reg-crumb" data-step="profile">PROFILE</span>
       <span class="phase-chevron">&rsaquo;</span>
-      <span class="phase reg-crumb" data-step="equipment" onclick="showRegStep('equipment')">EQUIPMENT</span>
+      <span class="phase reg-crumb" data-step="equipment">EQUIPMENT</span>
       <span class="phase-chevron">&rsaquo;</span>
-      <span class="phase reg-crumb" data-step="payment" onclick="showRegStep('payment')">PAYMENT</span>
+      <span class="phase reg-crumb" data-step="payment">PAYMENT</span>
     </nav>
   </div>
 
@@ -787,7 +787,6 @@ var WORKER_BASE = 'https://yakrobot-chat.rafaeldf2.workers.dev';
 
 // Global state
 var discoveredRobots = [];
-var auctionComplete = false;
 var _cachedStripeKey = null;
 
 // Demo mode — controls payment pathway
@@ -823,7 +822,8 @@ function onSimulatorToggle() {
 }
 
 function onFakeRoverFilterChange() {
-  var hideFake = document.getElementById('hideFakeRovers').checked;
+  hideFakeRovers = document.getElementById('hideFakeRovers').checked;
+  var hideFake = hideFakeRovers;
   // Hide FakeRovers is incompatible with Demo fleet only — uncheck it
   if (hideFake) {
     document.getElementById('simulatorOnly').checked = false;
@@ -841,11 +841,10 @@ function onFakeRoverFilterChange() {
   }).catch(function() {});
 }
 
+var hideFakeRovers = false;
 function getFilteredRobots() {
-  var hideFake = document.getElementById('hideFakeRovers') && document.getElementById('hideFakeRovers').checked;
-  var demoOnly = document.getElementById('simulatorOnly') && document.getElementById('simulatorOnly').checked;
-  if (hideFake) return discoveredRobots.filter(function(r) { return !r.name.startsWith('FakeRover-'); });
-  if (demoOnly) return discoveredRobots.filter(function(r) { return r.name.startsWith('FakeRover-') || r.name.startsWith('Tumbller'); });
+  if (hideFakeRovers) return discoveredRobots.filter(function(r) { return !r.name.startsWith('FakeRover-'); });
+  if (simulatorOnly) return discoveredRobots.filter(function(r) { return r.name.startsWith('FakeRover-') || r.name.startsWith('Tumbller'); });
   return discoveredRobots;
 }
 
@@ -897,7 +896,6 @@ var DELIVERY_SCHEMA = {
 // ERC-8004 contract addresses & RPC
 var IDENTITY_REGISTRY = '0x8004A818BFB912233c491871b3d84c89A494BD9e';
 var GET_AGENT_WALLET_SELECTOR = '0x00339509';
-var PLATFORM_WALLET = '0xe33356d0d16c107eac7da1fc7263350cbdb548e5';
 var RELAY_WALLET = '0x4b5974229f96ac5987d6e31065d73d6fd8e130d9';
 var RPC_URLS = {
   1:        'https://ethereum-rpc.publicnode.com',
@@ -1801,7 +1799,7 @@ function openFeedbackPopup() {
     '</div>' +
     '<textarea class="form-textarea" id="feedbackComment" placeholder="Optional: share what went well or what could improve..." style="min-height:60px;margin-bottom:8px;width:100%"></textarea>' +
     '<button class="pay-btn" style="background:var(--accent);color:#fff;font-size:12px;padding:8px 16px" id="feedbackSubmitBtn" onclick="submitFeedback(\'' + escapeHtml(info.robotId) + '\',\'' + escapeHtml(info.robotName) + '\',\'' + escapeHtml(info.paymentInfo.payment_method || '') + '\',\'' + escapeHtml(info.paymentInfo.payment_tx || '') + '\')">Submit</button>' +
-    '<span id="feedbackStatus" style="font-size:11px;color:var(--text-3);margin-left:8px"></span>';
+    '<span id="feedbackPopupStatus" style="font-size:11px;color:var(--text-3);margin-left:8px"></span>';
 
   document.body.appendChild(modal);
   var overlay = document.getElementById('feedDetailOverlay');
@@ -1837,7 +1835,6 @@ function closeFeedbackPopup() {
 
 function resetDemo() {
   // Reset state
-  auctionComplete = false;
   window._awardedRequestId = null;
   window._tunnelUrl = null;
   window._paymentCommitment = null;
@@ -2121,8 +2118,7 @@ async function runAuction() {
   // Don't resetBtn on success — button stays disabled until resetDemo()
 }
 
-// Backward compat alias
-var runDemo = runAuction;
+
 
 
 // ===== RUN EXECUTION (rewritten rendering, same API calls) =====
@@ -2486,7 +2482,9 @@ async function payWithUSDC(operatorWallet) {
   var overrideChain = getDemoChainId();
   var winnerChain = window._winnerRobot ? window._winnerRobot.chain_id : 8453;
   var chainId = overrideChain || winnerChain;
-  if (chainId === 11155111) chainId = 84532; // Eth Sepolia → Base Sepolia
+  // USDC is on Base, not Ethereum Sepolia. Remap to Base Sepolia for testnet payments.
+  // Note: operator wallet address is valid on both chains (same private key), but USDC contract differs.
+  if (chainId === 11155111) chainId = 84532;
   var chainName = CHAIN_NAMES[chainId] || 'Chain ' + chainId;
   var usdcAddr = USDC_ADDRESSES[chainId];
 
@@ -2860,18 +2858,15 @@ function previewStars(n) {
   });
 }
 
-function resetStars() {
-  previewStars(selectedRating);
-}
-
 function selectStar(n) {
   selectedRating = n;
   previewStars(n);
 }
 
 async function submitFeedback(robotId, robotName, paymentMethod, paymentTx) {
+  var fbStatus = document.getElementById('feedbackPopupStatus') || document.getElementById('feedbackStatus');
   if (selectedRating === 0) {
-    document.getElementById('feedbackStatus').textContent = 'Please select a rating';
+    if (fbStatus) fbStatus.textContent = 'Please select a rating';
     return;
   }
 
@@ -2901,7 +2896,7 @@ async function submitFeedback(robotId, robotName, paymentMethod, paymentTx) {
     var data = await res.json();
     if (data.ok) {
       btn.textContent = 'Submitted';
-      var status = document.getElementById('feedbackStatus');
+      var status = document.getElementById('feedbackPopupStatus') || document.getElementById('feedbackStatus');
       status.style.color = 'var(--green)';
       status.textContent = 'Thank you! ';
       if (data.issue_url) {
@@ -3151,6 +3146,10 @@ function submitRegistration() {
   var location = document.getElementById('regLocation').value.trim();
   var modelSelect = document.getElementById('regModel').value;
   var model = modelSelect === '__other__' ? document.getElementById('regModelOther').value.trim() : modelSelect;
+  if (!model) {
+    showError('Please specify a platform/model name.');
+    return;
+  }
   var desc = document.getElementById('regDescription').value.trim();
   var minBid = parseInt(document.getElementById('regMinBid').value) || 50;
   var bidPct = parseInt(document.getElementById('regBidPct').value) / 100;
@@ -3398,7 +3397,11 @@ function submitRegistration() {
             mcp_endpoint: '',
             mcp_tools: [],
             owner: '',
-            payment: { usdc_wallet: null, wallet_chain_id: null, stripe_connect_id: null },
+            payment: {
+              usdc_wallet: (document.getElementById('regUsdcWallet') && document.getElementById('regUsdcWallet').value.trim()) || window._registration.operatorWallet || null,
+              wallet_chain_id: null,
+              stripe_connect_id: (document.getElementById('regStripeAccount') && document.getElementById('regStripeAccount').value.trim()) || null,
+            },
           });
           var robotCards = document.getElementById('robotCards');
           if (robotCards) { robotCards.innerHTML = ''; renderRobotsSidebar(getFilteredRobots()); }
