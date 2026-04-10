@@ -79,13 +79,14 @@ yakrover-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 35 MCP tool handlers
+│   ├── mcp_tools.py             # 36 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
 │   ├── reputation.py            # ReputationTracker
+│   ├── mcp_robot_adapter.py     # MCPRobotAdapter — bridges to real robot MCP servers
 │   ├── discovery_bridge.py      # ERC-8004 robot discovery
-│   ├── mock_fleet.py            # Simulated robots for testing
+│   ├── mock_fleet.py            # Simulated robots for testing + RuntimeRegisteredRobot
 │   ├── demo.py                  # Demo script
 │   └── tests/                   # 284 tests + integration stubs
 │
@@ -95,7 +96,7 @@ yakrover-marketplace/
 ├── chatbot/                     # Cloudflare Worker (yakrobot-chat)
 │   └── src/index.js             # Chat + demo API proxy
 │
-├── mcp_server.py                # Standalone REST API (35 MCP tools, Cloudflare Tunnel)
+├── mcp_server.py                # Standalone REST API (36 MCP tools, Cloudflare Tunnel)
 │
 ├── docs/                        # Documentation
 │   ├── mcp_demo_5/index.html    # Live demo (yakrobot.bid/demo)
@@ -108,11 +109,12 @@ yakrover-marketplace/
 │   ├── DIAGRAM_SYSTEM.md        # System architecture diagrams
 │   ├── DIAGRAM_USER_JOURNEY.md  # User journey diagrams
 │   ├── research/                # 52 research docs (see research/README.md)
-│   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (3,243 lines)
+│   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (3,623 lines)
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   ├── technical/           # Architecture, execution gaps
 │   │   └── operator/            # Onboarding, equipment, sensors
+│   ├── sample_certs/            # Realistic sample credentials (FAA, ACORD 25, PLS, OSHA)
 │   └── feedback/                # Audits, critiques, founder feedback
 │
 ├── docs/wave1/                  # GC + operator engagement packages

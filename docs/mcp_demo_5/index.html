@@ -158,10 +158,10 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
 /* .status-dot classes available for future use but not currently referenced in rendered HTML */
 
 /* Key-value rows */
-.kv-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid var(--bg-subtle)}
+.kv-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;padding:6px 0;border-bottom:1px solid var(--bg-subtle);gap:12px}
 .kv-row:last-child{border-bottom:none}
-.kv-label{color:var(--text-3)}
-.kv-value{font-weight:600;color:var(--text)}
+.kv-label{color:var(--text-3);flex-shrink:0;min-width:110px}
+.kv-value{font-weight:600;color:var(--text);text-align:right}
 .kv-value-green{color:var(--green)}
 .kv-value-accent{color:var(--accent)}
 .kv-value-mono{font-family:'JetBrains Mono',monospace;font-size:11px}
@@ -2061,11 +2061,45 @@ function showRobotProfile(robot, idx) {
         '<div class="kv-row"><span class="kv-label">Robot API</span><span class="kv-value kv-value-mono">' + escapeHtml(robot.mcp_endpoint || 'not set') + '</span></div>' +
         '<div class="kv-row"><span class="kv-label">Available commands</span><span class="kv-value" style="font-size:11px">' + escapeHtml(toolNames.join(', ') || 'None listed') + '</span></div>' +
       '</div>' +
-    '</details>';
+    '</details>' +
+
+    // Copy profile button
+    '<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:8px">' +
+      '<button class="admin-btn" id="copyProfileBtn" style="font-size:11px;padding:4px 10px" onclick="copyRobotProfile()">Copy profile</button>' +
+    '</div>';
+
+  // Build markdown for clipboard
+  var md = '# ' + robot.name + '\n\n';
+  md += (robot.description || 'No description') + '\n\n';
+  md += '**Status:** ' + (robot.active ? 'Available' : 'Offline') + '\n';
+  if (companyName || locationStr) md += '**Operator:** ' + [companyName, locationStr].filter(Boolean).join(' — ') + '\n';
+  if (equipLabel) md += '**Equipment:** ' + equipLabel + '\n';
+  if (sensorList.length) md += '**Sensors:** ' + sensorList.join(', ') + '\n';
+  if (capabilities.length) md += '**Capabilities:** ' + capabilities.join(', ') + '\n';
+  if (catLabels.length) md += '**Task types:** ' + catLabels.join(', ') + '\n';
+  md += '**Accepts payment:** ' + payLabel + '\n';
+  md += '**Remote control:** ' + commandsLabel + '\n';
+  md += '\n## Verification\n\n';
+  md += '- **Registration #:** [' + robot.agent_id + '](' + scanUrl + ')\n';
+  md += '- **Registry network:** [' + chainName + '](' + explorerUrl + ')\n';
+  if (walletAddr) md += '- **Payment address:** `' + walletShort + '`\n';
+  if (stripeId) md += '- **Payout account:** `' + stripeId + '`\n';
+  md += '- **Published profile:** ' + (ipfsLink ? '[' + agentUri.slice(0, 40) + '...](' + ipfsLink + ')' : (agentUri || 'not set')) + '\n';
+  md += '- **Robot API:** `' + (robot.mcp_endpoint || 'not set') + '`\n';
+  md += '- **Available commands:** ' + (toolNames.length ? toolNames.join(', ') : 'None listed') + '\n';
+  window._robotProfileMd = md;
 
   document.body.appendChild(modal);
   var overlay = document.getElementById('feedDetailOverlay');
   if (overlay) overlay.classList.add('active');
+}
+
+function copyRobotProfile() {
+  var md = window._robotProfileMd || '';
+  navigator.clipboard.writeText(md).then(function() {
+    var btn = document.getElementById('copyProfileBtn');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(function() { btn.textContent = 'Copy profile'; }, 2000); }
+  });
 }
 
 function closeRobotProfile() {

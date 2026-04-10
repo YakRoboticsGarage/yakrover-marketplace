@@ -26,7 +26,7 @@ yakrover-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 35 MCP tool handlers
+│   ├── mcp_tools.py             # 36 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
@@ -42,10 +42,11 @@ yakrover-marketplace/
 │   ├── FEATURE_REQUIREMENTS_v15.md       # v1.5 build spec
 │   ├── DECISIONS.md             # All product/technical decisions
 │   ├── DEVELOPMENT_STRATEGY.md  # Testing & code safety (5-layer strategy)
-│   ├── mcp_demo/
-│   │   └── index.html           # Live MCP demo (yakrobot.bid/mcp-demo)
+│   ├── mcp_demo_5/
+│   │   └── index.html           # Live auction demo (yakrobot.bid/demo)
+│   ├── sample_certs/            # Realistic sample credentials (FAA, ACORD 25, PLS, OSHA)
 │   ├── research/                # 52 research docs (see research/README.md)
-│   │   ├── PRODUCT_DSL_v2.yaml  # ← THE product ontology (3,200+ lines)
+│   │   ├── PRODUCT_DSL_v2.yaml  # ← THE product ontology (3,600+ lines)
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   ├── technical/           # Architecture, execution gaps
@@ -107,7 +108,7 @@ Start here, in this order:
 | URL | What it is |
 |-----|-----------|
 | **[yakrobot.bid](https://yakrobot.bid)** | Interactive demo — MDOT I-94 RFQ walkthrough |
-| **[yakrobot.bid/demo](https://yakrobot.bid/demo/)** | Live auction demo — Card, Bank Transfer, USDC payment, real robot discovery |
+| **[yakrobot.bid/demo](https://yakrobot.bid/demo/)** | Live auction demo — operator registration, Card/ACH/USDC payment, real robot discovery |
 | **[yakrobot.bid/yaml](https://yakrobot.bid/yaml)** | YAML ontology explorer — browse PRODUCT_DSL_v2 live |
 | **[yakrobot.bid/pitch](https://yakrobot.bid/pitch)** | Pitch deck — investor/partner presentation |
 
@@ -134,12 +135,12 @@ All four follow the [skill-creator-springett](https://github.com/bglek/skill-cre
 
 ## Key Numbers
 
-- **35 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator compliance, agreement generation, event tracking, feedback
+- **36 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator registration, compliance, agreement generation, event tracking, feedback
 - **284 tests** passing (all CI checks green: lint, mypy, pytest)
-- **99 commits** across the project
-- **47 research topics** in automated research roadmap (8 completed, 33 improvement proposals)
-- **Live demo** at yakrobot.bid/demo — Card/ACH/USDC payment, schema-driven delivery QA, real robot discovery, IPFS delivery
-- **3,243 line YAML** product ontology covering the entire product
+- **Live demo** at yakrobot.bid/demo — Card/ACH/USDC payment, schema-driven delivery QA, real robot discovery, on-chain operator registration, IPFS delivery
+- **3,600+ line YAML** product ontology covering the entire product (including interface language mapping)
+- **On-chain operator registration** — ERC-8004 identity on Base mainnet via agent0-sdk, 3-step UI, IPFS agent cards
+- **Buyer-friendly UI** — 30+ blockchain/crypto terms replaced with professional registry language
 - **43 real MDOT RFPs** analyzed for survey requirements
 - **6 real equipment platforms** with verified specs and pricing
 - **CI pipeline** with ruff (security linting), mypy, and pytest on every push

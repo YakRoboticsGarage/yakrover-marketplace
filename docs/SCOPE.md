@@ -17,8 +17,8 @@
 | **v1.0** | 12 weeks | Production MVP — real Stripe payments, persistent state, real robots | **Built** (151 tests, 15 MCP tools, ~11,400 LOC) |
 | **v1.1** | +1 week | Real Tumbller robot via MCP, Fly.io always-on, Stripe authorize/capture, gasless USDC on Base | **Built** (2026-04-06) |
 | **v1.2** | +1 day | EIP-3009 USDC (replaced ERC-2612), platform fee removed, professional buyer UI | **Built** (2026-04-07) |
-| **v1.3** | +1 day | ACH bank transfer, 3-method payment selector (Card/Bank/Stablecoin), US Stripe | **Built** (2026-04-08). 284 tests, 35 MCP tools, ~17,042 LOC |
-| **v1.4** | +1 day | On-chain ERC-8004 operator registration (Base mainnet + Sepolia). 3-step UI. 3 registration modes. Mock fleet archived. 100-finding code review. 36 MCP tools. | **Built** (2026-04-09) |
+| **v1.3** | +1 day | ACH bank transfer, 3-method payment selector (Card/Bank/Stablecoin), US Stripe | **Built** (2026-04-08). 284 tests, 36 MCP tools, ~17,042 LOC |
+| **v1.4** | 3 days | On-chain ERC-8004 operator registration, buyer-friendly language audit, IPFS enrichment, discovery fixes, operator profile popup redesign, interface language mapping. 36 MCP tools. | **Built** (2026-04-10) |
 | **v1.5** | 4 weeks | Settlement abstraction, construction task specs, privacy foundation | **Planned** — gated on v1.4 |
 
 ---
