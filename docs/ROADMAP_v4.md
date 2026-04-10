@@ -2,8 +2,8 @@
 
 **Project:** yakrover-auction-explorer
 **Owner:** Product
-**Last updated:** 2026-04-10 (rev 5.2, v1.4 complete — operator registration + code review + critique addressed + dynamic MCP tool resolution)
-**Status:** v1.0 built. v1.1 complete. v1.2 complete. v1.3 complete. **v1.4 complete** (36 MCP tools, on-chain ERC-8004 registration, 100-finding code review resolved, operator registration critique addressed, dynamic tool resolution). Demo at yakrobot.bid/demo.
+**Last updated:** 2026-04-10 (rev 5.3, v1.4 complete — operator registration + language audit + IPFS enrichment + discovery fix + scale testing planned)
+**Status:** v1.0 built. v1.1 complete. v1.2 complete. v1.3 complete. **v1.4 complete** (36 MCP tools, on-chain ERC-8004 registration, buyer-friendly language audit, IPFS tool enrichment, discovery race condition fix). Demo at yakrobot.bid/demo.
 
 > All product decisions and technical constraints referenced by ID live in `docs/DECISIONS.md`.
 > Feature requirements for the next build: `docs/FEATURE_REQUIREMENTS_v15.md`.
@@ -23,7 +23,7 @@ Every feature on this roadmap exists to serve a named user. If a feature cannot 
 | **v1.0 (built)** | Sarah — Facilities Manager | Buyer | Warehouse sensor readings via AI assistant |
 | | Robot Operator (fleet) | Operator | Registers fleet, configures pricing, receives payouts |
 | | Claude (AI Agent) | Agent | Translates intent to structured tasks, runs auctions |
-| **v1.4 (next)** | Alex — Independent Operator | Operator | Signs up, registers equipment, uploads credentials, receives Stripe Connect payouts |
+| **v1.4 (built)** | Alex — Independent Operator | Operator | Signs up, registers equipment, uploads credentials, receives Stripe Connect payouts |
 | | Controller / AP Manager | Controller | Configures company account, payment methods, agent spending limits |
 | **v1.5** | Marco — Senior Estimator | Buyer | Pre-bid surveys, progress monitoring via AI assistant |
 | | Drone/Robot Operator (regional) | Operator | Bids on construction survey tasks, uploads data |
@@ -335,11 +335,55 @@ All 6 MCP tools for operator management are built and tested:
 - Email removed from registration (PII)
 - All registration fields stored on-chain/IPFS (stripe_connect_id, company, location, model, sensors, preferred_usdc_wallet)
 
+**Session 3 (2026-04-10):**
+- **Buyer-friendly language audit (30+ changes):** Replaced blockchain/crypto jargon with professional registry language across entire demo UI. "On-chain" → "registered", "MCP endpoint" → "Robot Control URL", "USDC Wallet" → "Stablecoin Payment Address", "gas" → "covered by platform", "ERC-8004" → "identity registry", "agent card" → "published profile", "mint" → "register", "8004scan" → "Identity registry". Chain selector labels: "Base Mainnet" → "Production (Base)".
+- **Operator profile popup redesign:** Two-tier layout — top section shows Equipment, Capabilities, Sensors, Task types, Payment methods, Company/Location. Collapsible "Verification & technical details" section has Registration #, Registry network, Payment address with inline hyperlinks to 8004scan and block explorer (replaced 3 separate buttons). Close button / Available pill overlap fixed with flexbox header.
+- **IPFS agent card enrichment:** `enrichRobotsFromIPFS()` fetches each robot's IPFS card after subgraph discovery to read `services[0].mcpTools` per ERC-8004 registration-v1 schema. The subgraph doesn't index nested service fields, so tools were showing as empty for all robots. Now Berlin FakeRovers correctly show 6 commands.
+- **On-chain metadata decoding:** `decodeHexMeta()` converts hex-encoded metadata values (robot_type, task_categories, fleet_domain, equipment_model, operator_company, operator_location, sensors) to readable strings. Previously displayed as raw hex.
+- **Discovery race condition fix:** Replaced `Promise.race(Promise.all(subgraphs), 5s timeout)` with `Promise.allSettled(subgraphs)`. Slow Ethereum mainnet query no longer drops Base mainnet results where FakeRovers live. Each chain uses its own 8s AbortController timeout.
+- **Registration email validation fix:** Validation still checked `!email` after email was removed as PII — always failed since email hardcoded to `''`.
+- **Aerial LiDAR default fix:** Removed pre-checked checkbox and `|| 'aerial_lidar'` fallback that silently set sensor type even when unchecked.
+- **Interface language mapping:** Added `gtm.interface_language` to PRODUCT_DSL_v2.yaml — 20+ technical-to-interface term mappings with context for when technical language is acceptable.
+- **Sample certification documents:** 4 realistic mockups matching real document formats — FAA Part 107 (credit-card PNG), ACORD 25 COI (letter PDF with grid layout), Michigan PLS (wall certificate PDF), OSHA 30-Hour (green DOL card PNG).
+
 ### Remaining cleanup (deferred to v1.5)
 
 - **Remove `RuntimeRegisteredRobot` dependency on `mock_fleet.py`.** Currently inherits `bid_engine()` and `execute()` from `ConstructionMockRobot`. Should implement its own ~30 lines each, or be replaced entirely by `MCPRobotAdapter` once operators run their own MCP servers. This decouples registration from the mock fleet — `mock_fleet.py` becomes a test-only utility.
 - **Refactor tests to use `RuntimeRegisteredRobot`.** 274 tests currently import `create_demo_fleet()` / `create_construction_fleet()` directly. Not blocking but adds unnecessary coupling to archived mock fleet.
 - **Fix Berlin-04/05/06 agent cards.** Wrong MCP endpoint in IPFS metadata (marketplace instead of fleet). Need to rewrite agent cards with correct fleet MCP endpoint.
+- **Berlin-01/02/03 empty mcpTools in agent card.** IPFS cards have tools in `services[0].mcpTools` (correct per ERC-8004 spec) but subgraph doesn't index nested fields. Frontend now works around this via IPFS enrichment. Agent cards don't need re-uploading — the enrichment handles it.
+
+### Scale testing and mass registration (v1.5+)
+
+The demo currently has ~10 registered robots. Before the marketplace can handle real operator onboarding, it must be tested at 100+ and then 1,000+ registered operators with diverse equipment and geographies. This requires:
+
+**1. Test/production registration flag:**
+- Add `is_test` boolean metadata field to on-chain registration (written via `setMetadata`). Values: `true` for test/demo robots, `false` (or absent) for production operators.
+- Registration form: admin mode sets `is_test: true`; real operator registrations default to `false`.
+- Frontend fleet filter: add "Hide test robots" toggle (similar to existing "Hide FakeRovers" but driven by metadata, not name prefix). Replaces the brittle `FakeRover-` prefix convention.
+- Subgraph query: filter by `is_test` metadata to separate test fleet from production fleet.
+- Backend: `discover_and_swap_fleet()` accepts `include_test` parameter.
+
+**2. Automated registration script:**
+- Script to batch-register N robots with varied profiles: different equipment types (DJI M350, Skydio X10, Spot, ELIOS 3, custom ground rovers), sensor combinations, locations (MI, AZ, NV, NM metros), company names, and pricing.
+- Uses `auction_register_robot_onchain` MCP tool or direct agent0-sdk calls.
+- Configurable: chain, count, equipment distribution, geographic spread.
+- All batch-registered robots get `is_test: true` metadata.
+- Rate limiting: respect chain gas costs and RPC rate limits. Estimate ~$0.005/registration on Base = $0.50 for 100, $5 for 1,000.
+
+**3. Scale testing targets:**
+
+| Target | What to verify | When |
+|--------|----------------|------|
+| **100 robots** | Sidebar rendering, subgraph query performance, bid scoring with large fleet, IPFS enrichment latency, discovery time | v1.5 |
+| **1,000 robots** | Pagination/virtualization needed in sidebar, subgraph `first: 50` limit must increase, auction scoring performance under load, MCP server memory with 1K fleet objects | v2.0 |
+
+**4. Known scaling concerns:**
+- Subgraph query uses `first: 50` — needs pagination or increased limit for >50 robots
+- IPFS enrichment fetches each card sequentially in `Promise.allSettled` — at 1K robots this is too many parallel fetches. Need batch or cache.
+- Sidebar renders all robots in DOM — needs virtualized list at 100+
+- `_robots_by_id` dict in AuctionEngine grows linearly — fine to 10K, profile at 100K
+- Bid scoring runs `score_bids()` on all eligible robots per task — O(n) but each bid involves network call to robot MCP. At 1K robots, need async parallel bidding with timeout.
 
 ### Deferred to later milestones
 
