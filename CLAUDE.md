@@ -18,7 +18,7 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 - **Auction engine:** `auction/` — Task, Bid, AuctionResult, score_bids(), state machine, settlement abstraction
 - **Payment:** Stripe Connect (fiat) + USDC on Base via x402 (crypto, v1.5). Construction scale: $10K-$200K per project, not micro-payments.
 - **Escrow:** `RobotTaskEscrow.sol` on Base with 4-mode settlement abstraction (FD-1, v1.5)
-- **Fleet:** Robot/operator discovery via ERC-8004, 35 MCP tools for agent interaction
+- **Fleet:** Robot/operator discovery via ERC-8004, 36 MCP tools for agent interaction
 - **Persistence:** SQLite via `SyncTaskStore`
 - **Demo site:** `demo/index.html` — interactive demo at [yakrobot.bid](https://yakrobot.bid)
 - **Live demo:** `docs/mcp_demo_5/index.html` — Claude orchestrates real auction at [yakrobot.bid/demo](https://yakrobot.bid/demo/)
@@ -79,7 +79,7 @@ yakrover-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 35 MCP tool handlers
+│   ├── mcp_tools.py             # 36 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
@@ -95,7 +95,7 @@ yakrover-marketplace/
 ├── chatbot/                     # Cloudflare Worker (yakrobot-chat)
 │   └── src/index.js             # Chat + demo API proxy
 │
-├── mcp_server.py                # Standalone REST API (35 MCP tools, Cloudflare Tunnel)
+├── mcp_server.py                # Standalone REST API (36 MCP tools, Cloudflare Tunnel)
 │
 ├── docs/                        # Documentation
 │   ├── mcp_demo_5/index.html    # Live demo (yakrobot.bid/demo)
@@ -107,8 +107,8 @@ yakrover-marketplace/
 │   ├── SCOPE.md                 # Version boundaries
 │   ├── DIAGRAM_SYSTEM.md        # System architecture diagrams
 │   ├── DIAGRAM_USER_JOURNEY.md  # User journey diagrams
-│   ├── research/                # 52 research docs (see research/README.md)
-│   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (3,243 lines)
+│   ├── research/                # 62 research docs (see research/README.md)
+│   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (3,535 lines)
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   ├── technical/           # Architecture, execution gaps

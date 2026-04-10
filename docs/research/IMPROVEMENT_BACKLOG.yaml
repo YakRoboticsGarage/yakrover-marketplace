@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-09'
-  total_items: 47
+  last_updated: '2026-04-10'
+  total_items: 49
   implemented: 10
   deferred: 4
   rejected: 1
-  proposed: 32
+  proposed: 34
   source: Automated daily research agent + weekly synthesis
-  last_sync: "R-META-001 (2026-04-09) — corrected IMP-021/023/027 from proposed to implemented based on commits b76a4f1 and a58560f"
+  last_sync: "daily-sync (2026-04-10) — added IMP-048 (dead _registration.chains field), IMP-049 (module-level constants in function scope)"
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -778,5 +778,44 @@ proposals:
   priority: medium
   status: proposed
   proposed_date: '2026-04-08'
+  decision_date: null
+  decision_notes: null
+- id: IMP-048
+  title: Remove dead _registration.chains field in mcp_demo_5 frontend
+  description: >
+    After the single-chain registration refactor (commit 48527a7), the
+    window._registration state object still initialises with a `chains: {}` field
+    (docs/mcp_demo_5/index.html line 1913) but the field is never written to or
+    read back. Registration now tracks a single chain via _registration.chain
+    (singular). The dead field creates misleading state shape and could confuse
+    future contributors who assume multi-chain tracking is still active. Remove
+    `chains: {}` from the initialiser and confirm no downstream code reads it.
+  module: M28_mcp_demo
+  research_source: code-audit-2026-04-10
+  evidence: 'docs/mcp_demo_5/index.html line 1913: chains: {} — grep _registration.chains returns no matches'
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-10'
+  decision_date: null
+  decision_notes: null
+- id: IMP-049
+  title: Promote on-chain registration constants from function scope to module scope
+  description: >
+    In auction/mcp_tools.py, the constants SENSOR_TO_CATEGORY (line 1079),
+    CHAIN_CONFIG (line 1089), and DEFAULT_CHAIN (line 1095) are defined inside
+    register_auction_tools() rather than at module level. They have no dependency
+    on function arguments and behave as pure module constants captured by closure.
+    Defining them at module scope improves readability (constants are visible at
+    file top), enables direct import in tests without calling register_auction_tools,
+    and makes the module structure consistent with other constants in auction/.
+    No behavioural change; straightforward mechanical move.
+  module: M24_mcp_tool_layer
+  research_source: code-audit-2026-04-10
+  evidence: 'auction/mcp_tools.py lines 1079-1095 — three constants inside register_auction_tools() with no closure dependency on function args'
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-10'
   decision_date: null
   decision_notes: null

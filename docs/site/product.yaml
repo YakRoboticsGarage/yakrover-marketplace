@@ -119,7 +119,7 @@ talisman_metadata:
   staleness_policy:
     max_age_days: 30
     refresh_trigger: "Any bet confidence changes by > 0.15 or a phase gate is crossed"
-    last_refresh: "2026-04-08 (v2.4 — v1.1-v1.3 implementation state sync)"
+    last_refresh: "2026-04-10 (v2.5 — v1.4 single-chain registration; MCP tools: 36; DSL: 3535 lines)"
 
 executive_summary:
   core_problem:
@@ -1816,7 +1816,7 @@ architecture:
       sources: [{path: docs/research/PLAN_STABLE_INFRASTRUCTURE.md}]
     mcp_server:
       path: mcp_server.py
-      description: "Standalone REST API exposing 35 MCP tools for web demo"
+      description: "Standalone REST API exposing 36 MCP tools for web demo"
       endpoints:
         - "GET /health — status, tool count, fleet size, wallet balance"
         - "GET /api/tools — list all available tools"
@@ -1837,9 +1837,9 @@ architecture:
       Fly.io (always-on, v1.1+)
         fakerover .................... Robot simulator (yakrover.online)
         robot-mcp .................... Robot MCP server (ERC-8004)
-        marketplace-mcp .............. Marketplace MCP server (35 tools)
+        marketplace-mcp .............. Marketplace MCP server (36 tools)
       mcp_server.py (local + Cloudflare Tunnel)
-        /api/tool/{name} ............. REST proxy to 35 MCP tools
+        /api/tool/{name} ............. REST proxy to 36 MCP tools
         /health ...................... Status endpoint
       SQLite (local, :memory: for demo)
     database:
@@ -1893,7 +1893,7 @@ architecture:
       consumes: [repo:yakrover-8004-mcp]
     - id: component:mcp_server
       path: mcp_server.py
-      description: "Standalone REST API exposing 35 MCP tools for web demo and tunnel access"
+      description: "Standalone REST API exposing 36 MCP tools for web demo and tunnel access"
       status: implemented
       phase: phase:v1.0
     - id: component:mock_fleet
@@ -1951,9 +1951,9 @@ architecture:
       note: "Whitepaper never referenced in v1.1 YAML — should be cited for vision section"
 
   mcp_tools:
-    # [v2.4] Updated: 35 tools implemented (was 32 in v2.3)
-    existing_count: 35
-    status_summary: "35 implemented, 3 planned from gap analysis"
+    # [v2.5] Updated: 36 tools implemented (was 35 in v2.4)
+    existing_count: 36
+    status_summary: "36 implemented, 3 planned from gap analysis"
     # [Entry 2] Full parameter/return/error schemas for each tool
     existing:
       - name: post_task

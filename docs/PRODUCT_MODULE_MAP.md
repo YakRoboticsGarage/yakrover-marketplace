@@ -178,9 +178,9 @@ Tunnel       --> [M26: MCP Server] --> Engine
 
 | # | Module | Status | Key Files | Description |
 |---|--------|--------|-----------|-------------|
-| M24 | **MCP Tool Layer** | Built | `auction/mcp_tools.py` | 35 FastMCP tools wrapping the auction engine. Structured JSON responses. Error standardization. Decimal serialization. |
+| M24 | **MCP Tool Layer** | Built | `auction/mcp_tools.py` | 36 FastMCP tools wrapping the auction engine. Structured JSON responses. Error standardization. Decimal serialization. |
 | M25 | **REST API** | Built | `auction/api.py` | FastAPI router for web frontend: intent capture, task posting, bid retrieval. CORS. |
-| M26 | **Standalone MCP Server** | Built | `mcp_server.py` | HTTP server exposing 35 tools via REST (/api/tool/{name}). Cloudflare Tunnel support. Health + discovery endpoints. |
+| M26 | **Standalone MCP Server** | Built | `mcp_server.py` | HTTP server exposing 36 tools via REST (/api/tool/{name}). Cloudflare Tunnel support. Health + discovery endpoints. |
 
 ---
 

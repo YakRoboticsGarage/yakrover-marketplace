@@ -26,7 +26,7 @@ yakrover-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 35 MCP tool handlers
+│   ├── mcp_tools.py             # 36 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
@@ -44,8 +44,8 @@ yakrover-marketplace/
 │   ├── DEVELOPMENT_STRATEGY.md  # Testing & code safety (5-layer strategy)
 │   ├── mcp_demo/
 │   │   └── index.html           # Live MCP demo (yakrobot.bid/mcp-demo)
-│   ├── research/                # 52 research docs (see research/README.md)
-│   │   ├── PRODUCT_DSL_v2.yaml  # ← THE product ontology (3,200+ lines)
+│   ├── research/                # 62 research docs (see research/README.md)
+│   │   ├── PRODUCT_DSL_v2.yaml  # ← THE product ontology (3,500+ lines)
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   ├── technical/           # Architecture, execution gaps
@@ -92,7 +92,7 @@ Start here, in this order:
 | # | Document | What it tells you |
 |---|----------|-------------------|
 | 1 | **[PRODUCT_DSL_v2.yaml](docs/research/PRODUCT_DSL_v2.yaml)** | The entire product in one file — vision, bets, users, architecture, market, legal, roadmap |
-| 2 | **[Research README](docs/research/README.md)** | Index of all 52 research documents |
+| 2 | **[Research README](docs/research/README.md)** | Index of all 62 research documents |
 | 3 | **[User Journey](docs/USER_JOURNEY_CONSTRUCTION_v01.md)** | Marco's story — pre-bid survey for a highway project |
 | 4 | **[Roadmap v4](docs/ROADMAP_v4.md)** | Construction → Mining → Infrastructure → Lunar |
 | 5 | **[Decisions](docs/DECISIONS.md)** | Every product and technical decision with rationale |
