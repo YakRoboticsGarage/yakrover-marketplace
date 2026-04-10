@@ -313,19 +313,26 @@ class MCPRobotAdapter:
         # Resolve move and sensor tools dynamically
         move_tool, sensor_tool = self._resolve_tools(self._known_tools)
 
-        # Fallback to known robot types if pattern matching didn't find tools
+        # DEPRECATED FALLBACK — commented out to test dynamic resolution.
+        # If this causes execution failures, the robot's MCP server needs to
+        # expose tools with discoverable names (containing "move", "temperature", etc.)
+        # TODO: Remove entirely once dynamic resolution is verified in production.
+        # if not move_tool:
+        #     if "tumbller" in self.robot_id.lower():
+        #         move_tool = "tumbller_move"
+        #     else:
+        #         move_tool = "fakerover_move"
+        #     log.info("Using fallback move tool: %s", move_tool)
+        # if not sensor_tool:
+        #     if "tumbller" in self.robot_id.lower():
+        #         sensor_tool = "tumbller_get_temperature_humidity"
+        #     else:
+        #         sensor_tool = "fakerover_get_temperature_humidity"
+        #     log.info("Using fallback sensor tool: %s", sensor_tool)
         if not move_tool:
-            if "tumbller" in self.robot_id.lower():
-                move_tool = "tumbller_move"
-            else:
-                move_tool = "fakerover_move"
-            log.info("Using fallback move tool: %s", move_tool)
+            log.warning("No move tool found for %s — execution will skip movement", self.robot_id)
         if not sensor_tool:
-            if "tumbller" in self.robot_id.lower():
-                sensor_tool = "tumbller_get_temperature_humidity"
-            else:
-                sensor_tool = "fakerover_get_temperature_humidity"
-            log.info("Using fallback sensor tool: %s", sensor_tool)
+            log.warning("No sensor tool found for %s — execution will use robot_execute_task fallback", self.robot_id)
 
         log.info("Executing %s with tools: move=%s, sensor=%s", self.robot_id, move_tool, sensor_tool)
 
@@ -335,18 +342,21 @@ class MCPRobotAdapter:
 
         # Waypoint-by-waypoint execution using resolved tools
         for wp in range(1, num_waypoints + 1):
-            move_result = await self._mcp_call("tools/call", {
-                "name": move_tool,
-                "arguments": {"direction": "forward"},
-            })
-            move_ok = move_result and not move_result.get("isError")
-            if move_ok:
-                log.info("Waypoint %d: moved forward via %s", wp, move_tool)
-            else:
-                log.warning("Waypoint %d: move failed (%s), reading at current position", wp, move_tool)
+            if move_tool:
+                move_result = await self._mcp_call("tools/call", {
+                    "name": move_tool,
+                    "arguments": {"direction": "forward"},
+                })
+                move_ok = move_result and not move_result.get("isError")
+                if move_ok:
+                    log.info("Waypoint %d: moved forward via %s", wp, move_tool)
+                else:
+                    log.warning("Waypoint %d: move failed (%s), reading at current position", wp, move_tool)
 
             # Brief pause for robot to settle
             await asyncio.sleep(1.0)
+            if not sensor_tool:
+                break  # no sensor tool — skip to robot_execute_task fallback
             sensor_result = await self._mcp_call("tools/call", {
                 "name": sensor_tool,
                 "arguments": {},

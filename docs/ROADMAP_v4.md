@@ -317,6 +317,7 @@ All 6 MCP tools for operator management are built and tested:
 
 ### Deferred to later milestones
 
+- **Remove hardcoded tool name fallback in MCPRobotAdapter.** The old tumbller/fakerover name-based fallback is commented out (2026-04-10). Dynamic tool resolution via `_resolve_tools()` is active. Once verified working in production with multiple robot types, delete the commented-out fallback code entirely. See `auction/mcp_robot_adapter.py` lines 320-333.
 - Robot execution livestream (MJPEG/HLS camera feed) — moved to post-v1.4
 - Platform administration tooling (relay wallet monitoring, health aggregation) — partially done in v1.3 deploy scripts
 
