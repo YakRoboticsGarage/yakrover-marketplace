@@ -79,7 +79,7 @@ def _discover_onchain_robots():
 
     for entry in agents:
         agent = entry.get("agent", {})
-        rf = agent.get("registrationFile", {})
+        rf = agent.get("registrationFile") or {}
         meta = {m["key"]: m["value"] for m in agent.get("metadata", [])}
 
         name = rf.get("name", "Robot")
