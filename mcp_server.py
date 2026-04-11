@@ -123,11 +123,8 @@ def _discover_onchain_robots():
                 log("DISCOVERY", f"  Skip {name}: no MCP endpoint or inactive")
                 continue
 
-            # Skip robots without platform attestation
-            attestation = meta.get("attestation_status", "")
-            if attestation != "active":
-                log("DISCOVERY", f"  Skip {name}: not attested (status={attestation or 'none'})")
-                continue
+            # Platform attestation via EAS planned but not yet implemented.
+            # For now, fleet_provider == yakrover is the discovery filter.
 
             # Bearer token for authenticated robot MCP servers
             fleet_token = os.environ.get("FLEET_MCP_TOKEN")

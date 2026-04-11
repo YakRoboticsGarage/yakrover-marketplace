@@ -1298,10 +1298,8 @@ def register_auction_tools(
                     metadata["service_radius_km"] = str(service_radius_km)
                 if home_type:
                     metadata["home_type"] = home_type
-                # Platform attestation — signer attests this robot during registration
-                signer_address = sdk.web3_client.account.address
-                metadata["attested_by"] = signer_address
-                metadata["attestation_status"] = "active"
+                # Platform attestation: EAS (Ethereum Attestation Service) — not metadata.
+                # See PLAN_100_ROBOT_FLEET.md Section 9 for EAS integration plan.
                 agent.setMetadata(metadata)
 
                 # Step 1: Mint token with on-chain metadata (no IPFS URI yet)
@@ -1462,80 +1460,10 @@ def register_auction_tools(
     # ------------------------------------------------------------------
     # Attestation management tools
     # ------------------------------------------------------------------
-
-    @mcp.tool()
-    async def auction_revoke_attestation(
-        agent_id: str,
-        chain: str = "base-sepolia",
-        reason: str = "",
-    ) -> dict:
-        """Revoke platform attestation for a robot.
-
-        Sets attestation_status to 'revoked' on-chain. The robot remains
-        registered but will be excluded from marketplace discovery.
-        Requires SIGNER_PVT_KEY (platform signer).
-        """
-        import asyncio
-
-        signer_key = os.environ.get("SIGNER_PVT_KEY")
-        if not signer_key:
-            return _error_response_structured("MISSING_SIGNER_KEY", "SIGNER_PVT_KEY not set.", "")
-
-        target_chain = chain.strip().lower()
-        if target_chain not in CHAIN_CONFIG:
-            return _error_response_structured("INVALID_CHAIN", f"Unknown chain '{target_chain}'.", f"Valid: {sorted(CHAIN_CONFIG)}")
-
-        cfg = CHAIN_CONFIG[target_chain]
-
-        def _blocking():
-            from agent0_sdk import SDK
-            sdk = SDK(chainId=cfg["chain_id"], rpcUrl=cfg["rpc"], signer=signer_key)
-            agent_id_int = int(agent_id.split(":")[-1]) if ":" in agent_id else int(agent_id)
-            tx_hash = sdk.web3_client.transact_contract(
-                sdk.identity_registry, "setMetadata",
-                agent_id_int,
-                [["attestation_status", "revoked"]],
-            )
-            sdk.web3_client.wait_for_transaction(tx_hash, timeout=60)
-            return {"agent_id": agent_id, "chain": target_chain, "attestation_status": "revoked", "reason": reason}
-
-        return await asyncio.to_thread(_blocking)
-
-    @mcp.tool()
-    async def auction_reinstate_attestation(
-        agent_id: str,
-        chain: str = "base-sepolia",
-    ) -> dict:
-        """Reinstate platform attestation for a previously revoked robot.
-
-        Sets attestation_status back to 'active' on-chain.
-        Requires SIGNER_PVT_KEY (platform signer).
-        """
-        import asyncio
-
-        signer_key = os.environ.get("SIGNER_PVT_KEY")
-        if not signer_key:
-            return _error_response_structured("MISSING_SIGNER_KEY", "SIGNER_PVT_KEY not set.", "")
-
-        target_chain = chain.strip().lower()
-        if target_chain not in CHAIN_CONFIG:
-            return _error_response_structured("INVALID_CHAIN", f"Unknown chain '{target_chain}'.", f"Valid: {sorted(CHAIN_CONFIG)}")
-
-        cfg = CHAIN_CONFIG[target_chain]
-
-        def _blocking():
-            from agent0_sdk import SDK
-            sdk = SDK(chainId=cfg["chain_id"], rpcUrl=cfg["rpc"], signer=signer_key)
-            agent_id_int = int(agent_id.split(":")[-1]) if ":" in agent_id else int(agent_id)
-            tx_hash = sdk.web3_client.transact_contract(
-                sdk.identity_registry, "setMetadata",
-                agent_id_int,
-                [["attestation_status", "active"]],
-            )
-            sdk.web3_client.wait_for_transaction(tx_hash, timeout=60)
-            return {"agent_id": agent_id, "chain": target_chain, "attestation_status": "active"}
-
-        return await asyncio.to_thread(_blocking)
+    # Platform attestation: planned via EAS (Ethereum Attestation Service).
+    # See PLAN_100_ROBOT_FLEET.md Section 9 and docs/research/ for design.
+    # EAS contract on Base Sepolia: 0x4200000000000000000000000000000000000021
+    # ------------------------------------------------------------------
 
     # ------------------------------------------------------------------
     # Phase 5: Agreement generation and project management tools
