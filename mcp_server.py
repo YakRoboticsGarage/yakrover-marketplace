@@ -56,6 +56,50 @@ except ImportError:
     StripeService = None
 
 
+def _get_attested_agents() -> dict[int, str]:
+    """Query EAS for all valid (non-revoked) attestations under our schema.
+
+    Returns dict mapping agent_id → fleet_type for attested robots.
+    """
+    import httpx as _httpx
+
+    EAS_GRAPHQL = "https://base-sepolia.easscan.org/graphql"
+    SCHEMA_UID = "0x70a6cca5fbf857df1196dbbf7b0e460ff38f83788e3338a2c96cbb6feb3d711a"
+
+    query = """
+    { attestations(
+        where: { schemaId: { equals: "%s" }, revoked: { equals: false } },
+        take: 500
+    ) { decodedDataJson } }
+    """ % SCHEMA_UID
+
+    try:
+        resp = _httpx.post(EAS_GRAPHQL, json={"query": query}, timeout=10.0)
+        data = resp.json()
+        attested = {}
+        import json as _json
+        for att in data.get("data", {}).get("attestations", []):
+            decoded = _json.loads(att.get("decodedDataJson", "[]"))
+            agent_id = None
+            fleet_type = None
+            for field in decoded:
+                if field.get("name") == "agentId":
+                    val = field.get("value", {}).get("value", {})
+                    if isinstance(val, dict) and "hex" in val:
+                        agent_id = int(val["hex"], 16)
+                    elif isinstance(val, (int, str)):
+                        agent_id = int(val)
+                elif field.get("name") == "fleetType":
+                    fleet_type = field.get("value", {}).get("value", "")
+            if agent_id is not None:
+                attested[agent_id] = fleet_type or "unknown"
+        log("EAS", f"  {len(attested)} attested agents found")
+        return attested
+    except Exception as e:
+        log("EAS", f"  Attestation query failed: {e} — allowing all robots")
+        return {}  # fail-open: if EAS is down, allow all
+
+
 def _decode_hex_meta(val):
     """Decode hex-encoded on-chain metadata values to UTF-8 strings."""
     if not val:
@@ -152,6 +196,7 @@ def _discover_onchain_robots():
                 equipment_model=equip_model,
             )
             adapter.is_test = is_test
+            adapter._agent_id_int = int(agent.get("agentId", 0))
             adapters.append(adapter)
             log("DISCOVERY", f"  {name} (chain {chain_id}, test={is_test}) — {mcp_endpoint[:50]}...")
 
@@ -266,16 +311,43 @@ def build_engine():
                 log("DISCOVERY", "No on-chain robots reachable — fleet unchanged")
                 return
 
-            # Filter by is_test when simulator_only (demo fleet) mode is active
+            # EAS attestation filter — only include robots with valid attestations
+            log("EAS", "Checking attestations...")
+            attested = _get_attested_agents()
+            if attested:
+                before = len(all_online)
+                all_online = [a for a in all_online if int(getattr(a, 'agent_id_int', 0) or 0) in attested or a.robot_id in [str(aid) for aid in attested]]
+                # Also try matching by parsing agent ID from chain_id:agent_id format
+                attested_ids_str = {str(aid) for aid in attested}
+                all_online_filtered = []
+                for a in real_online + sim_online:
+                    # The adapter stores robot_id as the name, and chain_id as an int
+                    # We need to match against the numeric agent IDs from EAS
+                    # Check if any attested agent_id matches this adapter
+                    # The adapter doesn't have agent_id_int — we need to add it
+                    is_attested = getattr(a, '_agent_id_int', None) in attested
+                    if is_attested:
+                        a._fleet_type = attested.get(getattr(a, '_agent_id_int', 0), "")
+                        all_online_filtered.append(a)
+                all_online = all_online_filtered
+                log("EAS", f"  {before} robots → {len(all_online)} after attestation filter")
+            else:
+                log("EAS", "  No attestations found or EAS unavailable — allowing all robots")
+
+            if not all_online:
+                log("DISCOVERY", "No attested robots — fleet unchanged")
+                return
+
+            # Filter by fleet type based on demo mode
             if engine._simulator_only:
-                new_fleet = [a for a in all_online if getattr(a, 'is_test', False)]
-                label = f"{len(new_fleet)} test robot(s) (demo fleet)"
+                new_fleet = [a for a in all_online if getattr(a, '_fleet_type', '') in ('demo_fleet', 'live_production')]
+                label = f"{len(new_fleet)} attested robot(s) (demo + live)"
             elif engine._hide_fakerovers:
-                new_fleet = [a for a in all_online if not getattr(a, 'is_test', False)]
-                label = f"{len(new_fleet)} production robot(s)"
+                new_fleet = [a for a in all_online if getattr(a, '_fleet_type', '') == 'live_production']
+                label = f"{len(new_fleet)} live production robot(s)"
             else:
                 new_fleet = all_online
-                label = f"{len(all_online)} total ({len(real_online)} real + {len(sim_online)} sim)"
+                label = f"{len(all_online)} attested robot(s)"
 
             if not new_fleet:
                 log("DISCOVERY", f"No robots after filtering (simulator_only={engine._simulator_only}) — fleet unchanged")

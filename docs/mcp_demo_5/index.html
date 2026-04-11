@@ -2105,7 +2105,7 @@ function showRobotProfile(robot, idx) {
         '</span></div>' +
         '<div class="kv-row"><span class="kv-label">Robot API</span><span class="kv-value kv-value-mono">' + escapeHtml(robot.mcp_endpoint || 'not set') + '</span></div>' +
         '<div class="kv-row"><span class="kv-label">Available commands</span><span class="kv-value" style="font-size:11px">' + escapeHtml(toolNames.join(', ') || 'None listed') + '</span></div>' +
-        '<div class="kv-row"><span class="kv-label">Attestations</span><span class="kv-value"><a href="https://base-sepolia.easscan.org/schema/view/0x70a6cca5fbf857df1196dbbf7b0e460ff38f83788e3338a2c96cbb6feb3d711a" target="_blank" style="color:var(--link);text-decoration:none;font-size:11px" title="View all attestations for this schema">View on EAS</a></span></div>' +
+        '<div class="kv-row"><span class="kv-label">Attestations</span><span class="kv-value" id="attestLink-' + robot.agent_id + '" style="font-size:11px;color:var(--text-3)">Loading...</span></div>' +
       '</div>' +
     '</details>' +
 
@@ -2140,6 +2140,45 @@ function showRobotProfile(robot, idx) {
   document.body.appendChild(modal);
   var overlay = document.getElementById('feedDetailOverlay');
   if (overlay) overlay.classList.add('active');
+
+  // Async: look up attestation for this robot from EAS
+  var easBase = robot.chain_id === 8453 ? 'https://base.easscan.org' : 'https://base-sepolia.easscan.org';
+  fetch(easBase + '/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: '{ attestations(where: { schemaId: { equals: "' + EAS_SCHEMA_UID + '" }, revoked: { equals: false } }, take: 200) { id decodedDataJson } }' }),
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    var atts = (data.data || {}).attestations || [];
+    var match = null;
+    for (var i = 0; i < atts.length; i++) {
+      try {
+        var decoded = JSON.parse(atts[i].decodedDataJson || '[]');
+        for (var j = 0; j < decoded.length; j++) {
+          if (decoded[j].name === 'agentId') {
+            var val = decoded[j].value.value;
+            var aid = typeof val === 'object' ? parseInt(val.hex, 16) : parseInt(val);
+            if (aid === parseInt(robot.agent_id)) { match = atts[i]; break; }
+          }
+        }
+        if (match) break;
+      } catch (e) {}
+    }
+    var el = document.getElementById('attestLink-' + robot.agent_id);
+    if (!el) return;
+    if (match) {
+      var decoded = JSON.parse(match.decodedDataJson || '[]');
+      var ft = '';
+      for (var k = 0; k < decoded.length; k++) {
+        if (decoded[k].name === 'fleetType') ft = decoded[k].value.value;
+      }
+      el.innerHTML = '<a href="' + easBase + '/attestation/view/' + match.id + '" target="_blank" style="color:var(--link);text-decoration:none">' + escapeHtml(ft || 'Attested') + '</a>';
+    } else {
+      el.innerHTML = '<span style="color:var(--amber)">Not attested</span>';
+    }
+  }).catch(function() {
+    var el = document.getElementById('attestLink-' + robot.agent_id);
+    if (el) el.textContent = 'EAS unavailable';
+  });
 }
 
 // EAS Attestation
