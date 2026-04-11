@@ -2655,13 +2655,8 @@ async function runAuction() {
   var robotContext = '';
   var filteredForPrompt = getFilteredRobots();
   if (filteredForPrompt.length > 0) {
-    var robotList = filteredForPrompt.map(function(r) {
-      var walletStr = (r.payment && r.payment.usdc_wallet) ? ', wallet: ' + r.payment.usdc_wallet : '';
-      var toolStr = (r.mcp_tools && r.mcp_tools.length > 0) ? ', tools: ' + r.mcp_tools.join(', ') : '';
-      return '- ' + r.name + ' (agent #' + r.agent_id + ' on ' + r.chain_name + walletStr + toolStr + ')';
-    }).join('\n');
-    robotContext = '\n\nDiscovered operators (registered in identity registry):\n' + robotList +
-      '\n\nThese are registered operators discovered from the identity registry. They bid and execute tasks through the marketplace. Reference them by name in your narration.';
+    // Summarize fleet — don't list all 100 robots (blows prompt limit)
+    robotContext = '\n\n' + filteredForPrompt.length + ' registered operators available in the marketplace fleet. The server discovers and matches robots automatically based on sensor requirements. You do not need to name specific robots.';
   }
 
   var deliverySchemaContext = '\n\nDelivery Schema (robot receives this, QA validates against it):\n' + JSON.stringify(DELIVERY_SCHEMA, null, 2);
