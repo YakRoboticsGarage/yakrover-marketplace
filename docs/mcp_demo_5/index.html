@@ -445,7 +445,14 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
       <button class="admin-btn cta mobile-cta" id="mobileRegisterBtn" style="display:none;margin-top:8px" onclick="showRegistration()">Register Robot</button>
 
       <div class="card card-accent">
-        <label class="card-label" for="rfpText">RFP Document</label>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <label class="card-label" for="rfpText" style="margin:0">RFP Document</label>
+          <select class="field-input" id="rfpPreset" onchange="loadRfpPreset(this.value)" style="font-size:11px;padding:4px 8px;width:auto;flex-shrink:0">
+            <option value="">— Select preset —</option>
+            <option value="server_room" selected>Server Room Climate Check</option>
+            <option value="gpr_ann_arbor">GPR Utility Survey — Ann Arbor</option>
+          </select>
+        </div>
         <textarea class="form-textarea" id="rfpText">ENVIRONMENTAL MONITORING REQUEST
 Indoor Climate Assessment — Server Room Inspection
 
@@ -873,7 +880,7 @@ function onFakeRoverFilterChange() {
 var hideFakeRovers = false;
 function getFilteredRobots() {
   if (hideFakeRovers) return discoveredRobots.filter(function(r) { return !r.is_test; });
-  if (simulatorOnly) return discoveredRobots.filter(function(r) { return r.is_test || r.name.startsWith('FakeRover-') || r.name.startsWith('Tumbller'); });
+  if (simulatorOnly) return discoveredRobots.filter(function(r) { return r.is_test; });
   return discoveredRobots;
 }
 
@@ -1240,8 +1247,13 @@ async function discoverRobots() {
 
   discoveredRobots = allRobots;
 
-  if (allRobots.length > 0) {
-    renderRobotsSidebar(allRobots);
+  var filtered = getFilteredRobots();
+  if (filtered.length > 0) {
+    renderRobotsSidebar(filtered);
+  } else if (allRobots.length > 0) {
+    // Robots exist but all filtered out — show count hint
+    var st = document.getElementById('discoveryStatus');
+    if (st) st.innerHTML = '<span style="color:var(--text-3)">' + allRobots.length + ' found, 0 match filter</span>';
   } else {
     showNoRobots();
   }
@@ -1263,7 +1275,7 @@ async function discoverRobots() {
         owner: '', payment: { usdc_wallet: null, wallet_chain_id: null, stripe_connect_id: null },
       };
     });
-    renderRobotsSidebar(discoveredRobots);
+    renderRobotsSidebar(getFilteredRobots());
     var banner = document.getElementById('discoveryBanner');
     if (banner) { banner.textContent = 'Discovery error — showing known operators'; banner.style.background = 'var(--red-bg)'; banner.style.color = 'var(--red)'; setTimeout(function() { banner.style.display = 'none'; }, 5000); }
   }
@@ -1494,6 +1506,18 @@ function showPhase(phaseId) {
   }
 }
 
+function copyFeedDetail(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.innerText || el.textContent || '';
+  // Remove the "Close" and "Copy" button text from the copied content
+  text = text.replace(/^Close\s*Copy\s*/, '').trim();
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = el.querySelector('.admin-btn');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(function() { btn.textContent = 'Copy'; }, 2000); }
+  });
+}
+
 // Feed drawer toggle
 function closeFeedDetail(id) {
   var el = document.getElementById(id);
@@ -1583,10 +1607,11 @@ function appendFeedItem(step, index) {
   detailDiv.setAttribute('aria-modal', 'true');
   detailDiv.setAttribute('aria-label', 'Step detail');
   var closeBtn = '<button type="button" class="feed-detail-close" onclick="closeFeedDetail(\'' + detailId + '\')" aria-label="Close">Close</button>';
+  var copyBtn = '<button class="admin-btn" style="position:absolute;top:8px;right:60px;font-size:10px;padding:3px 8px" onclick="copyFeedDetail(\'' + detailId + '\')">Copy</button>';
   if (step.type === 'tool_call') {
-    detailDiv.innerHTML = closeBtn + '<div style="margin-top:8px">// Input\n' + escapeHtml(JSON.stringify(step.input, null, 2)) + '\n\n// Result\n' + escapeHtml(JSON.stringify(step.result, null, 2)) + '</div>';
+    detailDiv.innerHTML = closeBtn + copyBtn + '<div style="margin-top:8px">// Input\n' + escapeHtml(JSON.stringify(step.input, null, 2)) + '\n\n// Result\n' + escapeHtml(JSON.stringify(step.result, null, 2)) + '</div>';
   } else {
-    detailDiv.innerHTML = closeBtn + '<div style="margin-top:8px">' + escapeHtml(step.claude_text || '') + '</div>';
+    detailDiv.innerHTML = closeBtn + copyBtn + '<div style="margin-top:8px">' + escapeHtml(step.claude_text || '') + '</div>';
   }
 
   item.addEventListener('click', function() {
@@ -2245,6 +2270,33 @@ async function testTunnel() {
 // ===== RUN AUCTION (rewritten rendering, same API calls) =====
 
 var _auctionRunning = false;
+var RFP_PRESETS = {
+  server_room: {
+    rfp: 'ENVIRONMENTAL MONITORING REQUEST\nIndoor Climate Assessment — Server Room Inspection\n\nSCOPE: Ground robot to navigate server room and collect environmental\nreadings. Robot must move to 3 waypoints and record temperature and\nhumidity at each location. Deliverables: JSON sensor readings with\ntimestamps and position data.\n\nRequirements:\n- Ground-based mobile robot (wheeled or tracked)\n- Temperature sensor (range: 15-40C, accuracy: +/-1C)\n- Humidity sensor (range: 20-80% RH)\n- Remote operation capability\n- Budget: $1.00\n- Deadline: 1 hour',
+    project: 'Server Room Climate Check',
+    location: 'Detroit, MI',
+    agency: 'YAK Robotics',
+    terrain: 'Indoor, flat floor',
+  },
+  gpr_ann_arbor: {
+    rfp: 'MDOT PROJECT 2026-W-0847 — UTILITY LOCATION SURVEY\nSubsurface Utility Detection — Stadium Boulevard, Ann Arbor\n\nAgency: Michigan Department of Transportation — University Region\nProject: Stadium Boulevard Watermain Replacement\nLocation: Stadium Blvd from Main St to Pauline Blvd (0.6 miles)\n\nSCOPE: Ground-penetrating radar (GPR) subsurface utility detection\nalong the Stadium Boulevard corridor. Identify and mark all underground\nutilities including water, sewer, gas, electric, and telecommunications.\n\nRequirements:\n- GPR scan at 400 MHz and 1600 MHz frequencies\n- Minimum depth penetration: 3 meters\n- Survey area: 0.6-mile corridor, full roadway width (approx. 60 ft)\n- Deliverables: DZT raw data files, utility location map (DXF),\n  written report with anomaly identification and depth estimates\n- Coordinate system: Michigan State Plane South (EPSG:2253)\n- Accuracy: horizontal ±15 cm, depth ±10%\n- Mark all utilities per APWA Uniform Color Code\n- Budget: $4,200\n- Deadline: 5 business days',
+    project: 'Stadium Blvd Watermain Replacement — Utility Survey',
+    location: 'Ann Arbor, MI',
+    agency: 'MDOT — University Region',
+    terrain: 'Urban roadway, paved',
+  },
+};
+
+function loadRfpPreset(preset) {
+  var p = RFP_PRESETS[preset];
+  if (!p) return;
+  document.getElementById('rfpText').value = p.rfp;
+  document.getElementById('siteProject').value = p.project;
+  document.getElementById('siteLocation').value = p.location;
+  document.getElementById('siteAgency').value = p.agency;
+  document.getElementById('siteTerrain').value = p.terrain;
+}
+
 async function runAuction() {
   if (_auctionRunning) return;
   _auctionRunning = true;
