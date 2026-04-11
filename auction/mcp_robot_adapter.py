@@ -242,7 +242,10 @@ class MCPRobotAdapter:
         })
 
         if not result:
-            return None
+            # Robot MCP server doesn't have robot_submit_bid (e.g. fleet simulator).
+            # Generate a local bid using budget percentage.
+            return self._local_bid(task)
+
 
         # Parse structured content or text content
         content = result
@@ -274,6 +277,32 @@ class MCPRobotAdapter:
             self.capability_metadata["sensors"] = [
                 {"type": s} if isinstance(s, str) else s for s in caps
             ]
+
+        bid_hash = sign_bid(self.robot_id, task.request_id, price, self.signing_key)
+
+        return Bid(
+            request_id=task.request_id,
+            robot_id=self.robot_id,
+            price=price,
+            sla_commitment_seconds=sla,
+            ai_confidence=confidence,
+            capability_metadata=self.capability_metadata,
+            reputation_metadata=self.reputation_metadata,
+            bid_hash=bid_hash,
+        )
+
+    def _local_bid(self, task: Task) -> Bid | None:
+        """Generate a bid locally when the robot MCP doesn't support robot_submit_bid.
+
+        Uses a default bid percentage (80% of budget) and the robot's
+        capability metadata. This allows fleet simulator robots to bid
+        without needing a dedicated bidding tool.
+        """
+        import random
+        bid_pct = 0.75 + random.uniform(0, 0.15)  # 75-90% of budget
+        price = Decimal(str(round(float(task.budget_ceiling) * bid_pct, 2)))
+        sla = task.sla_seconds
+        confidence = round(0.7 + random.uniform(0, 0.25), 2)
 
         bid_hash = sign_bid(self.robot_id, task.request_id, price, self.signing_key)
 
