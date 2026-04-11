@@ -333,58 +333,101 @@ This diversity is intentional — it tests that the marketplace handles heteroge
 
 ---
 
-## 11. Implementation Sequence
+## 11. Implementation Sequence (Comprehensive)
 
-### Phase A — Attestation + registration flow updates (1 day)
-1. Add `attested_by`, `attestation_status` to registration metadata
-2. Add `is_test`, lat/lng, service_radius, `home_type`, `initial_reputation` to registration backend
-3. Update frontend form with new fields (admin-only for test/reputation)
-4. Add "Hide test robots" filter toggle
-5. Update discovery query to filter for `attestation_status == active`
-6. Add `auction_revoke_attestation` and `auction_reinstate_attestation` MCP tools
+### Current state (as of 2026-04-11)
+- 5 robots registered on Base Sepolia — wrong owner (platform signer), wrong endpoint (fakerover), no `is_test`, no geo coords, no attestation. Will be superseded.
+- Fleet simulator deployed at `yakrover-fleet-sim.fly.dev/mcp` — 9 categories, 60 tools, always-on ✅
+- 18 operator wallets generated in `.fleet_wallets.json` (gitignored) — not yet funded
+- `fleet_manifest.yaml` complete — 100 robots, 18 operators, varied naming ✅
+- Demo discovers Base Sepolia (84532 added to DISCOVERY_CHAINS) and shows all chains ✅
+- `simulatorOnly` filter still uses `FakeRover-` name prefix — needs metadata-based filter
+- Registration backend does NOT accept `is_test`, lat/lng, service_radius, attestation fields
+- Bid engine has NO geographic filtering or busy state tracking
+- Demo UI has NO multi-task decomposition preview
 
-### Phase B — MCP servers (1-2 days)
-7. Build 8 MCP server templates (one per robot category)
-8. Deploy to Fly.io (always-on, ~$16/mo total)
-9. Verify each server responds to `tools/list` and returns category-appropriate tools
+### Phase 1 — Backend registration updates
+1. Add `is_test` parameter to `auction_register_robot_onchain` — write as on-chain metadata
+2. Add `latitude`, `longitude` parameters — write as on-chain metadata
+3. Add `service_radius_km` parameter — write as on-chain metadata
+4. Add `home_type` parameter (`garage` or `docked`) — write as on-chain metadata
+5. Add `attested_by` metadata write during registration (platform signer address)
+6. Add `attestation_status` metadata write during registration (value: `active`)
+7. Add `auction_revoke_attestation(agent_id, chain, reason)` MCP tool
+8. Add `auction_reinstate_attestation(agent_id, chain)` MCP tool
+9. Update `discover_and_swap_fleet()` in `mcp_server.py` to filter for `attestation_status == active`
+10. Deploy updated MCP server to Fly.io
 
-### Phase C — Fleet manifest + script (1 day)
-10. Write `fleet_manifest.yaml` with all 100 robots, 18 operators, varied naming conventions
-11. Generate 18 operator wallets (keypairs stored in manifest, gitignored)
-12. Write `scripts/register_fleet.py` batch registration script:
-    - Step 1: Fund 18 operator wallets from platform signer (0.003 ETH each)
-    - Step 2: Each operator wallet registers its own robots
-    - Step 3: Platform signer writes attestation metadata for each robot
-13. Dry-run: validate manifest, check gas estimate, print plan
+### Phase 2 — Discard the 5 test robots
+11. The 5 early test robots (#4292–#4296) have wrong owner, wrong endpoint, missing metadata. They're on Sepolia — ignore them. Discovery will filter them out via missing `attestation_status`. No action needed.
 
-### Phase D — Registration on Base Sepolia (~30 min)
-14. Fund operator wallets (18 txns, ~1 min)
-15. Run batch registration from operator wallets (rate limited: 1 per 5 seconds = ~8 min)
-16. Platform attests all 100 robots (100 txns, ~8 min)
-17. Verify all 100 robots appear in Base Sepolia subgraph
-18. Verify IPFS enrichment shows correct tools for each robot
-19. Verify attestation filter works (only attested robots in discovery)
-20. Verify robot ownership matches operator wallets (not platform)
+### Phase 3 — Operator wallets
+12. Fund 18 operator wallets from platform signer (0.003 ETH each, 0.054 ETH total)
+13. Verify each wallet received ETH via RPC balance check
+14. Log all funding tx hashes
 
-### Phase E — Bid engine updates (1 day)
-17. Add geographic hard cutoff filter (haversine distance > service_radius → no bid)
-18. Add busy/offline filter (busy_until timestamp, realistic task durations)
-19. Test with sample auctions: correct robots excluded by distance, busy state
+### Phase 4 — Batch registration script
+15. Write `scripts/register_fleet.py`:
+    - Reads `fleet_manifest.yaml` and `.fleet_wallets.json`
+    - For each operator → for each robot:
+      a. Registers robot from operator's wallet with correct MCP endpoint per category (`yakrover-fleet-sim.fly.dev/mcp`)
+      b. Includes all metadata: `is_test: true`, lat/lng, service_radius_km, home_type, attested_by, attestation_status
+    - Rate limited: 1 registration per 5 seconds
+    - Resume mode: skip already-registered robots (check by name in subgraph)
+    - Dry-run mode: validate manifest, estimate gas, print plan
+    - Logs results to `fleet_registration_log.json`
+16. Test dry-run mode
+17. Test with 5 robots from different operators — verify ownership, endpoint, metadata, attestation, IPFS tools
 
-### Phase F — RFP corpus + multi-task UI (1-2 days)
-20. Expand MDOT RFP research to 50 entries
-21. Decompose each into structured task specs with lat/lng
-22. Build multi-task decomposition preview UI (Claude shows breakdown, user confirms)
-23. Build parallel auction display (N winner cards per RFP)
+### Phase 5 — Full registration (100 robots)
+18. Run batch registration for all 100 robots on Base Sepolia
+19. Verify all 100 appear in subgraph with correct metadata
+20. Verify IPFS agent cards have correct category-specific tools
+21. Verify robot ownership matches operator wallets (not platform signer)
+22. Verify attestation filter: only attested robots in marketplace discovery
+23. Verify geo metadata: lat/lng and service_radius readable from subgraph
 
-### Phase G — Demo verification
-24. Run 10 diverse RFP auctions through the demo
-25. Verify competitive bidding (multiple bidders per task)
-26. Verify geographic filtering excludes distant robots
-27. Verify busy robots excluded after winning
-28. Verify docked in-situ tasks complete in seconds
-29. Verify reputation-weighted scoring produces expected winner distribution
-30. Verify multi-task RFP decomposition + parallel auctions work end-to-end
+### Phase 6 — Demo UI updates
+24. Replace `FakeRover-` / `Tumbller` name-based filter in `getFilteredRobots()` with `is_test` metadata check
+25. "Demo fleet only" toggle shows `is_test: true` robots; unchecked shows all attested robots
+26. Add "Hide test robots" toggle (new) — for when real operators coexist with test fleet
+27. Verify 100 robots render in sidebar without performance issues (may need virtual scroll or pagination)
+28. Verify operator profile popup shows correct equipment model, location, category-specific tools for each robot type
+29. Verify IPFS enrichment completes for 100 robots without timeout (may need batch/cache)
+
+### Phase 7 — Bid engine updates
+30. Add haversine distance calculation utility
+31. Add geographic hard cutoff filter: robot does not bid if task location > service_radius_km
+32. Extend `auction_post_task` to require `latitude`/`longitude` for the job site
+33. Add `busy_until` timestamp tracking to robot state (MCPRobotAdapter / RuntimeRegisteredRobot)
+34. Add busy filter: robot does not bid while `busy_until > now()`
+35. Set `busy_until` when robot wins auction (duration from task duration model in Section 10)
+36. Test: post task in Detroit → verify only robots within range bid
+37. Test: robot wins → excluded from next auction → re-available after task duration
+
+### Phase 8 — Multi-task RFP decomposition
+38. Update Claude system prompt to decompose RFPs into multiple tasks when appropriate
+39. Build decomposition preview UI: Claude presents breakdown ("This project requires 3 tasks: ..."), user confirms or edits
+40. Build parallel auction execution: `auction_post_task` called N times with shared `rfp_id`
+41. Build multi-result display: N winner cards shown in the feed
+42. Each task settles independently (no bundled payment)
+43. Test with 3 MDOT RFPs that decompose into 2-3 tasks each
+
+### Phase 9 — RFP corpus
+44. Expand MDOT RFP research to 50 entries (currently 43)
+45. Decompose each into structured task specs with lat/lng coordinates
+46. Verify every task type has 8-15 eligible bidders in the 100-robot fleet
+47. Create 5 sample RFPs as demo presets (selectable in UI dropdown)
+
+### Phase 10 — End-to-end verification
+48. Run 10 diverse auctions across different task types and Michigan locations
+49. Verify geographic filtering: UP robot (Copper Country, 400km) bids on Houghton task but not Detroit
+50. Verify busy exclusion: winning robot excluded, re-available after task duration
+51. Verify docked in-situ tasks complete in seconds (not minutes)
+52. Verify reputation-weighted scoring: established operators win more than new entrants
+53. Verify multi-task RFP: I-94 project decomposes into topo + tunnel + bridge → 3 parallel auctions → 3 different winners
+54. Verify 100-robot sidebar: no performance lag, scroll works, popup loads correctly
+55. Verify all 100 robots show correct category-specific tools via IPFS enrichment
 
 ---
 
