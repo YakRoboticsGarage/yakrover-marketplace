@@ -138,6 +138,7 @@ def _discover_onchain_robots():
             sensors_raw = meta.get("sensors", "")
             sensors_list = [s.strip() for s in sensors_raw.split(",") if s.strip()] if sensors_raw else []
             equip_model = meta.get("equipment_model", "")
+            is_test = meta.get("is_test", "") == "true"
 
             adapter = MCPRobotAdapter(
                 robot_id=name,
@@ -150,8 +151,9 @@ def _discover_onchain_robots():
                 sensors=sensors_list,
                 equipment_model=equip_model,
             )
+            adapter.is_test = is_test
             adapters.append(adapter)
-            log("DISCOVERY", f"  {name} (chain {chain_id}) — {mcp_endpoint[:50]}...")
+            log("DISCOVERY", f"  {name} (chain {chain_id}, test={is_test}) — {mcp_endpoint[:50]}...")
 
     return adapters
 
@@ -258,19 +260,31 @@ def build_engine():
                     else:
                         log("PROBE", f"  --{adapter.robot_id} ({kind})")
 
-            # Combine all reachable robots — both real and simulator
-            new_fleet = real_online + sim_online
-            label = f"{len(real_online)} real + {len(sim_online)} simulator(s)"
-            if not new_fleet:
+            # Combine all reachable robots
+            all_online = real_online + sim_online
+            if not all_online:
                 log("DISCOVERY", "No on-chain robots reachable — fleet unchanged")
+                return
+
+            # Filter by is_test when simulator_only (demo fleet) mode is active
+            if engine._simulator_only:
+                new_fleet = [a for a in all_online if getattr(a, 'is_test', False)]
+                label = f"{len(new_fleet)} test robot(s) (demo fleet)"
+            elif engine._hide_fakerovers:
+                new_fleet = [a for a in all_online if not getattr(a, 'is_test', False)]
+                label = f"{len(new_fleet)} production robot(s)"
+            else:
+                new_fleet = all_online
+                label = f"{len(all_online)} total ({len(real_online)} real + {len(sim_online)} sim)"
+
+            if not new_fleet:
+                log("DISCOVERY", f"No robots after filtering (simulator_only={engine._simulator_only}) — fleet unchanged")
                 return
 
             # Preserve runtime-registered robots (from operator registration form)
             from auction.mock_fleet import RuntimeRegisteredRobot
             with engine._fleet_lock:
                 registered = [r for r in engine.robots if isinstance(r, RuntimeRegisteredRobot)]
-                if engine._hide_fakerovers:
-                    registered = [r for r in registered if not getattr(r, 'name', '').startswith('FakeRover-')]
                 if registered:
                     new_fleet = new_fleet + registered
                 engine.robots = new_fleet
