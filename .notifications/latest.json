@@ -1,1 +1,1 @@
-{"name": "YAK Docs Sync", "message": "docs-sync 2026-04-10: MCP tools 35→36, DSL 3243→3535 lines, research docs 52→62 across CLAUDE.md/README/MODULE_MAP/PRODUCT_DSL. 2 new backlog items (IMP-048/049): dead chains field + constants in function scope."}
+{"name": "YAK Docs Sync", "message": "docs-sync 2026-04-11: MCP tools 36→37 across CLAUDE.md/README/MODULE_MAP (EAS attest tool added post-v1.4). 2 new backlog items: IMP-050 (eas_attest ignores chain_id in TX routing, Medium) + IMP-051 (delete stale fallback block in mcp_robot_adapter.py, Low)."}

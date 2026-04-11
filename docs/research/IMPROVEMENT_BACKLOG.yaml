@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-10'
-  total_items: 49
+  last_updated: '2026-04-11'
+  total_items: 51
   implemented: 10
   deferred: 4
   rejected: 1
-  proposed: 34
+  proposed: 36
   source: Automated daily research agent + weekly synthesis
-  last_sync: "daily-sync (2026-04-10) — added IMP-048 (dead _registration.chains field), IMP-049 (module-level constants in function scope)"
+  last_sync: "daily-sync (2026-04-11) — added IMP-050 (auction_eas_attest ignores chain_id in TX routing), IMP-051 (delete stale fallback block in mcp_robot_adapter.py)"
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -817,5 +817,47 @@ proposals:
   priority: low
   status: proposed
   proposed_date: '2026-04-10'
+  decision_date: null
+  decision_notes: null
+- id: IMP-050
+  title: auction_eas_attest ignores chain_id parameter when building the on-chain transaction
+  description: >
+    auction_eas_attest (auction/mcp_tools.py line 1481) accepts a chain_id parameter
+    but hardcodes both the RPC provider ("https://sepolia.base.org") and the transaction
+    chainId (84532) regardless of what the caller passes. If chain_id=8453 (Base mainnet)
+    is supplied, the attestation payload encodes "mainnet" but the transaction is submitted
+    to Sepolia, silently minting a misleading attestation on the wrong network.
+    The fix is to route through CHAIN_CONFIG (already defined at line 1089) exactly as
+    auction_register_robot_onchain does: look up the chain entry, use its rpc_url and
+    chain_id for the Web3 provider and transaction dict. EAS_ADDRESS is the same on both
+    chains so no address switch is needed. Also consider moving EAS_ADDRESS, EAS_SCHEMA_UID,
+    and EAS_ABI out of register_auction_tools() scope into module constants (complements IMP-049).
+  module: M24_mcp_tool_layer
+  research_source: code-audit-2026-04-11
+  evidence: 'auction/mcp_tools.py line 1509: w3 = Web3(HTTPProvider("https://sepolia.base.org")) — hardcoded; line 1533: "chainId": 84532 — hardcoded; CHAIN_CONFIG at line 1089 already maps 84532 and 8453'
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-11'
+  decision_date: null
+  decision_notes: null
+- id: IMP-051
+  title: Delete stale deprecated fallback block in mcp_robot_adapter.py
+  description: >
+    auction/mcp_robot_adapter.py lines 345-360 contain a DEPRECATED FALLBACK block —
+    a commented-out robot-name-based hardcoded tool lookup (tumbller_move, fakerover_move,
+    etc.) with an explicit TODO: "Remove entirely once dynamic resolution is verified in
+    production." Dynamic _resolve_tools() has been the sole resolver since v1.4
+    (2026-04-10) and has operated across a 100-robot fleet through the EAS attestation
+    sprint without regressions. The block is dead code. Delete lines 345-360 and the
+    surrounding comment header. The live warn logs (lines 361-364) that fire when no
+    tool is found should be retained — they are the correct failure signal.
+  module: M9_mock_fleet
+  research_source: code-audit-2026-04-11
+  evidence: 'auction/mcp_robot_adapter.py line 348: TODO: Remove entirely once dynamic resolution is verified in production. — 100-robot fleet deployed and attested post-v1.4; dynamic resolution confirmed'
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-11'
   decision_date: null
   decision_notes: null

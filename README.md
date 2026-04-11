@@ -26,7 +26,7 @@ yakrover-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 36 MCP tool handlers
+│   ├── mcp_tools.py             # 37 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
@@ -135,7 +135,7 @@ All four follow the [skill-creator-springett](https://github.com/bglek/skill-cre
 
 ## Key Numbers
 
-- **36 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator registration, compliance, agreement generation, event tracking, feedback
+- **37 MCP tools** — auction lifecycle, RFP parsing, bond verification, operator registration, compliance, agreement generation, event tracking, feedback, EAS attestation
 - **284 tests** passing (all CI checks green: lint, mypy, pytest)
 - **Live demo** at yakrobot.bid/demo — Card/ACH/USDC payment, schema-driven delivery QA, real robot discovery, on-chain operator registration, IPFS delivery
 - **3,600+ line YAML** product ontology covering the entire product (including interface language mapping)
