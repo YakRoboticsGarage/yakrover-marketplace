@@ -1460,10 +1460,98 @@ def register_auction_tools(
     # ------------------------------------------------------------------
     # Attestation management tools
     # ------------------------------------------------------------------
-    # Platform attestation: planned via EAS (Ethereum Attestation Service).
-    # See PLAN_100_ROBOT_FLEET.md Section 9 and docs/research/ for design.
-    # EAS contract on Base Sepolia: 0x4200000000000000000000000000000000000021
+    # Platform attestation via EAS (Ethereum Attestation Service)
     # ------------------------------------------------------------------
+
+    EAS_ADDRESS = "0x4200000000000000000000000000000000000021"
+    EAS_SCHEMA_UID = "0x70a6cca5fbf857df1196dbbf7b0e460ff38f83788e3338a2c96cbb6feb3d711a"
+    EAS_ABI = [
+        {
+            "inputs": [{"components": [{"name": "schema", "type": "bytes32"},
+                {"components": [{"name": "recipient", "type": "address"}, {"name": "expirationTime", "type": "uint64"},
+                 {"name": "revocable", "type": "bool"}, {"name": "refUID", "type": "bytes32"},
+                 {"name": "data", "type": "bytes"}, {"name": "value", "type": "uint256"}],
+                "name": "data", "type": "tuple"}], "name": "request", "type": "tuple"}],
+            "name": "attest", "outputs": [{"name": "", "type": "bytes32"}],
+            "stateMutability": "payable", "type": "function",
+        },
+    ]
+
+    @mcp.tool()
+    async def auction_eas_attest(
+        agent_id: int,
+        chain_id: int = 84532,
+        fleet_type: str = "demo_fleet",
+        fleet_name: str = "yakrover-demo-100",
+        attestor_role: str = "platform_admin",
+        notes: str = "",
+        attester_address: str = "",
+    ) -> dict:
+        """Create an EAS attestation for a robot from the platform wallet.
+
+        Attestation types: live_production, demo_fleet, legacy.
+        Attestor roles: platform_admin, operator, auditor, community.
+        """
+        import asyncio
+
+        signer_key = os.environ.get("SIGNER_PVT_KEY")
+        if not signer_key:
+            return _error_response_structured("MISSING_SIGNER_KEY", "SIGNER_PVT_KEY not set.", "")
+
+        valid_types = ["live_production", "demo_fleet", "legacy"]
+        if fleet_type not in valid_types:
+            return _error_response_structured("INVALID_FLEET_TYPE", f"fleet_type must be one of {valid_types}", "")
+
+        def _blocking():
+            import eth_abi as _eth_abi
+            from web3 import Web3 as _Web3
+
+            w3 = _Web3(_Web3.HTTPProvider("https://sepolia.base.org"))
+            eas = w3.eth.contract(
+                address=_Web3.to_checksum_address(EAS_ADDRESS), abi=EAS_ABI
+            )
+            account = w3.eth.account.from_key(signer_key)
+
+            encoded_data = _eth_abi.encode(
+                ["uint256", "uint256", "string", "string", "string", "string"],
+                [agent_id, chain_id, fleet_type, fleet_name, attestor_role, notes],
+            )
+
+            tx = eas.functions.attest(
+                (
+                    bytes.fromhex(EAS_SCHEMA_UID[2:]),
+                    (
+                        _Web3.to_checksum_address(attester_address if attester_address.startswith("0x") else "0x0000000000000000000000000000000000000000"),
+                        0, True, b"\x00" * 32, encoded_data, 0,
+                    ),
+                )
+            ).build_transaction({
+                "from": account.address,
+                "nonce": w3.eth.get_transaction_count(account.address),
+                "gasPrice": w3.eth.gas_price,
+                "chainId": 84532,
+                "value": 0,
+            })
+
+            signed = w3.eth.account.sign_transaction(tx, signer_key)
+            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+            receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=60)
+
+            uid = "unknown"
+            for log in receipt["logs"]:
+                if log["address"].lower() == EAS_ADDRESS.lower() and len(log["data"]) >= 32:
+                    uid = "0x" + log["data"].hex()[:64]
+                    break
+
+            return {
+                "attestation_uid": uid,
+                "agent_id": agent_id,
+                "fleet_type": fleet_type,
+                "attestor": account.address,
+                "explorer": f"https://base-sepolia.easscan.org/attestation/view/{uid}",
+            }
+
+        return await asyncio.to_thread(_blocking)
 
     # ------------------------------------------------------------------
     # Phase 5: Agreement generation and project management tools

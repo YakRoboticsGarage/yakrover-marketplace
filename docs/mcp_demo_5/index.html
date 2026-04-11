@@ -2105,12 +2105,15 @@ function showRobotProfile(robot, idx) {
         '</span></div>' +
         '<div class="kv-row"><span class="kv-label">Robot API</span><span class="kv-value kv-value-mono">' + escapeHtml(robot.mcp_endpoint || 'not set') + '</span></div>' +
         '<div class="kv-row"><span class="kv-label">Available commands</span><span class="kv-value" style="font-size:11px">' + escapeHtml(toolNames.join(', ') || 'None listed') + '</span></div>' +
+        '<div class="kv-row"><span class="kv-label">Attestations</span><span class="kv-value"><a href="https://base-sepolia.easscan.org/schema/view/0x70a6cca5fbf857df1196dbbf7b0e460ff38f83788e3338a2c96cbb6feb3d711a" target="_blank" style="color:var(--link);text-decoration:none;font-size:11px" title="View all attestations for this schema">View on EAS</a></span></div>' +
       '</div>' +
     '</details>' +
 
-    // Copy profile button
-    '<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:8px">' +
-      '<button class="admin-btn" id="copyProfileBtn" style="font-size:11px;padding:4px 10px" onclick="copyRobotProfile()">Copy profile</button>' +
+    // Actions
+    '<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+      '<button class="admin-btn" id="copyProfileBtn" style="font-size:11px;padding:4px 10px;width:auto" onclick="copyRobotProfile()">Copy profile</button>' +
+      '<button class="admin-btn" style="font-size:11px;padding:4px 10px;width:auto" onclick="attestRobot(' + robot.agent_id + ',' + robot.chain_id + ',\'' + escapeHtml(robot.name) + '\')">Attest this operator</button>' +
+      '<span id="attestStatus" style="font-size:11px;color:var(--text-3)"></span>' +
     '</div>';
 
   // Build markdown for clipboard
@@ -2137,6 +2140,105 @@ function showRobotProfile(robot, idx) {
   document.body.appendChild(modal);
   var overlay = document.getElementById('feedDetailOverlay');
   if (overlay) overlay.classList.add('active');
+}
+
+// EAS Attestation
+var EAS_ADDRESS = '0x4200000000000000000000000000000000000021';
+var EAS_SCHEMA_UID = '0x70a6cca5fbf857df1196dbbf7b0e460ff38f83788e3338a2c96cbb6feb3d711a';
+
+async function attestRobot(agentId, chainId, robotName) {
+  var status = document.getElementById('attestStatus');
+  if (!status) return;
+
+  if (!window.ethereum) {
+    status.textContent = 'Connect a wallet to attest';
+    status.style.color = 'var(--red)';
+    return;
+  }
+
+  // Show attestation type picker
+  var fleetType = prompt('Attestation type:\n\n• live_production — Real verified robot\n• demo_fleet — Test/demo robot\n• legacy — Deprecated, filter out\n\nEnter type:', 'demo_fleet');
+  if (!fleetType || !['live_production', 'demo_fleet', 'legacy'].includes(fleetType)) {
+    status.textContent = 'Cancelled';
+    return;
+  }
+
+  var notes = prompt('Optional notes (or leave blank):', '') || '';
+
+  status.textContent = 'Connecting wallet...';
+  status.style.color = 'var(--text-3)';
+
+  try {
+    var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    var attester = accounts[0];
+
+    // Ensure on Base Sepolia
+    var currentChain = await window.ethereum.request({ method: 'eth_chainId' });
+    if (currentChain !== '0x14a34') {
+      status.textContent = 'Switch to Base Sepolia...';
+      try {
+        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x14a34' }] });
+      } catch (e) {
+        status.textContent = 'Please switch to Base Sepolia';
+        status.style.color = 'var(--red)';
+        return;
+      }
+    }
+
+    status.textContent = 'Sign attestation...';
+
+    // Encode attestation data: (uint256 agentId, uint256 chainId, string fleetType, string fleetName, string attestorRole, string notes)
+    // Using ethers-style ABI encoding via hex
+    var abiCoder = new (function() {
+      // Minimal ABI encoder for our specific types
+      this.encode = function(agentId, chainId, fleetType, fleetName, role, notes) {
+        // Pack as: uint256, uint256, then dynamic string offsets + data
+        // This is complex to do manually — use EAS SDK approach instead
+        // For now, encode via the contract's attest function directly
+        return null;
+      };
+    })();
+
+    // Build the attest transaction using raw calldata
+    // attest((bytes32 schema, (address recipient, uint64 expirationTime, bool revocable, bytes32 refUID, bytes data, uint256 value)))
+    // This is complex — let's use eth_abi via a proxy call to our MCP server instead
+
+    // Call our MCP server to create the attestation from the platform wallet
+    var tunnelUrl = document.getElementById('tunnelUrl').value.trim().replace(/\/+$/, '');
+    var resp = await fetch(tunnelUrl + '/api/tool/auction_eas_attest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agent_id: agentId,
+        chain_id: chainId,
+        fleet_type: fleetType,
+        fleet_name: 'yakrover-demo-100',
+        attestor_role: 'community',
+        notes: notes || (robotName + ' attested by ' + attester.slice(0, 8) + '...'),
+        attester_address: attester,
+      }),
+    });
+
+    if (!resp.ok) {
+      // Fallback: create attestation directly from browser wallet
+      // For now, show the EAS explorer link where they can do it manually
+      status.innerHTML = 'Server attestation not available. <a href="https://base-sepolia.easscan.org/schema/view/' + EAS_SCHEMA_UID + '" target="_blank" style="color:var(--link)">Attest on EAS</a>';
+      return;
+    }
+
+    var data = await resp.json();
+    var result = data.result || data;
+    if (result.attestation_uid) {
+      status.innerHTML = 'Attested! <a href="https://base-sepolia.easscan.org/attestation/view/' + result.attestation_uid + '" target="_blank" style="color:var(--link)">View on EAS</a>';
+      status.style.color = 'var(--green)';
+    } else {
+      status.textContent = result.error || 'Attestation failed';
+      status.style.color = 'var(--red)';
+    }
+  } catch (e) {
+    status.textContent = 'Error: ' + (e.message || e).toString().slice(0, 60);
+    status.style.color = 'var(--red)';
+  }
 }
 
 function copyRobotProfile() {
