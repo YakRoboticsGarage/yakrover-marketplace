@@ -397,10 +397,10 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
           <input type="checkbox" id="simulatorOnly" onchange="onSimulatorToggle()" checked style="accent-color:var(--navy)">
           Demo fleet only
         </label>
-        <div class="field-hint" style="margin:2px 0 6px 22px">Use demo simulators. Uncheck to show registered operators only.</div>
+        <div class="field-hint" style="margin:2px 0 6px 22px">Show test fleet robots. Uncheck to include all registered operators.</div>
         <label class="check-label">
           <input type="checkbox" id="hideFakeRovers" onchange="onFakeRoverFilterChange()" style="accent-color:var(--navy)">
-          Hide FakeRovers
+          Hide test robots
         </label>
         <div class="field-hint" style="margin:2px 0 0 22px">Remove FakeRover-* robots from both the sidebar and auction bidding. Only registered robots with custom names will bid.</div>
       </div>
@@ -872,8 +872,8 @@ function onFakeRoverFilterChange() {
 
 var hideFakeRovers = false;
 function getFilteredRobots() {
-  if (hideFakeRovers) return discoveredRobots.filter(function(r) { return !r.name.startsWith('FakeRover-'); });
-  if (simulatorOnly) return discoveredRobots.filter(function(r) { return r.name.startsWith('FakeRover-') || r.name.startsWith('Tumbller'); });
+  if (hideFakeRovers) return discoveredRobots.filter(function(r) { return !r.is_test; });
+  if (simulatorOnly) return discoveredRobots.filter(function(r) { return r.is_test || r.name.startsWith('FakeRover-') || r.name.startsWith('Tumbller'); });
   return discoveredRobots;
 }
 
@@ -1340,6 +1340,8 @@ async function querySubgraph(url, chainId) {
         var opLocation = olEntry && olEntry.value ? decodeHexMeta(olEntry.value) : null;
         var snEntry = a.metadata.filter(function(md) { return md.key === 'sensors'; })[0];
         var sensors = snEntry && snEntry.value ? decodeHexMeta(snEntry.value) : null;
+        var itEntry = a.metadata.filter(function(md) { return md.key === 'is_test'; })[0];
+        var isTest = itEntry && itEntry.value ? decodeHexMeta(itEntry.value) === 'true' : false;
       }
       return {
         agent_id: a.agentId || a.id,
@@ -1359,6 +1361,7 @@ async function querySubgraph(url, chainId) {
         operator_company: opCompany || null,
         operator_location: opLocation || null,
         sensors: sensors || null,
+        is_test: isTest,
         owner: a.owner || '',
         payment: {
           usdc_wallet: walletFromMeta || null,
