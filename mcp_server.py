@@ -63,7 +63,10 @@ def _get_attested_agents() -> dict[int, str]:
     """
     import httpx as _httpx
 
-    EAS_GRAPHQL = "https://base-sepolia.easscan.org/graphql"
+    EAS_ENDPOINTS = [
+        "https://base-sepolia.easscan.org/graphql",
+        "https://base.easscan.org/graphql",
+    ]
     SCHEMA_UID = "0x70a6cca5fbf857df1196dbbf7b0e460ff38f83788e3338a2c96cbb6feb3d711a"
 
     query = """
@@ -73,31 +76,31 @@ def _get_attested_agents() -> dict[int, str]:
     ) { decodedDataJson } }
     """ % SCHEMA_UID
 
-    try:
-        resp = _httpx.post(EAS_GRAPHQL, json={"query": query}, timeout=10.0)
-        data = resp.json()
-        attested = {}
-        import json as _json
-        for att in data.get("data", {}).get("attestations", []):
-            decoded = _json.loads(att.get("decodedDataJson", "[]"))
-            agent_id = None
-            fleet_type = None
-            for field in decoded:
-                if field.get("name") == "agentId":
-                    val = field.get("value", {}).get("value", {})
-                    if isinstance(val, dict) and "hex" in val:
-                        agent_id = int(val["hex"], 16)
-                    elif isinstance(val, (int, str)):
-                        agent_id = int(val)
-                elif field.get("name") == "fleetType":
-                    fleet_type = field.get("value", {}).get("value", "")
-            if agent_id is not None:
-                attested[agent_id] = fleet_type or "unknown"
-        log("EAS", f"  {len(attested)} attested agents found")
-        return attested
-    except Exception as e:
-        log("EAS", f"  Attestation query failed: {e} — allowing all robots")
-        return {}  # fail-open: if EAS is down, allow all
+    attested = {}
+    import json as _json
+    for eas_url in EAS_ENDPOINTS:
+        try:
+            resp = _httpx.post(eas_url, json={"query": query}, timeout=10.0)
+            data = resp.json()
+            for att in data.get("data", {}).get("attestations", []):
+                decoded = _json.loads(att.get("decodedDataJson", "[]"))
+                agent_id = None
+                fleet_type = None
+                for field in decoded:
+                    if field.get("name") == "agentId":
+                        val = field.get("value", {}).get("value", {})
+                        if isinstance(val, dict) and "hex" in val:
+                            agent_id = int(val["hex"], 16)
+                        elif isinstance(val, (int, str)):
+                            agent_id = int(val)
+                    elif field.get("name") == "fleetType":
+                        fleet_type = field.get("value", {}).get("value", "")
+                if agent_id is not None:
+                    attested[agent_id] = fleet_type or "unknown"
+        except Exception as e:
+            log("EAS", f"  EAS query failed for {eas_url}: {e}")
+    log("EAS", f"  {len(attested)} attested agents found across {len(EAS_ENDPOINTS)} chains")
+    return attested
 
 
 def _decode_hex_meta(val):
