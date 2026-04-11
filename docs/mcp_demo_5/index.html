@@ -395,14 +395,14 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
         <div class="sidebar-label">Fleet Filter</div>
         <label class="check-label">
           <input type="checkbox" id="simulatorOnly" onchange="onSimulatorToggle()" checked style="accent-color:var(--navy)">
-          Demo fleet only
+          Demo fleet
         </label>
-        <div class="field-hint" style="margin:2px 0 6px 22px">Show test fleet robots. Uncheck to include all registered operators.</div>
+        <div class="field-hint" style="margin:2px 0 6px 22px">Show demo fleet + live production robots (attested only).</div>
         <label class="check-label">
           <input type="checkbox" id="hideFakeRovers" onchange="onFakeRoverFilterChange()" style="accent-color:var(--navy)">
-          Hide test robots
+          Production only
         </label>
-        <div class="field-hint" style="margin:2px 0 0 22px">Remove FakeRover-* robots from both the sidebar and auction bidding. Only registered robots with custom names will bid.</div>
+        <div class="field-hint" style="margin:2px 0 0 22px">Show only live production robots (attested via EAS). Excludes demo fleet and legacy robots.</div>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-label">Demo Overrides</div>
@@ -898,8 +898,9 @@ function onFakeRoverFilterChange() {
 
 var hideFakeRovers = false;
 function getFilteredRobots() {
-  if (hideFakeRovers) return discoveredRobots.filter(function(r) { return !r.is_test; });
-  if (simulatorOnly) return discoveredRobots.filter(function(r) { return r.is_test; });
+  // Server-side EAS attestation filter handles fleet mode.
+  // Frontend shows all discovered robots (already filtered by server).
+  // These toggles only affect the server via /api/fleet-mode.
   return discoveredRobots;
 }
 
