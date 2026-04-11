@@ -463,6 +463,10 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
             <option value="">— Select preset —</option>
             <option value="server_room" selected>Server Room Climate Check</option>
             <option value="gpr_ann_arbor">GPR Utility Survey — Ann Arbor</option>
+            <option value="lidar_topo">Aerial LiDAR Topo — I-94 Corridor</option>
+            <option value="progress_photo">Progress Monitoring — MSU Farm Lane</option>
+            <option value="bridge_inspect">Bridge Inspection — US-31 Manistee</option>
+            <option value="thermal_roof">Thermal Roof Survey — Huntington Place</option>
           </select>
         </div>
         <textarea class="form-textarea" id="rfpText">ENVIRONMENTAL MONITORING REQUEST
@@ -2296,6 +2300,34 @@ var RFP_PRESETS = {
     location: 'Ann Arbor, MI',
     agency: 'MDOT — University Region',
     terrain: 'Urban roadway, paved',
+  },
+  lidar_topo: {
+    rfp: 'MDOT PROJECT 2026-M-1422 — TOPOGRAPHIC SURVEY\nAerial LiDAR Topographic Survey — I-94 Reconstruction, Dearborn\n\nAgency: Michigan Department of Transportation — Metro Region\nProject: I-94 Reconstruction (Wayne Rd to Michigan Ave)\nLocation: I-94 corridor, Dearborn MI (2.3 miles)\n\nSCOPE: Aerial LiDAR topographic survey of the I-94 reconstruction\ncorridor to support design-phase earthwork quantity calculations.\nCapture existing ground conditions including roadway, shoulders,\nmedians, drainage structures, and adjacent terrain.\n\nRequirements:\n- Aerial LiDAR with minimum 5 pts/m² density\n- RTK GPS ground control (6 control points minimum)\n- Vertical accuracy: 5 cm RMSE or better\n- Deliverables: LAS 1.4 classified point cloud, 1-foot contours (DXF),\n  digital terrain model (GeoTIFF), ground control report\n- Coordinate system: Michigan State Plane South (EPSG:2253)\n- Datum: NAVD88 (Geoid18)\n- Budget: $3,500\n- Deadline: 3 business days',
+    project: 'I-94 Reconstruction — Topographic Survey',
+    location: 'Dearborn, MI',
+    agency: 'MDOT — Metro Region',
+    terrain: 'Highway corridor, active traffic',
+  },
+  progress_photo: {
+    rfp: 'MSU CAPITAL PROJECT — PROGRESS MONITORING\nAerial Photogrammetry Progress Report — Farm Lane Reconstruction\n\nAgency: Michigan State University — Infrastructure Planning & Facilities\nProject: Farm Lane Reconstruction (Wilson Rd to N. Shaw Ln)\nLocation: MSU Campus, East Lansing MI\n\nSCOPE: Monthly aerial photogrammetry progress monitoring of the\nFarm Lane reconstruction project. Capture high-resolution orthomosaic\nand 3D surface model to document construction progress, compare\nagainst design plans, and calculate cut/fill volumes.\n\nRequirements:\n- Aerial photogrammetry with GSD ≤ 2 cm\n- RTK GPS for geotagging accuracy\n- Deliverables: orthomosaic (GeoTIFF), 3D point cloud (LAS),\n  digital surface model, cut/fill volume comparison report\n- Coordinate system: Michigan State Plane South (EPSG:2253)\n- Overlap: 80% frontal, 70% side\n- Budget: $2,800\n- Deadline: 2 business days\n- Recurring: monthly for 14 months',
+    project: 'Farm Lane Reconstruction — Monthly Progress',
+    location: 'East Lansing, MI',
+    agency: 'MSU — IPF',
+    terrain: 'Campus roadway, construction zone',
+  },
+  bridge_inspect: {
+    rfp: 'MDOT BRIDGE INSPECTION — US-31 BASCULE BRIDGE\nAerial + Thermal Bridge Inspection — Manistee\n\nAgency: Michigan Department of Transportation — North Region\nProject: US-31 Bascule Bridge Rehabilitation\nLocation: US-31 over Manistee River, Manistee MI\n\nSCOPE: Drone-based visual and thermal inspection of the US-31\nbascule bridge superstructure, substructure, and mechanical components.\nIdentify concrete spalling, delamination, steel corrosion, bearing\ncondition, and thermal anomalies in the deck and approach spans.\n\nRequirements:\n- High-resolution visual imagery (≤ 1mm/pixel GSD for close-range)\n- Thermal infrared for subsurface delamination detection\n- Autonomous orbit and close-range inspection capability\n- Deliverables: annotated inspection photo set, thermal anomaly map,\n  condition report per MDOT bridge element coding, 3D point cloud\n- Blue UAS compliant (NDAA Section 848) preferred\n- Budget: $5,500\n- Deadline: 5 business days',
+    project: 'US-31 Bascule Bridge — Inspection',
+    location: 'Manistee, MI',
+    agency: 'MDOT — North Region',
+    terrain: 'Over water, bridge structure',
+  },
+  thermal_roof: {
+    rfp: 'FACILITY INSPECTION — HUNTINGTON PLACE\nThermal Roof Survey — Convention Center\n\nAgency: Detroit Regional Convention Facility Authority\nProject: Huntington Place Roof Condition Assessment\nLocation: Huntington Place, 1 Washington Blvd, Detroit MI\n\nSCOPE: Aerial thermal imaging survey of the Huntington Place\nconvention center roof system (723,000 sq ft) to identify moisture\nintrusion, insulation deficiencies, and membrane failures. Survey\nto be conducted during early morning hours (pre-dawn to 2 hours\nafter sunrise) for optimal thermal contrast.\n\nRequirements:\n- Radiometric thermal camera (640×512 resolution minimum)\n- Thermal sensitivity: ≤ 50 mK NETD\n- Visual reference imagery for each thermal anomaly\n- Deliverables: georeferenced thermal mosaic, anomaly location map,\n  written report with severity classification (ASTM C1153)\n- Flight altitude: 60-80 ft AGL for roof detail\n- Budget: $4,800\n- Deadline: 7 business days (weather dependent)',
+    project: 'Huntington Place — Roof Thermal Assessment',
+    location: 'Detroit, MI',
+    agency: 'DRCFA',
+    terrain: 'Urban, flat commercial roof',
   },
 };
 
