@@ -335,36 +335,54 @@ This diversity is intentional — it tests that the marketplace handles heteroge
 
 ## 11. Implementation Sequence (Comprehensive)
 
-### Current state (as of 2026-04-11)
-- 5 robots registered on Base Sepolia — wrong owner (platform signer), wrong endpoint (fakerover), no `is_test`, no geo coords, no attestation. Will be superseded.
+### Current state (as of 2026-04-11, end of Phase 3)
+
+**Completed:**
 - Fleet simulator deployed at `yakrover-fleet-sim.fly.dev/mcp` — 9 categories, 60 tools, always-on ✅
-- 18 operator wallets generated in `.fleet_wallets.json` (gitignored) — not yet funded
 - `fleet_manifest.yaml` complete — 100 robots, 18 operators, varied naming ✅
 - Demo discovers Base Sepolia (84532 added to DISCOVERY_CHAINS) and shows all chains ✅
+- Registration backend accepts `is_test`, `latitude`, `longitude`, `service_radius_km`, `home_type` — written as on-chain metadata ✅
+- MCP server discovery queries both Base mainnet + Base Sepolia (was mainnet only) ✅
+- 18 operator wallets generated (`.fleet_wallets.json`, gitignored) and funded (0.003 ETH each on Base Sepolia) ✅
+- 5 test robots (#4292-4296) updated: MCP endpoint corrected to `yakrover-fleet-sim.fly.dev/mcp`, geo/equipment/sensor metadata added (some via retry due to nonce collisions). Owned by platform signer (not operator wallets — pre-date Phase 3). ✅
+
+**Attestation decision:**
+- Metadata-based attestation (`attested_by`/`attestation_status`) removed — `setMetadata` is owner-only on ERC-8004, so platform can't attest operator-owned robots.
+- EAS (Ethereum Attestation Service) planned as the correct mechanism. EAS on Base Sepolia: `0x4200000000000000000000000000000000000021`. Not yet implemented.
+- For now, `fleet_provider == yakrover` is the only discovery filter.
+
+**Lessons learned from 5-robot test:**
+- SDK `setMetadata(dict)` fires one tx per key without waiting → nonce collisions. Batch registration via `register()` bundles all metadata in one tx — no issue for new robots.
+- Updating existing robots requires one-key-at-a-time with 5s delays.
+- `registerIPFS()` on existing agents works correctly for updating MCP endpoint and IPFS card.
+- Subgraph indexing takes 1-5 minutes after on-chain writes.
+
+**Not started:**
 - `simulatorOnly` filter still uses `FakeRover-` name prefix — needs metadata-based filter
-- Registration backend does NOT accept `is_test`, lat/lng, service_radius, attestation fields
 - Bid engine has NO geographic filtering or busy state tracking
 - Demo UI has NO multi-task decomposition preview
+- Batch registration script not yet written
+- 95 remaining robots not registered
 
-### Phase 1 — Backend registration updates
-1. Add `is_test` parameter to `auction_register_robot_onchain` — write as on-chain metadata
-2. Add `latitude`, `longitude` parameters — write as on-chain metadata
-3. Add `service_radius_km` parameter — write as on-chain metadata
-4. Add `home_type` parameter (`garage` or `docked`) — write as on-chain metadata
-5. Add `attested_by` metadata write during registration (platform signer address)
-6. Add `attestation_status` metadata write during registration (value: `active`)
-7. Add `auction_revoke_attestation(agent_id, chain, reason)` MCP tool
-8. Add `auction_reinstate_attestation(agent_id, chain)` MCP tool
-9. Update `discover_and_swap_fleet()` in `mcp_server.py` to filter for `attestation_status == active`
-10. Deploy updated MCP server to Fly.io
+### Phase 1 — Backend registration updates ✅
+1. ✅ Add `is_test` parameter to `auction_register_robot_onchain` — write as on-chain metadata
+2. ✅ Add `latitude`, `longitude` parameters — write as on-chain metadata
+3. ✅ Add `service_radius_km` parameter — write as on-chain metadata
+4. ✅ Add `home_type` parameter (`garage` or `docked`) — write as on-chain metadata
+5. ~~Add `attested_by` metadata write~~ — removed, EAS planned instead
+6. ~~Add `attestation_status` metadata write~~ — removed, EAS planned instead
+7. ~~Add `auction_revoke_attestation` MCP tool~~ — removed, EAS planned instead
+8. ~~Add `auction_reinstate_attestation` MCP tool~~ — removed, EAS planned instead
+9. ✅ Update `discover_and_swap_fleet()` — queries Base mainnet + Sepolia, hex metadata decoding
+10. ✅ Deploy updated MCP server to Fly.io (yakrover-marketplace)
 
-### Phase 2 — Discard the 5 test robots
-11. The 5 early test robots (#4292–#4296) have wrong owner, wrong endpoint, missing metadata. They're on Sepolia — ignore them. Discovery will filter them out via missing `attestation_status`. No action needed.
+### Phase 2 — Fix the 5 test robots ✅
+11. ✅ Updated #4292-4296: MCP endpoint → `yakrover-fleet-sim.fly.dev/mcp`, geo/equipment/sensor metadata added. Still owned by platform signer (pre-date operator wallets). Functional for demo.
 
-### Phase 3 — Operator wallets
-12. Fund 18 operator wallets from platform signer (0.003 ETH each, 0.054 ETH total)
-13. Verify each wallet received ETH via RPC balance check
-14. Log all funding tx hashes
+### Phase 3 — Operator wallets ✅
+12. ✅ Funded 18 operator wallets (0.003 ETH each, 0.054 ETH total, block 40069529)
+13. ✅ All 18 verified via RPC balance check
+14. ✅ Tx hashes logged to `fleet_funding_log.json`
 
 ### Phase 4 — Batch registration script
 15. Write `scripts/register_fleet.py`:
