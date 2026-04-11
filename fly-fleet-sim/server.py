@@ -2,9 +2,11 @@
 Multi-category robot fleet simulator.
 
 Single FastMCP server with mounted sub-servers per robot category.
-Each category's tools are namespaced (e.g., aerial_lidar_fly_waypoint).
+Tools are namespaced (e.g., ground_gpr_robot_submit_bid).
 
-Endpoints: /mcp (all tools via single MCP server)
+The MCPRobotAdapter resolves tool names dynamically via tools/list,
+so namespaced marketplace tools work correctly.
+
 Categories: aerial_lidar, aerial_photo, aerial_thermal, fixedwing,
             ground_lidar, ground_gpr, confined, skydio, fakerover
 """
@@ -22,11 +24,11 @@ def sim_gps(base_lat=42.5, base_lng=-83.5):
     return {"latitude": round(base_lat + random.uniform(-0.01, 0.01), 6),
             "longitude": round(base_lng + random.uniform(-0.01, 0.01), 6),
             "altitude_m": round(random.uniform(50, 120), 1), "fix": "RTK_FIXED",
-            "satellites": random.randint(12, 24), "hdop": round(random.uniform(0.5, 1.2), 2)}
+            "satellites": random.randint(12, 24)}
 
 def sim_battery():
     return {"level_pct": random.randint(40, 100), "voltage_v": round(random.uniform(21.5, 25.2), 1),
-            "temperature_c": round(random.uniform(22, 38), 1), "estimated_flight_min": random.randint(8, 45)}
+            "estimated_flight_min": random.randint(8, 45)}
 
 def sim_lidar():
     return {"points_captured": random.randint(800_000, 4_200_000), "density_pts_m2": round(random.uniform(5, 25), 1),
@@ -50,354 +52,239 @@ def sim_wind():
             "gusts_mph": round(random.uniform(5, 25), 1)}
 
 
-# ── Aerial LiDAR ──────────────────────────────────────────────────
-aerial_lidar = FastMCP("Aerial LiDAR Simulator")
+# ── Category config ───────────────────────────────────────────────
+
+CATEGORY_CONFIG = {
+    "aerial_lidar":    {"sensors": {"aerial_lidar", "rtk_gps"}, "task_cats": {"env_sensing", "topo_survey", "volumetric"}, "bid_range": (0.70, 0.90)},
+    "aerial_photo":    {"sensors": {"photogrammetry", "rtk_gps"}, "task_cats": {"visual_inspection", "progress_monitoring", "env_sensing"}, "bid_range": (0.65, 0.88)},
+    "aerial_thermal":  {"sensors": {"thermal_camera", "photogrammetry"}, "task_cats": {"visual_inspection", "thermal_inspection", "env_sensing"}, "bid_range": (0.72, 0.90)},
+    "fixedwing":       {"sensors": {"aerial_lidar", "photogrammetry", "rtk_gps"}, "task_cats": {"topo_survey", "corridor_survey", "env_sensing"}, "bid_range": (0.75, 0.92)},
+    "ground_lidar":    {"sensors": {"terrestrial_lidar", "photogrammetry"}, "task_cats": {"env_sensing", "as_built", "tunnel_survey"}, "bid_range": (0.78, 0.92)},
+    "ground_gpr":      {"sensors": {"gpr", "rtk_gps"}, "task_cats": {"subsurface_scan", "utility_detection", "env_sensing"}, "bid_range": (0.72, 0.88)},
+    "confined":        {"sensors": {"terrestrial_lidar", "photogrammetry"}, "task_cats": {"confined_space", "tunnel_survey", "env_sensing"}, "bid_range": (0.80, 0.95)},
+    "skydio":          {"sensors": {"photogrammetry", "thermal_camera"}, "task_cats": {"visual_inspection", "bridge_inspection", "env_sensing"}, "bid_range": (0.68, 0.85)},
+    "fakerover":       {"sensors": {"temperature", "humidity"}, "task_cats": {"env_sensing", "sensor_reading"}, "bid_range": (0.60, 0.85)},
+}
+
+
+# ── Category MCP builder ─────────────────────────────────────────
+
+def build_category(name, cfg):
+    """Build a FastMCP server for a robot category with marketplace + operational tools."""
+    mcp = FastMCP(f"{name} Simulator")
+    my_sensors = cfg["sensors"]
+    my_cats = cfg["task_cats"]
+    bid_lo, bid_hi = cfg["bid_range"]
+
+    # ── Marketplace tools (standard 8004 protocol) ────────────────
+
+    @mcp.tool
+    async def robot_submit_bid(
+        task_description: str, task_category: str, budget_ceiling: float,
+        sla_seconds: int, capability_requirements: dict,
+    ) -> dict:
+        """Evaluate a task and return a bid, or decline."""
+        if task_category not in my_cats:
+            return {"willing_to_bid": False, "reason": f"Category '{task_category}' not supported"}
+        reqs = capability_requirements or {}
+        hard = reqs.get("hard", reqs)
+        required = set(hard.get("sensors_required", []))
+        if required and not required.issubset(my_sensors):
+            return {"willing_to_bid": False, "reason": f"Missing sensors: {sorted(required - my_sensors)}"}
+        if budget_ceiling < 0.50:
+            return {"willing_to_bid": False, "reason": "Budget too low"}
+        bid_pct = bid_lo + random.random() * (bid_hi - bid_lo)
+        return {
+            "willing_to_bid": True, "price": round(budget_ceiling * bid_pct, 2),
+            "currency": "usd", "sla_commitment_seconds": sla_seconds,
+            "confidence": round(0.70 + random.random() * 0.25, 2),
+            "capabilities_offered": sorted(my_sensors),
+        }
+
+    @mcp.tool
+    async def robot_execute_task(
+        task_id: str, task_description: str, parameters: dict, payment_source: str = "fleet",
+    ) -> dict:
+        """Execute a task and return simulated delivery data."""
+        readings = []
+        for i in range(3):
+            r = {"waypoint": i + 1, "position": sim_gps(), "timestamp": time.time() + i * 60}
+            if "gpr" in my_sensors: r["gpr"] = sim_gpr()
+            if "aerial_lidar" in my_sensors or "terrestrial_lidar" in my_sensors: r["lidar"] = sim_lidar()
+            if "photogrammetry" in my_sensors: r["photo"] = sim_photo()
+            if "thermal_camera" in my_sensors: r["thermal"] = sim_thermal()
+            if "temperature" in my_sensors: r["temperature_c"] = round(random.uniform(18, 32), 1)
+            readings.append(r)
+        return {"task_id": task_id, "status": "completed", "readings": readings}
+
+    @mcp.tool
+    async def robot_get_pricing() -> dict:
+        """Return pricing and availability."""
+        return {"min_task_price_usd": 0.50, "rate_per_minute_usd": round(0.05 + random.random() * 0.15, 2),
+                "accepted_currencies": ["usd", "usdc"], "task_categories": sorted(my_cats), "availability": "online"}
+
+    # ── Operational tools (category-specific) ─────────────────────
+
+    if name in ("aerial_lidar", "aerial_photo", "aerial_thermal", "fixedwing", "skydio"):
+        @mcp.tool
+        async def fly_waypoint(latitude: float, longitude: float, altitude_m: float = 60) -> dict:
+            """Fly to a GPS waypoint."""
+            return {"status": "arrived", "position": sim_gps(latitude, longitude)}
+        @mcp.tool
+        async def get_gps_position() -> dict:
+            """Get GPS position."""
+            return sim_gps()
+        @mcp.tool
+        async def check_battery() -> dict:
+            """Check battery."""
+            return sim_battery()
+        @mcp.tool
+        async def return_to_home() -> dict:
+            """Return to launch."""
+            return {"status": "landing", "eta_seconds": random.randint(30, 120)}
+
+    if name == "aerial_lidar":
+        @mcp.tool
+        async def capture_lidar_scan(duration_seconds: int = 30) -> dict:
+            """Capture LiDAR scan."""
+            return sim_lidar()
+        @mcp.tool
+        async def get_wind_speed() -> dict:
+            """Get wind speed."""
+            return sim_wind()
+    elif name == "aerial_photo":
+        @mcp.tool
+        async def capture_photo() -> dict:
+            """Capture photo."""
+            return sim_photo()
+        @mcp.tool
+        async def set_camera_params(iso: int = 100, shutter_speed: str = "1/1000") -> dict:
+            """Set camera params."""
+            return {"status": "params_set", "iso": iso}
+    elif name == "aerial_thermal":
+        @mcp.tool
+        async def capture_thermal() -> dict:
+            """Capture thermal image."""
+            return sim_thermal()
+        @mcp.tool
+        async def capture_photo() -> dict:
+            """Capture photo."""
+            return sim_photo()
+    elif name == "fixedwing":
+        @mcp.tool
+        async def launch_vtol() -> dict:
+            """VTOL launch."""
+            return {"status": "airborne", "altitude_m": 120}
+        @mcp.tool
+        async def fly_corridor(start_lat: float, start_lng: float, end_lat: float, end_lng: float) -> dict:
+            """Fly corridor."""
+            return {"status": "corridor_complete", "distance_km": round(random.uniform(1, 20), 1)}
+        @mcp.tool
+        async def land_vtol() -> dict:
+            """VTOL land."""
+            return {"status": "landed", "position": sim_gps()}
+    elif name == "skydio":
+        @mcp.tool
+        async def fly_orbit(center_lat: float, center_lng: float, radius_m: float = 20) -> dict:
+            """Orbit point."""
+            return {"status": "orbit_complete", "photos_captured": random.randint(12, 36)}
+        @mcp.tool
+        async def capture_photo() -> dict:
+            """Capture photo."""
+            return sim_photo()
+        @mcp.tool
+        async def autonomous_inspect(structure_type: str = "bridge") -> dict:
+            """Autonomous inspection."""
+            return {"status": "complete", "images_captured": random.randint(50, 200)}
+    elif name in ("ground_lidar", "ground_gpr"):
+        @mcp.tool
+        async def walk_to(latitude: float, longitude: float) -> dict:
+            """Walk to position."""
+            return {"status": "arrived", "position": sim_gps(latitude, longitude)}
+        @mcp.tool
+        async def get_position() -> dict:
+            """Get position."""
+            return sim_gps()
+        @mcp.tool
+        async def check_battery() -> dict:
+            """Check battery."""
+            return sim_battery()
+        @mcp.tool
+        async def dock() -> dict:
+            """Return to dock."""
+            return {"status": "docking"}
+        if name == "ground_lidar":
+            @mcp.tool
+            async def scan_360_lidar() -> dict:
+                """360 LiDAR scan."""
+                return sim_lidar()
+        else:
+            @mcp.tool
+            async def deploy_gpr() -> dict:
+                """Deploy GPR."""
+                return {"status": "gpr_deployed", "frequency_mhz": 1600}
+            @mcp.tool
+            async def scan_gpr_line(length_m: float = 10) -> dict:
+                """Scan GPR line."""
+                return sim_gpr()
+            @mcp.tool
+            async def mark_utility(depth_m: float, utility_type: str = "unknown") -> dict:
+                """Mark utility."""
+                return {"status": "marked", "depth_m": depth_m, "type": utility_type}
+    elif name == "confined":
+        @mcp.tool
+        async def fly_indoor(direction: str = "forward", distance_m: float = 5) -> dict:
+            """Fly indoors."""
+            return {"status": "moved", "direction": direction}
+        @mcp.tool
+        async def capture_lidar_scan() -> dict:
+            """Indoor LiDAR scan."""
+            s = sim_lidar(); s["environment"] = "indoor"; return s
+        @mcp.tool
+        async def capture_photo() -> dict:
+            """Photo with lighting."""
+            return sim_photo()
+        @mcp.tool
+        async def detect_obstacle() -> dict:
+            """Detect obstacles."""
+            return {d + "_m": round(random.uniform(0.3, 10), 1) for d in ["front", "rear", "left", "right"]}
+        @mcp.tool
+        async def check_battery() -> dict:
+            """Check battery."""
+            return sim_battery()
+        @mcp.tool
+        async def return_to_pilot() -> dict:
+            """Return to entry."""
+            return {"status": "returning"}
+    elif name == "fakerover":
+        @mcp.tool
+        async def move(direction: str = "forward") -> dict:
+            """Move rover."""
+            return {"status": "moved", "direction": direction}
+        @mcp.tool
+        async def is_online() -> dict:
+            """Check online."""
+            return {"online": True}
+        @mcp.tool
+        async def get_temperature_humidity() -> dict:
+            """Read sensors."""
+            return {"temperature_c": round(random.uniform(18, 32), 1), "humidity_pct": round(random.uniform(30, 70), 1)}
+
+    return mcp
+
+
+# ── Build + mount ─────────────────────────────────────────────────
 
-@aerial_lidar.tool
-async def fly_waypoint(latitude: float, longitude: float, altitude_m: float = 80) -> dict:
-    """Fly to a GPS waypoint at specified altitude."""
-    return {"status": "arrived", "position": sim_gps(latitude, longitude)}
-
-@aerial_lidar.tool
-async def capture_lidar_scan(duration_seconds: int = 30) -> dict:
-    """Capture a LiDAR point cloud scan."""
-    return sim_lidar()
-
-@aerial_lidar.tool
-async def get_gps_position() -> dict:
-    """Get current GPS position with RTK fix status."""
-    return sim_gps()
-
-@aerial_lidar.tool
-async def check_battery() -> dict:
-    """Check battery level and estimated flight time."""
-    return sim_battery()
-
-@aerial_lidar.tool
-async def return_to_home() -> dict:
-    """Return to launch point and land."""
-    return {"status": "landing", "eta_seconds": random.randint(30, 120)}
-
-@aerial_lidar.tool
-async def set_flight_altitude(altitude_m: float) -> dict:
-    """Set flight altitude in meters AGL."""
-    return {"status": "altitude_set", "altitude_m": altitude_m}
-
-@aerial_lidar.tool
-async def get_wind_speed() -> dict:
-    """Get current wind speed and direction."""
-    return sim_wind()
-
-
-# ── Aerial Photo ──────────────────────────────────────────────────
-aerial_photo = FastMCP("Aerial Photogrammetry Simulator")
-
-@aerial_photo.tool
-async def fly_waypoint(latitude: float, longitude: float, altitude_m: float = 60) -> dict:
-    """Fly to a GPS waypoint."""
-    return {"status": "arrived", "position": sim_gps(latitude, longitude)}
-
-@aerial_photo.tool
-async def capture_photo() -> dict:
-    """Capture a geotagged photo."""
-    return sim_photo()
-
-@aerial_photo.tool
-async def capture_video(duration_seconds: int = 10) -> dict:
-    """Record geotagged video."""
-    return {"status": "recorded", "duration_s": duration_seconds, "resolution": "4K"}
-
-@aerial_photo.tool
-async def get_gps_position() -> dict:
-    """Get current GPS position."""
-    return sim_gps()
-
-@aerial_photo.tool
-async def check_battery() -> dict:
-    """Check battery level."""
-    return sim_battery()
-
-@aerial_photo.tool
-async def return_to_home() -> dict:
-    """Return to launch point."""
-    return {"status": "landing", "eta_seconds": random.randint(30, 120)}
-
-@aerial_photo.tool
-async def set_camera_params(iso: int = 100, shutter_speed: str = "1/1000", aperture: float = 2.8) -> dict:
-    """Set camera parameters."""
-    return {"status": "params_set", "iso": iso, "shutter_speed": shutter_speed, "aperture": aperture}
-
-
-# ── Aerial Thermal ────────────────────────────────────────────────
-aerial_thermal = FastMCP("Aerial Thermal Simulator")
-
-@aerial_thermal.tool
-async def fly_waypoint(latitude: float, longitude: float, altitude_m: float = 40) -> dict:
-    """Fly to a GPS waypoint."""
-    return {"status": "arrived", "position": sim_gps(latitude, longitude)}
-
-@aerial_thermal.tool
-async def capture_thermal() -> dict:
-    """Capture thermal infrared image."""
-    return sim_thermal()
-
-@aerial_thermal.tool
-async def capture_photo() -> dict:
-    """Capture a visual photo."""
-    return sim_photo()
-
-@aerial_thermal.tool
-async def get_surface_temp(latitude: float, longitude: float) -> dict:
-    """Get surface temperature at a point."""
-    return {"temperature_c": round(random.uniform(15, 65), 1), "position": sim_gps(latitude, longitude)}
-
-@aerial_thermal.tool
-async def get_gps_position() -> dict:
-    """Get current GPS position."""
-    return sim_gps()
-
-@aerial_thermal.tool
-async def check_battery() -> dict:
-    """Check battery level."""
-    return sim_battery()
-
-@aerial_thermal.tool
-async def return_to_home() -> dict:
-    """Return to launch point."""
-    return {"status": "landing", "eta_seconds": random.randint(30, 120)}
-
-
-# ── Fixed-Wing ────────────────────────────────────────────────────
-fixedwing = FastMCP("Fixed-Wing VTOL Simulator")
-
-@fixedwing.tool
-async def launch_vtol() -> dict:
-    """VTOL launch sequence."""
-    return {"status": "airborne", "altitude_m": 120, "mode": "cruise"}
-
-@fixedwing.tool
-async def fly_corridor(start_lat: float, start_lng: float, end_lat: float, end_lng: float, width_m: float = 100) -> dict:
-    """Fly a corridor survey between two points."""
-    return {"status": "corridor_complete", "distance_km": round(random.uniform(1, 20), 1), "photos": random.randint(50, 500)}
-
-@fixedwing.tool
-async def capture_photo() -> dict:
-    """Capture a geotagged photo during flight."""
-    return sim_photo()
-
-@fixedwing.tool
-async def get_gps_position() -> dict:
-    """Get current GPS position."""
-    return sim_gps()
-
-@fixedwing.tool
-async def check_battery() -> dict:
-    """Check battery level."""
-    return sim_battery()
-
-@fixedwing.tool
-async def land_vtol() -> dict:
-    """VTOL landing sequence."""
-    return {"status": "landed", "position": sim_gps()}
-
-@fixedwing.tool
-async def set_flight_plan(waypoints: list) -> dict:
-    """Upload a flight plan."""
-    return {"status": "plan_loaded", "waypoints": len(waypoints) if waypoints else 0}
-
-
-# ── Ground LiDAR (Spot) ──────────────────────────────────────────
-ground_lidar = FastMCP("Ground LiDAR Simulator")
-
-@ground_lidar.tool
-async def walk_to(latitude: float, longitude: float) -> dict:
-    """Walk to a GPS position."""
-    return {"status": "arrived", "position": sim_gps(latitude, longitude), "terrain": random.choice(["flat", "stairs", "rubble"])}
-
-@ground_lidar.tool
-async def scan_360_lidar() -> dict:
-    """360-degree LiDAR scan."""
-    return sim_lidar()
-
-@ground_lidar.tool
-async def capture_photo() -> dict:
-    """Capture a photo."""
-    return sim_photo()
-
-@ground_lidar.tool
-async def get_position() -> dict:
-    """Get current position and heading."""
-    p = sim_gps(); p["heading_deg"] = random.randint(0, 359); return p
-
-@ground_lidar.tool
-async def check_battery() -> dict:
-    """Check battery and runtime."""
-    b = sim_battery(); b["estimated_runtime_min"] = random.randint(30, 90); return b
-
-@ground_lidar.tool
-async def dock() -> dict:
-    """Return to charging dock."""
-    return {"status": "docking", "eta_seconds": random.randint(60, 300)}
-
-@ground_lidar.tool
-async def navigate_stairs(direction: str = "up") -> dict:
-    """Navigate a staircase."""
-    return {"status": "stairs_complete", "direction": direction}
-
-
-# ── Ground GPR (Spot) ─────────────────────────────────────────────
-ground_gpr = FastMCP("Ground GPR Simulator")
-
-@ground_gpr.tool
-async def walk_to(latitude: float, longitude: float) -> dict:
-    """Walk to a GPS position."""
-    return {"status": "arrived", "position": sim_gps(latitude, longitude)}
-
-@ground_gpr.tool
-async def deploy_gpr() -> dict:
-    """Lower and calibrate GPR antenna."""
-    return {"status": "gpr_deployed", "frequency_mhz": 1600, "calibration": "complete"}
-
-@ground_gpr.tool
-async def scan_gpr_line(length_m: float = 10, direction_deg: int = 0) -> dict:
-    """Scan a GPR line."""
-    return sim_gpr()
-
-@ground_gpr.tool
-async def get_position() -> dict:
-    """Get current position."""
-    return sim_gps()
-
-@ground_gpr.tool
-async def check_battery() -> dict:
-    """Check battery level."""
-    b = sim_battery(); b["estimated_runtime_min"] = random.randint(30, 90); return b
-
-@ground_gpr.tool
-async def dock() -> dict:
-    """Return to charging dock."""
-    return {"status": "docking", "eta_seconds": random.randint(60, 300)}
-
-@ground_gpr.tool
-async def mark_utility(depth_m: float, utility_type: str = "unknown") -> dict:
-    """Mark a detected underground utility."""
-    return {"status": "marked", "depth_m": depth_m, "type": utility_type, "position": sim_gps()}
-
-
-# ── Confined Space (ELIOS 3) ─────────────────────────────────────
-confined = FastMCP("Confined Space Simulator")
-
-@confined.tool
-async def fly_indoor(direction: str = "forward", distance_m: float = 5) -> dict:
-    """Fly inside a confined space."""
-    return {"status": "moved", "direction": direction, "distance_m": distance_m}
-
-@confined.tool
-async def capture_lidar_scan() -> dict:
-    """LiDAR scan of enclosed space."""
-    s = sim_lidar(); s["environment"] = "indoor"; return s
-
-@confined.tool
-async def capture_photo() -> dict:
-    """Photo with onboard lighting."""
-    p = sim_photo(); p["lighting"] = "onboard_led"; return p
-
-@confined.tool
-async def detect_obstacle() -> dict:
-    """Detect obstacles in all directions."""
-    return {d + "_m": round(random.uniform(0.3, 10), 1) for d in ["front", "rear", "left", "right"]}
-
-@confined.tool
-async def get_position() -> dict:
-    """Estimated position (SLAM, GPS-denied)."""
-    return {"x_m": round(random.uniform(0, 50), 1), "y_m": round(random.uniform(0, 30), 1), "z_m": round(random.uniform(0, 10), 1), "method": "SLAM"}
-
-@confined.tool
-async def check_battery() -> dict:
-    """Check battery level."""
-    return sim_battery()
-
-@confined.tool
-async def return_to_pilot() -> dict:
-    """Retrace path to entry point."""
-    return {"status": "returning", "eta_seconds": random.randint(30, 180)}
-
-
-# ── Skydio X10 ────────────────────────────────────────────────────
-skydio = FastMCP("Skydio X10 Simulator")
-
-@skydio.tool
-async def fly_waypoint(latitude: float, longitude: float, altitude_m: float = 40) -> dict:
-    """Fly to a GPS waypoint with obstacle avoidance."""
-    return {"status": "arrived", "position": sim_gps(latitude, longitude), "obstacle_avoidance": "active"}
-
-@skydio.tool
-async def fly_orbit(center_lat: float, center_lng: float, radius_m: float = 20, altitude_m: float = 30) -> dict:
-    """Orbit a point of interest."""
-    return {"status": "orbit_complete", "photos_captured": random.randint(12, 36), "radius_m": radius_m}
-
-@skydio.tool
-async def capture_photo() -> dict:
-    """Capture a high-resolution photo."""
-    return sim_photo()
-
-@skydio.tool
-async def capture_thermal() -> dict:
-    """Capture thermal image."""
-    return sim_thermal()
-
-@skydio.tool
-async def autonomous_inspect(structure_type: str = "bridge") -> dict:
-    """Autonomous inspection scan."""
-    return {"status": "inspection_complete", "structure": structure_type, "images_captured": random.randint(50, 200), "anomalies": random.randint(0, 5)}
-
-@skydio.tool
-async def get_gps_position() -> dict:
-    """Get current GPS position."""
-    return sim_gps()
-
-@skydio.tool
-async def check_battery() -> dict:
-    """Check battery level."""
-    return sim_battery()
-
-
-# ── Legacy FakeRover ──────────────────────────────────────────────
-fakerover = FastMCP("FakeRover Simulator")
-
-@fakerover.tool
-async def move(direction: str = "forward") -> dict:
-    """Move the rover."""
-    return {"status": "moved", "direction": direction, "distance_m": round(random.uniform(0.5, 2.0), 1)}
-
-@fakerover.tool
-async def is_online() -> dict:
-    """Check if the rover is online."""
-    return {"online": True}
-
-@fakerover.tool
-async def get_temperature_humidity() -> dict:
-    """Read temperature and humidity."""
-    return {"temperature_c": round(random.uniform(18, 32), 1), "humidity_pct": round(random.uniform(30, 70), 1)}
-
-
-# ── Root server ───────────────────────────────────────────────────
 mcp = FastMCP("yakrover Fleet Simulator")
 
-mcp.mount(aerial_lidar, namespace="aerial_lidar")
-mcp.mount(aerial_photo, namespace="aerial_photo")
-mcp.mount(aerial_thermal, namespace="aerial_thermal")
-mcp.mount(fixedwing, namespace="fixedwing")
-mcp.mount(ground_lidar, namespace="ground_lidar")
-mcp.mount(ground_gpr, namespace="ground_gpr")
-mcp.mount(confined, namespace="confined")
-mcp.mount(skydio, namespace="skydio")
-mcp.mount(fakerover, namespace="fakerover")
+for cat_name, cat_cfg in CATEGORY_CONFIG.items():
+    cat_mcp = build_category(cat_name, cat_cfg)
+    mcp.mount(cat_mcp, namespace=cat_name)
 
 @mcp.tool
 async def health() -> dict:
-    """Fleet simulator health check."""
-    return {"status": "ok", "categories": 9}
+    """Fleet simulator health."""
+    return {"status": "ok", "categories": len(CATEGORY_CONFIG)}
 
 
 if __name__ == "__main__":

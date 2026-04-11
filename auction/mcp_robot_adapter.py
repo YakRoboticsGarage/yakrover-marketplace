@@ -228,10 +228,29 @@ class MCPRobotAdapter:
 
         return result
 
+    def _resolve_marketplace_tool(self, base_name: str) -> str:
+        """Find the correct tool name, handling namespace prefixes.
+
+        The fleet simulator namespaces tools (e.g., ground_gpr_robot_submit_bid).
+        The 8004 fleet server uses plain names (robot_submit_bid).
+        Check known tools for a match, or fall back to the base name.
+        """
+        if not self._known_tools:
+            return base_name
+        # Exact match
+        if base_name in self._known_tools:
+            return base_name
+        # Namespaced match (e.g., ground_gpr_robot_submit_bid)
+        for tool in self._known_tools:
+            if tool.endswith("_" + base_name):
+                return tool
+        return base_name
+
     async def _bid_async(self, task: Task) -> Bid | None:
         """Async implementation of bid request."""
+        bid_tool = self._resolve_marketplace_tool("robot_submit_bid")
         result = await self._mcp_call("tools/call", {
-            "name": "robot_submit_bid",
+            "name": bid_tool,
             "arguments": {
                 "task_description": task.description,
                 "task_category": task.task_category,
@@ -242,9 +261,7 @@ class MCPRobotAdapter:
         })
 
         if not result:
-            # Robot MCP server doesn't have robot_submit_bid (e.g. fleet simulator).
-            # Generate a local bid using budget percentage.
-            return self._local_bid(task)
+            return None
 
 
         # Parse structured content or text content
@@ -277,32 +294,6 @@ class MCPRobotAdapter:
             self.capability_metadata["sensors"] = [
                 {"type": s} if isinstance(s, str) else s for s in caps
             ]
-
-        bid_hash = sign_bid(self.robot_id, task.request_id, price, self.signing_key)
-
-        return Bid(
-            request_id=task.request_id,
-            robot_id=self.robot_id,
-            price=price,
-            sla_commitment_seconds=sla,
-            ai_confidence=confidence,
-            capability_metadata=self.capability_metadata,
-            reputation_metadata=self.reputation_metadata,
-            bid_hash=bid_hash,
-        )
-
-    def _local_bid(self, task: Task) -> Bid | None:
-        """Generate a bid locally when the robot MCP doesn't support robot_submit_bid.
-
-        Uses a default bid percentage (80% of budget) and the robot's
-        capability metadata. This allows fleet simulator robots to bid
-        without needing a dedicated bidding tool.
-        """
-        import random
-        bid_pct = 0.75 + random.uniform(0, 0.15)  # 75-90% of budget
-        price = Decimal(str(round(float(task.budget_ceiling) * bid_pct, 2)))
-        sla = task.sla_seconds
-        confidence = round(0.7 + random.uniform(0, 0.25), 2)
 
         bid_hash = sign_bid(self.robot_id, task.request_id, price, self.signing_key)
 
@@ -429,8 +420,9 @@ class MCPRobotAdapter:
         # If no readings at all, fall back to robot_execute_task
         if not readings:
             log.warning("No waypoint readings — falling back to robot_execute_task")
+            exec_tool = self._resolve_marketplace_tool("robot_execute_task")
             fallback = await self._mcp_call("tools/call", {
-                "name": "robot_execute_task",
+                "name": exec_tool,
                 "arguments": {
                     "task_id": task.request_id,
                     "task_description": task.description,
