@@ -123,6 +123,12 @@ VALID_TASK_CATEGORIES = frozenset(
         "subsurface_scan",
         "environmental_survey",
         "control_survey",
+        "topo_survey",
+        "thermal_inspection",
+        "corridor_survey",
+        "volumetric",
+        "confined_space",
+        "utility_detection",
     ]
 )
 
