@@ -404,6 +404,18 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
         </label>
         <div class="field-hint" style="margin:2px 0 0 22px">Remove FakeRover-* robots from both the sidebar and auction bidding. Only registered robots with custom names will bid.</div>
       </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Demo Overrides</div>
+        <label class="check-label">
+          <input type="checkbox" id="overrideBudget" style="accent-color:var(--navy)">
+          Force budget $0.50
+        </label>
+        <label class="check-label" style="margin-top:4px">
+          <input type="checkbox" id="overrideSla" style="accent-color:var(--navy)">
+          Force SLA 5 seconds
+        </label>
+        <div class="field-hint" style="margin:2px 0 0 22px">Override task budget and deadline for quick demo testing.</div>
+      </div>
     </div>
 
     <!-- Hidden MCP server URL (stable, no need for UI input) -->
@@ -1509,12 +1521,12 @@ function showPhase(phaseId) {
 function copyFeedDetail(id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var text = el.innerText || el.textContent || '';
-  // Remove the "Close" and "Copy" button text from the copied content
-  text = text.replace(/^Close\s*Copy\s*/, '').trim();
-  navigator.clipboard.writeText(text).then(function() {
-    var btn = el.querySelector('.admin-btn');
-    if (btn) { btn.textContent = 'Copied!'; setTimeout(function() { btn.textContent = 'Copy'; }, 2000); }
+  // Get the content div (skip the close/copy buttons)
+  var content = el.querySelector('div[style*="margin-top"]');
+  var text = (content || el).innerText || (content || el).textContent || '';
+  navigator.clipboard.writeText(text.trim()).then(function() {
+    var link = document.getElementById('copy-' + id);
+    if (link) { link.textContent = 'Copied!'; setTimeout(function() { link.textContent = 'Copy'; }, 2000); }
   });
 }
 
@@ -1606,8 +1618,8 @@ function appendFeedItem(step, index) {
   detailDiv.setAttribute('role', 'dialog');
   detailDiv.setAttribute('aria-modal', 'true');
   detailDiv.setAttribute('aria-label', 'Step detail');
-  var closeBtn = '<button type="button" class="feed-detail-close" onclick="closeFeedDetail(\'' + detailId + '\')" aria-label="Close">Close</button>';
-  var copyBtn = '<button class="admin-btn" style="position:absolute;top:8px;right:60px;font-size:10px;padding:3px 8px" onclick="copyFeedDetail(\'' + detailId + '\')">Copy</button>';
+  var closeBtn = '<span style="position:absolute;top:8px;right:12px;font-size:12px"><span style="cursor:pointer;color:var(--text-3);margin-right:10px" onclick="event.stopPropagation();copyFeedDetail(\'' + detailId + '\')" id="copy-' + detailId + '">Copy</span><button type="button" class="feed-detail-close" onclick="closeFeedDetail(\'' + detailId + '\')" aria-label="Close" style="position:static;font-size:14px">Close</button></span>';
+  var copyBtn = '';
   if (step.type === 'tool_call') {
     detailDiv.innerHTML = closeBtn + copyBtn + '<div style="margin-top:8px">// Input\n' + escapeHtml(JSON.stringify(step.input, null, 2)) + '\n\n// Result\n' + escapeHtml(JSON.stringify(step.result, null, 2)) + '</div>';
   } else {
@@ -2367,7 +2379,18 @@ async function runAuction() {
   }
 
   var deliverySchemaContext = '\n\nDelivery Schema (robot receives this, QA validates against it):\n' + JSON.stringify(DELIVERY_SCHEMA, null, 2);
-  var prompt = rfpText + '\n\nSite Info: ' + JSON.stringify(siteInfo) + robotContext + deliverySchemaContext;
+
+  // Demo overrides
+  var overrides = '';
+  var forceBudget = document.getElementById('overrideBudget') && document.getElementById('overrideBudget').checked;
+  var forceSla = document.getElementById('overrideSla') && document.getElementById('overrideSla').checked;
+  if (forceBudget || forceSla) {
+    overrides = '\n\nIMPORTANT DEMO OVERRIDES (apply these regardless of what the RFP says):';
+    if (forceBudget) overrides += '\n- Set budget_ceiling to 0.50 (fifty cents) in the task_spec.';
+    if (forceSla) overrides += '\n- Set sla_seconds to 5 (five seconds) in the task_spec.';
+  }
+
+  var prompt = rfpText + '\n\nSite Info: ' + JSON.stringify(siteInfo) + robotContext + deliverySchemaContext + overrides;
 
   try {
     var adminKey = new URLSearchParams(window.location.search).get('admin') || '';
