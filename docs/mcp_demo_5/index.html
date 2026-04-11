@@ -2526,6 +2526,7 @@ var RFP_PRESETS = {
     location: 'Detroit, MI',
     agency: 'YAK Robotics',
     terrain: 'Indoor, flat floor',
+    latitude: 42.3314, longitude: -83.0458,
   },
   gpr_ann_arbor: {
     rfp: 'MDOT PROJECT 2026-W-0847 — UTILITY LOCATION SURVEY\nSubsurface Utility Detection — Stadium Boulevard, Ann Arbor\n\nAgency: Michigan Department of Transportation — University Region\nProject: Stadium Boulevard Watermain Replacement\nLocation: Stadium Blvd from Main St to Pauline Blvd (0.6 miles)\n\nSCOPE: Ground-penetrating radar (GPR) subsurface utility detection\nalong the Stadium Boulevard corridor. Identify and mark all underground\nutilities including water, sewer, gas, electric, and telecommunications.\n\nRequirements:\n- GPR scan at 400 MHz and 1600 MHz frequencies\n- Minimum depth penetration: 3 meters\n- Survey area: 0.6-mile corridor, full roadway width (approx. 60 ft)\n- Deliverables: DZT raw data files, utility location map (DXF),\n  written report with anomaly identification and depth estimates\n- Coordinate system: Michigan State Plane South (EPSG:2253)\n- Accuracy: horizontal ±15 cm, depth ±10%\n- Mark all utilities per APWA Uniform Color Code\n- Budget: $4,200\n- Deadline: 5 business days',
@@ -2533,6 +2534,7 @@ var RFP_PRESETS = {
     location: 'Ann Arbor, MI',
     agency: 'MDOT — University Region',
     terrain: 'Urban roadway, paved',
+    latitude: 42.2808, longitude: -83.7430,
   },
   lidar_topo: {
     rfp: 'MDOT PROJECT 2026-M-1422 — TOPOGRAPHIC SURVEY\nAerial LiDAR Topographic Survey — I-94 Reconstruction, Dearborn\n\nAgency: Michigan Department of Transportation — Metro Region\nProject: I-94 Reconstruction (Wayne Rd to Michigan Ave)\nLocation: I-94 corridor, Dearborn MI (2.3 miles)\n\nSCOPE: Aerial LiDAR topographic survey of the I-94 reconstruction\ncorridor to support design-phase earthwork quantity calculations.\nCapture existing ground conditions including roadway, shoulders,\nmedians, drainage structures, and adjacent terrain.\n\nRequirements:\n- Aerial LiDAR drone with minimum 5 pts/m² density\n- RTK/PPK positioning for survey-grade accuracy\n- Vertical accuracy: 5 cm RMSE or better\n- Deliverables: LAS 1.4 classified point cloud, 1-foot contours (DXF),\n  digital terrain model (GeoTIFF)\n- Coordinate system: Michigan State Plane South (EPSG:2253)\n- Datum: NAVD88 (Geoid18)\n- Budget: $3,500\n- Deadline: 3 business days',
@@ -2540,6 +2542,7 @@ var RFP_PRESETS = {
     location: 'Dearborn, MI',
     agency: 'MDOT — Metro Region',
     terrain: 'Highway corridor, active traffic',
+    latitude: 42.3223, longitude: -83.1763,
   },
   progress_photo: {
     rfp: 'MSU CAPITAL PROJECT — PROGRESS MONITORING\nAerial Photogrammetry Progress Report — Farm Lane Reconstruction\n\nAgency: Michigan State University — Infrastructure Planning & Facilities\nProject: Farm Lane Reconstruction (Wilson Rd to N. Shaw Ln)\nLocation: MSU Campus, East Lansing MI\n\nSCOPE: Monthly aerial photogrammetry progress monitoring of the\nFarm Lane reconstruction project. Capture high-resolution orthomosaic\nand 3D surface model to document construction progress, compare\nagainst design plans, and calculate cut/fill volumes.\n\nRequirements:\n- Aerial photogrammetry with GSD ≤ 2 cm\n- RTK GPS for geotagging accuracy\n- Deliverables: orthomosaic (GeoTIFF), 3D point cloud (LAS),\n  digital surface model, cut/fill volume comparison report\n- Coordinate system: Michigan State Plane South (EPSG:2253)\n- Overlap: 80% frontal, 70% side\n- Budget: $2,800\n- Deadline: 2 business days\n- Recurring: monthly for 14 months',
@@ -2547,6 +2550,7 @@ var RFP_PRESETS = {
     location: 'East Lansing, MI',
     agency: 'MSU — IPF',
     terrain: 'Campus roadway, construction zone',
+    latitude: 42.7370, longitude: -84.4839,
   },
   bridge_inspect: {
     rfp: 'MDOT BRIDGE INSPECTION — US-31 BASCULE BRIDGE\nAerial + Thermal Bridge Inspection — Manistee\n\nAgency: Michigan Department of Transportation — North Region\nProject: US-31 Bascule Bridge Rehabilitation\nLocation: US-31 over Manistee River, Manistee MI\n\nSCOPE: Drone-based visual and thermal inspection of the US-31\nbascule bridge superstructure, substructure, and mechanical components.\nIdentify concrete spalling, delamination, steel corrosion, bearing\ncondition, and thermal anomalies in the deck and approach spans.\n\nRequirements:\n- High-resolution visual imagery (≤ 1mm/pixel GSD for close-range)\n- Thermal infrared for subsurface delamination detection\n- Autonomous orbit and close-range inspection capability\n- Deliverables: annotated inspection photo set, thermal anomaly map,\n  condition report per MDOT bridge element coding, 3D point cloud\n- Blue UAS compliant (NDAA Section 848) preferred\n- Budget: $5,500\n- Deadline: 5 business days',
@@ -2554,6 +2558,7 @@ var RFP_PRESETS = {
     location: 'Manistee, MI',
     agency: 'MDOT — North Region',
     terrain: 'Over water, bridge structure',
+    latitude: 44.2442, longitude: -86.3225,
   },
   thermal_roof: {
     rfp: 'FACILITY INSPECTION — HUNTINGTON PLACE\nThermal Roof Survey — Convention Center\n\nAgency: Detroit Regional Convention Facility Authority\nProject: Huntington Place Roof Condition Assessment\nLocation: Huntington Place, 1 Washington Blvd, Detroit MI\n\nSCOPE: Aerial thermal imaging survey of the Huntington Place\nconvention center roof system (723,000 sq ft) to identify moisture\nintrusion, insulation deficiencies, and membrane failures. Survey\nto be conducted during early morning hours (pre-dawn to 2 hours\nafter sunrise) for optimal thermal contrast.\n\nRequirements:\n- Radiometric thermal camera (640×512 resolution minimum)\n- Thermal sensitivity: ≤ 50 mK NETD\n- Visual reference imagery for each thermal anomaly\n- Deliverables: georeferenced thermal mosaic, anomaly location map,\n  written report with severity classification (ASTM C1153)\n- Flight altitude: 60-80 ft AGL for roof detail\n- Budget: $4,800\n- Deadline: 7 business days (weather dependent)',
@@ -2561,6 +2566,7 @@ var RFP_PRESETS = {
     location: 'Detroit, MI',
     agency: 'DRCFA',
     terrain: 'Urban, flat commercial roof',
+    latitude: 42.3266, longitude: -83.0560,
   },
   corridor_fixedwing: {
     rfp: 'DTMB/MDOT MiSAIL PROGRAM — CORRIDOR SURVEY\nAerial LiDAR Corridor Mapping — I-96 Western Segment\n\nAgency: Michigan Department of Technology, Management & Budget\nProject: MiSAIL Statewide LiDAR & Imagery Program\nLocation: I-96 from Portland to Ionia, MI (18 miles)\n\nSCOPE: Fixed-wing VTOL aerial LiDAR corridor survey for the\nMiSAIL statewide mapping program. Capture QL2-equivalent LiDAR\nalong the I-96 corridor with adjacent terrain coverage (500ft\neach side of centerline).\n\nRequirements:\n- Fixed-wing VTOL platform for extended corridor coverage\n- Aerial LiDAR at QL2 density (2 pts/m² minimum)\n- RTK/PPK positioning\n- Deliverables: LAS 1.4 point cloud, bare earth DEM, intensity image\n- Coordinate system: Michigan State Plane South (EPSG:2253)\n- Budget: $6,200\n- Deadline: 5 business days',
@@ -2568,6 +2574,7 @@ var RFP_PRESETS = {
     location: 'Portland to Ionia, MI',
     agency: 'DTMB / MDOT',
     terrain: 'Highway corridor, rural',
+    latitude: 42.8692, longitude: -84.9030,
   },
   tunnel_lidar: {
     rfp: 'MDOT PROJECT — TUNNEL AS-BUILT SURVEY\nGround LiDAR As-Built Documentation — I-94 Drainage Tunnel\n\nAgency: Michigan Department of Transportation — Metro Region\nProject: I-94 Drainage Tunnel Design-Build (Segment 3)\nLocation: I-94 corridor, Detroit MI (underground)\n\nSCOPE: Ground-based LiDAR as-built survey of the completed\ndrainage tunnel segment. Robot must navigate tunnel interior,\ncapture 360-degree LiDAR scans at regular intervals, and\nproduce a complete 3D model for comparison against design.\n\nRequirements:\n- Ground robot with terrestrial LiDAR (360-degree scanning)\n- Autonomous or teleoperated tunnel navigation\n- Deliverables: registered point cloud (LAS), tunnel cross-sections,\n  as-built vs design deviation report\n- Scan interval: every 10 meters\n- Budget: $8,500\n- Deadline: 3 business days',
@@ -2575,6 +2582,7 @@ var RFP_PRESETS = {
     location: 'Detroit, MI (underground)',
     agency: 'MDOT — Metro Region',
     terrain: 'Underground tunnel, no GPS',
+    latitude: 42.3314, longitude: -83.0458,
   },
   confined_tank: {
     rfp: 'DETROIT WATER DEPARTMENT — TANK INSPECTION\nConfined Space Interior Survey — Springwells Water Treatment\n\nAgency: Detroit Water and Sewerage Department (DWSD)\nProject: Springwells Water Treatment Plant — Storage Tank Inspection\nLocation: Springwells WTP, West Jefferson Ave, Detroit MI\n\nSCOPE: Confined-space drone inspection of a 2-million-gallon\nunderground water storage tank during scheduled maintenance\nshutdown. Collision-tolerant platform required. Capture LiDAR\nand visual documentation of tank interior surfaces for corrosion\nassessment and structural condition evaluation.\n\nRequirements:\n- Confined-space rated drone with collision cage\n- Onboard LiDAR + visual camera with LED lighting\n- GPS-denied navigation (SLAM-based positioning)\n- Deliverables: interior point cloud, annotated photo set,\n  corrosion map with severity classification\n- Budget: $7,200\n- Deadline: 2 business days',
@@ -2582,6 +2590,7 @@ var RFP_PRESETS = {
     location: 'Detroit, MI (confined space)',
     agency: 'DWSD',
     terrain: 'Underground tank, GPS-denied, wet',
+    latitude: 42.2985, longitude: -83.1148,
   },
 };
 
@@ -2593,7 +2602,12 @@ function loadRfpPreset(preset) {
   document.getElementById('siteLocation').value = p.location;
   document.getElementById('siteAgency').value = p.agency;
   document.getElementById('siteTerrain').value = p.terrain;
+  window._siteLatitude = p.latitude || null;
+  window._siteLongitude = p.longitude || null;
 }
+// Initialize for default preset
+window._siteLatitude = 42.3314;
+window._siteLongitude = -83.0458;
 
 async function runAuction() {
   if (_auctionRunning) return;
@@ -2649,8 +2663,10 @@ async function runAuction() {
     project_name: document.getElementById('siteProject').value.trim(),
     location: document.getElementById('siteLocation').value.trim(),
     agency: document.getElementById('siteAgency').value.trim(),
-    terrain: document.getElementById('siteTerrain').value.trim()
+    terrain: document.getElementById('siteTerrain').value.trim(),
   };
+  if (window._siteLatitude) siteInfo.latitude = window._siteLatitude;
+  if (window._siteLongitude) siteInfo.longitude = window._siteLongitude;
 
   var robotContext = '';
   var filteredForPrompt = getFilteredRobots();
@@ -2665,10 +2681,11 @@ async function runAuction() {
   var overrides = '';
   var forceBudget = document.getElementById('overrideBudget') && document.getElementById('overrideBudget').checked;
   var forceSla = document.getElementById('overrideSla') && document.getElementById('overrideSla').checked;
-  if (forceBudget || forceSla) {
-    overrides = '\n\nIMPORTANT DEMO OVERRIDES (apply these regardless of what the RFP says):';
-    if (forceBudget) overrides += '\n- Set budget_ceiling to 0.50 (fifty cents) in the task_spec.';
-    if (forceSla) overrides += '\n- Set sla_seconds to 5 (five seconds) in the task_spec.';
+  if (forceBudget || forceSla || siteInfo.latitude) {
+    overrides = '\n\nIMPORTANT OVERRIDES (apply these in the task_spec):';
+    if (forceBudget) overrides += '\n- Set budget_ceiling to 0.50 (fifty cents).';
+    if (forceSla) overrides += '\n- Set sla_seconds to 5 (five seconds).';
+    if (siteInfo.latitude && siteInfo.longitude) overrides += '\n- Include latitude: ' + siteInfo.latitude + ' and longitude: ' + siteInfo.longitude + ' in the task_spec for geographic filtering.';
   }
 
   var prompt = rfpText + '\n\nSite Info: ' + JSON.stringify(siteInfo) + robotContext + deliverySchemaContext + overrides;
