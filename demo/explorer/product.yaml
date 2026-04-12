@@ -173,13 +173,13 @@ executive_summary:
     - {path: github.com/rafaeldavid/robotTAM/critiques/pitch-critique-technical.md, section: all, synthesis: "CTO: deliverable QA pipeline is the hardest unsolved piece"}
     - {path: docs/REPORT-STYLE.md, section: all, synthesis: "Style guide with tropes.fyi anti-patterns"}
     # [v2.4] v1.1-v1.3 implementation plans and automated research
-    - {path: docs/research/PLAN_REAL_ROBOT_INTEGRATION.md, section: all, synthesis: "MCPRobotAdapter bridges marketplace to real robots via ERC-8004 on Base mainnet"}
-    - {path: docs/research/PLAN_STABLE_INFRASTRUCTURE.md, section: all, synthesis: "Fly.io always-on deployment for fakerover + robot MCP + marketplace MCP"}
-    - {path: docs/research/PLAN_REMOVE_PLATFORM_FEE.md, section: all, synthesis: "Demo-5: single EIP-3009 transferWithAuthorization, 100% to operator"}
-    - {path: docs/research/PLAN_ACH_AND_PAYMENT_TRANSLATION.md, section: all, synthesis: "v1.3: ACH bank transfer, 3-method payment selector, payment method translation"}
-    - {path: docs/research/PLAN_GASLESS_USDC_PAYMENT.md, section: all, synthesis: "ERC-2612 permit relay → migrated to EIP-3009 transferWithAuthorization"}
-    - {path: docs/research/PLAN_COMMIT_ON_HIRE_PAYMENT.md, section: all, synthesis: "Security analysis of commit-on-hire permit flow, 4 threat vectors"}
-    - {path: docs/research/PLAN_SCHEMA_DRIVEN_QA.md, section: all, synthesis: "delivery_schema field for robot self-validation and QA engine"}
+    - {path: docs/architecture/PLAN_REAL_ROBOT_INTEGRATION.md, section: all, synthesis: "MCPRobotAdapter bridges marketplace to real robots via ERC-8004 on Base mainnet"}
+    - {path: docs/architecture/PLAN_STABLE_INFRASTRUCTURE.md, section: all, synthesis: "Fly.io always-on deployment for fakerover + robot MCP + marketplace MCP"}
+    - {path: docs/architecture/PLAN_REMOVE_PLATFORM_FEE.md, section: all, synthesis: "Demo-5: single EIP-3009 transferWithAuthorization, 100% to operator"}
+    - {path: docs/architecture/PLAN_ACH_AND_PAYMENT_TRANSLATION.md, section: all, synthesis: "v1.3: ACH bank transfer, 3-method payment selector, payment method translation"}
+    - {path: docs/architecture/PLAN_GASLESS_USDC_PAYMENT.md, section: all, synthesis: "ERC-2612 permit relay → migrated to EIP-3009 transferWithAuthorization"}
+    - {path: docs/architecture/PLAN_COMMIT_ON_HIRE_PAYMENT.md, section: all, synthesis: "Security analysis of commit-on-hire permit flow, 4 threat vectors"}
+    - {path: docs/architecture/PLAN_SCHEMA_DRIVEN_QA.md, section: all, synthesis: "delivery_schema field for robot self-validation and QA engine"}
     - {path: docs/research/market/COMPETITOR_SARONIC.md, section: all, synthesis: "Saronic $9.25B defense maritime autonomy, a16z/Kleiner/Bessemer"}
     - {path: docs/research/automated/R-024_fiat_to_usdc_checkout_services.md, section: all, synthesis: "Stripe Connect stablecoin payouts live for US sole-proprietor operators"}
     - {path: docs/research/automated/R-031_state_plane_zone_autodetect.md, section: all, synthesis: "stateplane Python lib for auto EPSG detection, current code has wrong EPSGs"}
@@ -1698,30 +1698,30 @@ architecture:
       status: implemented
       phase: phase:v1.3
       note: "No authorize/capture for ACH — platform-level hold required. Stripe collects into platform, Transfer to operator on delivery."
-      sources: [{path: docs/research/PLAN_ACH_AND_PAYMENT_TRANSLATION.md}]
+      sources: [{path: docs/architecture/PLAN_ACH_AND_PAYMENT_TRANSLATION.md}]
     - id: cap:three_method_payment_selector
       description: "Buyer chooses Card / Bank Transfer / Stablecoin at checkout — marketplace translates to operator payout"
       status: implemented
       phase: phase:v1.3
       note: "Payment method translation: buyer pays however they want, operator receives via their preferred method."
-      sources: [{path: docs/research/PLAN_ACH_AND_PAYMENT_TRANSLATION.md}]
+      sources: [{path: docs/architecture/PLAN_ACH_AND_PAYMENT_TRANSLATION.md}]
     - id: cap:real_robot_integration
       description: "MCPRobotAdapter bridges marketplace MCP server to real on-chain robots via ERC-8004 on Base mainnet"
       status: implemented
       phase: phase:v1.1
       note: "Tumbller robot live — move, read sensors via MCP. 4 robots registered on Base mainnet (FakeRover-Finland-01, Berlin-01/02/03)."
-      sources: [{path: docs/research/PLAN_REAL_ROBOT_INTEGRATION.md}]
+      sources: [{path: docs/architecture/PLAN_REAL_ROBOT_INTEGRATION.md}]
     - id: cap:always_on_infrastructure
       description: "Marketplace + fleet on Fly.io (fakerover, robot MCP, marketplace MCP) — no laptop dependency"
       status: implemented
       phase: phase:v1.1
-      sources: [{path: docs/research/PLAN_STABLE_INFRASTRUCTURE.md}]
+      sources: [{path: docs/architecture/PLAN_STABLE_INFRASTRUCTURE.md}]
     - id: cap:schema_driven_qa
       description: "delivery_schema in task spec — robot self-validates before submitting, QA engine validates delivery"
       status: implemented
       phase: phase:v1.1
       note: "JSON Schema: required/type/minimum/maximum/minItems/maxItems. No task-type-specific code in QA engine."
-      sources: [{path: docs/research/PLAN_SCHEMA_DRIVEN_QA.md}]
+      sources: [{path: docs/architecture/PLAN_SCHEMA_DRIVEN_QA.md}]
     - id: cap:settlement_abstraction
       description: "4-mode interface supporting immediate/batched x transparent/private"
       status: planned
@@ -1813,7 +1813,7 @@ architecture:
           description: "Robot MCP server (yakrover-8004-mcp)"
         - name: marketplace-mcp
           description: "Marketplace MCP server (mcp_server.py)"
-      sources: [{path: docs/research/PLAN_STABLE_INFRASTRUCTURE.md}]
+      sources: [{path: docs/architecture/PLAN_STABLE_INFRASTRUCTURE.md}]
     mcp_server:
       path: mcp_server.py
       description: "Standalone REST API exposing 36 MCP tools for web demo"
@@ -2787,7 +2787,7 @@ roadmap:
         - "Gasless USDC on Base via ERC-2612 permit relay + 88/12 splits.org split"
         - "Schema-driven delivery QA (delivery_schema field)"
         - "4 robots registered on Base mainnet: FakeRover-Finland-01, Berlin-01/02/03"
-      sources: [{path: docs/research/PLAN_REAL_ROBOT_INTEGRATION.md}, {path: docs/research/PLAN_STABLE_INFRASTRUCTURE.md}]
+      sources: [{path: docs/architecture/PLAN_REAL_ROBOT_INTEGRATION.md}, {path: docs/architecture/PLAN_STABLE_INFRASTRUCTURE.md}]
 
     - id: phase:v1.2
       label: "Single-Signature USDC + No Platform Fee"
@@ -2799,7 +2799,7 @@ roadmap:
         - "Removed platform fee — 100% to operator for demo simplicity"
         - "Professional buyer-facing UI (demo-5)"
         - "Base mainnet USDC live"
-      sources: [{path: docs/research/PLAN_REMOVE_PLATFORM_FEE.md}, {path: docs/research/automated/R-034_erc2612_permit_relay_security.md}]
+      sources: [{path: docs/architecture/PLAN_REMOVE_PLATFORM_FEE.md}, {path: docs/research/automated/R-034_erc2612_permit_relay_security.md}]
 
     - id: phase:v1.3
       label: "ACH Bank Transfer + 3-Method Payment"
@@ -2814,7 +2814,7 @@ roadmap:
         - "Payment method translation architecture (buyer pays one way, operator receives another)"
         - "US Stripe account setup"
         - "Structured deploy scripts"
-      sources: [{path: docs/research/PLAN_ACH_AND_PAYMENT_TRANSLATION.md}]
+      sources: [{path: docs/architecture/PLAN_ACH_AND_PAYMENT_TRANSLATION.md}]
 
     - id: phase:v1.4
       label: "Operator Sign-Up and Registration"

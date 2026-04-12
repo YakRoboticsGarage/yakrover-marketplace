@@ -140,7 +140,7 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 | **Demo** | https://yakrobot.bid/demo/ |
 | **Revert tags** | `v1.1-milestone-payment-e2e` (Sepolia), `v1.1-milestone-base-mainnet` (mainnet + UX) |
 
-> **Detailed plan:** `docs/research/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`
+> **Detailed plan:** `docs/architecture/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`
 
 ### What's built
 - **Robot discovery from browser** — direct subgraph query + on-chain `getAgentWallet()` RPC call. No server dependency. Discovers `fleet_provider: yakrover` robots on Base + Sepolia.
@@ -202,7 +202,7 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - [x] ~~Unskip fakerover bid tests~~ — rewritten for new bid format (8 tests, 0 skipped, all pass)
 
 ### Next phase
-- [ ] **ACH bank transfer** — Add `us_bank_account` to Stripe Payment Element. Same hold/capture pattern as card. GCs prefer ACH for tasks >$3K. See `docs/research/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`.
+- [ ] **ACH bank transfer** — Add `us_bank_account` to Stripe Payment Element. Same hold/capture pattern as card. GCs prefer ACH for tasks >$3K. See `docs/architecture/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`.
 - [ ] **Payment method selection in UI** — Dispatch phase shows 3 buttons (Card / Bank Transfer / Crypto) instead of sidebar dropdown. User picks at moment of payment.
 - [ ] **Operator award notification** — MCP call `robot_task_awarded` to notify operator they won + payment is held. Currently robot only learns at execution time. Coordinate with Anuraj.
 - [x] ~~Stable tunnel URLs~~ — yakrover.online DNS active, Fly.io custom domains with SSL.
