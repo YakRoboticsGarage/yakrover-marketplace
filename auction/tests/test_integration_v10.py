@@ -540,6 +540,8 @@ class TestMCPToolsRegistered:
                 "auction_get_task_feed",
                 # Phase 7: Feedback
                 "auction_submit_feedback",
+                # EAS attestation
+                "auction_eas_attest",
             ]
         )
 

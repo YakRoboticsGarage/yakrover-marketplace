@@ -363,15 +363,15 @@ def build_engine():
                 log("DISCOVERY", f"No robots after filtering (simulator_only={engine._simulator_only}) — fleet unchanged")
                 return
 
-            # Preserve runtime-registered robots (from operator registration form)
-            from auction.mock_fleet import RuntimeRegisteredRobot
+            # Preserve robots registered during this session (not yet in subgraph)
             with engine._fleet_lock:
-                registered = [r for r in engine.robots if isinstance(r, RuntimeRegisteredRobot)]
-                if registered:
-                    new_fleet = new_fleet + registered
+                new_ids = {r.robot_id for r in new_fleet}
+                session_robots = [r for r in engine.robots if r.robot_id not in new_ids]
+                if session_robots:
+                    new_fleet = new_fleet + session_robots
                 engine.robots = new_fleet
                 engine._robots_by_id = {r.robot_id: r for r in new_fleet}
-            log("SERVER", f"Fleet updated: {len(new_fleet)} operators ({label}, +{len(registered)} registered)")
+            log("SERVER", f"Fleet updated: {len(new_fleet)} operators ({label}, +{len(session_robots)} session)")
 
         except Exception as e:
             log("DISCOVERY", f"Discovery failed: {e}")

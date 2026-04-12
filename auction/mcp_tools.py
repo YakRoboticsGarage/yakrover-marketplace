@@ -1377,54 +1377,30 @@ def register_auction_tools(
 
             # 3. Create fleet robot if registration succeeded
             registration_ok = chain_result.get("status") == "ok"
-            execution_mode = "mock"
+            execution_mode = "pending"
             if registration_ok:
                 sensors = list(all_sensors)
-                robot = None
 
-                # If MCP endpoint provided and reachable, create a real adapter
-                if mcp_endpoint_url and mcp_endpoint_url.startswith("http"):
-                    try:
-                        from auction.mcp_robot_adapter import MCPRobotAdapter
-                        bearer = os.environ.get("FLEET_MCP_TOKEN", "")
-                        adapter = MCPRobotAdapter(
-                            robot_id=name,
-                            mcp_endpoint=mcp_endpoint_url,
-                            wallet=usdc_wallet or "",
-                            chain_id=cfg["chain_id"],
-                            description=description,
-                            bearer_token=bearer,
-                            mcp_tools=robot_tools if robot_tools else None,
-                        )
-                        if adapter.is_reachable(timeout=10.0):
-                            robot = adapter
-                            execution_mode = "live"
-                        else:
-                            execution_mode = "mock (MCP endpoint unreachable)"
-                    except Exception as mcp_exc:
-                        execution_mode = f"mock ({str(mcp_exc)[:60]})"
+                # Always create MCPRobotAdapter — it handles unreachable endpoints
+                # gracefully (bid returns None, execution falls back to robot_execute_task)
+                from auction.mcp_robot_adapter import MCPRobotAdapter
+                bearer = os.environ.get("FLEET_MCP_TOKEN", "")
+                robot = MCPRobotAdapter(
+                    robot_id=name,
+                    mcp_endpoint=mcp_endpoint_url or "",
+                    wallet=usdc_wallet or "",
+                    chain_id=cfg["chain_id"],
+                    description=description,
+                    bearer_token=bearer,
+                    mcp_tools=robot_tools if robot_tools else None,
+                    sensors=sensors,
+                    equipment_model=model,
+                )
 
-                # Fall back to mock robot if no live MCP endpoint
-                if robot is None:
-                    from auction.mock_fleet import RuntimeRegisteredRobot
-                    capability_metadata = {
-                        "sensors": sensors,
-                        "mobility_type": "aerial" if any("aerial" in s or s == "photogrammetry" for s in sensors) else "ground",
-                        "indoor_capable": False,
-                        "equipment": [{"type": s, "model": model} for s in sensors],
-                        "coverage_area": {"base": location},
-                    }
-                    robot = RuntimeRegisteredRobot(
-                        robot_id=op_id,
-                        name=name,
-                        sensors=sensors,
-                        capability_metadata=capability_metadata,
-                        reputation_metadata={"completion_rate": 0.95},
-                        signing_key=f"reg_{op_id}",
-                        bid_pct=bid_pct,
-                        sla_seconds=3600,
-                        ai_confidence=0.85,
-                    )
+                if mcp_endpoint_url and robot.is_reachable(timeout=10.0):
+                    execution_mode = "live"
+                else:
+                    execution_mode = "registered (MCP endpoint not yet reachable)"
 
                 with engine._fleet_lock:
                     if op_id not in engine._robots_by_id:

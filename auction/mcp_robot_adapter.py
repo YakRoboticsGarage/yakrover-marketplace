@@ -342,22 +342,6 @@ class MCPRobotAdapter:
         # Resolve move and sensor tools dynamically
         move_tool, sensor_tool = self._resolve_tools(self._known_tools)
 
-        # DEPRECATED FALLBACK — commented out to test dynamic resolution.
-        # If this causes execution failures, the robot's MCP server needs to
-        # expose tools with discoverable names (containing "move", "temperature", etc.)
-        # TODO: Remove entirely once dynamic resolution is verified in production.
-        # if not move_tool:
-        #     if "tumbller" in self.robot_id.lower():
-        #         move_tool = "tumbller_move"
-        #     else:
-        #         move_tool = "fakerover_move"
-        #     log.info("Using fallback move tool: %s", move_tool)
-        # if not sensor_tool:
-        #     if "tumbller" in self.robot_id.lower():
-        #         sensor_tool = "tumbller_get_temperature_humidity"
-        #     else:
-        #         sensor_tool = "fakerover_get_temperature_humidity"
-        #     log.info("Using fallback sensor tool: %s", sensor_tool)
         if not move_tool:
             log.warning("No move tool found for %s — execution will skip movement", self.robot_id)
         if not sensor_tool:
