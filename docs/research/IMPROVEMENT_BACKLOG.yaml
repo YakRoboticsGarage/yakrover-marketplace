@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
   last_updated: '2026-04-12'
-  total_items: 63
-  implemented: 15
-  deferred: 4
+  total_items: 69
+  implemented: 11
+  deferred: 8
   rejected: 1
-  proposed: 43
+  proposed: 49
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
-  last_sync: "manual-sync (2026-04-12) — merged 12 items from 100-robot fleet backlog (IMP-052 to IMP-063), resolved IMP-051"
+  last_sync: "daily-sync (2026-04-12) — corrected meta counts (63→69 items; IMP-064-067 from R-027 were not reflected); added IMP-068-069 from code audit"
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -1075,6 +1075,46 @@ proposals:
   module: M10_compliance
   research_source: R-027
   evidence: docs/research/automated/R-027_operator_identity_verification.md
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-068
+  title: Split mcp_tools.py (1,817 LOC, 37 tools) into domain-scoped modules
+  description: >
+    mcp_tools.py is the largest file in the codebase at 1,817 LOC and houses all 37 MCP
+    tools in a single flat namespace. Logical groupings already exist: auction lifecycle
+    (post_task, submit_bid, award_bid, confirm_delivery), fleet/discovery (list_robots,
+    get_robot_status), compliance (check_compliance, upload_document, verify_bond),
+    RFP (parse_rfp, get_rfp_presets), EAS attestation, and payment (initiate_payment,
+    settle_task). Split into 5-6 domain files (e.g. mcp_auction.py, mcp_fleet.py,
+    mcp_compliance.py, mcp_rfp.py, mcp_payment.py) assembled by mcp_tools.py as a
+    thin router. Reduces merge conflicts, makes individual tool groups easier to test
+    in isolation, and keeps each file under 400 LOC.
+  module: M24_mcp_tool_layer
+  research_source: daily-code-audit-2026-04-12
+  evidence: auction/mcp_tools.py (1,817 LOC)
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-069
+  title: Reconcile PRODUCT_MODULE_MAP.md header counts with actual table data
+  description: >
+    The PRODUCT_MODULE_MAP.md header states "Modules: 48 | Built: 39 | Planned: 5 |
+    Deferred: 4" but grep of the actual table rows finds: Built: 36, Building: 2,
+    Designed: 2, Planned: 3, Deferred: 2. The discrepancy was introduced during the
+    commit adding 9 MPP modules (c736fe0). The header should be reconciled — either
+    the new status labels (Building, Designed) need to be folded into the header
+    categories explicitly, or the header numbers need to reflect the true count.
+    Action: manually count each module's status in the table and update the header line.
+  module: null
+  research_source: daily-code-audit-2026-04-12
+  evidence: docs/architecture/PRODUCT_MODULE_MAP.md line 5
   effort: small
   priority: low
   status: proposed
