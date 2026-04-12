@@ -1009,3 +1009,75 @@ proposals:
   proposed_date: '2026-04-12'
   decision_date: null
   decision_notes: Defer until approaching 200 robots on a single chain.
+- id: IMP-064
+  title: Add stripe_account_id to OperatorProfile and enforce it at activation
+  description: >
+    OperatorProfile has no field for the operator's Stripe Connect Express account ID.
+    An operator can currently be activated for bidding and win tasks without completing
+    Stripe onboarding, causing payout failure at settlement. Add stripe_account_id: str | None
+    to OperatorProfile. In activate(), check that stripe_account_id is set and non-None before
+    allowing activation. The v1.4 3-step registration UI should write the Connect account ID
+    back to the registry on completion.
+  module: M10_compliance
+  research_source: R-027
+  evidence: docs/research/automated/R-027_operator_identity_verification.md
+  effort: small
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-065
+  title: Tiered compliance gate — NOT_REQUIRED for task-type-irrelevant docs
+  description: >
+    The verify_operator() 'compliant' flag returns False if any of 6 doc types is MISSING,
+    including pls_license, sam_registration, dot_prequalification, dbe_certification —
+    which are irrelevant for most drone-only tasks. Add a task_type (or required_docs list)
+    parameter to verify_operator() that populates NOT_REQUIRED status for non-applicable docs.
+    Always required: faa_part_107, insurance_coi. Conditionally required: pls_license
+    (PLS-stamped deliverables only), sam_registration (federal-funded tasks), dot_prequalification
+    (DOT contracts), dbe_certification (DBE set-aside tasks).
+  module: M10_compliance
+  research_source: R-027
+  evidence: docs/research/automated/R-027_operator_identity_verification.md
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-066
+  title: Middesk entity-level KYB trigger at first large task win (>=$25K)
+  description: >
+    When an operator first wins a task with value >= $25K, trigger a Middesk KYB check
+    (entity name + address → Secretary of State registration, IRS EIN match, OFAC screening).
+    Store result on OperatorProfile as kyb_status: {vendor, result, checked_at}. If FAIL
+    (entity not found, SoS inactive, OFAC hit), hold payout and flag for manual review.
+    Middesk covers 100% of US businesses with 92% of records updated within 10 days.
+    Pricing: ~$500/month floor; per-check negotiated. Requires IMP-065 first.
+  module: M10_compliance
+  research_source: R-027
+  evidence: docs/research/automated/R-027_operator_identity_verification.md
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-067
+  title: SAM.gov Entity registration check for federal-funded tasks
+  description: >
+    Add check_sam_entity_registration(entity_name) to compliance.py alongside existing
+    check_sam_exclusion(). Uses the SAM.gov Entity Management API v4 (same free API key,
+    1000 req/day for registered accounts). For tasks tagged federal_funded=True (MDOT
+    federal-aid projects), check both active registration and exclusion. Currently we check
+    debarment but not active registration status — both are required for federal contract work.
+  module: M10_compliance
+  research_source: R-027
+  evidence: docs/research/automated/R-027_operator_identity_verification.md
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null

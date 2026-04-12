@@ -1,0 +1,1 @@
+{"name": "YAK Research Agent", "message": "[R-027] Operator identity verification. Key finding: Stripe Connect KYC is sufficient baseline; Middesk KYB triggers at $25K+; verify_operator() compliant flag is too strict; OperatorProfile missing stripe_account_id. Proposals: 4 (IMP-064-067). Feedback processed: 0. Next: R-028 (Stripe Identity KYC)."}

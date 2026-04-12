@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-09"  # R-META-001 complete; duplicate IDs fixed (R-026/027/028 renamed R-039/040/041); R-007/R-027 reset to queued; IMP-021/023/027 marked implemented; R-042/043/044 spawned; R-006b/c downgraded; R-036 downgraded
+  last_updated: "2026-04-12"  # R-027 complete; IMP-064/065/066/067 added; R-028 unblocked
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -329,11 +329,15 @@ topics:
     title: "Robot operator identity verification — individuals and businesses"
     module: M10_compliance
     hypothesis: "The platform should verify the operator entity (individual or business), not chase individual PLS license numbers. Business registry checks, KYC/KYB services (Middesk, Berbix, Stripe Identity, Persona), and existing compliance data (insurance COI, SAM.gov) may be sufficient to establish operator trust without per-credential verification."
-    status: queued
+    status: complete
     priority: critical
     estimated_sessions: 2
+    completed_date: "2026-04-12"
     depends_on: []
-    notes: "Reset from in_progress→queued by R-META-001 (2026-04-09). Previous session started but produced no output file. Must be re-run from scratch. Key questions: (1) What does a GC actually need to trust an operator? Business registration? Insurance? References? (2) What KYB/KYC services exist for marketplace operator verification? Cost, coverage, API? (3) How do other construction marketplaces (Procore, BuildOps) verify contractors? (4) Can Stripe Connect Express onboarding (which already does KYC) serve as sufficient operator verification? (5) What's the minimum viable trust for the demo ($0.50) vs production ($45K)? (6) Should verification level scale with task value?"
+    output_file: "docs/research/automated/R-027_operator_identity_verification.md"
+    improvement_proposals: [IMP-064, IMP-065, IMP-066, IMP-067]
+    spawned: [R-028]
+    notes: "Key findings: (1) Stripe Connect Express KYC is the right mandatory baseline gate — zero marginal cost, covers regulatory KYC. (2) Middesk is the right entity-level KYB for tasks >= $25K. (3) INFORM Act does not apply to services. (4) Most serious construction survey operators are LLCs (Stripe USDC payout path less relevant). (5) Current verify_operator() 'compliant' flag is incorrectly strict — needs task_type context. (6) OperatorProfile missing stripe_account_id — operators can be activated without payout path. R-028 (Stripe Identity as KYC) is now unblocked."
 
   - id: R-028
     title: "Stripe Identity and Connect KYC as operator verification"
