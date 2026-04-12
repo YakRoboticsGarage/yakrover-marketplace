@@ -99,8 +99,9 @@ yakrover-marketplace/
 ├── chatbot/                     # Cloudflare Worker (yakrobot-chat)
 │   └── src/index.js             # Chat + demo API proxy
 │
-├── fly-fleet-sim/               # Fleet simulator servers (9 categories, Fly.io)
-│   └── category_server.py       # Shared server with marketplace tools
+├── infra/                       # Deployment configs (Fly.io)
+│   ├── fleet/                   # Fleet MCP server (yakrover-fleet)
+│   └── fleet-sim/               # 9 category simulator servers + deploy script
 │
 ├── data/                        # Static data files
 │   ├── sample_certs/            # Realistic sample credentials (FAA, ACORD 25, PLS, OSHA)

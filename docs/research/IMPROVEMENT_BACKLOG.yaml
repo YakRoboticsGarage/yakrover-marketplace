@@ -870,7 +870,7 @@ proposals:
   description: 'Category-specific delivery schemas implemented (auction/delivery_schemas.py) with 8 schema types mapped to 17 task categories. Category servers updated to return matching structured data. Auto-injection in engine.py. Adapter passes through category-specific delivery_data. GPR tested — need to verify remaining 8 presets (LiDAR, photo, thermal, bridge, corridor, tunnel, confined, env_sensing) pass QA end-to-end.'
   module: M35_deliverable_qa
   research_source: v1.4.1-fleet-sprint
-  evidence: auction/delivery_schemas.py, fly-fleet-sim/category_server.py
+  evidence: auction/delivery_schemas.py, infra/fleet-sim/category_server.py
   effort: medium
   priority: high
   status: proposed
