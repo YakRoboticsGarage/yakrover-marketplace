@@ -275,7 +275,7 @@ ACH does not support authorize/capture. Card uses Stripe manual capture (real ho
 | **Serves** | Alex (independent operator), Controller (AP manager) |
 | **Goal** | Production operator registration, credential verification, and Stripe Connect onboarding. First real operator onboarded. |
 | **Gate for v1.5** | At least 1 operator registered and activated |
-| **Robot verification** | Liveness probe on registration (MCP endpoint reachable). See PLAN_OPERATOR_REGISTRATION.md for v1.5+ verification roadmap (capability attestation, signed telemetry, delivery cross-verification). |
+| **Robot verification** | Liveness probe on registration (MCP endpoint reachable). See docs/architecture/PLAN_OPERATOR_REGISTRATION.md for v1.5+ verification roadmap (capability attestation, signed telemetry, delivery cross-verification). |
 | **Revert tag** | `v1.4-milestone-operator-registration` |
 | **Critique** | `docs/architecture/CRITIQUE_OPERATOR_REGISTRATION_AND_DEMO.md` |
 | **Assessment** | `docs/architecture/ASSESSMENT_TECHNICAL_STACK.md` |

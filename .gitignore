@@ -19,3 +19,6 @@ chatbot/.dev.vars
 !.env.example
 .fleet_wallets.json
 .eas_state.json
+fleet_registration_log.json
+fleet_funding_log.json
+eas_attestation_log.json

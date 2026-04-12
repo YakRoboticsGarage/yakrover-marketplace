@@ -104,8 +104,8 @@ yakrover-marketplace/
 │   └── fleet-sim/               # 9 category simulator servers + deploy script
 │
 ├── data/                        # Static data files
-│   ├── sample_certs/            # Realistic sample credentials (FAA, ACORD 25, PLS, OSHA)
-│   └── (fleet_manifest.yaml at root)
+│   ├── fleet_manifest.yaml      # 100-robot fleet database
+│   └── sample_certs/            # Realistic sample credentials (FAA, ACORD 25, PLS, OSHA)
 │
 ├── scripts/                     # CLI tools
 │   ├── register_fleet.py        # Batch robot registration
@@ -138,7 +138,7 @@ yakrover-marketplace/
 ├── .github/workflows/test.yml   # CI: tests + ruff + mypy
 ├── CLAUDE.md                    # Payment safety rules for Claude (this file)
 ├── docs/REPORT-STYLE.md         # Report formatting and tone guide
-├── serve_with_auction.py        # MCP gateway server
+├── GETTING_STARTED.md           # Setup guide
 └── pyproject.toml               # Dependencies, ruff, mypy config
 ```
 

@@ -308,7 +308,7 @@ def main():
         print("ERROR: PINATA_JWT not set in .env")
         sys.exit(1)
 
-    with open(root / "fleet_manifest.yaml") as f:
+    with open(root / "data" / "fleet_manifest.yaml") as f:
         manifest = yaml.safe_load(f)
     with open(root / ".fleet_wallets.json") as f:
         wallets = {w["name"]: w for w in json.load(f)}
