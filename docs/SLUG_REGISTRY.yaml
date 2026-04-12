@@ -24,8 +24,8 @@ sites:
 
   - url: "https://yakrobot.bid/pitch/"
     slug: bronze-osprey-nsj6
-    source: docs/_to_move/pitch/
-    description: Pitch deck — investor/partner presentation (moving to robotTAM)
+    source: github.com/rafaeldavid/robotTAM/pitch/
+    description: Pitch deck — managed in robotTAM repo
 
 # Archived slugs (no longer actively deployed)
 archived:

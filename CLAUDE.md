@@ -126,7 +126,6 @@ yakrover-marketplace/
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   └── operator/            # Onboarding, equipment, sensors
 │   ├── feedback/                # Product feedback synthesis pipeline
-│   └── _to_move/               # Staging for robotTAM repo (pitch, outreach, financials)
 │
 ├── .claude/
 │   ├── skills/

@@ -42,12 +42,12 @@ Every feature on this roadmap exists to serve a named user. If a feature cannot 
 Three parallel workstreams to validate demand before building the next version:
 
 ### 1. GC Outreach
-- Engagement packages for general contractors (see `docs/_to_move/wave1/`, moving to robotTAM repo)
+- Engagement packages for general contractors (see [robotTAM/outreach](https://github.com/rafaeldavid/robotTAM/tree/main/outreach))
 - Target: 5-10 GC conversations to validate survey pain points, willingness to use a marketplace, and pricing expectations
 - Deliverable: Validated demand signal or pivot insight
 
 ### 2. Operator Outreach
-- Engagement packages for drone/robot operators (see `docs/_to_move/wave1/`, moving to robotTAM repo)
+- Engagement packages for drone/robot operators (see [robotTAM/outreach](https://github.com/rafaeldavid/robotTAM/tree/main/outreach))
 - Target: 5-10 operator conversations to validate supply-side economics, willingness to bid on tasks, and equipment readiness
 - Deliverable: Letter-of-intent pipeline or operator onboarding commitments
 

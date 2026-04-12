@@ -162,15 +162,15 @@ executive_summary:
     - {path: docs/research/legal/RESEARCH_BOND_VERIFICATION_EXAMPLES.md, section: all, synthesis: "6 real bond examples, Treasury Circular 570, surety portals"}
     - {path: docs/research/legal/RESEARCH_LEGAL_TERMS_COMPARISON_EXAMPLES.md, section: all, synthesis: "7 contract examples, 12 comparison dimensions, anti-indemnity"}
     - {path: docs/research/RESEARCH_SKILL_CANDIDATES.md, section: all, synthesis: "55 ranked skill candidates across 4 categories"}
-    - {path: docs/_to_move/research/FINANCIAL_ANALYSIS_RAISE.md, section: all, synthesis: "$2.5M raise model, 18-month burn, revenue projection"}
+    - {path: github.com/rafaeldavid/robotTAM/financial-model/financial-analysis-raise.md, section: all, synthesis: "$2.5M raise model, 18-month burn, revenue projection"}
     - {path: docs/research/RESEARCH_TOPO_BACKGROUND_SOURCE.md, section: all, synthesis: "USGS NED contour data for site watermark"}
-    - {path: docs/_to_move/wave1/GC_ENGAGEMENT_PACKAGE.md, section: all, synthesis: "15 GC targets, 9-step interview process"}
-    - {path: docs/_to_move/wave1/GC_BRIEFING_PACKETS.md, section: all, synthesis: "15 individual GC profiles, 0/15 in-house survey finding"}
-    - {path: docs/_to_move/wave1/OPERATOR_BRIEFING_PACKETS.md, section: all, synthesis: "14 operator profiles, Drone Brothers competitive watch, SSI MDOT partner"}
+    - {path: github.com/rafaeldavid/robotTAM/outreach/gc-engagement-package.md, section: all, synthesis: "15 GC targets, 9-step interview process"}
+    - {path: github.com/rafaeldavid/robotTAM/outreach/gc-briefing-packets.md, section: all, synthesis: "15 individual GC profiles, 0/15 in-house survey finding"}
+    - {path: github.com/rafaeldavid/robotTAM/outreach/operator-briefing-packets.md, section: all, synthesis: "14 operator profiles, Drone Brothers competitive watch, SSI MDOT partner"}
     - {path: docs/architecture/TECHNICAL_MCP_DEPLOYMENT.md, section: all, synthesis: "Railway deployment plan, $5/mo MVP hosting"}
-    - {path: docs/_to_move/feedback/PITCH_CRITIQUE_CONSTRUCTION.md, section: all, synthesis: "GC exec: pitch the deliverable not the platform"}
-    - {path: docs/_to_move/feedback/PITCH_CRITIQUE_VC.md, section: all, synthesis: "VC: LOI + operator + co-founder = fundable"}
-    - {path: docs/_to_move/feedback/PITCH_CRITIQUE_TECHNICAL.md, section: all, synthesis: "CTO: deliverable QA pipeline is the hardest unsolved piece"}
+    - {path: github.com/rafaeldavid/robotTAM/critiques/pitch-critique-construction.md, section: all, synthesis: "GC exec: pitch the deliverable not the platform"}
+    - {path: github.com/rafaeldavid/robotTAM/critiques/pitch-critique-vc.md, section: all, synthesis: "VC: LOI + operator + co-founder = fundable"}
+    - {path: github.com/rafaeldavid/robotTAM/critiques/pitch-critique-technical.md, section: all, synthesis: "CTO: deliverable QA pipeline is the hardest unsolved piece"}
     - {path: docs/REPORT-STYLE.md, section: all, synthesis: "Style guide with tropes.fyi anti-patterns"}
     # [v2.4] v1.1-v1.3 implementation plans and automated research
     - {path: docs/research/PLAN_REAL_ROBOT_INTEGRATION.md, section: all, synthesis: "MCPRobotAdapter bridges marketplace to real robots via ERC-8004 on Base mainnet"}
@@ -511,7 +511,7 @@ personas:
       - {source: "RESEARCH_MARKETPLACE_JUSTIFICATION.md", finding: "$150K robot idle 70% costs $105K/yr in depreciated downtime. Multi-vendor bidding yields 10-25% savings."}
       - {source: "OPERATOR_BRIEFING_PACKETS.md", finding: "14 Michigan operators profiled. Drone Brothers (350+ pilots) operates the closest existing analog to this model."}
       - {source: "RESEARCH_BUY_A_ROBOT_STORY.md", finding: "Hardware entry ladder starts at EUR 30-50 (Tumbller). Professional tier (DJI M350+L2) is $26-28K."}
-    sources: [{path: docs/research/RESEARCH_OPERATOR_ONBOARDING_CONSTRUCTION.md}, {path: docs/_to_move/wave1/OPERATOR_BRIEFING_PACKETS.md}]
+    sources: [{path: docs/research/RESEARCH_OPERATOR_ONBOARDING_CONSTRUCTION.md}, {path: github.com/rafaeldavid/robotTAM/outreach/operator-briefing-packets.md}]
 
   # [Entry 3] New persona: Controller
   - id: persona:controller
@@ -984,8 +984,8 @@ market:
         cities: [Detroit, Kalamazoo, Grand Rapids, Ann Arbor, Lansing]
         rationale: "Wave 1 target. MDOT is sophisticated DOT with $1.97B annual lettings. 43+ RFPs researched. I-94 Modernization ($2B+) creates concentrated survey demand. 15 target GCs identified with briefing packets."
         rfp_examples: docs/research/market/RESEARCH_MICHIGAN_RFP_EXAMPLES.md
-        gc_targets: docs/_to_move/wave1/GC_BRIEFING_PACKETS.md
-        operator_targets: docs/_to_move/wave1/OPERATOR_BRIEFING_PACKETS.md
+        gc_targets: github.com/rafaeldavid/robotTAM/outreach/gc-briefing-packets.md
+        operator_targets: github.com/rafaeldavid/robotTAM/outreach/operator-briefing-packets.md
         key_finding: "0 of 15 target GCs have in-house survey departments. 0 have public drone/UAS adoption. Market is wide open."
     secondary:
       - state: Ohio
@@ -993,7 +993,7 @@ market:
       - state: Arizona
         cities: [Phoenix, Scottsdale, Mesa, Tempe]
         rationale: "Year-round flyable weather. Active highway construction."
-    sources: [{path: docs/ROADMAP_v4.md}, {path: docs/_to_move/wave1/GC_ENGAGEMENT_PACKAGE.md}]
+    sources: [{path: docs/ROADMAP_v4.md}, {path: github.com/rafaeldavid/robotTAM/outreach/gc-engagement-package.md}]
 
   wave1_targets:
     gc_companies:
@@ -1028,7 +1028,7 @@ market:
           key_contact: "Andy LeBeau, Estimator/PM"
           conversation_angle: "Named estimator contact, direct outreach path"
       total_identified: 15
-      source: docs/_to_move/wave1/GC_BRIEFING_PACKETS.md
+      source: github.com/rafaeldavid/robotTAM/outreach/gc-briefing-packets.md
     operator_companies:
       tier_a:
         - name: "SSI (Surveying Solutions)"
@@ -1048,7 +1048,7 @@ market:
           priority: "Watch — closest existing competitor to yakrobot.bid model"
           competitive_note: "If they build what we're building, they have scale advantage"
       total_identified: 14
-      source: docs/_to_move/wave1/OPERATOR_BRIEFING_PACKETS.md
+      source: github.com/rafaeldavid/robotTAM/outreach/operator-briefing-packets.md
     key_intelligence:
       - "0/15 GCs have in-house survey departments — pain point is real"
       - "0/15 GCs have public drone/UAS adoption — market is greenfield"
@@ -3043,7 +3043,7 @@ gtm:
     target_count: 15
     named_targets: "Dan's Excavating (Jim Doescher), Ajax Paving, Angelo Iafrate, C.A. Hull, Fisher Contracting (Andy LeBeau)"
     validation_status: "0/15 have in-house survey. 0/15 use drones. 6/15 on Procore."
-    sources: [{path: docs/research/SYNTHESIS_JTBD_WEDGE_PROPOSAL.md}, {path: docs/_to_move/wave1/GC_BRIEFING_PACKETS.md}]
+    sources: [{path: docs/research/SYNTHESIS_JTBD_WEDGE_PROPOSAL.md}, {path: github.com/rafaeldavid/robotTAM/outreach/gc-briefing-packets.md}]
 
   first_operators:
     who: "Part 107 drone survey operators in Michigan with construction experience"
@@ -3051,15 +3051,15 @@ gtm:
     named_targets: "SSI (MDOT partner, 40-50 employees), DroneView Technologies, Drone Brothers (350+ pilots)"
     competitive_watch: "Drone Brothers operates a pilot network on Procore — closest competitive model"
     lowest_friction: "Emmet Drones (already on Droners.io)"
-    sources: [{path: docs/_to_move/wave1/OPERATOR_BRIEFING_PACKETS.md}]
+    sources: [{path: github.com/rafaeldavid/robotTAM/outreach/operator-briefing-packets.md}]
 
   channels:
     - name: "Direct outreach to 15 target Michigan GCs"
       stage: phase:v1.5
-      playbook: docs/_to_move/wave1/GC_ENGAGEMENT_PACKAGE.md
+      playbook: github.com/rafaeldavid/robotTAM/outreach/gc-engagement-package.md
     - name: "Direct outreach to 14 target Michigan operators"
       stage: phase:v1.5
-      playbook: docs/_to_move/wave1/OPERATOR_ENGAGEMENT_PACKAGE.md
+      playbook: github.com/rafaeldavid/robotTAM/outreach/operator-engagement-package.md
     - name: "MDOT pilot program via SSI partnership"
       stage: phase:v2.0
       evidence: "SSI is confirmed MDOT survey partner. MDOT has 'UAS Systems Development Consulting Service' RFP."
@@ -3499,7 +3499,7 @@ financial:
   alternative_staged_raise:
     tranche_1: {amount: 750000, milestone: "v1.5 shipped + MDOT pilot live", timing: M1}
     tranche_2: {amount: 2000000, milestone: "10 paying GCs + $50K GMV/mo", timing: "M8-10"}
-  sources: [{path: docs/_to_move/research/FINANCIAL_ANALYSIS_RAISE.md}]
+  sources: [{path: github.com/rafaeldavid/robotTAM/financial-model/financial-analysis-raise.md}]
 
 # ============================================================
 # PITCH INSIGHTS — synthesized critique perspectives
@@ -3517,7 +3517,7 @@ pitch_insights:
       - "Show me LandXML that imports into HeavyBid. One real project example beats the entire pitch."
       - "Blockchain, MCP, ERC-8004, USDC are negative signals in construction"
     pilot_requirement: "Free 10-acre topo survey, LandXML for HeavyBid, Michigan PLS stamp, 0.1 ft vertical match"
-    sources: [{path: docs/_to_move/feedback/PITCH_CRITIQUE_CONSTRUCTION.md}]
+    sources: [{path: github.com/rafaeldavid/robotTAM/critiques/pitch-critique-construction.md}]
 
   vc_perspective:
     source: "Simulated seed-stage partner, construction-tech fund"
@@ -3537,7 +3537,7 @@ pitch_insights:
       x_axis: "Procurement Automation (manual/phone ... AI-agent-mediated)"
       y_axis: "Physical Execution (software-only ... owns task completion)"
       white_space: "Nobody automates procurement AND delivers physical execution"
-    sources: [{path: docs/_to_move/feedback/PITCH_CRITIQUE_VC.md}]
+    sources: [{path: github.com/rafaeldavid/robotTAM/critiques/pitch-critique-vc.md}]
 
   cto_perspective:
     source: "Senior engineer, marketplace platform background, evaluating co-founder role"
@@ -3554,7 +3554,7 @@ pitch_insights:
       - "Drop crypto and lunar from near-term plan"
       - "Conversations with 3+ actual GCs"
       - "Founder-market fit story, not just a bullet point"
-    sources: [{path: docs/_to_move/feedback/PITCH_CRITIQUE_TECHNICAL.md}]
+    sources: [{path: github.com/rafaeldavid/robotTAM/critiques/pitch-critique-technical.md}]
 
   synthesis:
     all_three_agree_on:
@@ -3579,7 +3579,7 @@ wave1:
       - {name: "Dan's Excavating", hq: "Shelby Twp, MI", revenue: "~$150M+", employees: "150+"}
       - {name: "Toebe Construction", hq: "Wixom, MI", revenue: "~$100M+", employees: "200+"}
       - {name: "C.A. Hull", hq: "Walled Lake, MI", revenue: "~$74M", employees: "43 office + seasonal"}
-    sources: [{path: docs/_to_move/wave1/GC_ENGAGEMENT_PACKAGE.md}, {path: docs/_to_move/wave1/GC_BRIEFING_PACKETS.md}]
+    sources: [{path: github.com/rafaeldavid/robotTAM/outreach/gc-engagement-package.md}, {path: github.com/rafaeldavid/robotTAM/outreach/gc-briefing-packets.md}]
 
   operator_targets:
     count: 14
@@ -3589,13 +3589,13 @@ wave1:
       - "DroneView Technologies (Bloomfield Hills, MI) — ASPRS-certified photogrammetrists, enterprise fleet. Potential premium operator or channel partner."
     competitive_watch: "Drone Brothers LLC — network/platform model dispatching pilots to construction jobs via DroneDeploy. Both competitor and potential partner."
     mdot_partner: "Surveying Solutions Inc. (SSI) — verified MDOT contractor, PLS on staff (Jackie Davis), US-23 Connector LiDAR project"
-    sources: [{path: docs/_to_move/wave1/OPERATOR_BRIEFING_PACKETS.md}]
+    sources: [{path: github.com/rafaeldavid/robotTAM/outreach/operator-briefing-packets.md}]
 
   engagement_process:
     steps: 9
     interview_guide: true
     pre_brief_template: true
-    sources: [{path: docs/_to_move/wave1/GC_ENGAGEMENT_PACKAGE.md}]
+    sources: [{path: github.com/rafaeldavid/robotTAM/outreach/gc-engagement-package.md}]
 
 # ============================================================
 # STYLE GUIDE — report formatting reference
