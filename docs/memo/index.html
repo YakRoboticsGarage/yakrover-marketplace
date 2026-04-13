@@ -166,6 +166,42 @@ a:hover { text-decoration: underline; }
 .sel-submit:disabled { opacity: 0.5; cursor: default; }
 .sel-status { font-size: 11px; color: #6B7280; margin-top: 6px; }
 
+/* Get in Touch button */
+.cta-touch {
+  display: inline-block; background: #E8792B; color: #fff; border: none;
+  border-radius: 5px; padding: 10px 22px; font: inherit; font-size: 13px;
+  font-weight: 600; cursor: pointer; text-decoration: none; letter-spacing: 0.02em;
+  transition: background 0.15s;
+}
+.cta-touch:hover { background: #d06a22; }
+.cta-touch-sm { padding: 7px 16px; font-size: 12px; }
+
+/* Contact modal */
+.contact-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 400;
+  display: none; align-items: center; justify-content: center;
+}
+.contact-overlay.visible { display: flex; }
+.contact-box {
+  background: #fff; border-radius: 8px; padding: 24px; width: 380px;
+  max-width: 90vw; box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  font-family: 'JetBrains Mono', monospace;
+}
+.contact-box h3 { font-size: 16px; margin-bottom: 14px; }
+.contact-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px 10px; font: inherit; font-size: 13px; margin-bottom: 10px; outline: none; }
+.contact-field:focus { border-color: #E8792B; }
+.contact-field-msg { min-height: 80px; resize: vertical; }
+.contact-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.contact-cancel { background: none; border: 1px solid #e2e8f0; border-radius: 4px; padding: 7px 16px; font: inherit; font-size: 12px; cursor: pointer; color: #6B7280; }
+.contact-cancel:hover { border-color: #cbd5e0; }
+.contact-status { font-size: 12px; color: #6B7280; margin-top: 8px; }
+
+/* Refresh icon in panel */
+.fp-refresh { cursor: pointer; color: #6B7280; font-size: 16px; border: none; background: none; padding: 2px 6px; transition: transform 0.3s; }
+.fp-refresh:hover { color: #E8792B; }
+.fp-refresh.spinning { animation: spin 0.6s linear; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
 /* Shift body when panel open */
 body.panel-open { margin-right: 320px; }
 
@@ -196,7 +232,8 @@ body.panel-open { margin-right: 320px; }
   <div class="meta">Partner Brief &mdash; April 2026 &mdash; yakrobot.bid</div>
 </div>
 
-<p style="font-size:18px;color:#1A1F26;font-weight:500;margin-bottom:18px">A Protocol for Verified Physical-World Task Execution</p>
+<p style="font-size:18px;color:#1A1F26;font-weight:500;margin-bottom:12px">A Protocol for Verified Physical-World Task Execution</p>
+<p style="margin-bottom:24px"><button class="cta-touch cta-touch-sm" onclick="showContact()">Get in Touch</button></p>
 
 <h2>Problem</h2>
 <p>Digital service procurement is structured: API calls carry machine-readable specifications, delivery is verified algorithmically, and settlement occurs in milliseconds. Physical service procurement is unstructured: phone calls carry verbal scope, executor selection is relationship-based, delivery is verified by human inspection, and settlement follows a 30-60 day invoice cycle. No protocol exists that integrates machine-readable task specification, algorithmic executor matching, automated completion verification, and programmatic settlement for physical-world work.</p>
@@ -291,6 +328,10 @@ body.panel-open { margin-right: 320px; }
   </div>
 </div>
 
+<div style="text-align:center;margin:24px 0 16px">
+  <button class="cta-touch" onclick="showContact()">Get in Touch</button>
+</div>
+
 <div class="footer-bar">
   <span>Yak Robotics &mdash; yakrobot.bid</span>
   <span>Demo: <a href="https://yakrobot.bid/demo">yakrobot.bid/demo</a> &mdash; Code: github.com/YakRoboticsGarage/robot-marketplace</span>
@@ -308,9 +349,26 @@ body.panel-open { margin-right: 320px; }
 <div class="feedback-panel" id="feedbackPanel">
   <div class="fp-header">
     <span class="fp-title">Feedback</span>
-    <button class="fp-close" onclick="togglePanel()">&times;</button>
+    <span>
+      <button class="fp-refresh" id="refreshBtn" onclick="refreshComments()" title="Refresh">&#8635;</button>
+      <button class="fp-close" onclick="togglePanel()">&times;</button>
+    </span>
   </div>
   <div id="commentList"><div class="fp-empty">Highlight any text to leave a comment.</div></div>
+</div>
+
+<div class="contact-overlay" id="contactOverlay" onclick="if(event.target===this)hideContact()">
+  <div class="contact-box">
+    <h3>Get in Touch</h3>
+    <input class="contact-field" id="contactName" placeholder="Your name">
+    <input class="contact-field" id="contactEmail" type="email" placeholder="Email (optional)">
+    <textarea class="contact-field contact-field-msg" id="contactMsg" placeholder="What are you working on? How can we collaborate?"></textarea>
+    <div class="contact-actions">
+      <button class="contact-cancel" onclick="hideContact()">Cancel</button>
+      <button class="cta-touch cta-touch-sm" id="contactSubmit" onclick="submitContact()">Send</button>
+    </div>
+    <div class="contact-status" id="contactStatus"></div>
+  </div>
 </div>
 
 <div class="sel-popover" id="selPopover">
@@ -471,6 +529,56 @@ function submitComment() {
     btn.disabled = false;
   });
 }
+
+// --- Refresh button ---
+function refreshComments() {
+  var btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  loadComments();
+  setTimeout(function() { btn.classList.remove('spinning'); }, 600);
+}
+
+// --- Contact modal ---
+function showContact() {
+  document.getElementById('contactOverlay').classList.add('visible');
+  document.getElementById('contactName').value = '';
+  document.getElementById('contactEmail').value = '';
+  document.getElementById('contactMsg').value = '';
+  document.getElementById('contactStatus').textContent = '';
+  document.getElementById('contactSubmit').disabled = false;
+  document.getElementById('contactName').focus();
+}
+
+function hideContact() {
+  document.getElementById('contactOverlay').classList.remove('visible');
+}
+
+function submitContact() {
+  var msg = document.getElementById('contactMsg').value.trim();
+  if (!msg) { document.getElementById('contactStatus').textContent = 'Please enter a message.'; return; }
+  var name = document.getElementById('contactName').value.trim();
+  var email = document.getElementById('contactEmail').value.trim();
+  var btn = document.getElementById('contactSubmit');
+  var status = document.getElementById('contactStatus');
+  btn.disabled = true;
+  status.textContent = 'Sending...';
+
+  fetch(API + '/api/memo/contact', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name || 'Anonymous', email: email, message: msg }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    status.textContent = 'Sent — thank you! We\'ll be in touch.';
+    setTimeout(hideContact, 2000);
+  }).catch(function() {
+    status.textContent = 'Error — please try again.';
+    btn.disabled = false;
+  });
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') hideContact();
+});
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 </script>

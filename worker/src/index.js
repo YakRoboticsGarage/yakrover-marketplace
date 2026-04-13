@@ -305,6 +305,9 @@ export default {
     if (url.pathname === "/api/memo/comments" && request.method === "GET") {
       return handleMemoComments(env, cors);
     }
+    if (url.pathname === "/api/memo/contact" && request.method === "POST") {
+      return handleMemoContact(request, env, cors);
+    }
 
     return new Response("Not found", { status: 404, headers: cors });
   },
@@ -2720,4 +2723,55 @@ async function handleMemoComments(env, cors) {
   return new Response(JSON.stringify({ comments: comments.slice(0, 30) }), {
     headers: { ...cors, "Content-Type": "application/json" },
   });
+}
+
+async function handleMemoContact(request, env, cors) {
+  let body;
+  try { body = await request.json(); } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+  }
+
+  const { name, email, message } = body;
+  if (!message || !message.trim()) {
+    return new Response(JSON.stringify({ error: "message is required" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+  }
+
+  const contactName = (name || "Anonymous").slice(0, 100);
+  const contactEmail = (email || "").slice(0, 200);
+  const contactMsg = message.slice(0, 2000);
+  const timestamp = new Date().toISOString();
+
+  // Send Telegram notification
+  const chatId = env.TELEGRAM_CHAT_ID;
+  const botToken = env.TELEGRAM_BOT_TOKEN;
+  let telegramSent = false;
+  if (botToken && chatId) {
+    try {
+      const text = [
+        `New contact from yakrobot.bid/memo`,
+        ``,
+        `Name: ${contactName}`,
+        contactEmail ? `Email: ${contactEmail}` : "",
+        ``,
+        contactMsg,
+        ``,
+        `— ${timestamp}`,
+      ].filter(Boolean).join("\n");
+
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, text }),
+      });
+      telegramSent = true;
+    } catch (e) {
+      console.error("Telegram contact notification failed:", e);
+    }
+  }
+
+  return new Response(JSON.stringify({
+    status: "sent",
+    telegram: telegramSent,
+    message: "Thank you — we'll be in touch.",
+  }), { headers: { ...cors, "Content-Type": "application/json" } });
 }
