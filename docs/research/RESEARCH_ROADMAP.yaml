@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-12"  # R-027 complete; IMP-064/065/066/067 added; R-028 unblocked
+  last_updated: "2026-04-13"  # R-007 complete; IMP-068/069/070 added; R-007a/R-007b spawned
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -129,11 +129,15 @@ topics:
     title: "Electronic survey seal/stamp regulations by state"
     module: M36_pls_review
     hypothesis: "Michigan and other states may have specific regulations on electronic vs physical PLS seals — DocuSign approach may not be legal everywhere"
-    status: queued
+    status: complete
     priority: critical
     estimated_sessions: 1
+    completed_date: "2026-04-13"
     depends_on: [R-006]
-    notes: "Reset from in_progress→queued by R-META-001 (2026-04-09). Previous session started but produced no output file. Must be re-run from scratch."
+    output_file: "docs/research/automated/R-007_electronic_survey_seal_stamp_regulations.md"
+    improvement_proposals: [IMP-068, IMP-069, IMP-070]
+    spawned: [R-007a, R-007b]
+    notes: "Hypothesis CONFIRMED. DocuSign e-signature fails PKI requirement in OH (OAC 4733-23-01), NJ, VA, NV. TX is most permissive (TxDOT explicitly permits DocuSign). MI is permissive by statute. CA permits e-seal but practice-of-surveying definition is broad (PLS licensure risk). 2024 NC federal court ruling confirms drone topo = surveying = PLS required. Codebase gap: no pls_seal_format in Level 3 delivery schema. 3 proposals + 2 new topics spawned."
 
   - id: R-008
     title: "ACORD 25 COI PDF field extraction methods"
@@ -629,3 +633,29 @@ topics:
     spawned_from: "R-META-001 (IMP-039 proposed but unresearched)"
     spawned_date: "2026-04-09"
     notes: "Key questions: (1) WalletConnect v2 in vanilla JS — SDK, bundle size, setup? (2) signTypedData_v4 support (required for EIP-3009 EIP-712 messages)? (3) Cloudflare Worker CORS for WalletConnect relay calls? (4) WalletConnect vs @metamask/sdk for mobile-first single-page demo? (5) Session reconnect model across page refreshes?"
+
+  # ===== SPAWNED BY R-007 =====
+
+  - id: R-007a
+    title: "PKI digital certificate providers for PLS seal workflows"
+    module: M36_pls_review
+    hypothesis: "IdenTrust TrustID and DocuSign Advanced may offer a practical workflow for PLS operators to apply PKI-certified seals — but the cost ($100-200/year/user) and integration complexity may be a barrier. Research the specific API/workflow for each provider."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-007]
+    spawned_from: R-007
+    spawned_date: "2026-04-13"
+    notes: "Key questions: (1) IdenTrust TrustID PE pricing and integration with Adobe/Bluebeam? (2) DocuSign Advanced Signatures API — does it apply a PKI cert to the PDF byte stream? (3) Can a marketplace platform automate PKI certificate application on behalf of an operator, or must the licensee hold the cert hardware token personally? (4) Estoppel risk: if platform applies seal programmatically, is the PLS still in responsible charge? (5) Cost-effectiveness at 10 tasks/month vs 100 tasks/month."
+
+  - id: R-007b
+    title: "2024 North Carolina drone mapping court ruling — operator liability implications"
+    module: M36_pls_review
+    hypothesis: "The 2024 federal appeals court ruling that aerial drone mapping requires a surveyor's license creates direct liability for drone operators on the YAK platform who lack a PLS license yet bid on topographic deliverable tasks. Platform terms may need to address this."
+    status: queued
+    priority: high
+    estimated_sessions: 1
+    depends_on: [R-007]
+    spawned_from: R-007
+    spawned_date: "2026-04-13"
+    notes: "Key questions: (1) Exact case citation and circuit; (2) Which states have similar enforcement precedents beyond NC? (3) Does platform's current T&Cs shift liability to the operator for practicing without a license? (4) Is 'PLS-as-a-service' (operator collects data, licensed PLS reviews and seals) a legally valid model in MI/OH/TX/CA? (5) Does the operator onboarding flow need to require PLS disclosure for topo/LiDAR task categories?"

@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-12'
-  total_items: 63
+  last_updated: '2026-04-13'
+  total_items: 66
   implemented: 15
   deferred: 4
   rejected: 1
-  proposed: 43
+  proposed: 46
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
-  last_sync: "manual-sync (2026-04-12) — merged 12 items from 100-robot fleet backlog (IMP-052 to IMP-063), resolved IMP-051"
+  last_sync: "R-007 (2026-04-13) — added IMP-068/069/070 (electronic seal/PLS compliance)"
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -1079,5 +1079,62 @@ proposals:
   priority: low
   status: proposed
   proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-068
+  title: Add pls_seal_format and pls_license_state to Level 3 delivery schemas
+  description: >
+    Add two fields to the Level 3 delivery validation schema in deliverable_qa.py and delivery_schemas.py:
+    (1) pls_seal_format — enum: pki_digital_cert | docusign_advanced | docusign_esign | image_embed | wet_stamp.
+    Required when pls_review_status is present.
+    (2) pls_license_state — two-letter state code of the issuing PLS board (e.g. "MI", "OH").
+    Required for all Level 3 tasks.
+    In _check_level_3(), add WARN when pls_seal_format in (image_embed, docusign_esign) and task state
+    is OH, NJ, VA, or NV (states requiring PKI-based signing). Also WARN when pls_license_state != task
+    project_state and no comity agreement is documented.
+  module: M35_deliverable_qa
+  research_source: R-007
+  evidence: docs/research/automated/R-007_electronic_survey_seal_stamp_regulations.md
+  effort: small
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-13'
+  decision_date: null
+  decision_notes: null
+- id: IMP-069
+  title: State seal requirement table in compliance module
+  description: >
+    Create auction/pls_seal_requirements.py with STATE_SEAL_REQUIREMENTS dict mapping state codes to:
+    min_seal_level (image | esign | pki_cert), dot_level (higher requirement for DOT submissions),
+    and notes string for human-readable guidance.
+    Pre-populate for MI, OH, TX, CA, FL, VA, NJ, NV.
+    Expose via MCP tool get_state_seal_requirements(state_code, is_dot_project).
+    Ohio (OAC 4733-23-01) requires PKI-based digital signature; Texas TxDOT explicitly permits DocuSign.
+    Drives Level 3 QA validation and operator onboarding UI warnings.
+  module: M36_pls_review
+  research_source: R-007
+  evidence: docs/research/automated/R-007_electronic_survey_seal_stamp_regulations.md
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-13'
+  decision_date: null
+  decision_notes: null
+- id: IMP-070
+  title: Operator onboarding — digital certificate guidance for DOT-tier operators
+  description: >
+    Add pls_seal_capability field to OperatorProfile (enum: image_only | docusign_esign | pki_cert).
+    During operator registration (3-step UI), if the operator selects task categories involving
+    topo/LiDAR deliverables AND DOT states, show an inline informational panel explaining that
+    Ohio, Virginia, New Jersey, and Florida require a PKI digital certificate from a Certificate
+    Authority (IdenTrust, GlobalSign) — NOT standard DocuSign e-signature — for sealed PLS deliverables.
+    ~$100-200/year/user. Surfaces the compliance requirement before bidding, reducing Level 3 QA failures.
+  module: M10_compliance
+  research_source: R-007
+  evidence: docs/research/automated/R-007_electronic_survey_seal_stamp_regulations.md
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-13'
   decision_date: null
   decision_notes: null
