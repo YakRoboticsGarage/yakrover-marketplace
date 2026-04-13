@@ -292,6 +292,20 @@ export default {
       return handleAuctionFeedback(request, env, cors);
     }
 
+    // Memo collaboration endpoints
+    if (url.pathname === "/api/memo/heartbeat" && request.method === "POST") {
+      return handleMemoHeartbeat(request, env, cors);
+    }
+    if (url.pathname === "/api/memo/presence" && request.method === "GET") {
+      return handleMemoPresence(env, cors);
+    }
+    if (url.pathname === "/api/memo/comment" && request.method === "POST") {
+      return handleMemoComment(request, env, cors);
+    }
+    if (url.pathname === "/api/memo/comments" && request.method === "GET") {
+      return handleMemoComments(env, cors);
+    }
+
     return new Response("Not found", { status: 404, headers: cors });
   },
 
@@ -2578,4 +2592,132 @@ async function checkRelayBalance(env) {
   } catch (e) {
     console.error("Telegram alert failed:", e);
   }
+}
+
+// --- Memo collaboration (presence + inline comments → GitHub Issues) ---
+
+const MEMO_PRESENCE_PREFIX = "memo:reader:";
+const MEMO_HEARTBEAT_TTL = 90; // seconds — reader considered gone after this
+
+async function handleMemoHeartbeat(request, env, cors) {
+  if (!env.RATE_LIMIT_KV) {
+    return new Response(JSON.stringify({ error: "KV not configured" }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
+  }
+  let body = {};
+  try { body = await request.json(); } catch {}
+  const readerId = body.reader_id || crypto.randomUUID();
+  await env.RATE_LIMIT_KV.put(
+    MEMO_PRESENCE_PREFIX + readerId,
+    JSON.stringify({ ts: Date.now(), name: body.name || "Anonymous" }),
+    { expirationTtl: MEMO_HEARTBEAT_TTL }
+  );
+  return new Response(JSON.stringify({ reader_id: readerId }), {
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
+}
+
+async function handleMemoPresence(env, cors) {
+  if (!env.RATE_LIMIT_KV) {
+    return new Response(JSON.stringify({ count: 0 }), { headers: { ...cors, "Content-Type": "application/json" } });
+  }
+  // List all active reader keys (KV auto-expires stale ones via TTL)
+  const list = await env.RATE_LIMIT_KV.list({ prefix: MEMO_PRESENCE_PREFIX, limit: 200 });
+  return new Response(JSON.stringify({ count: list.keys.length }), {
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
+}
+
+async function handleMemoComment(request, env, cors) {
+  let body;
+  try { body = await request.json(); } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+  }
+
+  const { highlight, comment, section, name } = body;
+  if (!comment || !comment.trim()) {
+    return new Response(JSON.stringify({ error: "comment is required" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+  }
+
+  const timestamp = new Date().toISOString();
+  const commenterName = name || "Anonymous";
+
+  // Store in KV for side panel display
+  if (env.FEEDBACK_KV) {
+    const commentId = `memo:comment:${Date.now()}:${crypto.randomUUID().slice(0, 8)}`;
+    await env.FEEDBACK_KV.put(commentId, JSON.stringify({
+      highlight: (highlight || "").slice(0, 500),
+      comment: comment.slice(0, 2000),
+      section: (section || "").slice(0, 200),
+      name: commenterName.slice(0, 100),
+      timestamp,
+    }), { expirationTtl: 365 * 86400 });
+  }
+
+  // Create GitHub Issue
+  let issueUrl = null;
+  if (env.GITHUB_TOKEN) {
+    try {
+      const issueBody = [
+        `## Memo Feedback`,
+        ``,
+        `| Field | Value |`,
+        `|-------|-------|`,
+        `| **From** | ${commenterName} |`,
+        `| **Section** | ${section || "General"} |`,
+        `| **Timestamp** | ${timestamp} |`,
+        highlight ? `| **Highlighted text** | "${highlight.slice(0, 300)}" |` : "",
+        ``,
+        `### Comment`,
+        comment,
+        ``,
+        `---`,
+        `_Submitted from [yakrobot.bid/memo](https://yakrobot.bid/memo/)_`,
+      ].filter(Boolean).join("\n");
+
+      const ghRes = await fetch("https://api.github.com/repos/YakRoboticsGarage/yakrover-marketplace/issues", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${env.GITHUB_TOKEN}`,
+          "Content-Type": "application/json",
+          "User-Agent": "yakrobot-api-worker",
+        },
+        body: JSON.stringify({
+          title: `[Memo] ${commenterName}: ${comment.slice(0, 60)}${comment.length > 60 ? "..." : ""}`,
+          body: issueBody,
+          labels: ["memo-feedback"],
+        }),
+      });
+      if (ghRes.ok) {
+        const issue = await ghRes.json();
+        issueUrl = issue.html_url;
+      }
+    } catch (e) {
+      console.error("GitHub issue creation failed:", e);
+    }
+  }
+
+  return new Response(JSON.stringify({
+    status: "submitted",
+    issue_url: issueUrl,
+    message: "Thank you for your feedback.",
+  }), { headers: { ...cors, "Content-Type": "application/json" } });
+}
+
+async function handleMemoComments(env, cors) {
+  if (!env.FEEDBACK_KV) {
+    return new Response(JSON.stringify({ comments: [] }), { headers: { ...cors, "Content-Type": "application/json" } });
+  }
+  const list = await env.FEEDBACK_KV.list({ prefix: "memo:comment:", limit: 50 });
+  const comments = [];
+  for (const key of list.keys) {
+    try {
+      const val = await env.FEEDBACK_KV.get(key.name);
+      if (val) comments.push(JSON.parse(val));
+    } catch {}
+  }
+  // Sort newest first
+  comments.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  return new Response(JSON.stringify({ comments: comments.slice(0, 30) }), {
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
 }

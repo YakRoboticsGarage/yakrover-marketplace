@@ -108,6 +108,72 @@ a:hover { text-decoration: underline; }
   justify-content: space-between;
 }
 
+/* ---- COLLABORATION LAYER ---- */
+
+/* Side panel */
+.feedback-panel {
+  position: fixed; top: 0; right: 0; width: 320px; height: 100vh;
+  background: #fafaf8; border-left: 1px solid #e2e8f0;
+  overflow-y: auto; padding: 16px; z-index: 200;
+  transform: translateX(100%); transition: transform 0.25s ease;
+  font-size: 13px;
+}
+.feedback-panel.open { transform: translateX(0); }
+.fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.fp-title { font-size: 14px; font-weight: 600; color: #1A1F26; }
+.fp-close { cursor: pointer; color: #6B7280; font-size: 18px; border: none; background: none; padding: 2px 6px; }
+.fp-close:hover { color: #1A1F26; }
+.fp-comment { border-bottom: 1px solid #e2e8f0; padding: 10px 0; }
+.fp-comment:last-child { border-bottom: none; }
+.fp-comment-highlight { font-size: 12px; color: #E8792B; font-style: italic; margin-bottom: 4px; border-left: 2px solid #E8792B; padding-left: 8px; }
+.fp-comment-text { font-size: 13px; color: #4A5568; }
+.fp-comment-meta { font-size: 11px; color: #9CA3AF; margin-top: 3px; }
+.fp-empty { color: #9CA3AF; text-align: center; padding: 32px 0; font-size: 13px; }
+
+/* Toggle button */
+.fb-toggle {
+  position: fixed; top: 12px; right: 16px; z-index: 201;
+  display: flex; align-items: center; gap: 6px;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; font-family: inherit;
+  font-size: 12px; color: #4A5568; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: all 0.15s;
+}
+.fb-toggle:hover { border-color: #E8792B; color: #1A1F26; }
+.fb-badge { background: #E8792B; color: #fff; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 8px; min-width: 18px; text-align: center; }
+.fb-eyes { font-size: 14px; }
+
+/* Selection popover */
+.sel-popover {
+  position: absolute; z-index: 300;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1); padding: 12px; width: 280px;
+  display: none; font-family: 'JetBrains Mono', monospace;
+}
+.sel-popover.visible { display: block; }
+.sel-highlight { font-size: 11px; color: #E8792B; font-style: italic; margin-bottom: 8px; max-height: 40px; overflow: hidden; }
+.sel-input { width: 100%; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px; font: inherit; font-size: 13px; resize: none; min-height: 60px; outline: none; }
+.sel-input:focus { border-color: #E8792B; }
+.sel-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+.sel-name { flex: 1; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px; font: inherit; font-size: 12px; outline: none; }
+.sel-name:focus { border-color: #E8792B; }
+.sel-submit {
+  background: #E8792B; color: #fff; border: none; border-radius: 4px;
+  padding: 6px 14px; font: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+.sel-submit:hover { background: #d06a22; }
+.sel-submit:disabled { opacity: 0.5; cursor: default; }
+.sel-status { font-size: 11px; color: #6B7280; margin-top: 6px; }
+
+/* Shift body when panel open */
+body.panel-open { margin-right: 320px; }
+
+@media print {
+  .feedback-panel, .fb-toggle, .sel-popover { display: none !important; }
+  body.panel-open { margin-right: 0; }
+}
+
 /* responsive */
 @media (max-width: 768px) {
   body { padding: 24px 20px; font-size: 14px; }
@@ -116,6 +182,8 @@ a:hover { text-decoration: underline; }
   .footer-bar { flex-direction: column; gap: 4px; }
   .stack-row { flex-direction: column; gap: 2px; }
   .stack-label { width: auto; }
+  .feedback-panel { width: 280px; }
+  body.panel-open { margin-right: 0; }
 }
 </style>
 </head>
@@ -125,7 +193,7 @@ a:hover { text-decoration: underline; }
 
 <div class="header">
   <h1>Yak Robotics</h1>
-  <div class="meta">Partner Brief &mdash; April 2026 &mdash; yakroboticsgarage.com</div>
+  <div class="meta">Partner Brief &mdash; April 2026 &mdash; yakrobot.bid</div>
 </div>
 
 <p style="font-size:18px;color:#1A1F26;font-weight:500;margin-bottom:18px">A Protocol for Verified Physical-World Task Execution</p>
@@ -227,6 +295,185 @@ a:hover { text-decoration: underline; }
   <span>Yak Robotics &mdash; yakrobot.bid</span>
   <span>Demo: <a href="https://yakrobot.bid/demo">yakrobot.bid/demo</a> &mdash; Code: github.com/YakRoboticsGarage/robot-marketplace</span>
 </div>
+
+<!-- Collaboration layer -->
+<button class="fb-toggle" onclick="togglePanel()">
+  <span class="fb-eyes">&#128065;</span>
+  <span id="eyeCount">0</span>
+  <span style="color:#e2e8f0">|</span>
+  <span>Feedback</span>
+  <span class="fb-badge" id="commentBadge">0</span>
+</button>
+
+<div class="feedback-panel" id="feedbackPanel">
+  <div class="fp-header">
+    <span class="fp-title">Feedback</span>
+    <button class="fp-close" onclick="togglePanel()">&times;</button>
+  </div>
+  <div id="commentList"><div class="fp-empty">Highlight any text to leave a comment.</div></div>
+</div>
+
+<div class="sel-popover" id="selPopover">
+  <div class="sel-highlight" id="selText"></div>
+  <textarea class="sel-input" id="selComment" placeholder="Your feedback on this section..."></textarea>
+  <div class="sel-row">
+    <input class="sel-name" id="selName" placeholder="Name (optional)">
+    <button class="sel-submit" id="selSubmit" onclick="submitComment()">Send</button>
+  </div>
+  <div class="sel-status" id="selStatus"></div>
+</div>
+
+<script>
+var API = 'https://yakrobot-api.rafaeldf2.workers.dev';
+var readerId = null;
+var panelOpen = false;
+
+// --- Presence heartbeat ---
+function heartbeat() {
+  fetch(API + '/api/memo/heartbeat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reader_id: readerId }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (!readerId) readerId = d.reader_id;
+  }).catch(function() {});
+}
+
+function refreshPresence() {
+  fetch(API + '/api/memo/presence').then(function(r) { return r.json(); }).then(function(d) {
+    document.getElementById('eyeCount').textContent = d.count || 0;
+  }).catch(function() {});
+}
+
+heartbeat();
+refreshPresence();
+setInterval(heartbeat, 30000);
+setInterval(refreshPresence, 15000);
+
+// --- Side panel ---
+function togglePanel() {
+  panelOpen = !panelOpen;
+  document.getElementById('feedbackPanel').classList.toggle('open', panelOpen);
+  document.body.classList.toggle('panel-open', panelOpen);
+  if (panelOpen) loadComments();
+}
+
+function loadComments() {
+  fetch(API + '/api/memo/comments').then(function(r) { return r.json(); }).then(function(d) {
+    var list = d.comments || [];
+    document.getElementById('commentBadge').textContent = list.length;
+    if (!list.length) {
+      document.getElementById('commentList').innerHTML = '<div class="fp-empty">Highlight any text to leave a comment.</div>';
+      return;
+    }
+    var h = '';
+    list.forEach(function(c) {
+      h += '<div class="fp-comment">';
+      if (c.highlight) h += '<div class="fp-comment-highlight">"' + esc(c.highlight.slice(0, 120)) + (c.highlight.length > 120 ? '...' : '') + '"</div>';
+      h += '<div class="fp-comment-text">' + esc(c.comment) + '</div>';
+      var when = c.timestamp ? new Date(c.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      h += '<div class="fp-comment-meta">' + esc(c.name || 'Anonymous') + (when ? ' · ' + when : '') + (c.section ? ' · ' + esc(c.section) : '') + '</div>';
+      h += '</div>';
+    });
+    document.getElementById('commentList').innerHTML = h;
+  }).catch(function() {});
+}
+
+// Load badge count on page load
+fetch(API + '/api/memo/comments').then(function(r) { return r.json(); }).then(function(d) {
+  document.getElementById('commentBadge').textContent = (d.comments || []).length;
+}).catch(function() {});
+
+// --- Text selection popover ---
+var currentHighlight = '';
+var currentSection = '';
+
+document.addEventListener('mouseup', function(e) {
+  var pop = document.getElementById('selPopover');
+  // Ignore clicks inside the popover or panel
+  if (pop.contains(e.target) || document.getElementById('feedbackPanel').contains(e.target)) return;
+
+  var sel = window.getSelection();
+  var text = (sel ? sel.toString().trim() : '');
+  if (text.length < 3) {
+    pop.classList.remove('visible');
+    return;
+  }
+
+  currentHighlight = text.slice(0, 500);
+
+  // Find nearest section heading
+  var node = sel.anchorNode;
+  currentSection = '';
+  while (node && node !== document.body) {
+    if (node.previousElementSibling) {
+      var prev = node.previousElementSibling;
+      if (prev.tagName === 'H2') { currentSection = prev.textContent; break; }
+    }
+    node = node.parentElement;
+  }
+  if (!currentSection) {
+    // Walk up to find containing section by checking previous h2
+    var all = document.querySelectorAll('h2');
+    var range = sel.getRangeAt(0);
+    for (var i = all.length - 1; i >= 0; i--) {
+      if (range.compareBoundaryPoints(Range.START_TO_START, document.createRange()) >= 0) {
+        currentSection = all[i].textContent;
+        break;
+      }
+    }
+  }
+
+  document.getElementById('selText').textContent = '"' + currentHighlight.slice(0, 100) + (currentHighlight.length > 100 ? '...' : '') + '"';
+  document.getElementById('selComment').value = '';
+  document.getElementById('selStatus').textContent = '';
+  document.getElementById('selSubmit').disabled = false;
+
+  // Position near selection
+  var rect = sel.getRangeAt(0).getBoundingClientRect();
+  pop.style.top = (window.scrollY + rect.bottom + 8) + 'px';
+  pop.style.left = Math.min(rect.left, window.innerWidth - 300) + 'px';
+  pop.classList.add('visible');
+});
+
+// Close popover on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') document.getElementById('selPopover').classList.remove('visible');
+});
+
+function submitComment() {
+  var comment = document.getElementById('selComment').value.trim();
+  if (!comment) return;
+  var name = document.getElementById('selName').value.trim();
+  var btn = document.getElementById('selSubmit');
+  var status = document.getElementById('selStatus');
+  btn.disabled = true;
+  status.textContent = 'Submitting...';
+
+  fetch(API + '/api/memo/comment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      highlight: currentHighlight,
+      comment: comment,
+      section: currentSection,
+      name: name || 'Anonymous',
+    }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    status.textContent = 'Submitted — thank you!';
+    setTimeout(function() {
+      document.getElementById('selPopover').classList.remove('visible');
+    }, 1500);
+    // Refresh badge + panel
+    loadComments();
+  }).catch(function(e) {
+    status.textContent = 'Error — please try again.';
+    btn.disabled = false;
+  });
+}
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+</script>
 
 </body>
 </html>
