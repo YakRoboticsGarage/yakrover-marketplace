@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YakRover — Protocol Technical Overview</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23E8792B'/><text x='16' y='23' text-anchor='middle' font-family='monospace' font-weight='700' font-size='20' fill='white'>Y</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #ffffff;
+  --bg2: #F0F2F5;
+  --border: #CBD5E0;
+  --fg: #4A5568;
+  --fg2: #6B7280;
+  --fgh: #1A1F26;
+  --ac: #E8792B;
+  --ac2: #1B3A5C;
+  --ac-light: #FEF0E3;
+  --blue: #2D5F8A;
+  --font: 'JetBrains Mono', monospace;
+}
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.deck { position: relative; width: 100%; height: 100%; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 52px 64px 44px;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  font-size: 16px; line-height: 1.65;
+}
+.slide.active { opacity: 1; pointer-events: all; }
+
+#progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--ac); z-index: 200; transition: width 0.2s; }
+#sn { position: fixed; bottom: 14px; right: 24px; font-size: 13px; color: #aaa; z-index: 200; }
+
+/* section title */
+.st {
+  font-size: 13px; font-weight: 500; color: var(--ac);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 20px;
+}
+
+h1 { font-size: 38px; font-weight: 700; color: var(--fgh); line-height: 1.2; letter-spacing: -0.01em; }
+.sub { font-size: 18px; font-weight: 300; color: var(--fg); margin-top: 8px; }
+.ml { font-size: 14px; color: var(--fg2); margin-top: 16px; }
+
+.mx { max-width: 880px; }
+
+/* paragraph text */
+p { margin-bottom: 14px; }
+
+/* two columns */
+.cols { display: flex; gap: 20px; }
+.cols > div { flex: 1; }
+
+/* card */
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  padding: 16px 18px; margin-bottom: 10px;
+}
+.card-t { font-size: 15px; font-weight: 600; color: var(--fgh); margin-bottom: 6px; }
+.card-b { font-size: 15px; color: var(--fg); line-height: 1.6; }
+.card-n { font-size: 13px; color: var(--blue); margin-top: 8px; font-style: italic; }
+
+/* numbered paragraph */
+.np { margin-bottom: 16px; }
+.np-h { font-size: 16px; font-weight: 600; color: var(--fgh); margin-bottom: 2px; }
+.np-b { font-size: 14px; color: var(--fg2); }
+
+/* table */
+table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+th {
+  text-align: left; font-weight: 500; color: var(--fgh);
+  padding: 8px 14px; border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+td { padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 15px; }
+td.dim { color: var(--fg2); font-size: 14px; }
+
+/* stack */
+.stack { display: flex; flex-direction: column; gap: 2px; }
+.stack-r {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 16px; background: var(--bg2); border-left: 3px solid var(--ac);
+}
+.stack-l { font-size: 12px; font-weight: 600; color: var(--ac); text-transform: uppercase; width: 90px; flex-shrink: 0; }
+.stack-v { font-size: 15px; color: var(--fgh); }
+
+/* flow */
+.flow { display: flex; align-items: center; }
+.flow-b { flex: 1; min-height: 90px; background: var(--bg2); border: 1px solid var(--border); padding: 12px 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+.flow-b .card-t { font-size: 13px; margin-bottom: 4px; }
+.flow-b .card-b { font-size: 12px; color: var(--fg2); }
+.flow-s { color: var(--ac); padding: 0 5px; font-size: 18px; flex-shrink: 0; }
+
+/* roadmap entries */
+.rm { display: flex; flex-direction: column; gap: 8px; }
+.rm-r { padding: 14px 16px; background: var(--bg2); border: 1px solid var(--border); }
+.rm-h { font-size: 15px; font-weight: 600; color: var(--fgh); margin-bottom: 4px; }
+.rm-b { font-size: 14px; color: var(--fg); line-height: 1.55; }
+.rm-s { font-size: 13px; color: var(--fg2); margin-top: 6px; font-style: italic; }
+
+/* compare */
+.cmp { display: flex; gap: 20px; }
+.cmp > div { flex: 1; }
+.step { font-size: 14px; padding: 4px 0 4px 12px; border-left: 2px solid #e2e8f0; margin-bottom: 4px; }
+.step-a { border-left-color: var(--ac); }
+
+/* footer */
+.ft { margin-top: auto; padding-top: 12px; font-size: 13px; color: var(--fg2); border-top: 1px solid #e2e8f0; line-height: 1.55; }
+
+/* closing */
+.ax { font-size: 18px; color: var(--fg); margin-bottom: 10px; line-height: 1.5; font-weight: 300; }
+.ax:nth-child(odd) { color: var(--fgh); }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="sn"></div>
+
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<div class="slide active">
+  <div>
+    <h1>YakRover</h1>
+    <div class="sub">A Protocol for Verified Physical-World Task Execution</div>
+    <div class="ml">Technical Overview &mdash; yakroboticsgarage.com</div>
+  </div>
+</div>
+
+<!-- 2 -->
+<div class="slide">
+  <div class="st">Problem Statement</div>
+  <div class="mx">
+    <p>Digital service procurement is structured: an API call carries a machine-readable specification, execution is metered, delivery is verified algorithmically, and settlement occurs in milliseconds. Infrastructure for this exists at scale (Stripe, AWS, MCP).</p>
+    <p>Physical service procurement is unstructured: a phone call carries a verbal scope, executor selection is relationship-based, delivery is verified by human inspection, and settlement follows a 30-60 day invoice cycle. No equivalent infrastructure exists.</p>
+    <p>The structural gap is not in any single step. It is in the absence of machine-readable task specification, algorithmic executor matching, automated completion verification, and programmatic settlement for physical-world work. Each of these components exists in isolation in adjacent domains. They have not been integrated into a protocol for physical tasks.</p>
+  </div>
+</div>
+
+<!-- 3 -->
+<div class="slide">
+  <div class="st">Converging Technical Conditions</div>
+  <div class="mx">
+    <div class="np"><div class="np-h">1. Autonomous data collection is production-deployed.</div><div class="np-b">DroneDeploy operates docked drones on 100+ construction projects as of October 2025 (Horizons 2025 announcement). Komatsu's SMARTCONSTRUCTION platform is deployed at 35,000 sites in Japan (Bentley Systems press release, November 2025). These are operational deployments, not pilots.</div></div>
+    <div class="np"><div class="np-h">2. Design models are becoming contractual deliverables.</div><div class="np-b">Japan's MLIT i-Construction program achieved 86% ICT adoption on government earthwork projects within 6 years of mandate (2016-2022). Norway's Statens vegvesen V770 handbook established model-based delivery as standard practice, producing 50%+ change order reduction across pilot projects.</div></div>
+    <div class="np"><div class="np-h">3. Regulatory specifications encode tolerances as numerical values.</div><div class="np-b">MDOT Standard Specifications for Construction (2020 ed.), Section 205.03.N defines subgrade tolerance as &plusmn;1 inch with subbase. Section 302.03.A defines aggregate base tolerance as &plusmn;&frac12; inch. These are published regulatory values, deterministic and machine-parseable. Verified against source documents.</div></div>
+    <div class="np"><div class="np-h">4. The specialist workforce is in structural demographic decline.</div><div class="np-b">Average US Professional Land Surveyor age is 57-60 years (ASCE, NSPS). 51% of engineering firms report turning down work due to staffing shortages (ACEC Q4 2024). The PLS licensing pipeline requires a minimum of 8 years (NCEES). Equivalent shortages are documented in Japan, South Korea, Australia, and Europe.</div></div>
+    <div class="np"><div class="np-h">5. AI agents are acquiring structured tool-use capabilities.</div><div class="np-b">Anthropic's Model Context Protocol (released 2024) has produced thousands of community tool servers enabling structured AI-to-service interaction. Agent-mediated procurement of physical services does not exist today. The infrastructure for it is being built.</div></div>
+  </div>
+</div>
+
+<!-- 4 -->
+<div class="slide">
+  <div class="st">Preconditions for Physical-World Task Liquidity</div>
+  <div class="mx">
+    <p>A physical-world task becomes algorithmically procurable when four conditions are simultaneously met:</p>
+    <div class="cols" style="margin-top:14px">
+      <div>
+        <div class="card"><div class="card-t">Structured specification</div><div class="card-b">The task is describable in machine-readable terms sufficient to determine completion criteria.</div><div class="card-n">MDOT Section 205.03.N: tolerance &plusmn;0.0833 ft</div></div>
+        <div class="card"><div class="card-t">Qualified executor discovery</div><div class="card-b">Credentials, equipment, and availability are verifiable against authoritative databases.</div><div class="card-n">FAA Part 107 + state PLS license + insurance COI</div></div>
+      </div>
+      <div>
+        <div class="card"><div class="card-t">Machine-verifiable completion</div><div class="card-b">An algorithm can determine whether the task was completed within specification without human inspection.</div><div class="card-n">RMSE against checkpoints; surface subtraction</div></div>
+        <div class="card"><div class="card-t">Programmatic settlement</div><div class="card-b">Payment can be triggered by verified completion without manual invoice processing.</div><div class="card-n">Escrow release on verification pass</div></div>
+      </div>
+    </div>
+    <div class="ft">Construction survey on DOT highway projects satisfies all four conditions with currently available technology. Other domains satisfy subsets. The number of domains satisfying all four is increasing as sensor accuracy improves and regulatory standards are digitized.</div>
+  </div>
+</div>
+
+<!-- 5 -->
+<div class="slide">
+  <div class="st">How Robotic Execution Changes Transaction Structure</div>
+  <div class="mx">
+    <p>The distinction between human and robotic task execution is not primarily about labor cost or speed. It is about the information properties of the execution, which determine whether the task can be procured algorithmically.</p>
+    <div class="cols" style="margin-top:12px">
+      <div class="card"><div class="card-t" style="color:var(--fg2)">Human executor</div><div class="card-b">Execution varies with skill, judgment, and fatigue. Quality assessment requires a separate human reviewer. Trust is relational, built through repeated engagement over years. Availability is opaque and requires direct inquiry.</div></div>
+      <div class="card" style="border-color:var(--ac)"><div class="card-t" style="color:var(--ac)">Robotic executor</div><div class="card-b">Execution follows a programmed mission with instrument-level variance. Quality is computed from the data itself (RMSE, checkpoint validation). Trust is systemic: output is verified algorithmically. Availability is a queryable system state.</div></div>
+    </div>
+    <div class="ft">A platform that dispatches human operators and manages logistics improves efficiency. A platform that dispatches robots and verifies their output algorithmically changes the procurement structure from relationship-based to verification-based. The trust model is different, not just the cost model.</div>
+  </div>
+</div>
+
+<!-- 6 -->
+<div class="slide">
+  <div class="st">Sample Protocol Stack</div>
+  <div class="mx">
+    <div class="stack">
+      <div class="stack-r"><span class="stack-l">Protocol</span><span class="stack-v">Runtime procurement and verified execution of physical-world tasks</span></div>
+      <div class="stack-r"><span class="stack-l">Task class</span><span class="stack-v">End-to-end procurement for physical-world ground truth measurement</span></div>
+      <div class="stack-r"><span class="stack-l">Industry</span><span class="stack-v">Construction survey, inspection, material delivery, environmental compliance</span></div>
+      <div class="stack-r"><span class="stack-l">Product job</span><span class="stack-v">Continuous verification that digital designs are based on accurate world models and as-built reporting matches physical developments</span></div>
+      <div class="stack-r"><span class="stack-l">Offering</span><span class="stack-v">Certified data provision with integrated deviation analysis</span></div>
+      <div class="stack-r"><span class="stack-l">Service Domain</span><span class="stack-v">MDOT highway construction &mdash; selected for verification loop tightness</span></div>
+    </div>
+    <div class="ft">Each layer narrows the one above it without contradicting it. The protocol is domain-agnostic. The initial domain was selected because it has the most fully structured specification-to-verification loop: numerical tolerances, arithmetic comparison, and machine-computable proof.</div>
+  </div>
+</div>
+
+<!-- 7 -->
+<div class="slide">
+  <div class="st">Service Domain Case Study: Michigan Department of Transportation Highway Construction</div>
+  <div class="mx">
+    <p>The initial domain was selected by evaluating which physical-world task class has the tightest specification-to-verification loop. MDOT highway construction survey scores highest because:</p>
+    <p>The specifications are published regulatory documents. MDOT Standard Specifications for Construction (2020 ed.) is publicly available and defines acceptance criteria as numerical values with section references.</p>
+    <p>The tolerances are deterministic. Subgrade tolerance is &plusmn;0.75 inches without subbase (Section 205.03.N). Aggregate base tolerance is &plusmn;0.5 inches (Section 302.03.A). These are not subjective assessments. They are arithmetic thresholds verified against source documents.</p>
+    <p>The verification operation is subtraction. As-built surface elevation minus design surface elevation at each measurement point. The result is a deviation value compared against the tolerance threshold. This is TIN interpolation followed by arithmetic, implemented with standard computational geometry libraries.</p>
+    <p>The quality proof is a computed metric. Root mean square error against checkpoints, per ASPRS Positional Accuracy Standards (2015), is a machine-computable number that does not require human interpretation.</p>
+    <div class="ft">Other construction domains involve less structured verification loops. Bridge inspection requires subjective defect severity classification. Environmental compliance involves regulatory interpretation. Material delivery involves logistics coordination. Ground truth measurement on DOT projects is arithmetic against published numbers.</div>
+  </div>
+</div>
+
+<!-- 8 -->
+<div class="slide">
+  <div class="st">Protocol Components and Development Status (v1.4.1)</div>
+  <div class="mx">
+    <p style="margin-bottom:12px">The protocol is implemented as seven modules. All are functional alpha. The verification engine is the domain-specific component that varies by vertical; all others are domain-agnostic.</p>
+    <div class="cols">
+      <div>
+        <p style="margin-bottom:8px"><strong style="color:var(--fgh)">Coordination Layer:</strong> MCP-native interface (FastMCP over Streamable HTTP). Reverse auction engine with 11-state task lifecycle, 4-factor weighted bid scoring, geographic filtering, and busy-state tracking. Deployed on Fly.io. <em style="color:var(--fg2)">Alpha, functional.</em></p>
+        <p style="margin-bottom:8px"><strong style="color:var(--fgh)">Task Registry:</strong> 18 task categories with structured capability requirements (ASPRS accuracy classes, CRS EPSG codes, sensor requirements, deliverable formats). RFP-to-structured-spec conversion via LLM with keyword fallback. <em style="color:var(--fg2)">Alpha, functional.</em></p>
+        <p style="margin-bottom:8px"><strong style="color:var(--fgh)">Executor Registry:</strong> ERC-8004 robot identity on Base (mainnet + Sepolia). MCP endpoints, sensor capabilities, and geographic metadata on-chain/IPFS. Discovery via The Graph. EAS attestation. 1 production + 100 demo registrations. <em style="color:var(--fg2)">Alpha, deployed on mainnet.</em></p>
+        <p><strong style="color:var(--fgh)">Credential Verification:</strong> Six compliance document types. SAM.gov Exclusions API (live) for debarment checks. Bond verification against Treasury Circular 570 (live, 500+ surety companies). PLS license and insurance: schema-complete, stub implementations. <em style="color:var(--fg2)">SAM.gov and bond live; PLS and insurance stubs.</em></p>
+      </div>
+      <div>
+        <p style="margin-bottom:8px"><strong style="color:var(--fgh)">Verification Engine:</strong> Four-level QA framework (schema validation, standards compliance, PLS review) with eight category-specific delivery schemas. Geospatial surface comparison, specification database, and compliance report generation are the next development phase. <em style="color:var(--fg2)">QA framework functional; geospatial verification not implemented.</em></p>
+        <p style="margin-bottom:8px"><strong style="color:var(--fgh)">Settlement Layer:</strong> Stripe PaymentIntents (authorize/capture), Connect Express for operator payouts, ACH bank transfer. USDC on Base via EIP-3009 (gasless). Four-mode settlement abstraction designed. <em style="color:var(--fg2)">Mode 1 operational; modes 2-4 designed.</em></p>
+        <p><strong style="color:var(--fgh)">Robot Federation:</strong> MCPRobotAdapter bridges protocol to individual robot MCP servers. Nine category simulator servers deployed on Fly.io. Dynamic tool resolution for heterogeneous robot capabilities. One physical robot (Tumbller) connected. <em style="color:var(--fg2)">Simulators operational; no production survey robots.</em></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 -->
+<div class="slide">
+  <div class="st">System Architecture</div>
+  <div class="mx" style="max-width:700px">
+    <div class="card" style="text-align:center;margin-bottom:4px;border-color:var(--fg2)">
+      <div class="card-b" style="color:var(--fg2);font-size:13px">Vertical application layers (domain-specific, per vertical)</div>
+      <div class="card-b" style="color:var(--fgh)">Construction Survey&ensp;|&ensp;Bridge Inspection&ensp;|&ensp;Environmental&ensp;|&ensp;Mining</div>
+      <div class="card-b" style="font-size:13px;color:var(--fg2);margin-top:4px">Each adds: specification database + verification function + compliance report template</div>
+    </div>
+    <div class="card" style="text-align:center;margin-bottom:4px;border-color:var(--ac)">
+      <div class="card-b" style="color:var(--ac);font-weight:500">Protocol Layer (Alpha, Functional)</div>
+      <div class="card-b" style="font-size:13px;color:var(--fg2)">Task Registry &bull; Executor Registry (ERC-8004) &bull; Coordination (MCP tools) &bull; Settlement (Stripe + USDC) &bull; Credentials (SAM.gov, Treasury Circular 570)</div>
+    </div>
+    <div class="card" style="text-align:center;border-color:var(--blue)">
+      <div class="card-b" style="color:var(--blue);font-weight:500">Robot federation layer</div>
+      <div class="card-b" style="font-size:13px;color:var(--fg2)">Category MCP servers &bull; MCPRobotAdapter &bull; On-chain discovery via The Graph &bull; EAS attestation</div>
+    </div>
+    <div class="ft">The protocol and federation layers are domain-agnostic. Adding a vertical application does not require changes to the protocol. The vertical layer is where the domain-specific verification logic, specification databases, and report formats reside.</div>
+  </div>
+</div>
+
+<!-- 11 -->
+<div class="slide">
+  <div class="st">Vertical Feasibility Assessment</div>
+  <div class="mx">
+    <p>Each domain is assessed against the four preconditions for task liquidity. Feasibility depends on whether all four are met with currently available technology.</p>
+    <table style="margin-top:12px">
+      <tr><th>Domain</th><th>Specification source</th><th>Verification method</th><th>Assessment</th></tr>
+      <tr><td>Highway survey</td><td>State DOT tolerances</td><td>Surface subtraction, RMSE</td><td>All four preconditions met</td></tr>
+      <tr><td>Environmental monitoring</td><td>EPA/EGLE permit thresholds</td><td>Sensor reading vs. threshold</td><td>Met for quantifiable parameters</td></tr>
+      <tr><td>Solar/wind inspection</td><td>IEC standards</td><td>Thermal anomaly detection</td><td>Production-deployed (Zeitview)</td></tr>
+      <tr><td>Mining/quarry</td><td>MSHA + operational specs</td><td>Volumetric analysis</td><td>Same sensor stack as construction</td></tr>
+      <tr><td>Agricultural</td><td>USDA/NRCS standards</td><td>Spectral index comparison</td><td>Met for remote-sensing parameters</td></tr>
+      <tr><td>Bridge inspection</td><td>NBI/AASHTO element-level</td><td>Point-to-model + CV classification</td><td>Partially met; defect severity requires human judgment</td></tr>
+    </table>
+    <div class="ft">Each feasible vertical requires encoding its specification database and implementing its verification function as a module in the verification engine. The protocol layer is shared. The engineering cost per vertical is the specification encoding and comparison function, not protocol infrastructure.</div>
+  </div>
+</div>
+
+<!-- 12 -->
+<div class="slide">
+  <div class="st">Vertical Expansion and Market Context</div>
+  <div class="mx">
+    <div class="cols">
+      <div>
+        <p style="font-weight:500;color:var(--fgh);margin-bottom:10px">Expansion path by specification encoding</p>
+        <p>The protocol expands by encoding additional specification databases. Each state DOT publishes its own standard specifications with its own tolerance values and section references. The schema is the same; the data content differs per state.</p>
+        <p>Michigan MDOT is the initial domain ($2.6B FY2026 highway program; survey at approximately 1% = ~$26M/yr). Adjacent state DOTs (Ohio, Indiana, Illinois, Wisconsin) represent approximately $150M/yr combined. National DOT survey at 1-2% of $120B/yr highway spending is $1.2-2.4B/yr.</p>
+        <p>Cross-domain expansion (bridge inspection, environmental, mining) follows the same pattern: encode the domain's specification database and implement the comparison function. The protocol does not change.</p>
+      </div>
+      <div>
+        <p style="font-weight:500;color:var(--fgh);margin-bottom:10px">Market context</p>
+        <p>US construction rework attributable to poor or inaccessible project data is estimated at $14.3B/yr (FMI/PlanGrid 2018). This figure represents the total value pool that improved verification addresses, not the directly addressable market for the protocol.</p>
+        <p>The Robot-as-a-Service market is estimated at $28.5B (2024), growing at 17.9% CAGR to $76.6B by 2030. The protocol operates within this broader transition from owned equipment to service-based robotic execution.</p>
+        <p style="font-size:14px;color:var(--fg2);margin-top:8px">Sources: MDOT FY2026 Five-Year Transportation Program. FMI/PlanGrid 2018. Survey at ~1% per primary interview (Virgil Klebba, April 2026), consistent with FHWA benchmarks.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 -->
+<div class="slide">
+  <div class="st">Ecosystem Integration Surfaces</div>
+  <div class="mx">
+    <p>The protocol is designed to be source-agnostic: it accepts measurement data from any field instrument or platform and adds specification-aware verification. This positions it as a complementary layer within existing tool ecosystems rather than a replacement for any installed system.</p>
+    <table style="margin-top:10px">
+      <tr><th>Platform</th><th>Relationship to protocol</th><th>Integration surface</th></tr>
+      <tr><td>DroneDeploy</td><td>Data source</td><td class="dim">Docked drone and ground robot data as verification input. Vertical commercial products built on the protocol would be able to verify against regulatory requirements such as DOT specifications.</td></tr>
+      <tr><td>Propeller Aero</td><td>Data source</td><td class="dim">AeroPoints and DirtMate surface data as verification input. Propeller provides visualization; protocol-based applications add specification-referenced compliance judgment.</td></tr>
+      <tr><td>Trimble / SITECH</td><td>Equipment ecosystem</td><td class="dim">TBC surface exports as verification input. Machine control as-built data as continuous monitoring source. SITECH dealer network as potential distribution channel.</td></tr>
+      <tr><td>Komatsu / EARTHBRAIN</td><td>Platform integration</td><td class="dim">SMARTCONSTRUCTION dashboard data as verification input. Bentley partnership (Nov 2025) creates interoperability path.</td></tr>
+      <tr><td>Procore / Autodesk</td><td>Workflow integration</td><td class="dim">Structured compliance reports delivered to project management platforms. Deviation data populates issue tracking systems.</td></tr>
+      <tr><td>Robot operators</td><td>Executor supply</td><td class="dim">Licensed drone operators (FAA Part 107), ground robot operators, and survey firms serve as the qualified executor pool. Examples in Michigan: DroneView Technologies, Emmet Drones, Midwest Aero Technologies, Drone Brothers (350-pilot managed network).</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- 14 -->
+<div class="slide">
+  <div class="st">Protocol Roadmap</div>
+  <div class="mx">
+    <div class="rm">
+      <div class="rm-r"><div class="rm-h">v1.4.1 (current) &mdash; Protocol layer with simulated fleet</div><div class="rm-b">MCP-native protocol interface, auction engine, on-chain executor identity, multi-modal settlement, federated robot communication, credential verification. Nine category simulators. No domain verification engine. No production survey robots connected.</div></div>
+      <div class="rm-r"><div class="rm-h">v1.5 &mdash; Domain verification engine and settlement abstraction</div><div class="rm-b">Construction survey verification engine: geospatial data ingestion, surface comparison, MDOT specification database, compliance report generation. Settlement modes 2-4 (batched, private). Task encryption (ECDH + AES-256-GCM). Sealed-bid auction scoring. First real operator integration.</div><div class="rm-s">Gate: v1.4 complete (met) and initial market validation conversations (in progress).</div></div>
+      <div class="rm-r"><div class="rm-h">v2.0 &mdash; Multi-robot coordination and operator tooling</div><div class="rm-b">Compound survey workflows (aerial + ground + GPR in a single task). Operator-facing dashboard with demand visibility. Live credential API connections (PLS license boards, insurance verification). Weather-aware scheduling. Agent-initiated payment (Stripe MPP).</div><div class="rm-s">Gate: v1.5 complete and 5+ active operators on the network.</div></div>
+      <div class="rm-r"><div class="rm-h">v2.5-3.0 &mdash; Vertical expansion and privacy infrastructure</div><div class="rm-b">Mining/quarry specification database. Infrastructure inspection (NBI bridge deliverables, 23 CFR 650). Privacy layer: ZK proofs for government contract compliance (SP1), Horizen L3 for private settlement (EU AMLR Article 79 constraints evaluated), BBS+ anonymous reputation credentials.</div><div class="rm-s">Gate: v2.0 complete, 15+ robots per metro area, Horizen L3 testnet evaluation complete.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 15 -->
+<div class="slide">
+  <div class="st">Technical Challenges</div>
+  <div class="mx">
+    <div class="cols">
+      <div>
+        <p style="font-weight:500;color:var(--fgh);margin-bottom:8px">Privacy and settlement</p>
+        <p style="font-size:14px"><strong style="color:var(--fgh)">Task privacy:</strong> ECDH key exchange with AES-256-GCM encryption for RFP contents. On-chain memos carry only H(request_id || salt), never raw identifiers (design decision FD-4).</p>
+        <p style="font-size:14px"><strong style="color:var(--fgh)">Settlement privacy:</strong> four-mode abstraction supports transparent and private settlement. Horizen L3 is under evaluation for Mode 2. EU AMLR Article 79 eliminates fully private chains from consideration, constraining the design space.</p>
+        <p style="font-size:14px"><strong style="color:var(--fgh)">Reputation privacy:</strong> BBS+ anonymous credentials are planned for v3.0 to enable operator quality attestation without revealing individual transaction history.</p>
+      </div>
+      <div>
+        <p style="font-weight:500;color:var(--fgh);margin-bottom:8px">Scale and onboarding</p>
+        <p style="font-size:14px"><strong style="color:var(--fgh)">Operator supply density:</strong> the protocol requires sufficient qualified operators per geographic region. Michigan has 15+ identified drone operators doing construction work. Density in rural highway corridors is uncertain.</p>
+        <p style="font-size:14px"><strong style="color:var(--fgh)">Credential API fragmentation:</strong> PLS licensing is administered state-by-state across 50 separate authorities with varying levels of digital accessibility. Insurance verification varies by carrier. No federated credential API exists. Each connection requires individual integration work.</p>
+        <p style="font-size:14px"><strong style="color:var(--fgh)">Trust bootstrapping:</strong> engineering firms select subcontractors through qualifications-based selection (Brooks Act, 23 CFR 172). Platform-dispatched operators must establish trust through managed curation and demonstrated quality, not through marketplace ratings.</p>
+        <p style="font-size:14px"><strong style="color:var(--fgh)">DOT acceptance:</strong> MDOT has not formally accepted drone-derived data for pay quantity determination. Acceptance is growing through the MTRI UAV program but is not yet standard practice in contract specifications.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 16 -->
+<div class="slide">
+  <div class="st">Protocol Interface: Human and Agent Procurement</div>
+  <div class="mx">
+    <p>The protocol exposes the same MCP tool interface regardless of whether the buyer is a human or an AI agent. The data model, tool signatures, and lifecycle state machine are identical in both cases. The difference is in who initiates the tool calls and how much autonomy the buyer exercises at each decision point.</p>
+    <div class="cmp" style="margin-top:14px">
+      <div>
+        <p style="font-weight:500;color:var(--fg2);margin-bottom:8px;font-size:14px">Current: human buyer via MCP</p>
+        <div class="step">PM posts task via MCP tool</div>
+        <div class="step">Protocol discovers qualified executors</div>
+        <div class="step">PM reviews bids and quality scores</div>
+        <div class="step">PM accepts bid</div>
+        <div class="step">Robot executes mission</div>
+        <div class="step">Verification engine produces compliance report</div>
+        <div class="step">Settlement on PM approval</div>
+      </div>
+      <div>
+        <p style="font-weight:500;color:var(--ac);margin-bottom:8px;font-size:14px">Future: agent buyer via MCP</p>
+        <div class="step step-a">Agent posts task via same MCP tool</div>
+        <div class="step step-a">Protocol discovers qualified executors</div>
+        <div class="step step-a">Agent evaluates quality scores programmatically</div>
+        <div class="step step-a">Agent presents candidates to PM for approval</div>
+        <div class="step step-a">PM approves; robot executes</div>
+        <div class="step step-a">Verification engine produces compliance report</div>
+        <div class="step step-a">Auto-settlement on verification pass</div>
+      </div>
+    </div>
+    <div class="ft">The transition from human to agent buyer does not require protocol changes. The structured data architecture serves both interfaces from day one. No rebuild is required when agents become procurement actors.</div>
+  </div>
+</div>
+
+<!-- 17 -->
+<div class="slide">
+  <div class="st">YakRobotics Garage</div>
+  <div class="mx">
+    <p>YakRobotics Garage is the development organization building the YakRover protocol. The project is open-source and available at github.com/YakRoboticsGarage/robot-marketplace.</p>
+    <p>The organization's focus is on the protocol layer for verified physical-world task execution, with construction survey as the initial domain application. The protocol is designed to be extended by third parties who build domain-specific verification layers for their own verticals.</p>
+    <p>The current development team has backgrounds in institutional governance system design (ZKsync Association), protocol research (Summer of Protocols, Ethereum Foundation), and materials science engineering (University of Pennsylvania). Domain access to Michigan heavy civil construction is through family connections with 40+ years of industry tenure.</p>
+    <p>The protocol demo is available at <a href="https://yakrobot.bid/demo" style="color:var(--ac)">yakrobot.bid/demo</a>.</p>
+  </div>
+</div>
+
+<!-- PARTNERSHIP -->
+<div class="slide">
+  <div class="st">Seeking Partners and Contributors</div>
+  <div class="mx">
+    <p style="margin-bottom:14px">YakRobotics Garage is seeking organizations and individuals to collaborate on bringing agent-mediated procurement of physical-world tasks to production. The protocol is open-source and designed for extension by domain experts.</p>
+    <div class="cols">
+      <div>
+        <p style="margin-bottom:10px"><strong style="color:var(--fgh)">Agent runtime services:</strong> Organizations building AI agent infrastructure, MCP tool ecosystems, agent-to-agent communication protocols, or runtime procurement systems. The protocol's MCP-native interface is designed for interoperability with emerging agent frameworks. Collaboration areas include agent-mediated task discovery, programmatic credential verification, and structured settlement triggered by machine verification.</p>
+        <p><strong style="color:var(--fgh)">Autonomous robot development and dispatch:</strong> Teams developing autonomous drone platforms, ground survey robots, or robotic fleet management systems. The protocol's federated robot communication layer (MCP-to-MCP) is designed to integrate any robot that exposes a structured tool interface. Collaboration areas include real robot integration, autonomous mission planning, multi-robot coordination, and sensor payload standardization.</p>
+      </div>
+      <div>
+        <p style="margin-bottom:10px"><strong style="color:var(--fgh)">Vertical domain experts and service procurers:</strong> Engineering firms, DOT agencies, inspection companies, environmental consultants, mining operators, and agricultural service providers who procure physical-world verification tasks and can contribute domain-specific specification databases, verification criteria, and compliance report requirements. These partners define what "correct" means in their domain.</p>
+        <p><strong style="color:var(--fgh)">Researchers:</strong> Academics and applied researchers working on construction robotics, geospatial computation, computational geometry for surface comparison, autonomous navigation in unstructured environments, privacy-preserving settlement (ZK proofs, BBS+ credentials), or the economics of agent-mediated physical-world marketplaces.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLOSING -->
+<div class="slide">
+  <div>
+    <div class="ax">Join us to bring agent-mediated procurement of physical-world tasks to production.</div>
+    <div style="margin-top:32px">
+      <div style="color:var(--ac);font-size:17px;font-weight:500">yakroboticsgarage.com</div>
+      <div style="color:var(--blue);font-size:14px;margin-top:6px"><a href="https://yakrobot.bid/demo" style="color:var(--blue)">yakrobot.bid/demo</a></div>
+      <div style="color:var(--fg2);font-size:14px;margin-top:3px">github.com/YakRoboticsGarage/robot-marketplace</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+!function(){var s=document.querySelectorAll('.slide'),t=s.length,c=0,
+n=document.getElementById('sn'),p=document.getElementById('progress');
+function go(i){if(i<0||i>=t)return;s[c].classList.remove('active');c=i;
+s[c].classList.add('active');n.textContent=(c+1)+'/'+t;
+p.style.width=((c+1)/t*100)+'%'}
+document.addEventListener('keydown',function(e){
+if(e.key==='ArrowRight'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();go(c+1)}
+else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();go(c-1)}
+else if(e.key==='Home')go(0);else if(e.key==='End')go(t-1)});
+document.addEventListener('click',function(e){if(e.target.closest('a'))return;
+e.clientX>innerWidth*.5?go(c+1):go(c-1)});go(0)}();
+</script>
+</body>
+</html>
