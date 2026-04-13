@@ -130,18 +130,21 @@ a:hover { text-decoration: underline; }
 .fp-comment-meta { font-size: 11px; color: #9CA3AF; margin-top: 3px; }
 .fp-empty { color: #9CA3AF; text-align: center; padding: 32px 0; font-size: 13px; }
 
-/* Toggle button */
-.fb-toggle {
+/* Floating action bar — pinned top-right */
+.fab {
   position: fixed; top: 12px; right: 16px; z-index: 201;
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 4px;
+}
+.fab-btn {
+  display: flex; align-items: center; gap: 5px;
   background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
-  padding: 6px 12px; cursor: pointer; font-family: inherit;
+  padding: 6px 10px; cursor: pointer; font-family: inherit;
   font-size: 12px; color: #4A5568; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   transition: all 0.15s;
 }
-.fb-toggle:hover { border-color: #E8792B; color: #1A1F26; }
+.fab-btn:hover { border-color: #E8792B; color: #1A1F26; }
 .fb-badge { background: #E8792B; color: #fff; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 8px; min-width: 18px; text-align: center; }
-.fb-eyes { font-size: 14px; }
+.fab-icon { font-size: 14px; line-height: 1; }
 
 /* Selection popover */
 .sel-popover {
@@ -202,12 +205,29 @@ a:hover { text-decoration: underline; }
 .fp-refresh.spinning { animation: spin 0.6s linear; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+/* Inline feedback form in panel */
+.fp-form { border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 12px; }
+.fp-form textarea { width: 100%; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px; font: inherit; font-size: 13px; resize: none; min-height: 60px; outline: none; }
+.fp-form textarea:focus { border-color: #E8792B; }
+.fp-form-row { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+.fp-form-name { flex: 1; border: 1px solid #e2e8f0; border-radius: 4px; padding: 5px 8px; font: inherit; font-size: 12px; outline: none; }
+.fp-form-name:focus { border-color: #E8792B; }
+.fp-form-submit { background: #E8792B; color: #fff; border: none; border-radius: 4px; padding: 5px 12px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.fp-form-submit:hover { background: #d06a22; }
+.fp-form-submit:disabled { opacity: 0.5; cursor: default; }
+.fp-form-status { font-size: 11px; color: #6B7280; margin-top: 4px; }
+
+/* Mobile: icon-only for inline CTA */
+.cta-icon { display: none; font-size: 16px; }
+.cta-label { display: inline; }
+
 /* Shift body when panel open */
 body.panel-open { margin-right: 320px; }
 
 @media print {
-  .feedback-panel, .fb-toggle, .sel-popover { display: none !important; }
+  .feedback-panel, .fab, .sel-popover, .contact-overlay { display: none !important; }
   body.panel-open { margin-right: 0; }
+  .cta-touch-inline { display: none !important; }
 }
 
 /* responsive */
@@ -220,6 +240,10 @@ body.panel-open { margin-right: 320px; }
   .stack-label { width: auto; }
   .feedback-panel { width: 280px; }
   body.panel-open { margin-right: 0; }
+  .cta-icon { display: inline; }
+  .cta-label { display: none; }
+  .cta-touch-inline { padding: 7px 10px; min-width: 0; }
+  .sel-popover { display: none !important; }
 }
 </style>
 </head>
@@ -234,7 +258,7 @@ body.panel-open { margin-right: 320px; }
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
   <p style="font-size:18px;color:#1A1F26;font-weight:500;margin:0">A Protocol for Verified Physical-World Task Execution</p>
-  <button class="cta-touch cta-touch-sm" onclick="showContact()">Get in Touch</button>
+  <button class="cta-touch cta-touch-sm cta-touch-inline" onclick="showContact()"><span class="cta-label">Get in Touch</span><span class="cta-icon">&#9993;</span></button>
 </div>
 
 <h2>Problem</h2>
@@ -353,14 +377,17 @@ body.panel-open { margin-right: 320px; }
   <span>Demo: <a href="https://yakrobot.bid/demo">yakrobot.bid/demo</a> &mdash; Code: <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace" target="_blank">github.com/YakRoboticsGarage/yakrover-marketplace</a></span>
 </div>
 
-<!-- Collaboration layer -->
-<button class="fb-toggle" onclick="togglePanel()">
-  <span class="fb-eyes">&#128065;</span>
-  <span id="eyeCount">0</span>
-  <span style="color:#e2e8f0">|</span>
-  <span>Feedback</span>
-  <span class="fb-badge" id="commentBadge">0</span>
-</button>
+<!-- Collaboration layer — pinned floating bar -->
+<div class="fab">
+  <button class="fab-btn" onclick="showContact()" title="Get in Touch"><span class="fab-icon">&#9993;</span></button>
+  <button class="fab-btn" onclick="togglePanel()">
+    <span class="fab-icon">&#128065;</span>
+    <span id="eyeCount">0</span>
+    <span style="color:#e2e8f0">|</span>
+    <span>Feedback</span>
+    <span class="fb-badge" id="commentBadge">0</span>
+  </button>
+</div>
 
 <div class="feedback-panel" id="feedbackPanel">
   <div class="fp-header">
@@ -370,7 +397,15 @@ body.panel-open { margin-right: 320px; }
     </span>
     <button class="fp-close" onclick="togglePanel()">&times;</button>
   </div>
-  <div id="commentList"><div class="fp-empty">Highlight any text to leave a comment.</div></div>
+  <div class="fp-form">
+    <textarea id="panelComment" placeholder="Leave feedback on this memo..."></textarea>
+    <div class="fp-form-row">
+      <input class="fp-form-name" id="panelName" placeholder="Name (optional)">
+      <button class="fp-form-submit" id="panelSubmit" onclick="submitPanelComment()">Send</button>
+    </div>
+    <div class="fp-form-status" id="panelStatus"></div>
+  </div>
+  <div id="commentList"><div class="fp-empty">No feedback yet.</div></div>
 </div>
 
 <div class="contact-overlay" id="contactOverlay" onclick="if(event.target===this)hideContact()">
@@ -547,6 +582,37 @@ function submitComment() {
 }
 
 // --- Refresh button ---
+// --- Panel inline feedback form ---
+function submitPanelComment() {
+  var comment = document.getElementById('panelComment').value.trim();
+  if (!comment) return;
+  var name = document.getElementById('panelName').value.trim();
+  var btn = document.getElementById('panelSubmit');
+  var status = document.getElementById('panelStatus');
+  btn.disabled = true;
+  status.textContent = 'Submitting...';
+
+  fetch(API + '/api/memo/comment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      highlight: '',
+      comment: comment,
+      section: 'General',
+      name: name || 'Anonymous',
+    }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    status.textContent = 'Submitted — thank you!';
+    document.getElementById('panelComment').value = '';
+    btn.disabled = false;
+    setTimeout(function() { status.textContent = ''; }, 2000);
+    loadComments();
+  }).catch(function() {
+    status.textContent = 'Error — please try again.';
+    btn.disabled = false;
+  });
+}
+
 function refreshComments() {
   var btn = document.getElementById('refreshBtn');
   btn.classList.add('spinning');
