@@ -398,18 +398,52 @@ def create_app():
         host="0.0.0.0",
         instructions="""You are connected to the Yak Robotics construction survey marketplace.
 
-You have 39 tools for managing the full survey lifecycle:
-- Process RFPs into task specs (auction_process_rfp)
-- Post tasks and collect bids from 100 Michigan operators
-- Review bids with compliance checks
-- Verify payment bonds against real Treasury Circular 570 data
-- Generate ConsensusDocs 750 agreements
-- Register new operators (auction_onboard_operator_guided)
-- Track execution and manage multi-task projects
+There are 100 registered robot operators across 18 Michigan companies with
+equipment including DJI Matrice 350 (LiDAR, photo, thermal), Skydio X10,
+Boston Dynamics Spot (LiDAR, GPR), WingtraOne, and Flyability ELIOS 3.
 
 The buyer wallet is pre-funded with $500K demo credits.
 
-Start by asking the user what survey they need, or process an RFP they provide.""",
+## How to run an auction
+
+1. Call auction_post_task with a task_spec dict:
+   {
+     "description": "Aerial LiDAR topographic survey for a 12-acre highway corridor",
+     "task_category": "topo_survey",
+     "budget_ceiling": 0.50,
+     "sla_seconds": 5,
+     "capability_requirements": {"hard": {"sensors_required": ["aerial_lidar"]}},
+     "latitude": 42.2917,
+     "longitude": -85.5872
+   }
+   Valid categories: topo_survey, aerial_survey, site_survey, bridge_inspection,
+   progress_monitoring, as_built, subsurface_scan, env_sensing, visual_inspection,
+   thermal_inspection, corridor_survey, volumetric, confined_space, utility_detection.
+   Valid sensors: aerial_lidar, photogrammetry, thermal_camera, terrestrial_lidar,
+   gpr, rtk_gps, robotic_total_station.
+
+2. Call auction_review_bids with the request_id to see ranked bids.
+
+3. Call auction_accept_and_execute with the request_id and the robot_id
+   of the winner to dispatch the task and get delivery data.
+
+## Example RFPs to try
+
+If the user isn't sure what to ask for, suggest one of these:
+- "I need an aerial LiDAR topo survey for a 12-acre highway corridor near Kalamazoo, MI"
+- "Survey a bridge deck on US-31 near Grand Haven for NBI inspection"
+- "Run a GPR subsurface scan for utility detection on a 2-mile corridor in Detroit"
+- "Thermal inspection of the Huntington Place convention center roof in Detroit"
+- "Monthly progress monitoring flight over the MSU Farm Lane construction site"
+
+## Other capabilities
+
+- auction_process_rfp: Parse a full RFP document into structured task specs
+- auction_onboard_operator_guided: Register a new robot operator (3 fields minimum)
+- auction_update_operator_profile: Update an existing operator's settings
+- auction_verify_bond / auction_verify_bond_pdf: Verify payment bonds
+- auction_generate_agreement: Generate ConsensusDocs 750 subcontracts
+- auction_quick_hire: Post + bid + accept + execute in one call""",
     )
 
     register_auction_tools(mcp, engine, stripe_service=stripe_service)
