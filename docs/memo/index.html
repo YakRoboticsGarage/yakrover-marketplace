@@ -260,11 +260,11 @@ body.panel-open { margin-right: 320px; }
 
 <h2>Executive Summary</h2>
 <ul style="padding-left:20px;color:#4A5568">
-  <li style="margin-bottom:10px"><strong>Construction spending keeps increasing.</strong> Construction surveying alone is an $8B/yr US market, much of it trying to solve for $31B/yr of rework costs, not to mention safety. To address the demand, drones are deployed on 100,000+ job sites all the while engineering companies are adopting AI tooling to increase speed of execution.</li>
-  <li style="margin-bottom:10px"><strong>But no one has built an agent-runtime procurement layer for physical work</strong> &mdash; on demand, with best-in-class SLAs. And it&rsquo;s not just construction that has this limitation. Physical-world tasks can&rsquo;t be purchased like software, yet.</li>
-  <li style="margin-bottom:10px"><strong>The infrastructure is already here.</strong> Dock-deployed drones and hundred-mile ranges, machine-readable DOT specifications, AI agents with tool-use capabilities, alongside a declining workforce in machine-powered expertise careers like licensed surveyors.</li>
-  <li style="margin-bottom:10px"><strong>Robots don&rsquo;t just replace scarce labor, they widen the feasible action space of agents.</strong> Quality becomes computable, availability becomes queryable, and data becomes training fuel. Each task becomes structurally compatible with algorithmic procurement in a way human execution never can be.</li>
-  <li style="margin-bottom:10px"><strong>Yak Robotics already has a proof of concept protocol.</strong> Auction engine, robot identity, settlement via Stripe (and agent-friendly crypto), credential verification, and a 100-robot simulated fleet.</li>
+  <li style="margin-bottom:10px"><strong>Construction spending keeps increasing.</strong> Construction surveying alone is an $8B/yr US market. The industry loses $31B/yr to rework, a significant portion traceable to inaccurate or outdated site data. To address the demand, drones are deployed on thousands of job sites and engineering companies are adopting AI tooling to increase speed of execution.</li>
+  <li style="margin-bottom:10px"><strong>But no one has built an agent-runtime procurement layer for physical work.</strong> And it&rsquo;s not just construction that has this limitation. Physical-world tasks can&rsquo;t be purchased like software, yet.</li>
+  <li style="margin-bottom:10px"><strong>The enabling infrastructure exists today.</strong> Dock-deployed drones and hundred-mile ranges, machine-readable DOT specifications, AI agents with tool-use capabilities, alongside a declining workforce in licensed technical professions like surveying.</li>
+  <li style="margin-bottom:10px"><strong>Robots don&rsquo;t just replace scarce labor, they widen the feasible action space of agents.</strong> Quality becomes computable, availability becomes queryable, and execution data accumulates for quality benchmarking. Each task becomes structurally compatible with algorithmic procurement in a way human execution never can be.</li>
+  <li style="margin-bottom:10px"><strong>Yak Robotics already has a proof of concept protocol.</strong> Auction engine, robot identity, settlement via Stripe (and agent-friendly crypto), credential verification, and a 100-robot test fleet (simulated execution).</li>
   <li style="margin-bottom:10px"><strong>Seeking partners</strong> in AI-agent procurement infrastructure, autonomous robotics, vertical domain expertise such as construction, and research in robot navigation and regulation.</li>
   <li style="margin-bottom:0"><strong>Seeking funding</strong> to refine the product with veteran software engineers, solve legal and insurance complexities, find the right vertical to double-down in, and then scale onboarding of robots and buyers.</li>
 </ul>
@@ -282,7 +282,7 @@ body.panel-open { margin-right: 320px; }
   <p style="font-size:13px;color:#4A5568;margin-top:12px;margin-bottom:8px"><strong>Step 2.</strong> Say this to Claude:</p>
   <div style="background:#f0f2f5;border-radius:4px;padding:10px 12px;font-size:13px;color:#4A5568;font-style:italic" id="memoClaudePrompt">Use yakrover to help me with an aerial LiDAR topo survey for a 12-acre highway corridor near Kalamazoo, MI</div>
   <button class="cta-touch cta-touch-sm" style="font-size:11px;padding:5px 12px;margin-top:8px" onclick="navigator.clipboard.writeText(document.getElementById('memoClaudePrompt').textContent);this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy Prompt'},1500)">Copy Prompt</button>
-  <p style="font-size:12px;color:#9CA3AF;margin-top:10px;margin-bottom:0">Claude will discover 100 robots, run the auction, and return delivery data. <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace/blob/main/docs/guides/GETTING_STARTED.md" target="_blank" style="color:#2D5F8A">Full guide &rarr;</a></p>
+  <p style="font-size:12px;color:#9CA3AF;margin-top:10px;margin-bottom:0">Claude will discover 100 test robots, run the auction, and return delivery data (simulated). <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace/blob/main/docs/guides/GETTING_STARTED.md" target="_blank" style="color:#2D5F8A">Full guide &rarr;</a></p>
 </div>
 
 <h2>Project Leads</h2>
@@ -311,10 +311,10 @@ body.panel-open { margin-right: 320px; }
 
 <h2>Problem</h2>
 <p>Physical service procurement is unstructured and unavailable for agents. However, the technologies necessary to enable API-like purchase of physical actions are emerging.</p>
-<p>Yak Robotics is building a protocol and application layer to allow for machine-readable task specification, algorithmic executor matching, automated completion verification, and programmatic settlement for physical-world work.</p>
+<p>Yak Robotics is building a protocol and application layer for physical-world task procurement &mdash; structured task specification, executor matching, delivery verification, and payment settlement. Task specification and matching are functional today. Delivery verification and settlement are in early stages.</p>
 
 <h2>Why Now</h2>
-<p>Five independent trends are converging to make physical-world task procurement programmable for the first time. None is sufficient alone, but together they create the conditions for a protocol layer that did not previously have the infrastructure to exist. As an example, construction survey on Department of Transportation (DOT) highway projects satisfies all necessary conditions with currently available technology.</p>
+<p>Five independent trends are converging to make physical-world task procurement programmable in ways it hasn&rsquo;t been before. None is sufficient alone, but together they create the conditions for a protocol layer that did not previously have the infrastructure to exist. As an example, construction survey on Department of Transportation (DOT) highway projects satisfies all necessary conditions with currently available technology.</p>
 <div class="cols">
   <div>
     <p><strong>Autonomous collection:</strong> DroneDeploy operates docked drones on 100+ projects (Oct 2025). Komatsu SMARTCONSTRUCTION: 35,000 sites in Japan (Nov 2025).</p>
@@ -328,12 +328,12 @@ body.panel-open { margin-right: 320px; }
 </div>
 
 <h2>Sample Protocol Stack</h2>
-<div class="stack-row"><span class="stack-label">Protocol</span><span class="stack-value">Runtime procurement and verified execution of physical-world tasks</span></div>
-<div class="stack-row"><span class="stack-label">Task class</span><span class="stack-value">End-to-end procurement for physical-world ground truth measurement</span></div>
+<div class="stack-row"><span class="stack-label">Protocol</span><span class="stack-value">Task posting, executor matching, and delivery verification for physical-world tasks</span></div>
+<div class="stack-row"><span class="stack-label">Task class</span><span class="stack-value">Structured procurement for physical-world survey and inspection tasks</span></div>
 <div class="stack-row"><span class="stack-label">Industry</span><span class="stack-value">Construction survey, inspection, material delivery, environmental compliance</span></div>
-<div class="stack-row"><span class="stack-label">Product job</span><span class="stack-value">Continuous verification that digital designs are based on accurate world models and as-built reporting matches physical developments</span></div>
-<div class="stack-row"><span class="stack-label">Offering</span><span class="stack-value">Certified data provision with integrated deviation analysis</span></div>
-<div class="stack-row"><span class="stack-label">Service Domain</span><span class="stack-value">MDOT highway construction &mdash; tightest specification-to-verification loop in US infrastructure</span></div>
+<div class="stack-row"><span class="stack-label">Product job</span><span class="stack-value">Verify that as-built conditions match design specifications</span></div>
+<div class="stack-row"><span class="stack-label">Offering</span><span class="stack-value">Survey data delivery with schema-driven quality checks</span></div>
+<div class="stack-row"><span class="stack-label">Service Domain</span><span class="stack-value">MDOT highway construction &mdash; numerically specified tolerances with established verification methods</span></div>
 
 <h2>Protocol Components and Development Status (v1.4.1 &mdash; Alpha, Functional)</h2>
 <p>The protocol is implemented as seven modules. The verification engine is the domain-specific component; all others are domain-agnostic and shared across verticals.</p>
@@ -341,18 +341,18 @@ body.panel-open { margin-right: 320px; }
   <div>
     <p><strong>Coordination Layer:</strong> MCP-native interface, reverse auction engine (11-state lifecycle, 4-factor scoring, geographic filtering). Deployed on Fly.io. <em>Alpha, functional.</em></p>
     <p><strong>Task Registry:</strong> 18 task categories with structured capability requirements (American Society for Photogrammetry and Remote Sensing accuracy classes, coordinate reference system codes, sensors, deliverables). Request for Proposal (RFP) to spec conversion. <em>Alpha, functional.</em></p>
-    <p><strong>Executor Registry:</strong> On-chain robot identity (ERC-8004 standard on Base). Discovery via The Graph indexing protocol. Ethereum Attestation Service (EAS) for platform attestation. 1 production + 100 demo registrations. <em>Alpha, deployed on mainnet.</em></p>
+    <p><strong>Executor Registry:</strong> On-chain robot identity (ERC-8004 standard on Base). Discovery via The Graph indexing protocol. Ethereum Attestation Service (EAS) for platform attestation. 1 physical robot on mainnet + 100 test registrations on testnet. <em>Alpha.</em></p>
     <p><strong>Credential Verification:</strong> SAM.gov Exclusions API (live). Bond verification against Treasury Circular 570 (live, 500+ sureties). PLS and insurance verification: schema-complete, stubs. <em>SAM.gov and bond live.</em></p>
   </div>
   <div>
     <p><strong>Verification Engine:</strong> Quality assurance framework (4 levels, 8 category schemas). Geospatial surface comparison, specification database, and compliance reporting are next phase. <em>QA framework functional; geospatial not implemented.</em></p>
-    <p><strong>Settlement Layer:</strong> Stripe (authorize/capture), Connect Express, Automated Clearing House (ACH) bank transfer, USDC stablecoin on Base (gasless). 4-mode abstraction designed. <em>Mode 1 operational; modes 2-4 designed.</em></p>
-    <p><strong>Robot Federation:</strong> MCP-to-MCP robot adapter, 9 category simulators on Fly.io. Dynamic tool resolution. 1 physical robot connected. <em>Simulators operational; no production survey robots.</em></p>
+    <p><strong>Settlement Layer:</strong> Stripe (authorize/capture), Connect Express, Automated Clearing House (ACH) bank transfer, USDC stablecoin on Base (gasless). 4-mode abstraction planned. <em>Mode 1 operational; modes 2-4 not yet built.</em></p>
+    <p><strong>Robot Federation:</strong> MCP-to-MCP robot adapter, 9 category simulators on Fly.io (mock execution, not real survey data). Dynamic tool resolution. 1 physical robot connected. <em>No production survey robots yet.</em></p>
   </div>
 </div>
 
 <h2>Long-Term Development Roadmap</h2>
-<div class="stack-row"><span class="stack-label" style="color:#1a7a6d">Complete</span><span class="stack-value">Protocol layer functional &mdash; auction engine, on-chain identity, settlement (card, bank, stablecoin), credential verification, 100-robot simulated fleet, MCP interface</span></div>
+<div class="stack-row"><span class="stack-label" style="color:#1a7a6d">Complete</span><span class="stack-value">Protocol layer functional &mdash; auction engine, on-chain identity, settlement (card, bank, stablecoin), credential verification, 100-robot test fleet (simulated execution), MCP interface</span></div>
 <div class="stack-row"><span class="stack-label">Now</span><span class="stack-value">Construction verification engine &mdash; geospatial ingestion, surface comparison against DOT specs, compliance reporting. First real operator onboarded.</span></div>
 <div class="stack-row"><span class="stack-label">Next</span><span class="stack-value">Multi-robot coordination (aerial + ground + subsurface in one job). Operator dashboard. Agent-initiated payment. Live credential APIs.</span></div>
 <div class="stack-row"><span class="stack-label">Expanding</span><span class="stack-value">New verticals &mdash; mining/quarry volumetrics, infrastructure inspection (bridges, pipelines). Privacy layer for government contracts.</span></div>
@@ -360,10 +360,10 @@ body.panel-open { margin-right: 320px; }
 <h2>Vertical Feasibility</h2>
 <table>
   <tr><th>Domain</th><th>Specification</th><th>Verification</th><th>Assessment</th></tr>
-  <tr><td>Highway survey</td><td>State DOT tolerances</td><td>Surface subtraction, root mean square error</td><td>All preconditions met</td></tr>
-  <tr><td>Environmental</td><td>EPA / Michigan EGLE permits</td><td>Sensor threshold comparison</td><td>Met (quantifiable parameters)</td></tr>
-  <tr><td>Solar/wind</td><td>International Electrotechnical Commission (IEC) standards</td><td>Thermal anomaly detection</td><td>Production (Zeitview)</td></tr>
-  <tr><td>Mining</td><td>Mine Safety and Health Administration (MSHA) + operational specs</td><td>Volumetric analysis</td><td>Same sensor stack</td></tr>
+  <tr><td>Highway survey</td><td>State DOT tolerances</td><td>Surface subtraction, root mean square error</td><td>Preconditions met by domain</td></tr>
+  <tr><td>Environmental</td><td>EPA / Michigan EGLE permits</td><td>Sensor threshold comparison</td><td>Sensor thresholds quantifiable</td></tr>
+  <tr><td>Solar/wind</td><td>International Electrotechnical Commission (IEC) standards</td><td>Thermal anomaly detection</td><td>Commercially proven (e.g. Zeitview)</td></tr>
+  <tr><td>Mining</td><td>Mine Safety and Health Administration (MSHA) + operational specs</td><td>Volumetric analysis</td><td>Overlapping sensors</td></tr>
   <tr><td>Bridge inspection</td><td>National Bridge Inventory (NBI) / AASHTO</td><td>Point-to-model + computer vision</td><td>Partial (human judgment needed)</td></tr>
 </table>
 <p class="footnote">Each vertical adds a specification database and verification function. Protocol layer is unchanged.</p>
@@ -371,7 +371,7 @@ body.panel-open { margin-right: 320px; }
 <h2>Technical Challenges</h2>
 <div class="cols">
   <div>
-    <p><strong>Privacy:</strong> Task encryption via standard elliptic-curve key exchange + AES-256 encryption. On-chain memos use commitment hashes only (no plaintext task data). Settlement privacy: 4-mode abstraction, Horizen L3 under evaluation (EU Anti-Money Laundering Regulation Article 79 constraints).</p>
+    <p><strong>Privacy:</strong> Construction RFPs contain sensitive site data, bid pricing, and project timelines. Government contracts add ITAR/CUI restrictions. The protocol must handle task matching without the platform seeing task content, and settle payments without revealing amounts to third parties. EU Anti-Money Laundering Regulation Article 79 constrains which privacy approaches are legally viable.</p>
     <p><strong>Regulation:</strong> FAA Part 108 (Beyond Visual Line of Sight) final rule expected mid-2026, following Executive Order 14307 directing routine commercial BVLOS operations. This unlocks autonomous drone dispatch without per-flight waivers &mdash; a prerequisite for algorithmic procurement at scale. Ground robots currently lack standardized navigation and right-of-way rules on construction sites.</p>
   </div>
   <div>
@@ -383,11 +383,11 @@ body.panel-open { margin-right: 320px; }
 <h2>Seeking Partners and Contributors</h2>
 <div class="cols">
   <div>
-    <p><strong>Agent runtime services:</strong> Organizations building AI agent infrastructure, MCP tool ecosystems, agent-to-agent protocols, or runtime procurement systems. Collaboration areas: agent-mediated task discovery, programmatic credential verification, structured settlement on machine verification.</p>
-    <p><strong>Autonomous robot development and dispatch:</strong> Teams developing autonomous drone platforms, ground survey robots, or robotic fleet management. The protocol's MCP-to-MCP federation integrates any robot exposing a structured tool interface. Collaboration areas: real robot integration, autonomous mission planning, multi-robot coordination.</p>
+    <p><strong>Agent runtime services:</strong> Organizations building AI agent infrastructure, MCP tool ecosystems, or agent-to-agent protocols. Collaboration areas: how agents discover and hire physical-world services, verify credentials, and settle on verified task completion.</p>
+    <p><strong>Autonomous robot development and dispatch:</strong> Teams developing autonomous drone platforms, ground survey robots, or robotic fleet management. The protocol integrates robots that expose bid, execute, and pricing tools via MCP. Collaboration areas: real robot integration, autonomous mission planning, multi-robot coordination.</p>
   </div>
   <div>
-    <p><strong>Vertical domain experts and service procurers:</strong> Engineering firms, DOT agencies, inspection companies, environmental consultants, mining operators, and agricultural service providers who procure physical-world verification tasks and can contribute specification databases, verification criteria, and compliance report requirements.</p>
+    <p><strong>Vertical domain experts and service procurers:</strong> Engineering firms, DOT agencies, inspection companies, environmental consultants, mining operators, and agricultural service providers who procure survey, inspection, and monitoring services and can contribute specification databases, verification criteria, and compliance report formats.</p>
     <p><strong>Researchers:</strong> Academics working on construction robotics, geospatial computation, autonomous navigation in unstructured environments, privacy-preserving settlement (ZK proofs, BBS+), or the economics of agent-mediated physical-world marketplaces.</p>
   </div>
 </div>
