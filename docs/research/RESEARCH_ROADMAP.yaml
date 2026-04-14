@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-13"  # R-007 complete; IMP-068/069/070 added; R-007a/R-007b spawned
+  last_updated: "2026-04-14"  # R-007b complete; IMP-072/073/074/075 added; R-045/R-046 spawned
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -652,10 +652,54 @@ topics:
     title: "2024 North Carolina drone mapping court ruling — operator liability implications"
     module: M36_pls_review
     hypothesis: "The 2024 federal appeals court ruling that aerial drone mapping requires a surveyor's license creates direct liability for drone operators on the YAK platform who lack a PLS license yet bid on topographic deliverable tasks. Platform terms may need to address this."
-    status: queued
+    status: complete
     priority: high
     estimated_sessions: 1
+    completed_date: "2026-04-14"
     depends_on: [R-007]
     spawned_from: R-007
     spawned_date: "2026-04-13"
-    notes: "Key questions: (1) Exact case citation and circuit; (2) Which states have similar enforcement precedents beyond NC? (3) Does platform's current T&Cs shift liability to the operator for practicing without a license? (4) Is 'PLS-as-a-service' (operator collects data, licensed PLS reviews and seals) a legally valid model in MI/OH/TX/CA? (5) Does the operator onboarding flow need to require PLS disclosure for topo/LiDAR task categories?"
+    output_file: "docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md"
+    improvement_proposals: [IMP-072, IMP-073, IMP-074, IMP-075]
+    spawned: [R-045, R-046]
+    notes: "Case confirmed: 360 Virtual Drone Services LLC v. Ritter, 102 F.4th 263 (4th Cir. 2024). SCOTUS petition pending (No. 24-279, supplemental brief Dec 2025 — no cert yet). 4th Cir. (VA/WV/MD/NC/SC) directly binding; OR (OSBEELS) has explicit drone UAS guidance. 'Data collector subcontractor' model IS legally valid — drone op works under PLS in responsible charge (Aerotas/FlyGuys model). Codebase gaps: no pls_required flag on task specs; verify_operator() pls_license check applies to ALL task types (over-restriction for non-topo operators); no PLS role declaration in operator onboarding. 4 proposals + 2 new topics spawned."
+
+  # ===== SPAWNED BY R-007b =====
+
+  - id: R-045
+    title: "State surveying board platform-intermediary liability — does the marketplace face enforcement risk?"
+    module: M36_pls_review
+    hypothesis: "The NC Board targeted the drone operator directly in 360 Virtual Drone v. Ritter. But if YAK facilitates transactions where unlicensed operators deliver topographic survey products in states requiring PLS licensure, the platform itself may face enforcement as an aider/abettor of unlicensed practice. Research: (1) Has any state board pursued a marketplace/platform rather than the individual operator? (2) Does the 'facilitating data-acquisition subcontracts, not surveying services' framing provide legal shield? (3) Are there marketplace safe-harbor precedents in professional licensing law (analogous to DMCA safe harbor for IP)?"
+    status: queued
+    priority: high
+    estimated_sessions: 1
+    depends_on: [R-007b]
+    spawned_from: R-007b
+    spawned_date: "2026-04-14"
+    notes: "Key questions: (1) Has any state surveying/engineering board sent cease-and-desist to a platform intermediary vs. individual operator? (2) Does 'knowledge' of unlicensed practice create liability for the platform? (3) NC Board already targets companies by name — YAK Platform operating in NC markets needs clear legal framing. (4) Compare to Upwork/Fiverr terms for licensed-profession services — how do they disclaim liability?"
+
+  - id: R-046
+    title: "ASPRS Certified Photogrammetrist (CP) as drone operator credential for YAK platform"
+    module: M36_pls_review
+    hypothesis: "ASPRS offers a Certified Photogrammetrist (CP) credential requiring demonstrated UAS mapping competency and a written exam. Some state DOTs and clients accept CP as evidence of professional competency for non-boundary survey deliverables (progress monitoring, volumetrics, orthomosaics). If YAK supported 'asprs_cp_certificate' as a compliance document type, operators could signal professional competency even without a PLS license — relevant for clients who need demonstrable qualifications but don't legally require a PLS."
+    status: queued
+    priority: low
+    estimated_sessions: 1
+    depends_on: [R-007b]
+    spawned_from: R-007b
+    spawned_date: "2026-04-14"
+    notes: "Key questions: (1) Is ASPRS CP accepted by any state DOT as a qualification for drone survey subcontracting? (2) Does CP reduce E&O insurance premiums for operators? (3) What is the exam/experience requirement for CP vs. PLS? (4) Should YAK add asprs_cp_certificate to VALID_DOC_TYPES in compliance.py? (5) Which task categories (non-topo) could accept CP as a sufficient credential?"
+
+  # ===== SPAWNED BY IMP-071 (git:7836a9b, 2026-04-14) =====
+
+  - id: R-047
+    title: "x402 protocol + Cloudflare Workers Agents SDK — agent payment evaluation"
+    module: M16_settlement
+    hypothesis: "Coinbase's x402 protocol (HTTP 402 Payment Required for pay-per-request stablecoin micropayments) launched April 2026 with native Cloudflare Workers support via the Agents SDK. 119M+ transactions on Base, $600M annualized volume, zero protocol fees. IMP-071 proposed evaluating x402 as a complement or replacement for the current settlement flow for agent-initiated payments. Key question: x402 is pay-per-request (no hold/escrow), but YAK needs commit-on-hire hold-and-release. Could x402 handle payment initiation while Stripe Connect or smart contract handles escrow? Also evaluate Stripe MPP (Managed Payment Platform) which may address similar agent-to-agent payment needs."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: []
+    spawned_from: "git:7836a9b (IMP-071 added 2026-04-14)"
+    spawned_date: "2026-04-14"
+    notes: "IMP-071 forward-references 'R-053 (Stripe MPP analysis)' — use R-047 for this topic. Key questions: (1) Does x402 support hold-and-release/escrow, or only instant settlement? (2) How does Cloudflare Workers Agents SDK x402 integration work with our existing Worker (worker/src/index.js)? (3) What is Stripe MPP and how does it compare to x402 for agent-initiated payments? (4) Does the zero-fee model apply to construction-scale ($10K+) payments or is it micro-payment-only? (5) Security: x402 signatures — are they replay-protected?"

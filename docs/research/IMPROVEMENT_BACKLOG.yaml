@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-13'
-  total_items: 67
+  last_updated: '2026-04-14'
+  total_items: 71
   implemented: 26
   deferred: 4
   rejected: 1
-  proposed: 36
+  proposed: 40
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
-  last_sync: "R-007 (2026-04-13) — added IMP-068/069/070 (electronic seal/PLS compliance)"
+  last_sync: "R-007b (2026-04-14) — added IMP-072/073/074/075 (NC drone ruling, PLS bid gating, T&C clause)"
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -1162,5 +1162,92 @@ proposals:
   priority: medium
   status: proposed
   proposed_date: '2026-04-13'
+  decision_date: null
+  decision_notes: null
+- id: IMP-072
+  title: Add `pls_required` flag to task spec and RFP processor
+  description: >
+    Add `pls_required: bool` and `pls_supervision_model: Literal["operator_is_pls",
+    "operator_subcontracts_pls", "not_required"]` to the task spec schema.
+    Set pls_required=true automatically for task categories topo_survey, corridor_survey,
+    site_survey, control_survey, as_built, aerial_survey. The rfp_processor should
+    populate this field based on task_category and project state. The bid submission
+    flow should surface this to the operator before they bid. This enables bid gating
+    (IMP-073) and correct agreement generation (PLS supervision clause in ConsensusDocs 750).
+    Codebase: auction/core.py VALID_TASK_CATEGORIES, auction/mcp_tools.py
+    auction_post_task / auction_parse_rfp.
+  module: M36_pls_review
+  research_source: R-007b
+  evidence: docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md
+  effort: small
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-14'
+  decision_date: null
+  decision_notes: null
+- id: IMP-073
+  title: Pre-bid PLS role declaration gate for survey task categories
+  description: >
+    Before an operator submits a bid on a task where pls_required=true (IMP-072),
+    require them to declare their PLS role: (a) "I am a licensed PLS in [project state]"
+    — triggers pls_license doc upload/check, OR (b) "I am a data-collection subcontractor
+    operating under PLS firm [name] [license#]" — requires supervising PLS firm name
+    and license number on file. Operators who cannot make either declaration are blocked
+    from bidding on that task category. Also fix the inverse problem in verify_operator()
+    (compliance.py:124): compliant=True should not require pls_license for task categories
+    that do not require PLS (e.g. bridge_inspection, subsurface_scan, thermal_inspection).
+    Per R-027 note: verify_operator() needs task_type context. This addresses both the
+    over-restriction (non-topo operators penalized for lacking PLS) and the under-restriction
+    (topo operators with no PLS gate).
+  module: M10_compliance
+  research_source: R-007b
+  evidence: docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-14'
+  decision_date: null
+  decision_notes: null
+- id: IMP-074
+  title: Platform T&C operator certification clause for licensing compliance
+  description: >
+    Add an explicit acknowledgment clause to operator registration T&Cs:
+    "For tasks requiring a Professional Land Surveyor (PLS) license in the project state,
+    I certify that I hold the required license OR am operating as a data-collection
+    subcontractor under a licensed PLS firm in responsible charge. I acknowledge that
+    the platform is not responsible for my compliance with state occupational licensing
+    laws and that violations may result in civil or criminal penalties." This shifts
+    liability to the operator and protects the platform as an intermediary facilitating
+    a data-acquisition subcontract. Applies to 4th Circuit states (NC, VA, WV, MD, SC)
+    immediately; recommended for OR, MI, OH, TX, CA as well.
+  module: M10_compliance
+  research_source: R-007b
+  evidence: docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md
+  effort: small
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-14'
+  decision_date: null
+  decision_notes: null
+- id: IMP-075
+  title: Operator profile — "Survey Role" field and data_collector_subcontractor declaration
+  description: >
+    In the operator registration UI (Step 1 — Profile), add a "Survey Role" field
+    for operators who select survey-related task categories: (a) Licensed PLS,
+    (b) Data Collection Subcontractor (operating under PLS supervision), or
+    (c) Not bidding on licensed-survey tasks. If "Data Collection Subcontractor":
+    collect the supervising PLS firm name, state, and license number. Store as
+    survey_role and supervising_pls fields on OperatorProfile. Used by bid gating
+    (IMP-073) and agreement generation to correctly populate the PLS supervision clause
+    in ConsensusDocs 750 subcontracts. Industry precedent: Aerotas and FlyGuys operate
+    on this data-acquisition subcontractor model — it is the primary viable path for
+    unlicensed drone operators in states following the NC ruling.
+  module: M10_compliance
+  research_source: R-007b
+  evidence: docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-14'
   decision_date: null
   decision_notes: null
