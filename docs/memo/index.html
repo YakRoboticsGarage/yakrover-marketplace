@@ -218,6 +218,13 @@ a:hover { text-decoration: underline; }
 .fp-form-submit:disabled { opacity: 0.5; cursor: default; }
 .fp-form-status { font-size: 11px; color: #6B7280; margin-top: 4px; }
 
+/* Header text links */
+.header-link {
+  font-size: 12px; color: #6B7280; text-decoration: none;
+  cursor: pointer; transition: all 0.15s;
+}
+.header-link:hover { color: #E8792B; font-weight: 700; text-decoration: underline; }
+
 /* Desktop-only CTA next to subtitle */
 .cta-touch-desktop { /* visible by default */ }
 
@@ -294,8 +301,8 @@ body.panel-open { margin-right: 320px; }
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
   <p style="font-size:18px;color:#1A1F26;font-weight:500;margin:0">Runtime procurement for physical-world tasks</p>
   <div class="cta-touch-desktop" style="display:flex;gap:16px;align-items:center">
-    <a href="javascript:void(0)" onclick="copyAsMarkdown()" id="copyMdBtn" style="font-size:12px;color:#6B7280;text-decoration:none;cursor:pointer;transition:color 0.15s">Copy as Markdown</a>
-    <a href="javascript:void(0)" onclick="showContact()" style="font-size:12px;color:#6B7280;text-decoration:none;cursor:pointer;transition:color 0.15s">Get in Touch</a>
+    <a href="javascript:void(0)" onclick="copyAsMarkdown()" id="copyMdBtn" class="header-link">Copy as Markdown</a>
+    <a href="javascript:void(0)" onclick="showContact()" class="header-link">Get in Touch</a>
   </div>
 </div>
 
