@@ -2,10 +2,10 @@ meta:
   created: '2026-04-01'
   last_updated: '2026-04-13'
   total_items: 67
-  implemented: 23
+  implemented: 26
   deferred: 4
   rejected: 1
-  proposed: 39
+  proposed: 36
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
   last_sync: "R-007 (2026-04-13) — added IMP-068/069/070 (electronic seal/PLS compliance)"
 proposals:
@@ -553,7 +553,7 @@ proposals:
   evidence: auction/api.py:231 — defined, zero call sites
   effort: trivial
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
   decision_date: null
   decision_notes: null
@@ -707,7 +707,7 @@ proposals:
   evidence: 1rpc.io 500 error during live payment — 2026-04-06
   effort: small
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-07'
   decision_date: null
   decision_notes: null
@@ -795,7 +795,7 @@ proposals:
   evidence: 'demo/marketplace/index.html line 1913: chains: {} — grep _registration.chains returns no matches'
   effort: trivial
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-10'
   decision_date: null
   decision_notes: null
