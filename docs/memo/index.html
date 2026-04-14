@@ -262,9 +262,9 @@ body.panel-open { margin-right: 320px; }
 <ul style="padding-left:20px;color:#4A5568">
   <li style="margin-bottom:10px"><strong>Construction spending keeps increasing.</strong> Construction surveying alone is an $8B/yr US market. The industry loses $31B/yr to rework, a significant portion traceable to inaccurate or outdated site data. To address the demand, drones are deployed on thousands of job sites and engineering companies are adopting AI tooling to increase speed of execution.</li>
   <li style="margin-bottom:10px"><strong>But no one has built an agent-runtime procurement layer for physical work.</strong> And it&rsquo;s not just construction that has this limitation. Physical-world tasks can&rsquo;t be purchased like software, yet.</li>
-  <li style="margin-bottom:10px"><strong>The enabling infrastructure exists today.</strong> Dock-deployed drones and hundred-mile ranges, machine-readable DOT specifications, AI agents with tool-use capabilities, alongside a declining workforce in licensed technical professions like surveying.</li>
-  <li style="margin-bottom:10px"><strong>Robots don&rsquo;t just replace scarce labor, they widen the feasible action space of agents.</strong> Quality becomes computable, availability becomes queryable, and execution data accumulates for quality benchmarking. Each task becomes structurally compatible with algorithmic procurement in a way human execution never can be.</li>
-  <li style="margin-bottom:10px"><strong>Yak Robotics already has a proof of concept protocol.</strong> Auction engine, robot identity, settlement via Stripe (and agent-friendly crypto), credential verification, and a 100-robot test fleet (simulated execution).</li>
+  <li style="margin-bottom:10px"><strong>The enabling infrastructure exists today.</strong> Dock-deployed drones, fixed-wing platforms with hundred-mile ranges, machine-readable DOT specifications, AI agents with tool-use capabilities, alongside a declining workforce in licensed technical professions like surveying.</li>
+  <li style="margin-bottom:10px"><strong>Robots don&rsquo;t just replace scarce labor, they widen the feasible action space of agents.</strong> Quality becomes computable, availability becomes queryable, and execution data accumulates for quality benchmarking. Each task becomes structurally compatible with algorithmic procurement in a way that human execution alone does not easily support.</li>
+  <li style="margin-bottom:10px"><strong>Yak Robotics already has a proof of concept protocol.</strong> Auction engine, robot identity, settlement via Stripe and stablecoin, credential verification, and a 100-robot test fleet (simulated execution).</li>
   <li style="margin-bottom:10px"><strong>Seeking partners</strong> in AI-agent procurement infrastructure, autonomous robotics, vertical domain expertise such as construction, and research in robot navigation and regulation.</li>
   <li style="margin-bottom:0"><strong>Seeking funding</strong> to refine the product with veteran software engineers, solve legal and insurance complexities, find the right vertical to double-down in, and then scale onboarding of robots and buyers.</li>
 </ul>
@@ -322,15 +322,15 @@ body.panel-open { margin-right: 320px; }
     <p><strong>Numerical regulatory specs:</strong> Michigan Department of Transportation (MDOT) Section 205.03.N: subgrade &plusmn;1 inch. Section 302.03.A: aggregate base &plusmn;&frac12; inch. Published, deterministic, machine-parseable.</p>
   </div>
   <div>
-    <p><strong>Workforce decline:</strong> Average US Professional Land Surveyor (PLS) age: 57-60 (American Society of Civil Engineers / National Society of Professional Surveyors). 51% of engineering firms turning down work (American Council of Engineering Companies, Q4 2024). 8-year licensing pipeline. Equivalent shortages documented in Japan, Korea, Australia, Europe.</p>
-    <p><strong>Agent tool-use:</strong> Model Context Protocol (MCP, Anthropic 2024): thousands of tool servers. Agent-mediated procurement of physical services does not exist today. The infrastructure is being built.</p>
+    <p><strong>Workforce decline:</strong> Average US Professional Land Surveyor (PLS) age: 57-60 (American Society of Civil Engineers / National Society of Professional Surveyors). 51% of engineering firms turning down work (American Council of Engineering Companies, Q4 2024). 8-year licensing pipeline. Similar trends reported internationally.</p>
+    <p><strong>Agent tool-use:</strong> Model Context Protocol (MCP, Anthropic 2024): growing ecosystem of tool servers. Agent-mediated procurement of physical services does not exist today. The infrastructure is being built.</p>
   </div>
 </div>
 
 <h2>Sample Protocol Stack</h2>
 <div class="stack-row"><span class="stack-label">Protocol</span><span class="stack-value">Task posting, executor matching, and delivery verification for physical-world tasks</span></div>
 <div class="stack-row"><span class="stack-label">Task class</span><span class="stack-value">Structured procurement for physical-world survey and inspection tasks</span></div>
-<div class="stack-row"><span class="stack-label">Industry</span><span class="stack-value">Construction survey, inspection, material delivery, environmental compliance</span></div>
+<div class="stack-row"><span class="stack-label">Industry</span><span class="stack-value">Construction survey and inspection (first vertical)</span></div>
 <div class="stack-row"><span class="stack-label">Product job</span><span class="stack-value">Verify that as-built conditions match design specifications</span></div>
 <div class="stack-row"><span class="stack-label">Offering</span><span class="stack-value">Survey data delivery with schema-driven quality checks</span></div>
 <div class="stack-row"><span class="stack-label">Service Domain</span><span class="stack-value">MDOT highway construction &mdash; numerically specified tolerances with established verification methods</span></div>
@@ -340,12 +340,12 @@ body.panel-open { margin-right: 320px; }
 <div class="cols" style="margin-top:4px">
   <div>
     <p><strong>Coordination Layer:</strong> MCP-native interface, reverse auction engine (11-state lifecycle, 4-factor scoring, geographic filtering). Deployed on Fly.io. <em>Alpha, functional.</em></p>
-    <p><strong>Task Registry:</strong> 18 task categories with structured capability requirements (American Society for Photogrammetry and Remote Sensing accuracy classes, coordinate reference system codes, sensors, deliverables). Request for Proposal (RFP) to spec conversion. <em>Alpha, functional.</em></p>
+    <p><strong>Task Registry:</strong> 18 task categories defined with structured capability requirements (American Society for Photogrammetry and Remote Sensing accuracy classes, coordinate reference system codes, sensors, deliverables). Request for Proposal (RFP) to spec conversion. <em>Alpha, functional.</em></p>
     <p><strong>Executor Registry:</strong> On-chain robot identity (ERC-8004 standard on Base). Discovery via The Graph indexing protocol. Ethereum Attestation Service (EAS) for platform attestation. 1 physical robot on mainnet + 100 test registrations on testnet. <em>Alpha.</em></p>
-    <p><strong>Credential Verification:</strong> SAM.gov Exclusions API (live). Bond verification against Treasury Circular 570 (live, 500+ sureties). PLS and insurance verification: schema-complete, stubs. <em>SAM.gov and bond live.</em></p>
+    <p><strong>Credential Verification:</strong> SAM.gov Exclusions API and bond verification against Treasury Circular 570 (500+ sureties) built as standalone modules, not yet integrated into auction flow. PLS and insurance verification: in design.</p>
   </div>
   <div>
-    <p><strong>Verification Engine:</strong> Quality assurance framework (4 levels, 8 category schemas). Geospatial surface comparison, specification database, and compliance reporting are next phase. <em>QA framework functional; geospatial not implemented.</em></p>
+    <p><strong>Verification Engine:</strong> Quality assurance framework (4 levels, 8 category schemas; tested with simulated data only). Geospatial surface comparison, specification database, and compliance reporting are next phase. <em>QA framework functional; geospatial not implemented.</em></p>
     <p><strong>Settlement Layer:</strong> Stripe (authorize/capture), Connect Express, Automated Clearing House (ACH) bank transfer, USDC stablecoin on Base (gasless). 4-mode abstraction planned. <em>Mode 1 operational; modes 2-4 not yet built.</em></p>
     <p><strong>Robot Federation:</strong> MCP-to-MCP robot adapter, 9 category simulators on Fly.io (mock execution, not real survey data). Dynamic tool resolution. 1 physical robot connected. <em>No production survey robots yet.</em></p>
   </div>
@@ -353,7 +353,7 @@ body.panel-open { margin-right: 320px; }
 
 <h2>Long-Term Development Roadmap</h2>
 <div class="stack-row"><span class="stack-label" style="color:#1a7a6d">Complete</span><span class="stack-value">Protocol layer functional &mdash; auction engine, on-chain identity, settlement (card, bank, stablecoin), credential verification, 100-robot test fleet (simulated execution), MCP interface</span></div>
-<div class="stack-row"><span class="stack-label">Now</span><span class="stack-value">Construction verification engine &mdash; geospatial ingestion, surface comparison against DOT specs, compliance reporting. First real operator onboarded.</span></div>
+<div class="stack-row"><span class="stack-label">Now</span><span class="stack-value">Construction verification engine &mdash; geospatial ingestion, surface comparison against DOT specs, compliance reporting. Operator onboarding.</span></div>
 <div class="stack-row"><span class="stack-label">Next</span><span class="stack-value">Multi-robot coordination (aerial + ground + subsurface in one job). Operator dashboard. Agent-initiated payment. Live credential APIs.</span></div>
 <div class="stack-row"><span class="stack-label">Expanding</span><span class="stack-value">New verticals &mdash; mining/quarry volumetrics, infrastructure inspection (bridges, pipelines). Privacy layer for government contracts.</span></div>
 
@@ -388,7 +388,7 @@ body.panel-open { margin-right: 320px; }
   </div>
   <div>
     <p><strong>Vertical domain experts and service procurers:</strong> Engineering firms, DOT agencies, inspection companies, environmental consultants, mining operators, and agricultural service providers who procure survey, inspection, and monitoring services and can contribute specification databases, verification criteria, and compliance report formats.</p>
-    <p><strong>Researchers:</strong> Academics working on construction robotics, geospatial computation, autonomous navigation in unstructured environments, privacy-preserving settlement (ZK proofs, BBS+), or the economics of agent-mediated physical-world marketplaces.</p>
+    <p><strong>Researchers:</strong> Academics working on construction robotics, geospatial computation, autonomous navigation in unstructured environments, privacy-preserving settlement, or the economics of automated service procurement.</p>
   </div>
 </div>
 
