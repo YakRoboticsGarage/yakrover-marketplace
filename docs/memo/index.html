@@ -287,15 +287,11 @@ body.panel-open { margin-right: 320px; }
 <nav class="breadcrumb-nav" id="breadcrumbNav">
   <ul class="breadcrumb-list">
     <li><a href="#summary">Summary</a></li>
-    <li><a href="#leads">Leads</a></li>
-    <li><a href="#problem">Problem</a></li>
+    <li><a href="#team">Team</a></li>
     <li><a href="#why-now">Why Now</a></li>
-    <li><a href="#stack">Stack</a></li>
-    <li><a href="#status">Status</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#protocol">Protocol</a></li>
     <li><a href="#verticals">Verticals</a></li>
-    <li><a href="#challenges">Challenges</a></li>
-    <li><a href="#partners">Partners</a></li>
+    <li><a href="#join">Join Us</a></li>
   </ul>
 </nav>
 
@@ -325,7 +321,7 @@ body.panel-open { margin-right: 320px; }
   <p style="font-size:12px;color:#9CA3AF;margin-top:10px;margin-bottom:0">Claude will discover 100 test robots, run the auction, and return delivery data (simulated). <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace/blob/main/docs/guides/GETTING_STARTED.md" target="_blank" style="color:#2D5F8A">Full guide &rarr;</a></p>
 </div>
 
-<h2 id="leads">Project Leads</h2>
+<h2 id="team">Team</h2>
 <p>This project emerged from the <a href="https://www.yakcollective.org/" target="_blank">Yak Collective</a>, a community of over 30 independent researchers, engineers, and consultants. The <a href="https://www.yakcollective.org/study-groups/yak-robotics-garage" target="_blank">Yak Robotics Garage</a> study group has built open-source rovers since 2021 &mdash; from living-room prototypes to blockchain-controlled robots with on-chain identity. The task auction protocol grew out of a practical question the group kept hitting: once you have a fleet of robots that can be discovered and commanded programmatically, how do you let software agents actually hire them?</p>
 <div class="g3">
   <div class="callout" style="background:#fff;border-left-color:#1B3A5C;padding:14px 16px">
@@ -349,12 +345,9 @@ body.panel-open { margin-right: 320px; }
   <button class="cta-touch" onclick="showContact()">Get in Touch</button>
 </div>
 
-<h2 id="problem">Problem</h2>
-<p>Physical service procurement is unstructured and unavailable for agents. However, the technologies necessary to enable API-like purchase of physical actions are emerging.</p>
-<p>Yak Robotics is building a protocol and application layer for physical-world task procurement &mdash; structured task specification, executor matching, delivery verification, and payment settlement. Task specification and matching are functional today. Delivery verification and settlement are in early stages.</p>
-
 <h2 id="why-now">Why Now</h2>
-<p>Five independent trends are converging to make physical-world task procurement programmable in ways it hasn&rsquo;t been before. None is sufficient alone, but together they create the conditions for a protocol layer that did not previously have the infrastructure to exist. As an example, construction survey on Department of Transportation (DOT) highway projects satisfies all necessary conditions with currently available technology.</p>
+<p>Physical service procurement is unstructured and unavailable for agents. The technologies necessary to enable API-like purchase of physical actions are emerging. Yak Robotics is building a protocol and application layer for physical-world task procurement &mdash; structured task specification, executor matching, delivery verification, and payment settlement.</p>
+<p>Five independent trends are converging to make this programmable in ways it hasn&rsquo;t been before. None is sufficient alone, but together they create the conditions for a protocol layer that did not previously have the infrastructure to exist. As an example, construction survey on Department of Transportation (DOT) highway projects satisfies all necessary conditions with currently available technology.</p>
 <div class="cols">
   <div>
     <p><strong>Autonomous collection:</strong> DroneDeploy operates docked drones on 100+ projects (Oct 2025). Komatsu SMARTCONSTRUCTION: 35,000 sites in Japan (Nov 2025). Ukrainian ground robots completed 24,500 frontline missions in Q1 2026 &mdash; supply delivery, ammunition transport, casualty evacuation &mdash; scaling from 2,900 to 9,000 missions/month in five months.</p>
@@ -367,7 +360,9 @@ body.panel-open { margin-right: 320px; }
   </div>
 </div>
 
-<h2 id="stack">Sample Protocol Stack</h2>
+<h2 id="protocol">Protocol</h2>
+
+<h3>Stack</h3>
 <div class="stack-row"><span class="stack-label">Protocol</span><span class="stack-value">Task posting, executor matching, and delivery verification for physical-world tasks</span></div>
 <div class="stack-row"><span class="stack-label">Task class</span><span class="stack-value">Structured procurement for physical-world survey and inspection tasks</span></div>
 <div class="stack-row"><span class="stack-label">Industry</span><span class="stack-value">Construction survey and inspection (first vertical)</span></div>
@@ -375,7 +370,7 @@ body.panel-open { margin-right: 320px; }
 <div class="stack-row"><span class="stack-label">Offering</span><span class="stack-value">Survey data delivery with schema-driven quality checks</span></div>
 <div class="stack-row"><span class="stack-label">Service Domain</span><span class="stack-value">MDOT highway construction &mdash; numerically specified tolerances with established verification methods</span></div>
 
-<h2 id="status">Protocol Components and Development Status (v1.4.1 &mdash; Alpha, Functional)</h2>
+<h3>Components and Status (v1.4.1 &mdash; Alpha, Functional)</h3>
 <p>The protocol is implemented as seven modules. The verification engine is the domain-specific component; all others are domain-agnostic and shared across verticals.</p>
 <div class="cols" style="margin-top:4px">
   <div>
@@ -391,11 +386,23 @@ body.panel-open { margin-right: 320px; }
   </div>
 </div>
 
-<h2 id="roadmap">Long-Term Development Roadmap</h2>
+<h3>Roadmap</h3>
 <div class="stack-row"><span class="stack-label" style="color:#1a7a6d">Complete</span><span class="stack-value">Protocol layer functional &mdash; auction engine, on-chain identity, settlement (card, bank, stablecoin), credential verification, 100-robot test fleet (simulated execution), MCP interface</span></div>
 <div class="stack-row"><span class="stack-label">Now</span><span class="stack-value">Construction verification engine &mdash; geospatial ingestion, surface comparison against DOT specs, compliance reporting. Operator onboarding.</span></div>
 <div class="stack-row"><span class="stack-label">Next</span><span class="stack-value">Multi-robot coordination (aerial + ground + subsurface in one job). Operator dashboard. Agent-initiated payment. Live credential APIs.</span></div>
 <div class="stack-row"><span class="stack-label">Expanding</span><span class="stack-value">New verticals &mdash; mining/quarry volumetrics, infrastructure inspection (bridges, pipelines). Privacy layer for government contracts.</span></div>
+
+<h3>Open Challenges</h3>
+<div class="cols">
+  <div>
+    <p><strong>Privacy:</strong> Construction RFPs contain sensitive site data, bid pricing, and project timelines. Government contracts add ITAR/CUI restrictions. The protocol must handle task matching without the platform seeing task content, and settle payments without revealing amounts to third parties. EU Anti-Money Laundering Regulation Article 79 constrains which privacy approaches are legally viable.</p>
+    <p><strong>Regulation:</strong> FAA Part 108 (Beyond Visual Line of Sight) final rule expected mid-2026, following Executive Order 14307 directing routine commercial BVLOS operations. This unlocks autonomous drone dispatch without per-flight waivers &mdash; a prerequisite for algorithmic procurement at scale. Ground robots currently lack standardized navigation and right-of-way rules on construction sites.</p>
+  </div>
+  <div>
+    <p><strong>Scale:</strong> Operator supply density uncertain in rural corridors. Credential APIs fragmented (50 state PLS boards). Trust bootstrapping requires managed curation (Brooks Act QBS culture). MDOT drone data acceptance not yet standard.</p>
+    <p><strong>Liability:</strong> When an autonomously dispatched robot causes damage, liability allocation between manufacturer, operator, platform, and software provider is unsettled law. Robotics-specific insurance is emerging (AXIS, Munich Re), but adoption stalls when liability is unclear. Proportional frameworks &mdash; where responsibility scales with autonomy level &mdash; are proposed but not yet codified.</p>
+  </div>
+</div>
 
 <h2 id="verticals">Vertical Feasibility</h2>
 <table>
@@ -408,19 +415,7 @@ body.panel-open { margin-right: 320px; }
 </table>
 <p class="footnote">Each vertical adds a specification database and verification function. Protocol layer is unchanged.</p>
 
-<h2 id="challenges">Technical Challenges</h2>
-<div class="cols">
-  <div>
-    <p><strong>Privacy:</strong> Construction RFPs contain sensitive site data, bid pricing, and project timelines. Government contracts add ITAR/CUI restrictions. The protocol must handle task matching without the platform seeing task content, and settle payments without revealing amounts to third parties. EU Anti-Money Laundering Regulation Article 79 constrains which privacy approaches are legally viable.</p>
-    <p><strong>Regulation:</strong> FAA Part 108 (Beyond Visual Line of Sight) final rule expected mid-2026, following Executive Order 14307 directing routine commercial BVLOS operations. This unlocks autonomous drone dispatch without per-flight waivers &mdash; a prerequisite for algorithmic procurement at scale. Ground robots currently lack standardized navigation and right-of-way rules on construction sites.</p>
-  </div>
-  <div>
-    <p><strong>Scale:</strong> Operator supply density uncertain in rural corridors. Credential APIs fragmented (50 state PLS boards). Trust bootstrapping requires managed curation (Brooks Act QBS culture). MDOT drone data acceptance not yet standard.</p>
-    <p><strong>Liability:</strong> When an autonomously dispatched robot causes damage, liability allocation between manufacturer, operator, platform, and software provider is unsettled law. Robotics-specific insurance is emerging (AXIS, Munich Re), but adoption stalls when liability is unclear. Proportional frameworks &mdash; where responsibility scales with autonomy level &mdash; are proposed but not yet codified.</p>
-  </div>
-</div>
-
-<h2 id="partners">Seeking Partners and Contributors</h2>
+<h2 id="join">Join Us</h2>
 <div class="cols">
   <div>
     <p><strong>Agent runtime services:</strong> Organizations building AI agent infrastructure, MCP tool ecosystems, or agent-to-agent protocols. Collaboration areas: how agents discover and hire physical-world services, verify credentials, and settle on verified task completion.</p>
