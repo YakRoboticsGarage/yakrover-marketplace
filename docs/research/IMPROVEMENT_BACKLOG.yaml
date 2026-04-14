@@ -1,11 +1,11 @@
 meta:
   created: '2026-04-01'
   last_updated: '2026-04-13'
-  total_items: 66
+  total_items: 67
   implemented: 15
   deferred: 4
   rejected: 1
-  proposed: 46
+  proposed: 47
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
   last_sync: "R-007 (2026-04-13) — added IMP-068/069/070 (electronic seal/PLS compliance)"
 proposals:
@@ -1118,6 +1118,32 @@ proposals:
   priority: medium
   status: proposed
   proposed_date: '2026-04-13'
+  decision_date: null
+  decision_notes: null
+- id: IMP-071
+  title: Evaluate x402 + Cloudflare Workers for agent-to-robot payment
+  description: >
+    Coinbase's x402 protocol uses HTTP 402 Payment Required for pay-per-request
+    stablecoin payments. Cloudflare Workers now has native x402 support via the
+    Agents SDK. The x402 Foundation (Coinbase + Cloudflare) launched April 2026.
+    119M+ transactions on Base, $600M annualized volume, zero protocol fees.
+    Evaluate whether x402 could replace or complement our current settlement
+    flow for robot task payments — particularly for agent-initiated micropayments
+    where Stripe's minimum doesn't apply. Key question: x402 is pay-per-request
+    (no escrow), but our flow needs hold-and-release. Could x402 handle the
+    payment initiation while Stripe Connect or smart contract handles escrow?
+    Related: R-053 (Stripe MPP analysis), AD-27 (settlement interface is protocol).
+    Sources: https://x.com/0xyoussea/status/2042286187956879447,
+    https://docs.cdp.coinbase.com/x402/welcome,
+    https://blog.cloudflare.com/x402/,
+    https://developers.cloudflare.com/agents/agentic-payments/x402/
+  module: M16_settlement
+  research_source: null
+  evidence: null
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-14'
   decision_date: null
   decision_notes: null
 - id: IMP-070
