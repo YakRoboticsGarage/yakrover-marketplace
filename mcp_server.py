@@ -18,7 +18,10 @@ Usage:
     AUCTION_DB_PATH=./auction.db PYTHONPATH=. uv run python mcp_server.py
 
 Then connect Claude Code:
-    claude mcp add --transport http yakrover http://localhost:8001/mcp
+    claude mcp add-json yakrover '{"type":"http","url":"http://localhost:8001/mcp"}'
+
+Or remotely (Fly.io):
+    claude mcp add-json yakrover '{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}'
 
 Or Claude Desktop (add to config):
     {"mcpServers": {"yakrover": {"type": "http", "url": "http://localhost:8001/mcp"}}}
@@ -388,16 +391,20 @@ def create_app():
 
     engine, wallet, stripe_service = build_engine()
 
+    # host="0.0.0.0" disables FastMCP's localhost-only DNS rebinding protection,
+    # which rejects requests with Host headers other than localhost (e.g. Fly.io proxy).
     mcp = FastMCP(
         "yakrover",
-        instructions="""You are connected to the YAK ROBOTICS construction survey marketplace.
+        host="0.0.0.0",
+        instructions="""You are connected to the Yak Robotics construction survey marketplace.
 
-You have 32 tools for managing the full survey lifecycle:
+You have 39 tools for managing the full survey lifecycle:
 - Process RFPs into task specs (auction_process_rfp)
-- Post tasks and collect bids from 7 Michigan operators
+- Post tasks and collect bids from 100 Michigan operators
 - Review bids with compliance checks
 - Verify payment bonds against real Treasury Circular 570 data
 - Generate ConsensusDocs 750 agreements
+- Register new operators (auction_onboard_operator_guided)
 - Track execution and manage multi-task projects
 
 The buyer wallet is pre-funded with $500K demo credits.
@@ -596,6 +603,16 @@ Start by asking the user what survey they need, or process an RFP they provide."
     # Build combined app: REST routes + MCP mount
     mcp_starlette = mcp.streamable_http_app()
 
+    # Lifespan must propagate to FastMCP's session manager so the task group
+    # is initialized before any MCP request arrives. Without this, streamable
+    # HTTP fails with "Task group is not initialized" on Fly.io.
+    from contextlib import asynccontextmanager
+
+    @asynccontextmanager
+    async def app_lifespan(starlette_app):
+        async with mcp.session_manager.run():
+            yield
+
     app = Starlette(
         routes=[
             Route("/health", handle_health, methods=["GET"]),
@@ -603,17 +620,19 @@ Start by asking the user what survey they need, or process an RFP they provide."
             Route("/api/tool/{name}", handle_tool_call, methods=["POST"]),
             Route("/api/fleet-mode", handle_fleet_mode, methods=["POST"]),
             Route("/api/feedback-onchain", handle_feedback_onchain, methods=["POST"]),
-            Mount("/mcp", app=mcp_starlette),
+            # Mount at root — FastMCP registers its route at /mcp internally
+            Mount("", app=mcp_starlette),
         ],
         middleware=[
             Middleware(
                 CORSMiddleware,
                 allow_origins=["https://yakrobot.bid", "https://yakrover.online"],  # wildcards handled by allow_origin_regex below
-                allow_methods=["GET", "POST", "OPTIONS"],
+                allow_methods=["GET", "POST", "OPTIONS", "DELETE"],
                 allow_headers=["*"],
                 allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.here\.now|https://yakrobot\.bid|https://.*\.yakrover\.online",
             ),
         ],
+        lifespan=app_lifespan,
     )
 
     return app, mcp

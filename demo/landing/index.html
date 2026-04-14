@@ -2489,12 +2489,10 @@ document.getElementById('feedTabs').onclick=function(e){
 };
 
 // ===== PART F: AGENT LINK FLOW =====
-var agentLinkState={step:1,agent:'',apiKey:''};
-
-function genHex(len){var h='0123456789abcdef';var r='';for(var i=0;i<len;i++)r+=h[Math.floor(Math.random()*16)];return r}
+var agentLinkState={step:1,agent:''};
 
 function initAgentLink(){
-  agentLinkState={step:1,agent:'',apiKey:'ym_live_'+genHex(32)};
+  agentLinkState={step:1,agent:''};
   renderAgentStep();
 }
 
@@ -2524,24 +2522,14 @@ function renderAgentStep(){
   html+='</div></div>';
 
   if(s.step>=2){
-    // Step 2: API Key
-    html+='<div class="agent-step">';
-    html+='<h3>Step 2: Your API Key</h3>';
-    html+='<p>This key gives your agent access to the robot marketplace. Keep it secret.</p>';
-    html+='<div class="api-key-display">'+s.apiKey+'</div>';
-    html+='<button class="btn btn-outline" style="font-size:0.8rem" onclick="navigator.clipboard.writeText(\''+s.apiKey+'\');this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy Key\'},1500)">Copy Key</button>';
-    html+='</div>';
-  }
-
-  if(s.step>=3){
-    // Step 3: Platform-specific install instructions
+    // Step 2: Platform-specific install instructions
     var mcpUrl='https://yakrover-marketplace.fly.dev/mcp';
     html+='<div class="agent-step">';
 
     if(s.agent==='claude-code'){
       // Claude Code: one-liner command
-      var addCmd='claude mcp add-json yakrover \'{"type":"http","url":"'+mcpUrl+'","headers":{"Authorization":"Bearer '+s.apiKey+'"}}\'';
-      html+='<h3>Step 3: Run this in your terminal</h3>';
+      var addCmd='claude mcp add-json yakrover \'{"type":"http","url":"'+mcpUrl+'"}\'';
+      html+='<h3>Step 2: Run this in your terminal</h3>';
       html+='<p>One command — Claude Code handles the rest. No config files to edit.</p>';
       html+='<div class="config-snippet" id="agentConfigSnippet">'+addCmd+'</div>';
       html+='<div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap">';
@@ -2551,51 +2539,47 @@ function renderAgentStep(){
       html+='<div style="margin-top:8px;font-size:0.72rem;color:var(--text-3)">This adds the marketplace to your current project. Use <code>--scope user</code> to make it available everywhere.</div>';
 
     } else if(s.agent==='claude-desktop'){
-      // Claude Desktop: Custom Connectors or config file
-      html+='<h3>Step 3: Add via Custom Connectors</h3>';
+      // Claude Desktop: Custom Connectors
+      html+='<h3>Step 2: Add via Custom Connectors</h3>';
       html+='<p>In Claude Desktop: <strong>Settings &rarr; Connectors &rarr; Add custom connector</strong></p>';
       html+='<div style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:12px 0">';
       html+='<div style="font-size:0.8rem;color:var(--text-2);margin-bottom:8px">Enter this URL:</div>';
       html+='<div class="config-snippet" id="agentConfigSnippet" style="font-size:0.95rem">'+mcpUrl+'</div>';
-      html+='<div style="font-size:0.8rem;color:var(--text-2);margin-top:8px">When prompted for authentication, paste your API key:</div>';
-      html+='<div class="config-snippet" style="font-size:0.875rem;margin-top:4px">'+s.apiKey+'</div>';
       html+='</div>';
       html+='<button class="btn btn-outline" style="font-size:0.8rem" onclick="navigator.clipboard.writeText(\''+mcpUrl+'\');this.textContent=\'URL Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy URL\'},1500)">Copy URL</button>';
-      html+=' <button class="btn btn-outline" style="font-size:0.8rem;margin-left:6px" onclick="navigator.clipboard.writeText(\''+s.apiKey+'\');this.textContent=\'Key Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy Key\'},1500)">Copy Key</button>';
 
     } else if(s.agent==='chatgpt'){
-      html+='<h3>Step 3: Connect via MCP</h3>';
+      html+='<h3>Step 2: Connect via MCP</h3>';
       html+='<p>ChatGPT supports MCP servers via the Connectors API. Add this endpoint:</p>';
       html+='<div class="config-snippet" id="agentConfigSnippet">'+mcpUrl+'</div>';
-      html+='<div style="font-size:0.72rem;color:var(--text-3);margin-top:8px">Auth header: <code>Authorization: Bearer '+s.apiKey+'</code></div>';
       html+='<button class="btn btn-outline" style="font-size:0.8rem;margin-top:8px" onclick="navigator.clipboard.writeText(\''+mcpUrl+'\');this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy URL\'},1500)">Copy URL</button>';
 
     } else {
       // Custom: show full JSON config
-      var configJson='{\n  "mcpServers": {\n    "yakrover": {\n      "type": "http",\n      "url": "'+mcpUrl+'",\n      "headers": {\n        "Authorization": "Bearer '+s.apiKey+'"\n      }\n    }\n  }\n}';
-      html+='<h3>Step 3: MCP Configuration</h3>';
+      var configJson='{\n  "mcpServers": {\n    "yakrover": {\n      "type": "http",\n      "url": "'+mcpUrl+'"\n    }\n  }\n}';
+      html+='<h3>Step 2: MCP Configuration</h3>';
       html+='<p>Add this to your agent\'s MCP server configuration:</p>';
       html+='<div class="config-snippet" id="agentConfigSnippet">'+configJson+'</div>';
       html+='<button class="btn btn-outline" style="font-size:0.8rem" onclick="navigator.clipboard.writeText(document.getElementById(\'agentConfigSnippet\').textContent);this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy Config\'},1500)">Copy Config</button>';
     }
 
-    if(s.step===3 && s.agent!=='claude-code'){
-      html+='<div style="margin-top:12px"><button class="btn btn-primary" style="font-size:0.8rem" onclick="agentLinkState.step=4;renderAgentStep()">Test Connection &rarr;</button></div>';
+    if(s.step===2 && s.agent!=='claude-code'){
+      html+='<div style="margin-top:12px"><button class="btn btn-primary" style="font-size:0.8rem" onclick="agentLinkState.step=3;renderAgentStep()">Test Connection &rarr;</button></div>';
     }
     html+='</div>';
   }
 
-  if(s.step>=4 && s.step<5){
-    // Step 4: Testing
+  if(s.step>=3 && s.step<4){
+    // Step 3: Testing
     html+='<div class="agent-step" style="text-align:center">';
-    html+='<h3>Step 4: Testing Connection</h3>';
+    html+='<h3>Step 3: Testing Connection</h3>';
     html+='<div style="padding:20px 0"><span class="spinner" style="width:20px;height:20px"></span> Connecting to marketplace...</div>';
     html+='</div>';
-    setTimeout(function(){agentLinkState.step=5;renderAgentStep()},2000);
+    setTimeout(function(){agentLinkState.step=4;renderAgentStep()},2000);
   }
 
-  if(s.step>=5){
-    // Step 4 done + Step 5: Tools
+  if(s.step>=4){
+    // Connected — show tools
     html+='<div class="agent-step">';
     html+='<h3><span class="success-check">\u2713</span> Connection Successful</h3>';
     html+='<p>Your agent is now connected to the YAK ROBOTICS marketplace. Here are the available tools:</p>';
@@ -2623,7 +2607,7 @@ function renderAgentStep(){
   container.querySelectorAll('.agent-pick').forEach(function(el){
     el.onclick=function(){
       agentLinkState.agent=this.dataset.agent;
-      if(agentLinkState.step<2) agentLinkState.step=2;
+      if(agentLinkState.step<2) agentLinkState.step=2; // skip to connection step
       // Small delay to show selection before advancing
       container.querySelectorAll('.agent-pick').forEach(function(p){p.classList.remove('selected')});
       this.classList.add('selected');
