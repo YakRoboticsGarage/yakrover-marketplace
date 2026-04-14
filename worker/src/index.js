@@ -2473,7 +2473,7 @@ async function handleExecutePayment(request, env, cors) {
     return new Response(
       JSON.stringify({ error: safeMsg, retryable: true, debug: {
         code, reason, msg: msg.slice(0, 300),
-        relay: relayAddr, chain: chain_id, usdc: usdcAddr,
+        chain: chain_id,
         total: total_amount, opAmt: operatorAmount.toString(),
         allowance: allowanceDiag,
       }}),

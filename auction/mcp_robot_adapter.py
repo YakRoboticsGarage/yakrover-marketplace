@@ -139,8 +139,8 @@ class MCPRobotAdapter:
                 if sid:
                     self._session_id = sid
                 return True
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("Reachability probe failed for %s: %s", self.robot_id, e)
         return False
 
     def _mcp_headers(self) -> dict:

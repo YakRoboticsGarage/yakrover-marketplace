@@ -2,10 +2,10 @@ meta:
   created: '2026-04-01'
   last_updated: '2026-04-13'
   total_items: 67
-  implemented: 15
+  implemented: 20
   deferred: 4
   rejected: 1
-  proposed: 47
+  proposed: 42
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
   last_sync: "R-007 (2026-04-13) — added IMP-068/069/070 (electronic seal/PLS compliance)"
 proposals:
@@ -414,7 +414,7 @@ proposals:
   evidence: auction/rfp_processor.py:26 and :424 — identical _load_reference definitions
   effort: small
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-05'
   decision_date: null
   decision_notes: null
@@ -504,7 +504,7 @@ proposals:
   evidence: docs/research/automated/R-034_erc2612_permit_relay_security.md
   effort: small
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
   decision_date: null
   decision_notes: null
@@ -521,7 +521,7 @@ proposals:
   evidence: docs/research/automated/R-034_erc2612_permit_relay_security.md
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
   decision_date: null
   decision_notes: null
@@ -581,7 +581,7 @@ proposals:
   evidence: auction/rfp_processor.py:26 and 348 — type:ignore[no-redef] suppressor
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
   decision_date: null
   decision_notes: null
@@ -723,7 +723,7 @@ proposals:
   evidence: 'mcp_robot_adapter.py line 104: except Exception: pass — connection failures are invisible'
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-07'
   decision_date: null
   decision_notes: null
@@ -776,7 +776,7 @@ proposals:
   evidence: '.github/workflows/test.yml unit-tests job: --ignore=auction/tests/test_fakerover_bid.py — 8 tests never run in CI'
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-08'
   decision_date: null
   decision_notes: null

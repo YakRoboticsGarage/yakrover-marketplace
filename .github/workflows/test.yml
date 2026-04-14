@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
       - name: Run unit tests
-        run: uv run pytest auction/tests/ -q --tb=short -x --ignore=auction/tests/integration --ignore=auction/tests/test_fakerover_bid.py
+        run: uv run pytest auction/tests/ -q --tb=short -x --ignore=auction/tests/integration
 
   lint:
     runs-on: ubuntu-latest
