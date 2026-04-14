@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Yak Robotics — Partner Brief</title>
 <link rel="icon" href="yak-icon.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -199,6 +199,37 @@ a:hover { text-decoration: underline; }
 .contact-field-msg { min-height: 80px; resize: vertical; }
 /* Drag handle — hidden on desktop */
 .sheet-handle { display: none; }
+
+/* Feedback drawer — mobile only */
+.feedback-drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 400;
+  display: none; align-items: flex-end; justify-content: center;
+}
+.feedback-drawer-overlay.visible { display: flex; }
+.feedback-drawer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  width: 100%; background: #fff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+  padding: 0 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+  will-change: transform; z-index: 401;
+  font-family: 'JetBrains Mono', monospace;
+}
+.feedback-drawer-overlay.visible .feedback-drawer { transform: translateY(0); }
+.fd-handle { display: flex; align-items: center; justify-content: center; padding: 12px 0 4px; cursor: grab; user-select: none; }
+.fd-handle-bar { width: 36px; height: 4px; background: #d0d0d0; border-radius: 2px; }
+.fd-title { font-size: 16px; font-weight: 600; color: #1A1F26; margin-bottom: 14px; }
+.fd-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font: inherit; font-size: 16px; margin-bottom: 10px; outline: none; resize: none; }
+.fd-field:focus { border-color: #E8792B; box-shadow: 0 0 0 3px rgba(232,121,43,0.1); }
+.fd-row { display: flex; gap: 8px; align-items: center; }
+.fd-name { flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font: inherit; font-size: 16px; outline: none; }
+.fd-name:focus { border-color: #E8792B; box-shadow: 0 0 0 3px rgba(232,121,43,0.1); }
+.fd-submit { background: #E8792B; color: #fff; border: none; border-radius: 6px; padding: 12px 20px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.fd-submit:hover { background: #d06a22; }
+.fd-submit:disabled { opacity: 0.5; cursor: default; }
+.fd-status { font-size: 12px; color: #6B7280; margin-top: 8px; }
 
 /* Contact — mobile: bottom drawer */
 @media (max-width: 768px) {
@@ -521,6 +552,19 @@ body.panel-open { margin-right: 320px; }
   </div>
 </div>
 
+<div class="feedback-drawer-overlay" id="fdOverlay" onclick="if(event.target===this)hideFeedbackDrawer()">
+  <div class="feedback-drawer" id="fdDrawer">
+    <div class="fd-handle" id="fdHandle"><div class="fd-handle-bar"></div></div>
+    <div class="fd-title">Leave Feedback</div>
+    <textarea class="fd-field" id="fdComment" placeholder="What did you think of this memo?" rows="3"></textarea>
+    <div class="fd-row">
+      <input class="fd-name" id="fdName" placeholder="Name (optional)">
+      <button class="fd-submit" id="fdSubmit" onclick="submitFeedbackDrawer()">Send</button>
+    </div>
+    <div class="fd-status" id="fdStatus"></div>
+  </div>
+</div>
+
 <div class="sel-popover" id="selPopover">
   <div class="sel-highlight" id="selText"></div>
   <textarea class="sel-input" id="selComment" placeholder="Your feedback on this section..."></textarea>
@@ -650,13 +694,96 @@ window.copyAsMarkdown = function() {
 var API = 'https://yakrobot-api.rafaeldf2.workers.dev';
 var panelOpen = false;
 
-// --- Side panel ---
+// --- Side panel / mobile feedback drawer ---
 function togglePanel() {
+  if (window.innerWidth <= 768) {
+    showFeedbackDrawer();
+    return;
+  }
   panelOpen = !panelOpen;
   document.getElementById('feedbackPanel').classList.toggle('open', panelOpen);
   document.body.classList.toggle('panel-open', panelOpen);
   if (panelOpen) loadComments();
 }
+
+function showFeedbackDrawer() {
+  var overlay = document.getElementById('fdOverlay');
+  var drawer = document.getElementById('fdDrawer');
+  overlay.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+  drawer.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+  drawer.style.transform = '';
+  document.getElementById('fdComment').value = '';
+  document.getElementById('fdName').value = '';
+  document.getElementById('fdStatus').textContent = '';
+  document.getElementById('fdSubmit').disabled = false;
+  setTimeout(function() { document.getElementById('fdComment').focus(); }, 350);
+}
+
+function hideFeedbackDrawer() {
+  var drawer = document.getElementById('fdDrawer');
+  var overlay = document.getElementById('fdOverlay');
+  drawer.style.transition = 'transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94)';
+  drawer.style.transform = 'translateY(100%)';
+  setTimeout(function() {
+    overlay.classList.remove('visible');
+    drawer.style.transform = '';
+    document.body.style.overflow = '';
+  }, 260);
+}
+
+function submitFeedbackDrawer() {
+  var msg = document.getElementById('fdComment').value.trim();
+  if (!msg) { document.getElementById('fdStatus').textContent = 'Please enter feedback.'; return; }
+  var name = document.getElementById('fdName').value.trim() || 'Anonymous';
+  var btn = document.getElementById('fdSubmit');
+  var status = document.getElementById('fdStatus');
+  btn.disabled = true;
+  status.textContent = 'Sending...';
+  fetch(API + '/api/memo/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comment: msg, name: name, highlight: '', page: 'memo' }),
+  }).then(function(r) {
+    if (!r.ok) throw new Error('Failed');
+    status.textContent = 'Sent! Thank you.';
+    btn.textContent = 'Sent';
+    setTimeout(hideFeedbackDrawer, 1500);
+  }).catch(function() {
+    status.textContent = 'Failed to send. Try again.';
+    btn.disabled = false;
+  });
+}
+
+// Swipe-to-dismiss for feedback drawer
+(function() {
+  var handle = document.getElementById('fdHandle');
+  var drawer = document.getElementById('fdDrawer');
+  var overlay = document.getElementById('fdOverlay');
+  var dragging = false, startY = 0, dy = 0;
+  handle.addEventListener('pointerdown', function(e) {
+    dragging = true; startY = e.clientY; dy = 0;
+    drawer.style.transition = 'none';
+    handle.setPointerCapture(e.pointerId);
+  });
+  document.addEventListener('pointermove', function(e) {
+    if (!dragging) return;
+    dy = Math.max(0, e.clientY - startY);
+    drawer.style.transform = 'translateY(' + dy + 'px)';
+    overlay.style.opacity = Math.max(0, 1 - dy / drawer.offsetHeight);
+  });
+  document.addEventListener('pointerup', function() {
+    if (!dragging) return;
+    dragging = false;
+    overlay.style.opacity = '';
+    if (dy / drawer.offsetHeight > 0.3) {
+      hideFeedbackDrawer();
+    } else {
+      drawer.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+      drawer.style.transform = 'translateY(0)';
+    }
+  });
+})();
 
 function loadComments() {
   fetch(API + '/api/memo/comments').then(function(r) { return r.json(); }).then(function(d) {
