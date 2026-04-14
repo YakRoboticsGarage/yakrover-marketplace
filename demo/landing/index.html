@@ -2227,7 +2227,7 @@ function closeModal(){document.getElementById('modalOverlay').classList.remove('
 function copyModalContent(){navigator.clipboard.writeText(document.getElementById('modalContent').textContent);document.querySelector('.modal .btn-outline').textContent='Copied!';setTimeout(function(){document.querySelector('.modal .btn-outline').textContent='Copy'},1500)}
 document.getElementById('modalOverlay').onclick=function(e){if(e.target===document.getElementById('modalOverlay'))closeModal()};
 
-document.getElementById('addClaudeBtn').onclick=function(){openModal('Add to Claude','{\n  "mcpServers": {\n    "yakrover": {\n      "type": "http",\n      "url": "https://yakrover-marketplace.fly.dev/mcp"\n    }\n  }\n}\n\nPaste into .mcp.json or Claude Desktop settings.\n\nOr run in terminal:\nclaude mcp add-json yakrover \'{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}\'')};
+document.getElementById('addClaudeBtn').onclick=function(){openModal('Add to Claude','Run in terminal:\n\nclaude mcp add-json yakrover \'{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}\' && claude\n\nThis registers the marketplace and opens Claude Code.\nAfter the first time, just run: claude\n\nOr paste into .mcp.json / Claude Desktop settings:\n{\n  "mcpServers": {\n    "yakrover": {\n      "type": "http",\n      "url": "https://yakrover-marketplace.fly.dev/mcp"\n    }\n  }\n}')};
 document.getElementById('downloadBtn').onclick=function(){openModal('Survey Deliverables','Files delivered:\n\n1. point_cloud.las (478 MB)\n   LiDAR point cloud, 12-acre coverage, 100 pts/m\u00b2\n\n2. topo_map.dxf (24 MB)\n   Civil 3D-ready surface model, 0.5m contours\n\n3. ortho_mosaic.tif (312 MB)\n   4cm/px orthomosaic, georeferenced\n\n4. cross_sections.csv (1.1 MB)\n   50-ft station cross-sections, cut/fill volumes\n\n5. survey_report.pdf (2.4 MB)\n   RTK accuracy report, ground control points,\n   weather conditions, operator certifications\n\nMetadata:\n  operator: Great Lakes Aerial\n  request_id: req_a1b2c3d4e5f6\n  accuracy_verified: \u00b11.8cm vertical\n  coordinate_system: NAD83 / Arizona Central (ft)\n  datum: NAVD88')};
 document.getElementById('receiptBtn').onclick=function(){openModal('Receipt','YAK ROBOTICS MARKETPLACE\n\nRFQ: I-94 Drainage Tunnel Design-Build\nAgency: MDOT Detroit\nProject: I-94 Modernization Segment 3 Package 1\n\nTask 1: Pre-Construction Topographic Survey\n  Operator: Great Lakes Aerial\n  Amount: $72,000.00\n  Ref: req_i94_topo_001\n\nTask 2: Tunnel 3D Scanning & As-Built\n  Operator: Wolverine Survey Tech\n  Amount: $98,000.00\n  Ref: req_i94_scan_001\n\nTask 3: Continuous TBM Alignment Monitoring\n  Status: Sent to specialist vendors\n\nTotal Robot Tasks: $170,000.00\nPayment: Credit balance\nDate: 2026-03-28\nSource: michigan.gov/mdot RFQ Oct 2025')};
 
@@ -2528,9 +2528,9 @@ function renderAgentStep(){
 
     if(s.agent==='claude-code'){
       // Claude Code: one-liner command
-      var addCmd='claude mcp add-json yakrover \'{"type":"http","url":"'+mcpUrl+'"}\'';
+      var addCmd='claude mcp add-json yakrover \'{"type":"http","url":"'+mcpUrl+'"}\' && claude';
       html+='<h3>Step 2: Run this in your terminal</h3>';
-      html+='<p>One command — Claude Code handles the rest. No config files to edit.</p>';
+      html+='<p>One command — registers the marketplace and opens Claude Code. After the first time, just run <code>claude</code>.</p>';
       html+='<div class="config-snippet" id="agentConfigSnippet">'+addCmd+'</div>';
       html+='<div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap">';
       html+='<button class="btn btn-outline" style="font-size:0.8rem" onclick="navigator.clipboard.writeText(document.getElementById(\'agentConfigSnippet\').textContent);this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy Command\'},1500)">Copy Command</button>';

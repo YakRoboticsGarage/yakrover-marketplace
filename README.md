@@ -125,11 +125,11 @@ uv run pytest auction/tests/ -q --tb=short
 # Run the demo auction
 PYTHONPATH=. uv run python auction/demo.py
 
-# Connect as MCP server (local)
-claude mcp add-json yakrover '{"type":"http","url":"http://localhost:8001/mcp"}'
+# Connect to the live server and start Claude
+claude mcp add-json yakrover '{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}' && claude
 
-# Or connect to the live server
-claude mcp add-json yakrover '{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}'
+# Or connect to a local server
+claude mcp add-json yakrover '{"type":"http","url":"http://localhost:8001/mcp"}' && claude
 ```
 
 See [Getting Started](docs/guides/GETTING_STARTED.md) for full setup including Stripe and robot simulator.

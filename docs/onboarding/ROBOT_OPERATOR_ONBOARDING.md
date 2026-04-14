@@ -26,7 +26,7 @@ Connect to the marketplace MCP server and describe your setup in plain English:
 
 ```bash
 # Connect Claude Code to the marketplace
-claude mcp add-json yakrover '{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}'
+claude mcp add-json yakrover '{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}' && claude
 ```
 
 Then tell Claude what you have:
