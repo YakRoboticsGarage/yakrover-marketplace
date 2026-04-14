@@ -127,6 +127,7 @@ PYTHONPATH=. uv run python auction/demo.py
 
 # Connect to the live server and start Claude
 claude mcp add-json yakrover '{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}' && claude
+# Then say: "Use yakrover to help me with an aerial LiDAR topo survey near Kalamazoo, MI"
 
 # Or connect to a local server
 claude mcp add-json yakrover '{"type":"http","url":"http://localhost:8001/mcp"}' && claude

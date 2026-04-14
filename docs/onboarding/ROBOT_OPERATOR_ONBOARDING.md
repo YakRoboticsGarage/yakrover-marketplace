@@ -29,9 +29,9 @@ Connect to the marketplace MCP server and describe your setup in plain English:
 claude mcp add-json yakrover '{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}' && claude
 ```
 
-Then tell Claude what you have:
+Then tell Claude what you have (prefix with "Use yakrover" so Claude knows which tools to use):
 
-> "I want to register my drone for survey work. I'm Acme Aerial, based in Detroit, Michigan. I have a Matrice 350 with a LiDAR sensor."
+> "Use yakrover to register my drone for survey work. I'm Acme Aerial, based in Detroit, Michigan. I have a Matrice 350 with a LiDAR sensor."
 
 Claude will ask a few follow-up questions, fill in sensible defaults for pricing and bidding, and register your robot. The whole process takes about 2 minutes.
 
