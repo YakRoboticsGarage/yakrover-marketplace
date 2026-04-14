@@ -231,55 +231,58 @@ class TestIntegration:
     """End-to-end integration tests with mocked simulator."""
 
     @pytest.mark.asyncio
-    async def test_full_lifecycle(self, capsys):
+    async def test_full_lifecycle(self, caplog):
         """Async test: post -> get_bids -> accept -> execute -> confirm.
 
         Assert every intermediate state. Mock the httpx call to the simulator.
         """
-        fleet = create_demo_fleet()
-        engine = AuctionEngine(fleet)
+        import logging
 
-        # 1. Post task -> BIDDING
-        post_result = engine.post_task(VALID_TASK_SPEC)
-        request_id = post_result["request_id"]
-        assert post_result["state"] == "bidding"
+        with caplog.at_level(logging.DEBUG, logger="yakrover"):
+            fleet = create_demo_fleet()
+            engine = AuctionEngine(fleet)
 
-        # 2. Get bids (still BIDDING)
-        bids_result = engine.get_bids(request_id)
-        assert bids_result["state"] == "bidding"
-        assert bids_result["bid_count"] >= 1
-        winner = bids_result["recommended_winner"]
-        assert winner is not None
+            # 1. Post task -> BIDDING
+            post_result = engine.post_task(VALID_TASK_SPEC)
+            request_id = post_result["request_id"]
+            assert post_result["state"] == "bidding"
 
-        # 3. Accept bid -> BID_ACCEPTED
-        accept_result = engine.accept_bid(request_id, winner)
-        assert accept_result["state"] == "bid_accepted"
+            # 2. Get bids (still BIDDING)
+            bids_result = engine.get_bids(request_id)
+            assert bids_result["state"] == "bidding"
+            assert bids_result["bid_count"] >= 1
+            winner = bids_result["recommended_winner"]
+            assert winner is not None
 
-        # 4. Execute -> IN_PROGRESS -> DELIVERED (mocked)
-        with _mock_httpx_patch():
-            exec_result = await engine.execute(request_id)
-        assert exec_result["state"] == "delivered"
-        assert exec_result["delivery"]["sla_met"] is True
+            # 3. Accept bid -> BID_ACCEPTED
+            accept_result = engine.accept_bid(request_id, winner)
+            assert accept_result["state"] == "bid_accepted"
 
-        # 5. Confirm -> VERIFIED -> SETTLED
-        settle_result = engine.confirm_delivery(request_id)
-        assert settle_result["state"] == "settled"
+            # 4. Execute -> IN_PROGRESS -> DELIVERED (mocked)
+            with _mock_httpx_patch():
+                exec_result = await engine.execute(request_id)
+            assert exec_result["state"] == "delivered"
+            assert exec_result["delivery"]["sla_met"] is True
+
+            # 5. Confirm -> VERIFIED -> SETTLED
+            settle_result = engine.confirm_delivery(request_id)
+            assert settle_result["state"] == "settled"
 
         # Verify log output contains expected tags
-        captured = capsys.readouterr()
-        assert "[STATE" in captured.out
-        assert "[BID" in captured.out
-        assert "[VERIFY" in captured.out
-        assert "[SCORE" in captured.out
-        assert "[PAYMENT" in captured.out
+        log_text = caplog.text
+        assert "[STATE" in log_text
+        assert "[BID" in log_text
+        assert "[VERIFY" in log_text
+        assert "[SCORE" in log_text
+        assert "[PAYMENT" in log_text
 
         # Verify state transition sequence in output
-        assert "bidding" in captured.out
-        assert "bid_accepted" in captured.out
-        assert "in_progress" in captured.out
-        assert "delivered" in captured.out
-        assert "verified" in captured.out
-        assert "settled" in captured.out
+        assert "bidding" in log_text
+        assert "bid_accepted" in log_text
+        assert "in_progress" in log_text
+        assert "delivered" in log_text
+        assert "verified" in log_text
+        assert "settled" in log_text
 
     def test_bid_signature_verified_at_acceptance(self):
         """accept_bid re-verifies the HMAC signature."""

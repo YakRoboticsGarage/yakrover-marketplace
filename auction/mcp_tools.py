@@ -1692,11 +1692,24 @@ def register_auction_tools(
         if fleet_type not in valid_types:
             return _error_response_structured("INVALID_FLEET_TYPE", f"fleet_type must be one of {valid_types}", "")
 
+        # Resolve chain config from chain_id parameter
+        chain_cfg = None
+        for _cname, _ccfg in CHAIN_CONFIG.items():
+            if _ccfg["chain_id"] == chain_id:
+                chain_cfg = _ccfg
+                break
+        if chain_cfg is None:
+            valid_ids = [c["chain_id"] for c in CHAIN_CONFIG.values()]
+            return _error_response_structured("INVALID_CHAIN", f"chain_id {chain_id} not in CHAIN_CONFIG. Valid: {valid_ids}", "")
+
+        # Pick explorer based on network
+        explorer_base = "https://base-sepolia.easscan.org" if chain_id == 84532 else "https://base.easscan.org"
+
         def _blocking():
             import eth_abi as _eth_abi
             from web3 import Web3 as _Web3
 
-            w3 = _Web3(_Web3.HTTPProvider("https://sepolia.base.org"))
+            w3 = _Web3(_Web3.HTTPProvider(chain_cfg["rpc"]))
             eas = w3.eth.contract(
                 address=_Web3.to_checksum_address(EAS_ADDRESS), abi=EAS_ABI
             )
@@ -1719,7 +1732,7 @@ def register_auction_tools(
                 "from": account.address,
                 "nonce": w3.eth.get_transaction_count(account.address),
                 "gasPrice": w3.eth.gas_price,
-                "chainId": 84532,
+                "chainId": chain_id,
                 "value": 0,
             })
 
@@ -1738,7 +1751,7 @@ def register_auction_tools(
                 "agent_id": agent_id,
                 "fleet_type": fleet_type,
                 "attestor": account.address,
-                "explorer": f"https://base-sepolia.easscan.org/attestation/view/{uid}",
+                "explorer": f"{explorer_base}/attestation/view/{uid}",
             }
 
         return await asyncio.to_thread(_blocking)

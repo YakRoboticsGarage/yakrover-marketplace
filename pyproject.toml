@@ -1,6 +1,6 @@
 [project]
 name = "yakrover-marketplace"
-version = "1.0.0"
+version = "1.4.1"
 description = "Robot task auction marketplace — AI agents post tasks, physical robots bid, winners are paid via Stripe or crypto"
 readme = "README.md"
 requires-python = ">=3.13"

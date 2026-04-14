@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import logging
+import math
 import os
 import secrets
-import math
 import uuid
 import warnings
 from dataclasses import dataclass, field
@@ -683,9 +684,18 @@ def verify_bid(bid: Bid, key: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
+_logger = logging.getLogger("yakrover")
+
+_WARNING_TAGS = frozenset({"ERROR", "TIMEOUT", "REJECT"})
+
+
 def log(tag: str, message: str) -> None:
-    """Print a tagged log line. Tag is left-padded to 10 chars with brackets."""
-    print(f"[{tag:<8s}] {message}")
+    """Emit a tagged log line via stdlib logging.
+
+    Tags in _WARNING_TAGS are emitted at WARNING level; all others at INFO.
+    """
+    level = logging.WARNING if tag in _WARNING_TAGS else logging.INFO
+    _logger.log(level, "[%-8s] %s", tag, message)
 
 
 # ---------------------------------------------------------------------------

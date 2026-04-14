@@ -2,10 +2,10 @@ meta:
   created: '2026-04-01'
   last_updated: '2026-04-14'
   total_items: 71
-  implemented: 26
+  implemented: 29
   deferred: 4
   rejected: 1
-  proposed: 40
+  proposed: 37
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
   last_sync: "R-007b (2026-04-14) — added IMP-072/073/074/075 (NC drone ruling, PLS bid gating, T&C clause)"
 proposals:
@@ -740,10 +740,10 @@ proposals:
   evidence: 'core.py:667 — log() wraps print(), no levels or timestamps'
   effort: small
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-07'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-14'
+  decision_notes: Replaced print()-based log() with stdlib logging.getLogger("yakrover"). WARNING for ERROR/TIMEOUT/REJECT tags, INFO for all others. Updated test_core and test_engine to use caplog.
 - id: IMP-046
   title: pyproject.toml version field is stale (1.0.0 vs v1.3 codebase)
   description: >
@@ -757,10 +757,10 @@ proposals:
   evidence: 'pyproject.toml line 3: version = "1.0.0" — git tag is v1.3-milestone-ach-payment'
   effort: trivial
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-08'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-14'
+  decision_notes: Bumped to 1.4.1 to match current milestone.
 - id: IMP-047
   title: test_fakerover_bid.py is blanket-excluded from CI rather than marker-gated
   description: >
@@ -837,10 +837,10 @@ proposals:
   evidence: 'auction/mcp_tools.py line 1509: w3 = Web3(HTTPProvider("https://sepolia.base.org")) — hardcoded; line 1533: "chainId": 84532 — hardcoded; CHAIN_CONFIG at line 1089 already maps 84532 and 8453'
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-11'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-14'
+  decision_notes: Now resolves RPC URL and chainId from CHAIN_CONFIG based on chain_id parameter. Explorer URL switches between base-sepolia and base mainnet EASScan.
 - id: IMP-051
   title: Delete stale deprecated fallback block in mcp_robot_adapter.py
   description: >

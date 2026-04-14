@@ -325,14 +325,15 @@ class TestScoring:
 class TestLogging:
     """Test 19: Console log format."""
 
-    def test_log_format(self, capsys):
+    def test_log_format(self, caplog):
         """log() output matches expected format: '[TAG     ] message'."""
-        log("AUCTION", "Task posted successfully")
-        captured = capsys.readouterr()
-        # Tag is left-padded to 8 chars inside brackets
-        assert captured.out.startswith("[AUCTION ")
-        assert "Task posted successfully" in captured.out
-        assert captured.out.strip() == "[AUCTION ] Task posted successfully"
+        import logging
+
+        with caplog.at_level(logging.DEBUG, logger="yakrover"):
+            log("AUCTION", "Task posted successfully")
+        assert len(caplog.records) == 1
+        assert "[AUCTION ]" in caplog.records[0].message
+        assert "Task posted successfully" in caplog.records[0].message
 
 
 # ===================================================================
