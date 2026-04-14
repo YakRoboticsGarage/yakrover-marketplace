@@ -224,10 +224,34 @@ a:hover { text-decoration: underline; }
 body.panel-open { margin-right: 320px; }
 
 @media print {
-  .feedback-panel, .fab, .sel-popover, .contact-overlay { display: none !important; }
+  .feedback-panel, .fab, .sel-popover, .contact-overlay, .breadcrumb-nav { display: none !important; }
   body.panel-open { margin-right: 0; }
   .cta-touch-inline { display: none !important; }
 }
+
+/* breadcrumb nav */
+.breadcrumb-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: #fff; border-bottom: 1px solid #e2e8f0;
+  margin: 0 -60px; padding: 0 60px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.breadcrumb-nav::-webkit-scrollbar { display: none; }
+.breadcrumb-list {
+  display: flex; gap: 0; list-style: none; padding: 0; margin: 0;
+  white-space: nowrap;
+}
+.breadcrumb-list li { flex-shrink: 0; }
+.breadcrumb-list a {
+  display: block; padding: 10px 14px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; color: #6B7280;
+  text-decoration: none; border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.breadcrumb-list a:hover { color: #1A1F26; }
+.breadcrumb-list a.active { color: #E8792B; border-bottom-color: #E8792B; }
 
 /* responsive */
 @media (max-width: 768px) {
@@ -241,6 +265,8 @@ body.panel-open { margin-right: 320px; }
   body.panel-open { margin-right: 0; }
   .cta-touch-desktop { display: none; }
   .sel-popover { display: none !important; }
+  .breadcrumb-nav { margin: 0 -20px; padding: 0 20px; }
+  .breadcrumb-list a { padding: 8px 10px; font-size: 10px; }
 }
 </style>
 </head>
@@ -258,7 +284,22 @@ body.panel-open { margin-right: 320px; }
   <button class="cta-touch cta-touch-sm cta-touch-desktop" onclick="showContact()">Get in Touch</button>
 </div>
 
-<h2>Executive Summary</h2>
+<nav class="breadcrumb-nav" id="breadcrumbNav">
+  <ul class="breadcrumb-list">
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#leads">Leads</a></li>
+    <li><a href="#problem">Problem</a></li>
+    <li><a href="#why-now">Why Now</a></li>
+    <li><a href="#stack">Stack</a></li>
+    <li><a href="#status">Status</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#verticals">Verticals</a></li>
+    <li><a href="#challenges">Challenges</a></li>
+    <li><a href="#partners">Partners</a></li>
+  </ul>
+</nav>
+
+<h2 id="summary">Executive Summary</h2>
 <ul style="padding-left:20px;color:#4A5568">
   <li style="margin-bottom:10px"><strong>Construction spending keeps increasing.</strong> Construction surveying alone is an $8B/yr US market. The industry loses $31B/yr to rework, a significant portion traceable to inaccurate or outdated site data. To address the demand, drones are deployed on thousands of job sites and engineering companies are adopting AI tooling to increase speed of execution.</li>
   <li style="margin-bottom:10px"><strong>But no one has built an agent-runtime procurement layer for physical work.</strong> And it&rsquo;s not just construction that has this limitation. Physical-world tasks can&rsquo;t be purchased like software, yet.</li>
@@ -284,7 +325,7 @@ body.panel-open { margin-right: 320px; }
   <p style="font-size:12px;color:#9CA3AF;margin-top:10px;margin-bottom:0">Claude will discover 100 test robots, run the auction, and return delivery data (simulated). <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace/blob/main/docs/guides/GETTING_STARTED.md" target="_blank" style="color:#2D5F8A">Full guide &rarr;</a></p>
 </div>
 
-<h2>Project Leads</h2>
+<h2 id="leads">Project Leads</h2>
 <p>This project emerged from the <a href="https://www.yakcollective.org/" target="_blank">Yak Collective</a>, a community of over 30 independent researchers, engineers, and consultants. The <a href="https://www.yakcollective.org/study-groups/yak-robotics-garage" target="_blank">Yak Robotics Garage</a> study group has built open-source rovers since 2021 &mdash; from living-room prototypes to blockchain-controlled robots with on-chain identity. The task auction protocol grew out of a practical question the group kept hitting: once you have a fleet of robots that can be discovered and commanded programmatically, how do you let software agents actually hire them?</p>
 <div class="g3">
   <div class="callout" style="background:#fff;border-left-color:#1B3A5C;padding:14px 16px">
@@ -308,11 +349,11 @@ body.panel-open { margin-right: 320px; }
   <button class="cta-touch" onclick="showContact()">Get in Touch</button>
 </div>
 
-<h2>Problem</h2>
+<h2 id="problem">Problem</h2>
 <p>Physical service procurement is unstructured and unavailable for agents. However, the technologies necessary to enable API-like purchase of physical actions are emerging.</p>
 <p>Yak Robotics is building a protocol and application layer for physical-world task procurement &mdash; structured task specification, executor matching, delivery verification, and payment settlement. Task specification and matching are functional today. Delivery verification and settlement are in early stages.</p>
 
-<h2>Why Now</h2>
+<h2 id="why-now">Why Now</h2>
 <p>Five independent trends are converging to make physical-world task procurement programmable in ways it hasn&rsquo;t been before. None is sufficient alone, but together they create the conditions for a protocol layer that did not previously have the infrastructure to exist. As an example, construction survey on Department of Transportation (DOT) highway projects satisfies all necessary conditions with currently available technology.</p>
 <div class="cols">
   <div>
@@ -326,7 +367,7 @@ body.panel-open { margin-right: 320px; }
   </div>
 </div>
 
-<h2>Sample Protocol Stack</h2>
+<h2 id="stack">Sample Protocol Stack</h2>
 <div class="stack-row"><span class="stack-label">Protocol</span><span class="stack-value">Task posting, executor matching, and delivery verification for physical-world tasks</span></div>
 <div class="stack-row"><span class="stack-label">Task class</span><span class="stack-value">Structured procurement for physical-world survey and inspection tasks</span></div>
 <div class="stack-row"><span class="stack-label">Industry</span><span class="stack-value">Construction survey and inspection (first vertical)</span></div>
@@ -334,7 +375,7 @@ body.panel-open { margin-right: 320px; }
 <div class="stack-row"><span class="stack-label">Offering</span><span class="stack-value">Survey data delivery with schema-driven quality checks</span></div>
 <div class="stack-row"><span class="stack-label">Service Domain</span><span class="stack-value">MDOT highway construction &mdash; numerically specified tolerances with established verification methods</span></div>
 
-<h2>Protocol Components and Development Status (v1.4.1 &mdash; Alpha, Functional)</h2>
+<h2 id="status">Protocol Components and Development Status (v1.4.1 &mdash; Alpha, Functional)</h2>
 <p>The protocol is implemented as seven modules. The verification engine is the domain-specific component; all others are domain-agnostic and shared across verticals.</p>
 <div class="cols" style="margin-top:4px">
   <div>
@@ -350,13 +391,13 @@ body.panel-open { margin-right: 320px; }
   </div>
 </div>
 
-<h2>Long-Term Development Roadmap</h2>
+<h2 id="roadmap">Long-Term Development Roadmap</h2>
 <div class="stack-row"><span class="stack-label" style="color:#1a7a6d">Complete</span><span class="stack-value">Protocol layer functional &mdash; auction engine, on-chain identity, settlement (card, bank, stablecoin), credential verification, 100-robot test fleet (simulated execution), MCP interface</span></div>
 <div class="stack-row"><span class="stack-label">Now</span><span class="stack-value">Construction verification engine &mdash; geospatial ingestion, surface comparison against DOT specs, compliance reporting. Operator onboarding.</span></div>
 <div class="stack-row"><span class="stack-label">Next</span><span class="stack-value">Multi-robot coordination (aerial + ground + subsurface in one job). Operator dashboard. Agent-initiated payment. Live credential APIs.</span></div>
 <div class="stack-row"><span class="stack-label">Expanding</span><span class="stack-value">New verticals &mdash; mining/quarry volumetrics, infrastructure inspection (bridges, pipelines). Privacy layer for government contracts.</span></div>
 
-<h2>Vertical Feasibility</h2>
+<h2 id="verticals">Vertical Feasibility</h2>
 <table>
   <tr><th>Domain</th><th>Specification</th><th>Verification</th><th>Assessment</th></tr>
   <tr><td>Highway survey</td><td>State DOT tolerances</td><td>Surface subtraction, root mean square error</td><td>Preconditions met by domain</td></tr>
@@ -367,7 +408,7 @@ body.panel-open { margin-right: 320px; }
 </table>
 <p class="footnote">Each vertical adds a specification database and verification function. Protocol layer is unchanged.</p>
 
-<h2>Technical Challenges</h2>
+<h2 id="challenges">Technical Challenges</h2>
 <div class="cols">
   <div>
     <p><strong>Privacy:</strong> Construction RFPs contain sensitive site data, bid pricing, and project timelines. Government contracts add ITAR/CUI restrictions. The protocol must handle task matching without the platform seeing task content, and settle payments without revealing amounts to third parties. EU Anti-Money Laundering Regulation Article 79 constrains which privacy approaches are legally viable.</p>
@@ -379,7 +420,7 @@ body.panel-open { margin-right: 320px; }
   </div>
 </div>
 
-<h2>Seeking Partners and Contributors</h2>
+<h2 id="partners">Seeking Partners and Contributors</h2>
 <div class="cols">
   <div>
     <p><strong>Agent runtime services:</strong> Organizations building AI agent infrastructure, MCP tool ecosystems, or agent-to-agent protocols. Collaboration areas: how agents discover and hire physical-world services, verify credentials, and settle on verified task completion.</p>
@@ -453,6 +494,49 @@ body.panel-open { margin-right: 320px; }
 </div>
 
 <script>
+// --- Breadcrumb scroll-spy ---
+(function() {
+  var sections = document.querySelectorAll('h2[id]');
+  var links = document.querySelectorAll('.breadcrumb-list a');
+  var nav = document.getElementById('breadcrumbNav');
+  var navH = nav ? nav.offsetHeight : 40;
+
+  // Smooth scroll with offset for sticky nav
+  links.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) {
+        var y = el.getBoundingClientRect().top + window.pageYOffset - navH - 8;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Highlight active section on scroll
+  function onScroll() {
+    var scrollY = window.pageYOffset + navH + 20;
+    var current = '';
+    sections.forEach(function(s) {
+      if (s.offsetTop <= scrollY) current = s.id;
+    });
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+    // Auto-scroll nav to keep active link visible
+    var active = nav.querySelector('a.active');
+    if (active) {
+      var nl = nav.scrollLeft, nw = nav.offsetWidth;
+      var al = active.offsetLeft, aw = active.offsetWidth;
+      if (al < nl + 20) nav.scrollTo({ left: al - 20, behavior: 'smooth' });
+      else if (al + aw > nl + nw - 20) nav.scrollTo({ left: al + aw - nw + 20, behavior: 'smooth' });
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
 var API = 'https://yakrobot-api.rafaeldf2.workers.dev';
 var panelOpen = false;
 
