@@ -293,7 +293,10 @@ body.panel-open { margin-right: 320px; }
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
   <p style="font-size:18px;color:#1A1F26;font-weight:500;margin:0">Runtime procurement for physical-world tasks</p>
-  <button class="cta-touch cta-touch-sm cta-touch-desktop" onclick="showContact()">Get in Touch</button>
+  <div class="cta-touch-desktop" style="display:flex;gap:8px">
+    <button class="cta-touch cta-touch-sm" onclick="copyAsMarkdown()" id="copyMdBtn">Copy as Markdown</button>
+    <button class="cta-touch cta-touch-sm" onclick="showContact()">Get in Touch</button>
+  </div>
 </div>
 
 <h2 id="summary">Executive Summary</h2>
@@ -532,6 +535,78 @@ body.panel-open { margin-right: 320px; }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 })();
+
+// --- Copy as Markdown ---
+// Generates a Markdown representation of the memo content for AI consumption.
+// Callable programmatically: window.getPageAsMarkdown() returns the string,
+// window.copyAsMarkdown() copies it to clipboard.
+window.getPageAsMarkdown = function() {
+  var md = '# Yak Robotics — Partner Brief\n\n';
+  md += '*Runtime procurement for physical-world tasks*\n\n';
+  var sections = document.querySelectorAll('h2[id], h3');
+  sections.forEach(function(heading) {
+    var level = heading.tagName === 'H2' ? '## ' : '### ';
+    md += level + heading.textContent.trim() + '\n\n';
+    var el = heading.nextElementSibling;
+    while (el && el.tagName !== 'H2' && el.tagName !== 'H3') {
+      if (el.tagName === 'P') {
+        md += el.textContent.trim() + '\n\n';
+      } else if (el.tagName === 'UL' || el.tagName === 'OL') {
+        var items = el.querySelectorAll('li');
+        items.forEach(function(li) { md += '- ' + li.textContent.trim() + '\n'; });
+        md += '\n';
+      } else if (el.tagName === 'TABLE') {
+        var rows = el.querySelectorAll('tr');
+        rows.forEach(function(row, i) {
+          var cells = row.querySelectorAll('th, td');
+          var line = '| ';
+          cells.forEach(function(c) { line += c.textContent.trim() + ' | '; });
+          md += line + '\n';
+          if (i === 0) {
+            md += '| ';
+            cells.forEach(function() { md += '--- | '; });
+            md += '\n';
+          }
+        });
+        md += '\n';
+      } else if (el.classList && el.classList.contains('stack-row')) {
+        var label = el.querySelector('.stack-label');
+        var value = el.querySelector('.stack-value');
+        if (label && value) md += '**' + label.textContent.trim() + ':** ' + value.textContent.trim() + '\n';
+      } else if (el.classList && el.classList.contains('cols')) {
+        var ps = el.querySelectorAll('p');
+        ps.forEach(function(p) { md += p.textContent.trim() + '\n\n'; });
+      } else if (el.classList && el.classList.contains('callout')) {
+        var strong = el.querySelector('strong');
+        var text = el.querySelectorAll('p');
+        if (strong) md += '**' + strong.textContent.trim() + '**\n';
+        for (var t = 1; t < text.length; t++) md += text[t].textContent.trim() + '\n';
+        md += '\n';
+      } else if (el.classList && el.classList.contains('g3')) {
+        var callouts = el.querySelectorAll('.callout');
+        callouts.forEach(function(c) {
+          var name = c.querySelector('strong');
+          var ps2 = c.querySelectorAll('p');
+          if (name) md += '**' + name.textContent.trim() + '**\n';
+          for (var j = 1; j < ps2.length; j++) md += ps2[j].textContent.trim() + '\n';
+          md += '\n';
+        });
+      }
+      el = el.nextElementSibling;
+    }
+  });
+  md += '---\n\nDemo: https://yakrobot.bid/demo/ | Code: https://github.com/YakRoboticsGarage/yakrover-marketplace\n';
+  return md;
+};
+
+window.copyAsMarkdown = function() {
+  var md = window.getPageAsMarkdown();
+  navigator.clipboard.writeText(md).then(function() {
+    var btn = document.getElementById('copyMdBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy as Markdown'; }, 1500);
+  });
+};
 
 var API = 'https://yakrobot-api.rafaeldf2.workers.dev';
 var panelOpen = false;
