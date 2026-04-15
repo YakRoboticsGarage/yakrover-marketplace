@@ -82,6 +82,25 @@ td { font-size: 14px; padding: 7px 10px; border-bottom: 1px solid #f0f2f5; color
 /* footnote */
 .footnote { font-size: 12px; color: #6B7280; margin-top: 8px; }
 
+/* evidence popover */
+.ev { position: relative; cursor: pointer; border-bottom: 1px dashed #E8792B; color: inherit; }
+.ev-pop {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%); background: #1A1F26; color: #f0f2f5;
+  border-radius: 6px; padding: 10px 14px; font-size: 12px; line-height: 1.6;
+  width: max-content; max-width: 320px; z-index: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2); white-space: normal;
+}
+.ev-pop::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: #1A1F26;
+}
+.ev.active .ev-pop { display: block; }
+@media (max-width: 768px) {
+  .ev-pop { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 85vw; }
+  .ev-pop::after { display: none; }
+}
+
 /* page break */
 .page-break { page-break-before: always; margin-top: 0; }
 
@@ -444,15 +463,15 @@ body.panel-open { margin-right: 320px; }
 <p>The protocol is implemented as seven modules. The verification engine is the domain-specific component; all others are domain-agnostic and shared across verticals.</p>
 <div class="cols" style="margin-top:4px">
   <div>
-    <p><strong>Coordination Layer:</strong> MCP-native interface, reverse auction engine (11-state lifecycle, 4-factor scoring, geographic filtering). Deployed on Fly.io. <em>Alpha, functional.</em></p>
-    <p><strong>Task Registry:</strong> 18 task categories defined with structured capability requirements (American Society for Photogrammetry and Remote Sensing accuracy classes, coordinate reference system codes, sensors, deliverables). Request for Proposal (RFP) to spec conversion. <em>Alpha, functional.</em></p>
+    <p><strong>Coordination Layer:</strong> MCP-native interface, reverse auction engine (<span class="ev" onclick="toggleEv(this)">11-state lifecycle<span class="ev-pop">Bidding &rarr; Bid Accepted &rarr; In Progress &rarr; Delivered &rarr; Verified &rarr; Settled. Plus: Withdrawn, Rejected, Expired, Provider Cancelled, and re-pool back to Bidding.</span></span>, <span class="ev" onclick="toggleEv(this)">4-factor scoring<span class="ev-pop">Price (40%) + SLA commitment (25%) + AI confidence (20%) + Reputation (15%). Bids above budget ceiling excluded. See AD-6.</span></span>, geographic filtering). Deployed on Fly.io. <em>Alpha, functional.</em></p>
+    <p><strong>Task Registry:</strong> <span class="ev" onclick="toggleEv(this)">18 task categories<span class="ev-pop">topo_survey, aerial_survey, site_survey, bridge_inspection, progress_monitoring, as_built, subsurface_scan, env_sensing, visual_inspection, thermal_inspection, corridor_survey, volumetric, confined_space, utility_detection, mapping, delivery_ground, environmental_survey, control_survey.</span></span> defined with structured capability requirements (ASPRS accuracy classes, CRS codes, sensors, deliverables). RFP to spec conversion. <em>Alpha, functional.</em></p>
     <p><strong>Executor Registry:</strong> On-chain robot identity (ERC-8004 standard on Base). Discovery via The Graph indexing protocol. Ethereum Attestation Service (EAS) for platform attestation. 1 physical robot on mainnet + 100 test registrations on testnet. <em>Alpha.</em></p>
-    <p><strong>Credential Verification:</strong> SAM.gov Exclusions API and bond verification against Treasury Circular 570 (500+ sureties) built as standalone modules, not yet integrated into auction flow. PLS and insurance verification: in design.</p>
+    <p><strong>Credential Verification:</strong> SAM.gov Exclusions API and bond verification against Treasury Circular 570 (500+ sureties) built as standalone modules, not yet integrated into auction flow.</p>
   </div>
   <div>
-    <p><strong>Verification Engine:</strong> Quality assurance framework (4 levels, 8 category schemas; tested with simulated data only). Geospatial surface comparison, specification database, and compliance reporting are next phase. <em>QA framework functional; geospatial not implemented.</em></p>
-    <p><strong>Settlement Layer:</strong> Stripe (authorize/capture), Connect Express, Automated Clearing House (ACH) bank transfer, USDC stablecoin on Base (gasless). 4-mode abstraction planned. <em>Mode 1 operational; modes 2-4 not yet built.</em></p>
-    <p><strong>Robot Federation:</strong> MCP-to-MCP robot adapter, 9 category simulators on Fly.io (mock execution, not real survey data). Dynamic tool resolution. 1 physical robot connected. <em>No production survey robots yet.</em></p>
+    <p><strong>Verification Engine:</strong> <span class="ev" onclick="toggleEv(this)">4-level<span class="ev-pop">Level 0: None (buyer trusts vendor). Level 1: Basic (data exists, format valid, fields present). Level 2: Standards (point density, accuracy, CRS per ASPRS/USGS). Level 3: PLS review required before payment.</span></span> quality assurance framework with <span class="ev" onclick="toggleEv(this)">8 delivery schemas<span class="ev-pop">Aerial LiDAR, Aerial Photo, Aerial Thermal, Ground GPR, Ground LiDAR, Bridge Inspection, Corridor, Confined Space &mdash; each with category-specific required fields, accuracy metrics, and file format validation.</span></span> mapped across task categories. Tested with simulated data. Geospatial surface comparison is next phase.</p>
+    <p><strong>Settlement Layer:</strong> Stripe (authorize/capture), Connect Express, ACH bank transfer, USDC stablecoin on Base (gasless). <span class="ev" onclick="toggleEv(this)">4-mode abstraction<span class="ev-pop">Immediate Transparent (Base x402, v1.5). Immediate Private (Horizen L3 candidate, v2.1). Batched Transparent (DTN lunar, v2.1). Batched Private (convergence, v3.0). Currently card, bank, and stablecoin settlement are operational. The 4 modes formalize the timing &times; privacy design space.</span></span> designed to cover timing and privacy dimensions as the protocol scales.</p>
+    <p><strong>Robot Federation:</strong> MCP-to-MCP robot adapter with <span class="ev" onclick="toggleEv(this)">9 category simulators<span class="ev-pop">aerial-lidar, aerial-photo, aerial-thermal, ground-gpr, ground-lidar, confined, fixedwing, skydio, fakerover &mdash; each deployed on Fly.io as a standalone MCP server returning category-specific structured delivery data.</span></span> on Fly.io for mock execution. Dynamic tool resolution. 1 physical robot connected (Tumbller via MCP). No production survey robots yet.</p>
   </div>
 </div>
 
@@ -627,6 +646,20 @@ body.panel-open { margin-right: 320px; }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 })();
+
+// --- Evidence popovers ---
+function toggleEv(el) {
+  var wasActive = el.classList.contains('active');
+  // Close all others
+  document.querySelectorAll('.ev.active').forEach(function(e) { e.classList.remove('active'); });
+  if (!wasActive) el.classList.add('active');
+}
+// Close on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.ev')) {
+    document.querySelectorAll('.ev.active').forEach(function(el) { el.classList.remove('active'); });
+  }
+});
 
 // --- Copy as Markdown ---
 // Generates a Markdown representation of the memo content for AI consumption.
