@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "yakrover": {
+      "type": "http",
+      "url": "https://yakrover-marketplace.fly.dev/mcp"
+    }
+  }
+}
