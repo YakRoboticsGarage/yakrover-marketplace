@@ -311,6 +311,27 @@ td.phase-complete { color: var(--color-complete); font-weight: 600; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* Selection popover */
+/* Selection action bar — appears on text highlight */
+.sel-bar {
+  position: absolute; z-index: 300;
+  background: var(--color-popover); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md); padding: var(--sp-1) var(--sp-2);
+  display: none; font-family: 'JetBrains Mono', monospace;
+}
+.sel-bar.visible { display: flex; align-items: center; gap: var(--sp-1); }
+.sel-bar-btn {
+  background: none; border: none; color: var(--color-popover-text);
+  font: inherit; font-size: var(--text-sm); font-weight: 600; cursor: pointer;
+  padding: var(--sp-1) var(--sp-2); border-radius: var(--radius-sm);
+  transition: background var(--ease-fast); white-space: nowrap;
+}
+.sel-bar-btn:hover { background: rgba(255,255,255,0.15); }
+.sel-bar::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: var(--color-popover);
+}
+
+/* Selection comment popover — appears on "Comment" click */
 .sel-popover {
   position: absolute; z-index: 300;
   background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
@@ -441,7 +462,7 @@ body.panel-open { margin-right: 320px; }
   .feedback-panel { width: 280px; }
   body.panel-open { margin-right: 0; }
   .cta-touch-desktop { display: none; }
-  .sel-popover { display: none !important; }
+  .sel-popover, .sel-bar { display: none !important; }
   .breadcrumb-nav { margin: 0 calc(-1 * var(--sp-5)); padding: 0 var(--sp-5); overflow-x: hidden; }
   .breadcrumb-list a { padding: var(--sp-2) 10px; font-size: var(--text-xs); }
   .breadcrumb-hide-mobile { display: none; }
@@ -720,6 +741,10 @@ body.panel-open { margin-right: 320px; }
   </div>
 </div>
 
+<div class="sel-bar" id="selBar">
+  <button class="sel-bar-btn" onclick="openSelComment()">Comment</button>
+</div>
+
 <div class="sel-popover" id="selPopover">
   <div class="sel-highlight" id="selText"></div>
   <textarea class="sel-input" id="selComment" placeholder="Your feedback on this section..."></textarea>
@@ -972,23 +997,27 @@ fetch(API + '/api/memo/comments').then(function(r) { return r.json(); }).then(fu
   document.getElementById('commentBadge').textContent = (d.comments || []).length;
 }).catch(function() {});
 
-// --- Text selection popover ---
+// --- Text selection — action bar + comment popover ---
 var currentHighlight = '';
 var currentSection = '';
+var selRect = null;
 
 document.addEventListener('mouseup', function(e) {
+  var bar = document.getElementById('selBar');
   var pop = document.getElementById('selPopover');
-  if (pop.contains(e.target) || document.getElementById('feedbackPanel').contains(e.target)) return;
+  if (bar.contains(e.target) || pop.contains(e.target) || document.getElementById('feedbackPanel').contains(e.target)) return;
+
+  // Hide both on new selection attempt
+  bar.classList.remove('visible');
+  pop.classList.remove('visible');
 
   var sel = window.getSelection();
   var text = (sel ? sel.toString().trim() : '');
-  if (text.length < 3) {
-    pop.classList.remove('visible');
-    return;
-  }
+  if (text.length < 3) return;
 
   currentHighlight = text.slice(0, 500);
 
+  // Find nearest section heading
   var node = sel.anchorNode;
   currentSection = '';
   while (node && node !== document.body) {
@@ -1009,20 +1038,37 @@ document.addEventListener('mouseup', function(e) {
     }
   }
 
+  // Show action bar above selection (selection stays intact)
+  var rect = sel.getRangeAt(0).getBoundingClientRect();
+  selRect = rect;
+  bar.style.top = (window.scrollY + rect.top - 36) + 'px';
+  bar.style.left = (rect.left + rect.width / 2 - 40) + 'px';
+  bar.classList.add('visible');
+});
+
+function openSelComment() {
+  var bar = document.getElementById('selBar');
+  var pop = document.getElementById('selPopover');
+  bar.classList.remove('visible');
+
   document.getElementById('selText').textContent = '"' + currentHighlight.slice(0, 100) + (currentHighlight.length > 100 ? '...' : '') + '"';
   document.getElementById('selComment').value = '';
   document.getElementById('selStatus').textContent = '';
   document.getElementById('selSubmit').disabled = false;
 
-  var rect = sel.getRangeAt(0).getBoundingClientRect();
-  pop.style.top = (window.scrollY + rect.bottom + 8) + 'px';
-  pop.style.left = Math.min(rect.left, window.innerWidth - 300) + 'px';
+  if (selRect) {
+    pop.style.top = (window.scrollY + selRect.bottom + 8) + 'px';
+    pop.style.left = Math.min(selRect.left, window.innerWidth - 300) + 'px';
+  }
   pop.classList.add('visible');
   setTimeout(function() { document.getElementById('selComment').focus(); }, 50);
-});
+}
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') document.getElementById('selPopover').classList.remove('visible');
+  if (e.key === 'Escape') {
+    document.getElementById('selBar').classList.remove('visible');
+    document.getElementById('selPopover').classList.remove('visible');
+  }
 });
 
 function submitComment() {
