@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Yak Robotics — Space Economy Brief</title>
+<meta name="description" content="Runtime procurement for satellites, space stations, and the Moon Base. Auction engine, on-chain robot identity, and settlement for space operations.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Yak Robotics — Space Economy Brief">
+<meta property="og:description" content="Runtime procurement for satellites, space stations, and the Moon Base. Auction engine, on-chain robot identity, and settlement for space operations.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yakrobot.bid/memo-space/">
+<meta property="og:image" content="https://yakrobot.bid/memo/og-image.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Yak Robotics — Space Economy Brief">
+<meta name="twitter:description" content="Runtime procurement for satellites, space stations, and the Moon Base. Auction engine, on-chain robot identity, and settlement for space operations.">
+<meta name="twitter:image" content="https://yakrobot.bid/memo/og-image.png">
+
+<link rel="icon" href="yak-icon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button, input, textarea, select { font: inherit; }
+
+/* ---- FOCUS ---- */
+a:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible {
+  outline: 2px solid #E8792B;
+  outline-offset: 2px;
+}
+
+@page { size: letter; margin: 0.6in 0.7in; }
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #E5E7EB;
+  background: #0B0F1A;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Global Container to center text while allowing sections to bleed */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 60px;
+}
+
+/* header bar */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 2px solid #E8792B;
+  padding-bottom: 12px;
+  margin-top: 28px;
+  margin-bottom: 28px;
+}
+.header h1 { font-size: 26px; font-weight: 700; color: #F9FAFB; }
+.header .meta { font-size: 13px; color: #9CA3AF; }
+
+/* section titles */
+h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #E8792B;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 28px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #1F2937;
+  padding-bottom: 5px;
+}
+
+h3 { font-size: 16px; font-weight: 600; color: #F9FAFB; margin-top: 24px; margin-bottom: 6px; }
+
+p { margin-bottom: 10px; color: #A0AEC0; }
+li { color: #A0AEC0; }
+strong { color: #F9FAFB; }
+em { color: #D1D5DB; }
+
+/* two columns */
+.cols { display: flex; gap: 32px; }
+.cols > div { flex: 1; }
+
+/* three columns */
+.g3 { display: flex; gap: 16px; }
+.g3 > div { flex: 1; }
+
+/* table */
+table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; }
+th { text-align: left; font-size: 13px; font-weight: 600; color: #60A5FA; padding: 8px 10px; border-bottom: 1px solid #3B5275; }
+td { font-size: 14px; padding: 7px 10px; border-bottom: 1px solid #1F2937; color: #A0AEC0; }
+
+/* stack */
+.stack-row {
+  display: flex; gap: 12px; align-items: baseline;
+  padding: 5px 0; border-left: 2px solid #E8792B; padding-left: 12px;
+  margin-bottom: 3px;
+}
+.stack-label { font-size: 12px; font-weight: 600; color: #E8792B; text-transform: uppercase; width: 100px; flex-shrink: 0; }
+.stack-value { font-size: 14px; color: #E5E7EB; }
+
+/* flow */
+.flow { display: flex; align-items: center; gap: 0; margin: 8px 0; }
+.flow-box { flex: 1; border: 1px solid #374151; padding: 8px 6px; text-align: center; background: #1F2937; }
+.flow-box strong { font-size: 13px; display: block; color: #F9FAFB; }
+.flow-box span { font-size: 12px; color: #9CA3AF; }
+.flow-sep { color: #E8792B; padding: 0 4px; font-size: 18px; }
+
+/* footnote */
+.footnote { font-size: 12px; color: #9CA3AF; margin-top: 8px; }
+
+/* page break */
+.page-break { page-break-before: always; margin-top: 0; }
+
+/* highlight box */
+.callout {
+  background: #2A1A0F;
+  border-left: 3px solid #E8792B;
+  padding: 10px 14px;
+  margin: 12px 0;
+  font-size: 15px;
+  color: #E5E7EB;
+}
+
+/* dark callout for space theme accents */
+.callout-dark {
+  background: #0F1B2E;
+  border-left: 3px solid #60A5FA;
+  padding: 10px 14px;
+  margin: 12px 0;
+  font-size: 15px;
+  color: #E5E7EB;
+}
+
+.callout p, .callout-dark p { color: #A0AEC0; }
+.callout strong, .callout-dark strong { color: #F9FAFB; }
+
+/* link */
+a { color: #60A5FA; text-decoration: none; }
+a:hover { color: #93C5FD; text-decoration: underline; }
+
+/* footer bar */
+.footer-bar {
+  margin-top: 24px;
+  padding: 24px 0 48px 0;
+  border-top: 1px solid #1F2937;
+  font-size: 12px;
+  color: #9CA3AF;
+  display: flex;
+  justify-content: space-between;
+}
+.footer-bar a { color: #60A5FA; }
+
+/* ---- COLLABORATION LAYER ---- */
+
+/* Side panel */
+.feedback-panel {
+  position: fixed; top: 0; right: 0; width: 320px; height: 100vh;
+  background: #111827; border-left: 1px solid #1F2937;
+  overflow-y: auto; padding: 16px; z-index: 200;
+  transform: translateX(100%); transition: transform 0.25s ease;
+  font-size: 13px;
+}
+.feedback-panel.open { transform: translateX(0); }
+.fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.fp-title { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #F9FAFB; }
+.fp-close { cursor: pointer; color: #9CA3AF; font-size: 18px; border: none; background: none; padding: 2px 6px; }
+.fp-close:hover { color: #E8792B; }
+.fp-comment { border-bottom: 1px solid #1F2937; padding: 10px 0; }
+.fp-comment:last-child { border-bottom: none; }
+.fp-comment-highlight { font-size: 12px; color: #E8792B; font-style: italic; margin-bottom: 4px; border-left: 2px solid #E8792B; padding-left: 8px; }
+.fp-comment-text { font-size: 13px; color: #D1D5DB; }
+.fp-comment-meta { font-size: 11px; color: #6B7280; margin-top: 3px; }
+.fp-empty { color: #6B7280; text-align: center; padding: 32px 0; font-size: 13px; }
+
+/* Floating action bar */
+.fab {
+  position: fixed; top: 12px; right: 16px; z-index: 201;
+  display: flex; align-items: center; gap: 4px;
+}
+.fab-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: #1F2937; border: 1px solid #374151; border-radius: 6px;
+  padding: 6px 10px; cursor: pointer; font-family: inherit;
+  font-size: 12px; color: #D1D5DB; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: all 0.15s;
+}
+.fab-btn:hover { border-color: #E8792B; color: #F9FAFB; }
+.fb-badge { background: #E8792B; color: #fff; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 8px; min-width: 18px; text-align: center; }
+
+/* Selection action bar — appears on text highlight */
+.sel-bar {
+  position: absolute; z-index: 300;
+  background: #1A1F26; border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5); padding: 4px 8px;
+  display: none; font-family: 'JetBrains Mono', monospace;
+}
+.sel-bar.visible { display: flex; align-items: center; gap: 4px; }
+.sel-bar-btn {
+  background: none; border: none; color: #f0f2f5;
+  font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+  padding: 4px 8px; border-radius: 4px;
+  transition: background 0.15s; white-space: nowrap;
+}
+.sel-bar-btn:hover { background: rgba(255,255,255,0.15); }
+.sel-bar::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: #1A1F26;
+}
+
+/* Selection popover */
+.sel-popover {
+  position: absolute; z-index: 300;
+  background: #111827; border: 1px solid #1F2937; border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5); padding: 12px; width: 280px;
+  display: none; font-family: 'JetBrains Mono', monospace;
+}
+.sel-popover.visible { display: block; }
+.sel-highlight { font-size: 11px; color: #E8792B; font-style: italic; margin-bottom: 8px; max-height: 40px; overflow: hidden; }
+.sel-input { width: 100%; border: 1px solid #374151; background: #1F2937; color: #E5E7EB; border-radius: 4px; padding: 8px; font: inherit; font-size: 13px; resize: none; min-height: 60px; outline: none; }
+.sel-input:focus { border-color: #E8792B; }
+.sel-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+.sel-name { flex: 1; border: 1px solid #374151; background: #1F2937; color: #E5E7EB; border-radius: 4px; padding: 6px 8px; font: inherit; font-size: 12px; outline: none; }
+.sel-name:focus { border-color: #E8792B; }
+.sel-submit {
+  background: #E8792B; color: #fff; border: none; border-radius: 4px;
+  padding: 6px 14px; font: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+.sel-submit:hover { background: #d06a22; }
+.sel-submit:disabled { opacity: 0.5; cursor: default; }
+.sel-status { font-size: 11px; color: #9CA3AF; margin-top: 6px; }
+
+/* Get in Touch button */
+.cta-touch {
+  display: inline-block; background: #E8792B; color: #fff; border: none;
+  border-radius: 5px; padding: 10px 22px; font: inherit; font-size: 13px;
+  font-weight: 600; cursor: pointer; text-decoration: none; letter-spacing: 0.02em;
+  transition: background 0.15s;
+}
+.cta-touch:hover { background: #d06a22; }
+.cta-touch-sm { padding: 7px 16px; font-size: 12px; }
+
+/* Contact modal */
+.contact-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400;
+  display: none; align-items: center; justify-content: center;
+}
+.contact-overlay.visible { display: flex; }
+.contact-box {
+  background: #111827; border-radius: 8px; padding: 24px; width: 380px;
+  max-width: 90vw; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  font-family: 'JetBrains Mono', monospace;
+}
+.contact-box h3 { font-size: 16px; margin-bottom: 14px; color: #F9FAFB; }
+.contact-field { width: 100%; border: 1px solid #374151; background: #1F2937; color: #E5E7EB; border-radius: 4px; padding: 8px 10px; font: inherit; font-size: 13px; margin-bottom: 10px; outline: none; }
+.contact-field:focus { border-color: #E8792B; }
+.contact-field-msg { min-height: 80px; resize: vertical; }
+.contact-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.contact-cancel { background: transparent; border: 1px solid #374151; color: #9CA3AF; border-radius: 4px; padding: 7px 16px; font: inherit; font-size: 12px; cursor: pointer; }
+.contact-cancel:hover { border-color: #4B5563; color: #E5E7EB; }
+.contact-status { font-size: 12px; color: #9CA3AF; margin-top: 8px; }
+
+/* Refresh icon in panel */
+.fp-refresh { cursor: pointer; color: #9CA3AF; font-size: 16px; border: none; background: none; padding: 2px 6px; transition: transform 0.3s; }
+.fp-refresh:hover { color: #E8792B; }
+.fp-refresh.spinning { animation: spin 0.6s linear; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Inline feedback form in panel */
+.fp-form { border-bottom: 1px solid #1F2937; padding-bottom: 12px; margin-bottom: 12px; }
+.fp-form textarea { width: 100%; border: 1px solid #374151; background: #1F2937; color: #E5E7EB; border-radius: 4px; padding: 8px; font: inherit; font-size: 13px; resize: none; min-height: 60px; outline: none; }
+.fp-form textarea:focus { border-color: #E8792B; }
+.fp-form-row { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+.fp-form-name { flex: 1; border: 1px solid #374151; background: #1F2937; color: #E5E7EB; border-radius: 4px; padding: 5px 8px; font: inherit; font-size: 12px; outline: none; }
+.fp-form-name:focus { border-color: #E8792B; }
+.fp-form-submit { background: #E8792B; color: #fff; border: none; border-radius: 4px; padding: 5px 12px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.fp-form-submit:hover { background: #d06a22; }
+.fp-form-submit:disabled { opacity: 0.5; cursor: default; }
+.fp-form-status { font-size: 11px; color: #9CA3AF; margin-top: 4px; }
+
+/* Header text links */
+.header-link {
+  font-size: 12px; color: #9CA3AF; text-decoration: none;
+  cursor: pointer; transition: all 0.15s;
+}
+.header-link:hover { color: #E8792B; font-weight: 700; text-decoration: underline; }
+
+/* Shift body when panel open */
+body.panel-open { margin-right: 320px; }
+
+/* breadcrumb nav */
+.breadcrumb-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(11, 15, 26, 0.92);
+  border-bottom: 1px solid #1F2937;
+  padding: 0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.breadcrumb-nav .container { padding: 0 60px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.breadcrumb-nav .container::-webkit-scrollbar { display: none; }
+.breadcrumb-list {
+  display: flex; gap: 0; list-style: none; padding: 0; margin: 0;
+  white-space: nowrap; justify-content: center;
+}
+.breadcrumb-list li { flex-shrink: 0; }
+.breadcrumb-list a {
+  display: block; padding: 10px 14px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; color: #9CA3AF;
+  text-decoration: none; border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.breadcrumb-list a:hover { color: #F9FAFB; }
+.breadcrumb-list a.active { color: #E8792B; border-bottom-color: #E8792B; }
+
+/* ============================================
+   FULL-BLEED SECTION STYLING
+   ============================================ */
+
+/* Subtle global starfield using radial gradients */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 90% 90%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 50% 50%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 70% 10%, rgba(255,255,255,0.4), transparent);
+  background-size: 600px 600px, 700px 700px, 500px 500px, 800px 800px, 650px 650px, 550px 550px, 750px 750px, 600px 600px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure body content sits above starfield */
+body > *:not(script) { position: relative; z-index: 1; }
+
+/* Sections are now full-width, content inside is constrained by .container */
+.topic-section {
+  position: relative;
+  width: 100%;
+  padding: 80px 0; /* Substantial breathing room to show off the images */
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.topic-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.12; 
+  z-index: 0;
+  pointer-events: none;
+  filter: grayscale(0.2) contrast(1.1);
+  mix-blend-mode: screen;
+}
+
+.topic-section > .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Background mappings */
+.bg-earth::before { background-image: url('https://images-assets.nasa.gov/image/art002e009205/art002e009205~large.jpg'); }
+.bg-orbit::before { background-image: url('https://www.nasa.gov/wp-content/uploads/2023/04/51476988575-254f09eb06-o.jpg?resize=1536,864'); }
+.bg-moon::before { background-image: url('https://www.nasa.gov/wp-content/uploads/2023/06/architecture-illustration-cover.png?resize=1536,864'); }
+.bg-cislunar::before { background-image: url('https://images-assets.nasa.gov/image/art002e009289/art002e009289~large.jpg'); background-position: top; }
+.bg-review::before { background-image: url('https://www.nasa.gov/wp-content/uploads/2024/09/architecture-illustration-review.png?resize=1536,864'); }
+.bg-eclipse::before { background-image: url('https://images-assets.nasa.gov/image/art002e009573/art002e009573~large.jpg'); }
+.bg-launch::before { background-image: url('https://images-assets.nasa.gov/image/artemis-ii-launch-11/artemis-ii-launch-11~large.jpg'); }
+
+
+/* responsive */
+@media (max-width: 768px) {
+  .container { padding: 0 20px; }
+  .cols { flex-direction: column; gap: 12px; }
+  .g3 { flex-direction: column; gap: 12px; }
+  .header { flex-direction: column; gap: 4px; }
+  .footer-bar { flex-direction: column; gap: 4px; padding-bottom: 24px; }
+  .stack-row { flex-direction: column; gap: 2px; }
+  .stack-label { width: auto; }
+  .feedback-panel { width: 280px; }
+  body.panel-open { margin-right: 0; }
+  .cta-touch-desktop { display: none; }
+  .sel-popover, .sel-bar { display: none !important; }
+  .breadcrumb-nav .container { padding: 0 20px; }
+  .breadcrumb-list a { padding: 8px 10px; font-size: 10px; }
+  .fab { display: none; }
+  .breadcrumb-notes { display: block; }
+  .topic-section { padding: 40px 0; }
+  /* Contact as bottom sheet on mobile */
+  .contact-overlay.visible { align-items: flex-end; }
+  .contact-box {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    width: 100%; max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 0 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+    will-change: transform;
+    max-height: 85vh; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #111827;
+  }
+  .contact-overlay.visible .contact-box { transform: translateY(0); }
+  #sheetHandle { display: flex !important; }
+}
+
+/* Print override — back to light for paper */
+@media print {
+  html, body { background: #fff !important; color: #1A1F26 !important; }
+  body::before { display: none !important; }
+  p, li, td { color: #4A5568 !important; }
+  strong, h3 { color: #1A1F26 !important; }
+  .callout, .callout-dark { background: #FEF0E3 !important; color: #1A1F26 !important; }
+  a, .footer-bar a { color: #2D5F8A !important; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 11px; color: #6B7280; }
+  .feedback-panel, .fab, .sel-popover, .sel-bar, .contact-overlay, .breadcrumb-nav { display: none !important; }
+  body.panel-open { margin-right: 0; }
+  .cta-touch-inline { display: none !important; }
+  .topic-section::before { display: none !important; }
+  .topic-section { border: none !important; padding: 20px 0 !important; }
+  section { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<nav class="breadcrumb-nav" id="breadcrumbNav">
+  <div class="container">
+    <ul class="breadcrumb-list">
+      <li><a href="#summary">Summary</a></li>
+      <li><a href="#why-now">Why Now</a></li>
+      <li><a href="#earth-orbit">Earth Orbit</a></li>
+      <li><a href="#moon-base">Moon Base</a></li>
+      <li><a href="#orbital">Relay Layer</a></li>
+      <li><a href="#verticals">Task Verticals</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#join">Join Us</a></li>
+      <li class="breadcrumb-notes"><a href="javascript:void(0)" onclick="togglePanel()" style="color:#E8792B">Feedback</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div style="background:#1a1a1a;border-bottom:2px dashed #4B5563;padding:8px 0;text-align:center;position:sticky;top:41px;z-index:99">
+  <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6B7280">Draft &mdash; Work in Progress</span>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1>Yak Robotics</h1>
+    <div class="meta">Space Economy Brief &mdash; April 2026</div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+    <p style="font-size:18px;color:#F9FAFB;font-weight:500;margin:0">Runtime procurement for satellites, space stations, and the Moon Base</p>
+    <div class="cta-touch-desktop" style="display:flex;gap:16px;align-items:center">
+      <a href="javascript:void(0)" onclick="copyAsMarkdown()" id="copyMdBtn" class="header-link">Copy as Markdown</a>
+      <a href="javascript:void(0)" onclick="showContact()" class="header-link">Get in Touch</a>
+    </div>
+  </div>
+</div>
+
+<section class="topic-section bg-earth">
+  <div class="container">
+    <h2 id="summary">Executive Summary</h2>
+    <ul style="padding-left:20px;color:#A0AEC0">
+      <li style="margin-bottom:10px"><strong>The space economy has become a multi-operator market.</strong> Over 10,000 active satellites orbit Earth as of 2026, up from ~2,500 in 2020. Commercial space stations (Axiom, Orbital Reef, Starlab, Vast Haven) are scheduled to replace the ISS by 2031. On March 24, 2026, NASA announced a permanent Moon Base at the lunar South Pole. Each tier has reached a scale where no single vendor can serve the market alone.</li>
+      <li style="margin-bottom:10px"><strong>Each tier converges on the same structural problem.</strong> Task posting, executor matching, credential verification, delivery verification, and settlement &mdash; these are unsolved across Earth observation tasking, in-space servicing (ISAM), commercial station logistics, and lunar surface operations. Bilateral contracts still dominate where a protocol layer should exist. The unit economics of space have matured faster than the procurement infrastructure that serves them.</li>
+      <li style="margin-bottom:10px"><strong>Physics forces autonomous dispatch at every tier.</strong> LEO satellites have 10-minute passes &mdash; no time for human coordination across ground stations. Earth&ndash;Moon round-trip latency is 2.6 seconds &mdash; no real-time teleoperation. At both ends, the execution decision must happen at the edge. Autonomous dispatch is not a nice-to-have; it is a property of the physical environment.</li>
+      <li style="margin-bottom:10px"><strong>Yak Robotics already built the protocol.</strong> Seven-module architecture: coordination, task registry, executor registry (ERC-8004 on Base), credential verification, verification engine, settlement (USDC + Stripe + ACH), robot federation. Operational today for construction surveying. Domain-agnostic by design. Extension to orbital and lunar operations is a schema exercise, not an architecture redesign.</li>
+      <li style="margin-bottom:10px"><strong>Relay constellations are the MCP gateway for the whole stack.</strong> Starlink in LEO, LunaNet in cislunar space, and upcoming commercial relay networks are the substrate for robot discovery and control at distance. On-chain robot identity (ERC-8004) is relay-agnostic &mdash; identity resolves on-chain, endpoint reachability is a separate routing concern. This separation is the correct architecture for multi-relay, intermittent-coverage environments, whether LEO or cislunar.</li>
+      <li style="margin-bottom:0"><strong>Seeking partners across the stack:</strong> commercial satellite operators (Earth observation, SAR, RF intelligence), space station builders, ISAM providers (servicing, refueling, debris removal), lunar robotics teams, cislunar communications operators, and research teams working on autonomous operations in space.</li>
+    </ul>
+
+    <div style="display:flex;gap:12px;justify-content:center;align-items:center;margin-top:16px;flex-wrap:wrap">
+      <a href="https://yakrobot.bid/demo/" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;background:#1B3A5C;color:#fff;border-radius:5px;padding:10px 22px;font-size:13px;font-weight:600;text-decoration:none;letter-spacing:0.02em;line-height:1.4;height:40px;box-sizing:border-box">Try Simulator &#8599;</a>
+      <span style="color:#9CA3AF;font-size:13px">or</span>
+      <a href="https://www.nasa.gov/architecture" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;background:#E8792B;color:#fff;border-radius:5px;padding:10px 22px;font-size:13px;font-weight:600;text-decoration:none;letter-spacing:0.02em;line-height:1.4;height:40px;box-sizing:border-box">NASA Architecture &#8599;</a>
+    </div>
+
+    <h2 id="why-now">Why Now</h2>
+    <p>The space economy is no longer a research program. Earth orbit is the most active commercial environment it has ever been, and NASA has committed to a permanent lunar presence. Two converging market shifts create the opening: commercial demand at scale, and a regulatory/architectural window where protocol layers still have room to form.</p>
+
+    <div class="callout" style="margin-bottom:12px">
+      <strong>NASA &ldquo;Ignition&rdquo; &mdash; March 24, 2026.</strong> NASA announced a Moon Base at the lunar South Pole region, phased iterative approach, end goal of continuous human presence. SR-1 Freedom nuclear propulsion demo repurposed for Mars. Architecture Definition Document released publicly.
+    </div>
+
+    <div class="callout-dark" style="margin-bottom:16px">
+      <strong>ISS Transition &mdash; 2031.</strong> NASA&rsquo;s Commercial LEO Destinations (CLD) program is funding Axiom Space, Orbital Reef (Blue Origin + Sierra Space), Starlab (Voyager + Airbus + Palantir), and Vast Haven as commercial replacements for the International Space Station. NASA shifts from station operator to anchor tenant, buying services from multiple private stations.
+    </div>
+
+    <h3>Earth Orbit &mdash; Commercial Scale</h3>
+    <div class="cols">
+      <div>
+        <p><strong>Constellation inflation.</strong> Starlink operates ~7,000 satellites with ~30,000 planned. Amazon Kuiper is deploying ~3,200. OneWeb, SES mPOWER, Telesat Lightspeed add thousands more. Earth observation constellations &mdash; Planet Labs (~200 active), Maxar, BlackSky, Capella Space, ICEYE &mdash; generate thousands of tasking requests per day. The unit of commerce has shifted from &ldquo;the satellite&rdquo; to &ldquo;the task.&rdquo;</p>
+        <p><strong>ISAM goes from demo to routine.</strong> Northrop Grumman MEV-1/2 proved life extension. Astroscale ELSA-d proved debris capture. Orbit Fab deployed the RAFTI refueling interface. Starfish Space Otter vehicle contracts are multiplying. In-space servicing, assembly, and manufacturing is transitioning from one-off contracts to a repeatable service market &mdash; and markets need clearing mechanisms.</p>
+        <p><strong>Earth observation is already a task market.</strong> Customers submit AOI (area of interest) + date + sensor class; providers bid capacity. Today this is fragmented across provider portals. A cross-provider auction layer with verified delivery would commoditize what is currently bilateral procurement.</p>
+      </div>
+      <div>
+        <p><strong>Multi-station LEO by 2030.</strong> Post-ISS, a minimum of three to four crewed commercial stations will operate simultaneously. Each needs cargo delivery, experiment hosting, crew rotation, maintenance, and inspection services. Multiple launch providers (SpaceX Falcon/Starship, Rocket Lab Neutron, Blue Origin New Glenn, Stoke Space, Sierra Space Dream Chaser) will compete on each manifest. Logistics coordination across operators is an explicit unsolved problem.</p>
+        <p><strong>Regulatory pressure on debris.</strong> FCC five-year deorbit rule (effective 2024). ESA Zero Debris Charter (2023). Active Debris Removal (ADR) contracts from JAXA and ESA are now funded. The regulatory direction is clear: every operator will be responsible for end-of-life management, and most will outsource it. This is a new task category, emerging today.</p>
+        <p><strong>Physics forces autonomy here too.</strong> A LEO satellite passes a given ground station in ~10 minutes. Orbit-to-orbit rendezvous windows can be sub-second. Earth&ndash;Moon round-trip latency is ~2.6 seconds. Human coordination across continents or planets is not fast enough. Autonomous dispatch with on-chain settlement is the only architecture that scales.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="topic-section bg-orbit">
+  <div class="container">
+    <h2 id="earth-orbit">Earth Orbit</h2>
+    <p>The commercial space economy around Earth is the near-term proving ground for the same procurement layer the Moon Base will need. Three market segments map cleanly onto Yak&rsquo;s protocol: satellite task provisioning, in-space servicing, and commercial station logistics.</p>
+
+    <h3>1. Satellite Constellations as a Task Market</h3>
+    <p>Earth observation (EO), synthetic aperture radar (SAR), radio frequency (RF) signal intelligence, and weather constellations already operate on a task-based commercial model. Customers submit AOI + date + sensor class + quality tier; providers fulfill against capacity. The missing layer is cross-provider aggregation: today a customer wanting guaranteed SAR imagery by a deadline must contract individually with Capella, ICEYE, or Umbra. Yak&rsquo;s auction engine is the natural clearing mechanism.</p>
+
+    <div class="cols">
+      <div>
+        <p><strong>Operators as executors.</strong> Planet Labs (PlanetScope, SkySat), Maxar (WorldView Legion), BlackSky, Capella Space, ICEYE, Umbra, HawkEye 360, Spire Global, Iceye. Each exposes tasking APIs today. Wrapping them as MCP tool servers plugs them into the Yak registry with zero protocol change. Each satellite is a robot in the federation &mdash; identical architectural pattern to construction drones.</p>
+        <p><strong>Tasks as auctions.</strong> &ldquo;Deliver 0.5m-resolution EO imagery of lat/lng box by 18:00 UTC, weather-adjusted, maximum cloud cover 20%.&rdquo; Multiple operators bid based on orbital passes, weather forecasts, and available tasking windows. Best capability wins; delivery verified against the schema; settlement in USDC or fiat. This is the construction survey auction, with orbital mechanics as the scheduling constraint.</p>
+      </div>
+      <div>
+        <p><strong>Verification as already-standard.</strong> EO providers deliver GeoTIFFs with embedded metadata (capture time, sun elevation, sensor parameters, resolution). SAR delivers SLCs with precise orbital state vectors. Yak&rsquo;s verification engine already consumes geospatial payloads for construction survey QA &mdash; the same schema family covers satellite delivery with minor extension.</p>
+        <p><strong>Credential layer maps directly.</strong> Earth observation providers hold Commerce Department licenses (NOAA for US operators), export control clearances (ITAR/EAR), and downlink licenses (FCC). Yak&rsquo;s existing credential verification module (SAM.gov Exclusions, insurance, PLS) is the same architectural pattern applied to a different certificate set.</p>
+      </div>
+    </div>
+
+    <h3>2. In-Space Servicing, Assembly, and Manufacturing (ISAM)</h3>
+    <p>ISAM is a service market in formation. The technical capability exists; the procurement layer does not. A satellite operator needing inspection, refueling, or relocation today negotiates bilateral contracts &mdash; often taking months. The operator pool is growing (Northrop, Astroscale, Starfish, Orbit Fab, D-Orbit, ClearSpace, Kall Morris), and the task types are stabilizing.</p>
+
+    <table>
+      <tr><th>Task Category</th><th>Executors</th><th>Typical Value</th><th>Yak Capability</th></tr>
+      <tr><td>Rendezvous &amp; Proximity Ops (RPO) inspection</td><td>Northrop MEV, Starfish Otter, Astroscale</td><td>$2M&ndash;$15M per mission</td><td>Task schema with RPO safety constraints; inspection delivery as image + telemetry package</td></tr>
+      <tr><td>Life extension / stationkeeping</td><td>Northrop MEV series, D-Orbit ION</td><td>$15M&ndash;$50M per client-year</td><td>Multi-year task contracts; milestone-based settlement via smart contract</td></tr>
+      <tr><td>Refueling</td><td>Orbit Fab (RAFTI standard)</td><td>$5M&ndash;$20M per propellant transfer</td><td>Standardized interface (RAFTI) as capability tag in executor registry</td></tr>
+      <tr><td>Active debris removal (ADR)</td><td>Astroscale ADRAS-J, ClearSpace, Kall Morris</td><td>$10M&ndash;$30M per target</td><td>Regulatory-driven demand; credential check against ADR certification + downlink license</td></tr>
+      <tr><td>In-space assembly</td><td>Maxar SPIDER, Redwire, Voyager</td><td>$20M&ndash;$100M per structure</td><td>Multi-robot coordination (analogous to aerial + ground survey on construction)</td></tr>
+      <tr><td>On-orbit manufacturing</td><td>Varda Space, Redwire</td><td>Task-priced by mass returned</td><td>Throughput-based task schema; delivery verification via physical return</td></tr>
+    </table>
+    <p class="footnote">Values are industry estimates; no liquid market yet exists. The protocol is the missing clearing layer.</p>
+
+    <h3>3. Commercial Space Stations (Post-ISS)</h3>
+    <p>By 2031, four or more crewed commercial stations will operate in LEO: Axiom Station (already attaching modules to ISS today, free-flying in late 2020s), Orbital Reef (Blue Origin + Sierra Space), Starlab (Voyager, Airbus, Palantir, Mitsubishi), and Vast Haven (Vast Space). Each will host research payloads, manufacturing experiments, and visiting crew from multiple national agencies and private customers. Coordination across stations is an explicit unsolved problem.</p>
+
+    <div class="cols">
+      <div>
+        <p><strong>Cargo manifest auction.</strong> Each station needs routine resupply: consumables, experiments, spare parts, crew rotation. Multiple launch providers compete per manifest. Yak&rsquo;s auction engine posts the cargo spec (mass, volume, stowage, timeline), launch providers bid capacity, the station operator dispatches the winning bid. Settlement on docking confirmation.</p>
+        <p><strong>Experiment hosting marketplace.</strong> Research customers (pharma, materials science, national agencies) need microgravity time on specific payload racks. Today they negotiate per station. A protocol-level experiment task schema would let a customer post &ldquo;30 days on EXPRESS-class rack, 400W, 2U stowage, downlink 10 GB&rdquo; and receive bids from Axiom, Orbital Reef, Starlab, Vast simultaneously.</p>
+      </div>
+      <div>
+        <p><strong>Free-flyer coordination.</strong> Starlab and Orbital Reef will host external free-flyers &mdash; autonomous modules performing tasks in formation with the station. Dispatch, docking windows, and payload handoff are procurement-heavy. Each free-flyer is a robot endpoint in the Yak federation; the station is a logistics node with its own docking and power interfaces.</p>
+        <p><strong>Crew time as a task.</strong> Commercial station crew time is billable at ~$40K&ndash;$80K per astronaut-hour depending on station and task. Structured task procurement of crew labor &mdash; maintenance, experiment tending, EVAs &mdash; is in early design across operators. Yak&rsquo;s protocol supports human executors alongside robotic ones (the same delivery verification applies to human-produced work product).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="topic-section bg-moon">
+  <div class="container">
+    <h2 id="moon-base">Moon Base</h2>
+    <p>Yak&rsquo;s seven-module protocol was designed to be domain-agnostic. The same auction engine that runs construction survey and satellite tasking maps directly to NASA&rsquo;s Phase 1 functional gaps for lunar surface operations. Below is the gap-to-capability mapping from NASA&rsquo;s Architecture Definition Document.</p>
+
+    <h3>NASA Functional Gaps &rarr; Yak Protocol Capabilities</h3>
+    <table>
+      <tr><th>NASA Gap ID</th><th>Functional Requirement</th><th>Yak Capability</th></tr>
+      <tr><td>FN-A-104L</td><td>Robotic manipulation of payloads, logistics, and equipment on the lunar surface</td><td>Task execution schema + payload delivery verification</td></tr>
+      <tr><td>FN-A-105L</td><td>Interface robotic systems with logistics carriers on the lunar surface</td><td>MCP robot adapter bridging to logistics carrier APIs</td></tr>
+      <tr><td>FN-A-201L</td><td>Control robotic systems in sunlit areas and non-PSRs from Earth</td><td>MCP-native robot control interface, remote execution</td></tr>
+      <tr><td>FN-A-401L</td><td>Command and control assets from Earth during uncrewed periods</td><td>Autonomous auction dispatch, no human-in-loop required</td></tr>
+      <tr><td>FN-A-103L</td><td>Robotic system capable of conducting reconnaissance</td><td>Survey task schema (terrain mapping, resource identification)</td></tr>
+      <tr><td>FN-C-101L</td><td>Communications and data exchange between surface and Earth</td><td>Relay-aware task routing; orbital relay as MCP endpoint</td></tr>
+      <tr><td>FN-C-103L</td><td>Communications between assets on the lunar surface</td><td>Surface mesh task coordination layer</td></tr>
+      <tr><td>FN-C-105L</td><td>High-bandwidth, high-availability surface-to-Earth comms (&gt;500 Mbps)</td><td>LunaNet / Starlink-lunar integration as robot discovery substrate</td></tr>
+      <tr><td>FN-C-201L</td><td>Position, navigation, and timing services at the South Pole</td><td>PNT task category; orbital asset scoring for navigation capability</td></tr>
+      <tr><td>FN-M-302L</td><td>Local unpressurized surface mobility in sunlit areas and non-PSRs</td><td>Mobility task class; rover capability matching in auction scoring</td></tr>
+      <tr><td>FN-M-304L</td><td>Local unpressurized surface mobility in PSRs</td><td>PSR-rated robot scoring; thermal and lighting tolerance as bid factors</td></tr>
+      <tr><td>FN-M-401L</td><td>Unload limited cargo (100s kg) on the lunar surface</td><td>Logistics task type; unload + reposition task schema</td></tr>
+      <tr><td>FN-M-501L</td><td>Reposition limited cargo (100s kg) in the South Pole region</td><td>Cargo repositioning task with GPS-equivalent coordinate delivery proof</td></tr>
+      <tr><td>FN-U-103L</td><td>Resource identification and utilization payload operations</td><td>ISRU survey task schema; spectrometer / drill payload capability matching</td></tr>
+    </table>
+    <p class="footnote">Gap IDs from NASA Moon Base Architecture Definition Document, Phase 01 Functional Gaps. Full gap list available at nasa.gov/architecture.</p>
+
+    <h3>Protocol Stack for Lunar Operations</h3>
+    <div class="stack-row"><span class="stack-label">Protocol</span><span class="stack-value">Task posting, executor matching, delivery verification, and settlement for autonomous lunar robot operations</span></div>
+    <div class="stack-row"><span class="stack-label">Task class</span><span class="stack-value">Surface reconnaissance, cargo manipulation, regolith survey, resource mapping, mobility deployment</span></div>
+    <div class="stack-row"><span class="stack-label">Domain</span><span class="stack-value">Lunar South Pole region &mdash; environmentally specified tolerances, PSR vs. sunlit area classification, NASA interoperability standards</span></div>
+    <div class="stack-row"><span class="stack-label">Offering</span><span class="stack-value">Sensor data delivery, terrain models, cargo delivery confirmation, ISRU resource maps &mdash; schema-driven, verifiable</span></div>
+    <div class="stack-row"><span class="stack-label">Scoring factors</span><span class="stack-value">PSR clearance rating, thermal tolerance range, comms relay availability window, proximity to task site, payload mass capacity</span></div>
+    <div class="stack-row"><span class="stack-label">Settlement</span><span class="stack-value">USDC on Base mainnet for stateless settlement; Stripe ACH for fiat; escrow-locked on verified delivery proof</span></div>
+
+    <h3>Open Challenges</h3>
+    <div class="cols">
+      <div>
+        <p><strong>Latency and autonomy:</strong> At 2.6-second round-trip, the auction engine must operate autonomously at the task execution level. Bid evaluation and dispatch can run from Earth; real-time correction of robot actions cannot. This requires local autonomy stacks on the lunar surface with execution-level authority &mdash; a trust boundary not present in construction.</p>
+        <p><strong>Relay windows:</strong> Orbital relay constellations provide intermittent coverage. Task scheduling must account for communications blackout periods and queue commands for relay window resumption. The auction engine&rsquo;s state machine must be extended to handle relay-gated execution states.</p>
+      </div>
+      <div>
+        <p><strong>Verification in permanent shadow:</strong> Delivery proof for tasks in PSRs requires sensors that operate at &minus;173&deg;C and cannot rely on visible-light imagery. LIDAR, radar, and spectrometry replace photogrammetry. The verification schema must be sensor-class-aware, not camera-first.</p>
+        <p><strong>Liability and planetary protection:</strong> When an autonomously dispatched lunar rover damages adjacent infrastructure or contaminates a sample site, liability allocation is unsettled. NASA&rsquo;s planetary protection requirements (forward and backward contamination) add a regulatory layer not present in terrestrial operations. Proportional liability frameworks for deep-space autonomous systems do not yet exist.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="topic-section bg-cislunar">
+  <div class="container">
+    <h2 id="orbital">Relay &amp; Discovery Layer</h2>
+    <p>Relay constellations are the communications substrate that makes remote robot discovery and dispatch physically possible &mdash; in Earth orbit, cislunar space, and eventually Mars. For LEO constellations, ground-station networks (AWS Ground Station, KSAT, Leaf Space) already function as the relay layer. For lunar operations, NASA&rsquo;s LunaNet is the emerging equivalent. Yak&rsquo;s MCP-based robot discovery architecture is designed for exactly this topology: endpoints are queried via relay, not direct line-of-sight.</p>
+
+    <div class="flow">
+      <div class="flow-box"><strong>Earth Control</strong><span>Auction engine, agent orchestration</span></div>
+      <div class="flow-sep">&rarr;</div>
+      <div class="flow-box"><strong>Relay Sat</strong><span>LunaNet / Starlink cislunar</span></div>
+      <div class="flow-sep">&rarr;</div>
+      <div class="flow-box"><strong>Lunar Surface</strong><span>MCP robot endpoints</span></div>
+      <div class="flow-sep">&rarr;</div>
+      <div class="flow-box"><strong>Delivery Proof</strong><span>Sensor data, coordinates</span></div>
+      <div class="flow-sep">&rarr;</div>
+      <div class="flow-box"><strong>Settlement</strong><span>USDC / fiat on verified delivery</span></div>
+    </div>
+
+    <h3>Earth-Orbit Ground Network &amp; Relay</h3>
+    <div class="cols">
+      <div>
+        <p><strong>AWS Ground Station / KSAT / Leaf Space:</strong> Ground-station-as-a-service providers already operate the relay layer for LEO satellites, exposing tasking APIs for downlink scheduling. Satellite tasking requests flow from customer &rarr; operator &rarr; ground-station reservation &rarr; payload tasking command. Yak&rsquo;s auction engine can integrate at the top of this stack: customer posts a task, the winning satellite operator uses its existing ground network to execute.</p>
+        <p><strong>Starlink as direct-to-orbit relay:</strong> SpaceX has demonstrated satellite-to-satellite laser links (Starlink v2). Earth observation operators are evaluating Starlink as a relay backhaul to reduce ground-station dependency. This changes the discovery topology: a satellite becomes an MCP endpoint reachable via Starlink, not tied to ground-station passes.</p>
+      </div>
+      <div>
+        <p><strong>TDRS successor &amp; commercial relay:</strong> NASA&rsquo;s Tracking and Data Relay Satellite System (TDRSS) reaches end-of-life in the late 2020s. NASA is procuring commercial near-Earth relay services as replacement. Viasat, Inmarsat, and SES are candidates. This creates a new commercial market where relay capacity is bought per task, not per station-year &mdash; the protocol layer fits directly.</p>
+        <p><strong>Cross-link capability as a scoring factor:</strong> Satellites with optical cross-links (Starlink v2, Kuiper, Telesat Lightspeed, SDA Transport Layer) have different task-completion characteristics than those dependent on ground-station passes. Yak&rsquo;s executor scoring already handles capability tiers &mdash; cross-link availability is one more factor in bid ranking.</p>
+      </div>
+    </div>
+
+    <h3>Cislunar Relay &amp; PNT</h3>
+    <div class="cols">
+      <div>
+        <p><strong>LunaNet (NASA):</strong> NASA&rsquo;s planned multi-orbit relay architecture for cislunar operations. Capability target per FN-C-105L: second orbital relay constellation with surface imaging and lunar surface ground stations to enable &gt;500 Mbps. Intended to serve as the shared communications backbone for all Moon Base elements. Analogous to the Deep Space Network, but built for surface operations not point-to-point spacecraft tracking.</p>
+        <p><strong>SpaceX (Starlink / Starship):</strong> SpaceX&rsquo;s Starship is the leading heavy-lift candidate for CLPS and Moon Base cargo (Phase 2+). Cislunar Starlink relay is under active evaluation. SpaceX has the vertical integration to serve as both launch provider and relay operator &mdash; a single commercial counterparty for transport and communications.</p>
+      </div>
+      <div>
+        <p><strong>Amazon Kuiper / SES / Telesat:</strong> Multiple LEO/MEO operators are evaluating cislunar relay as an adjacent commercial opportunity to their Earth-orbit constellations. The economics are favorable: lunar relay capacity can be sold to NASA, commercial lander operators, and private resource extraction ventures simultaneously. The market is nascent but capitalized.</p>
+        <p><strong>Orbital PNT (FN-C-201L):</strong> Position, Navigation, and Timing at the South Pole requires orbital assets. The lunar South Pole has no GPS equivalent. Orbital PNT assets are required for rover navigation, landing precision, and surface sample location documentation. This is a distinct service from relay communications &mdash; a second satellite market for lunar operations.</p>
+      </div>
+    </div>
+
+    <div class="callout-dark">
+      <strong>Why this matters for Yak:</strong> Every MCP-based robot endpoint on the lunar surface is reachable only through a relay. The relay operator becomes the gatekeeper for robot discovery. Yak&rsquo;s ERC-8004 robot identity system &mdash; on-chain robot registry with discovered tools published to IPFS &mdash; is relay-agnostic: identity is resolved on-chain, endpoint reachability is a separate routing concern. This separation is the correct architecture for a multi-relay, intermittent-coverage environment.
+    </div>
+  </div>
+</section>
+
+<section class="topic-section bg-review">
+  <div class="container">
+    <h2 id="verticals">Task Verticals</h2>
+    <p>The same task schema used for construction survey extends to Earth orbit and the lunar surface. The verification engine is the domain-specific component; the auction, identity, and settlement layers are unchanged across all verticals. Below are the task categories organized by tier.</p>
+
+    <h3>Earth-Orbit Task Types</h3>
+    <table>
+      <tr><th>Task Type</th><th>Tier</th><th>Specification Source</th><th>Executors</th><th>Typical Value</th></tr>
+      <tr><td>EO imagery tasking (optical)</td><td>LEO</td><td>Customer AOI + date + resolution + cloud tolerance</td><td>Planet Labs, Maxar, BlackSky, Airbus</td><td>$500&ndash;$50K per scene</td></tr>
+      <tr><td>SAR imagery tasking</td><td>LEO</td><td>Customer AOI + date + polarization + resolution</td><td>Capella, ICEYE, Umbra, Synspective</td><td>$1K&ndash;$100K per scene</td></tr>
+      <tr><td>RF signal collection</td><td>LEO</td><td>Customer target area + frequency band + dwell time</td><td>HawkEye 360, Kleos, Unseenlabs</td><td>$5K&ndash;$250K per collect</td></tr>
+      <tr><td>Satellite inspection (RPO)</td><td>LEO/GEO</td><td>Client satellite state + anomaly description</td><td>Northrop MEV, Starfish Otter, Astroscale</td><td>$2M&ndash;$15M per mission</td></tr>
+      <tr><td>Life extension / stationkeeping</td><td>GEO</td><td>Client orbital parameters + service years</td><td>Northrop MEV series, D-Orbit ION</td><td>$15M&ndash;$50M per client-year</td></tr>
+      <tr><td>Refueling (RAFTI standard)</td><td>LEO/GEO</td><td>Propellant type + mass + interface spec</td><td>Orbit Fab, Astroscale</td><td>$5M&ndash;$20M per transfer</td></tr>
+      <tr><td>Active debris removal</td><td>LEO</td><td>Target catalog ID + orbit + regulatory authority</td><td>Astroscale, ClearSpace, Kall Morris</td><td>$10M&ndash;$30M per target</td></tr>
+      <tr><td>In-space assembly</td><td>LEO/GEO</td><td>Structural design + assembly sequence</td><td>Maxar SPIDER, Redwire, Voyager</td><td>$20M&ndash;$100M per structure</td></tr>
+      <tr><td>Station cargo manifest</td><td>LEO station</td><td>Mass + volume + stowage + docking window</td><td>SpaceX, Sierra Dream Chaser, Rocket Lab, Stoke</td><td>$10K&ndash;$40K per kg delivered</td></tr>
+      <tr><td>Experiment hosting</td><td>LEO station</td><td>Rack class + power + downlink + duration</td><td>Axiom, Orbital Reef, Starlab, Vast Haven</td><td>$50K&ndash;$2M per experiment-month</td></tr>
+      <tr><td>Orbit transfer / last-mile</td><td>LEO&rarr;GEO/MEO</td><td>Source orbit + destination + payload mass</td><td>D-Orbit ION, Momentus, Impulse Space, Exolaunch</td><td>$1M&ndash;$10M per transfer</td></tr>
+    </table>
+    <p class="footnote">Earth-orbit tasks are the near-term productive vertical: existing executors, existing customers, existing standards. The protocol&rsquo;s role is aggregation and cross-provider clearing, not market creation.</p>
+
+    <h3>Lunar Surface Task Types</h3>
+    <table>
+      <tr><th>Task Type</th><th>Phase</th><th>Specification Source</th><th>Sensor Class</th><th>Typical Scope</th></tr>
+      <tr><td>Terrain reconnaissance survey</td><td>Phase 1</td><td>NASA DN-001 to DN-014 data gaps; surface topology requirements</td><td>LIDAR, stereo imaging, radar altimetry</td><td>1&ndash;50 km&sup2; South Pole region mapping</td></tr>
+      <tr><td>Resource identification (volatiles)</td><td>Phase 1&ndash;2</td><td>ISRU architecture; NASA gap FN-U-103L</td><td>Near-infrared spectrometer, neutron detector, ground-penetrating radar</td><td>PSR ice mapping, regolith composition profiling</td></tr>
+      <tr><td>Cargo unload &amp; repositioning</td><td>Phase 1+</td><td>CLPS payload manifest; gap FN-M-401L / FN-M-501L</td><td>Force-torque sensor, visual odometry, gripper telemetry</td><td>100s kg, CLPS lander vicinity</td></tr>
+      <tr><td>Landing site characterization</td><td>Phase 1</td><td>NASA precision landing requirements; DN-001 to DN-005</td><td>Plume-surface interaction (PSI) sensors, high-res imager</td><td>100m radius around candidate landing zones</td></tr>
+      <tr><td>Regolith manipulation &amp; site prep</td><td>Phase 2</td><td>NASA gap FN-M-302L; habitat foundation specs</td><td>Excavator telemetry, compaction sensor, LIDAR surface comparison</td><td>Habitat pad, power cable trenching, berms</td></tr>
+      <tr><td>Power cable deployment</td><td>Phase 2</td><td>NASA gap FN-P-301L; electrical connection standards</td><td>Spool telemetry, mating verification sensor (dust-tolerant)</td><td>Habitat to power source distance; 100m&ndash;2 km runs</td></tr>
+      <tr><td>Ongoing surface monitoring</td><td>Phase 3</td><td>Continuous operations; shadow &amp; dust accumulation tracking</td><td>Multispectral imager, LIDAR diff, dust accumulation sensor</td><td>Base perimeter, solar array health, settlement detection</td></tr>
+      <tr><td>Sample collection &amp; staging</td><td>Phase 2+</td><td>NASA gap DN-017L; planetary protection requirements</td><td>Core drill, gripper, sealed container verification</td><td>Science ROI targets; PSR and sunlit area both required</td></tr>
+    </table>
+    <p class="footnote">Each task vertical adds a specification database and verification schema. The auction engine, robot identity system, and settlement layer are unchanged across task types. Sensor classes drive executor scoring, not the protocol itself.</p>
+
+    <h3>Payment Scale Reference (Lunar)</h3>
+    <table>
+      <tr><th>Task Type</th><th>Estimated Range</th><th>Comparator</th></tr>
+      <tr><td>Terrain reconnaissance survey (50 km&sup2;)</td><td>$500K&ndash;$2M</td><td>Analogous to large-scale LiDAR topo + interpretation</td></tr>
+      <tr><td>Resource identification campaign (PSR access)</td><td>$1M&ndash;$5M</td><td>Comparable to deep GPR + spectrometry + analysis</td></tr>
+      <tr><td>Cargo repositioning (100s kg, single CLPS mission)</td><td>$250K&ndash;$1M</td><td>Specialized equipment mobilization + operation</td></tr>
+      <tr><td>Site preparation (habitat pad, 30&times;30m)</td><td>$5M&ndash;$20M</td><td>Analogous to major civil earthworks, extreme access</td></tr>
+      <tr><td>Full Phase 1 precursor survey package</td><td>$10M&ndash;$50M</td><td>Full construction project lifecycle, space-rated</td></tr>
+    </table>
+    <p class="footnote">Estimates are illustrative; no liquid market yet exists. Range reflects analogous terrestrial tasks scaled for extreme-environment access cost, not equipment cost in orbit. Settlement in USDC removes currency risk for international operator teams.</p>
+  </div>
+</section>
+
+<section class="topic-section bg-eclipse">
+  <div class="container">
+    <h2 id="roadmap">Roadmap</h2>
+
+    <h3>Protocol Status and Phase Alignment</h3>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:8px">The yakrover protocol is domain-agnostic. Construction is the first vertical — operational. Space is the second vertical — in design.</p>
+
+    <p style="font-size:11px;font-weight:700;color:#4bdabf;text-transform:uppercase;letter-spacing:0.08em;margin:12px 0 4px">Vertical 1 &mdash; Construction (Earth Robots)</p>
+    <div class="stack-row"><span class="stack-label" style="color:#4bdabf">Alpha</span><span class="stack-value">Construction protocol layer operational &mdash; auction engine, on-chain robot identity (ERC-8004 on Base), settlement (card, ACH, USDC stablecoin), 100-robot test fleet, MCP interface, 37 tools. v1.4.1 alpha.</span></div>
+
+    <p style="font-size:11px;font-weight:700;color:#60A5FA;text-transform:uppercase;letter-spacing:0.08em;margin:16px 0 4px">Vertical 2 &mdash; Space &nbsp;<span style="font-weight:400;color:#6B7280;text-transform:none;letter-spacing:normal">(design stage)</span></p>
+    <div class="stack-row"><span class="stack-label">Now</span><span class="stack-value">Space vertical definition: Earth-orbit task schema (EO/SAR tasking, ISAM, station manifests), lunar task schema (terrain survey, cargo manipulation, resource ID), delivery verification for geospatial + orbital payloads, SD-X decision series for space-specific constraints.</span></div>
+    <div class="stack-row"><span class="stack-label">Earth orbit 1</span><span class="stack-value">Integrate first EO/SAR operator as MCP tool server. Cross-provider auction for imagery tasking. Delivery verification for GeoTIFF/SLC payloads. Settlement in USDC for international customers. Commercial station manifest schema design.</span></div>
+    <div class="stack-row"><span class="stack-label">Earth orbit 2</span><span class="stack-value">ISAM task category: RPO inspection, refueling (RAFTI), active debris removal. Credential module extension for ITAR/EAR/NOAA licenses. Multi-executor coordination for in-space assembly tasks. Commercial station cargo manifest dispatch across Axiom, Orbital Reef, Starlab, Vast.</span></div>
+    <div class="stack-row"><span class="stack-label">Moon Phase 1</span><span class="stack-value">Lunar robot registry on Base mainnet. Relay-aware MCP endpoint routing (LunaNet integration design). PSR-rated scoring factors in auction. Landing site characterization task type. Operator onboarding for lunar rover manufacturers.</span></div>
+    <div class="stack-row"><span class="stack-label">Moon Phase 2</span><span class="stack-value">Regolith manipulation task schema. ISRU resource survey delivery format. Multi-robot coordination (aerial reconnaissance + ground manipulation in one job). Satellite relay operator as a registered fleet participant. Escrow for $1M+ tasks.</span></div>
+    <div class="stack-row"><span class="stack-label">Moon Phase 3</span><span class="stack-value">Continuous operations model. Subscription-based monitoring tasks. On-chain settlement for international partners (ESA, JAXA, CSA) without Stripe dependency. Mars-forward task schema (dust tolerance, longer latency, nuclear power delivery verification).</span></div>
+
+    <h3>Decision Reference (SD-X and LD-X Series)</h3>
+    <p>Space-specific architectural decisions follow the SD-X (space, all tiers) and LD-X (lunar-specific) conventions in <a href="../DECISIONS.md">docs/DECISIONS.md</a>. Key decisions to be made before Earth-orbit and lunar alignment:</p>
+    <div class="cols">
+      <div>
+        <p><strong>SD-1 (pending):</strong> Orbital mechanics as auction constraint &mdash; how bid scoring incorporates orbital pass windows, revisit time, and solar conditions for satellite tasking. Must serve both tasking-by-pass and tasking-by-deadline models.</p>
+        <p><strong>SD-2 (pending):</strong> Credential module extension &mdash; ITAR/EAR, NOAA downlink, FCC five-year deorbit, FAA Part 450. Each regulatory regime exposes different attestation APIs (or none). Determines which operators are eligible for which task categories.</p>
+        <p><strong>SD-3 (pending):</strong> Relay-gated execution state &mdash; how the state machine handles communications blackout periods during task execution. Shared between LEO ground-station-pass constraints and cislunar relay windows. Options: pause-and-resume, pre-programmed autonomous execution, or abort-and-report.</p>
+      </div>
+      <div>
+        <p><strong>LD-1 (pending):</strong> PSR sensor class registry &mdash; which non-optical sensor modalities (LIDAR, radar, spectrometry) are first-class delivery proof types for permanently shadowed regions. Determines which robot operators can serve PSR task categories.</p>
+        <p><strong>LD-2 (pending):</strong> Planetary protection attestation &mdash; how the credential verification module handles NASA planetary protection compliance certifications. Analogous to FAA Part 108 for BVLOS, but with no existing API.</p>
+        <p><strong>SD-4 (pending):</strong> International settlement &mdash; USDC covers most cases, but ESA and JAXA operators may require EUR/JPY-denominated contracts with fiat settlement via SEPA or Japanese bank transfer. Applies identically to orbital and lunar operators.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="topic-section bg-launch">
+  <div class="container">
+    <h2 id="join">Join Us</h2>
+
+    <h3>Earth-Orbit Partners</h3>
+    <div class="cols">
+      <div>
+        <p><strong>Earth observation, SAR, and RF operators:</strong> Planet Labs, Maxar, BlackSky, Capella, ICEYE, Umbra, HawkEye 360, Spire, Synspective, and any operator exposing a tasking API. The protocol wraps your existing API as an MCP tool server and aggregates demand from cross-provider auctions. Revenue model: incremental capacity sold through the protocol, with zero changes to your internal scheduling.</p>
+        <p><strong>ISAM providers:</strong> Northrop Grumman (MEV, OSAM), Astroscale, Starfish Space, Orbit Fab, D-Orbit, ClearSpace, Kall Morris, Voyager, Redwire, Maxar SPIDER, Varda. Integration point: capability registration (RPO, refueling interface, debris capture, assembly), task schema for in-space servicing, milestone-based smart-contract settlement. Priority gap: the industry has capability without a clearing market &mdash; this is what the protocol solves.</p>
+      </div>
+      <div>
+        <p><strong>Commercial space station operators:</strong> Axiom Space, Orbital Reef (Blue Origin + Sierra Space), Starlab (Voyager + Airbus + Palantir + Mitsubishi), Vast Space. Integration point: cargo manifest auction schema, experiment hosting task category, crew-time task primitives. The protocol lets a customer post a station-agnostic experiment spec and receive bids across all operators &mdash; and lets stations fill capacity without per-customer sales cycles.</p>
+        <p><strong>Launch providers and orbital transfer:</strong> SpaceX, Rocket Lab, Sierra Space Dream Chaser, Stoke Space, Blue Origin New Glenn, Impulse Space, Momentus, D-Orbit ION, Exolaunch. Manifest-level auctions across competing launch vehicles; last-mile orbital transfer as a dispatch layer. Station manifests and constellation deployments both benefit from cross-provider bidding.</p>
+      </div>
+    </div>
+
+    <h3>Lunar Surface Partners</h3>
+    <div class="cols">
+      <div>
+        <p><strong>Lunar robotics developers:</strong> Teams building lunar rovers, hoppers, drill systems, and cargo manipulation robots. The protocol integrates any robot that exposes bid, execute, and pricing tools via MCP. Phase 1 targets: small utility rovers (&lt;50 kg), hoppers for PSR access, wheeled platforms capable of 10 km/hr in sunlit areas. Yak provides the procurement layer; you provide the robot.</p>
+        <p><strong>CLPS landers:</strong> Astrobotic, Intuitive Machines, Firefly Aerospace, Draper, Lockheed Martin, and other CLPS program participants who deliver payloads to the lunar surface. Post-delivery, Yak provides the dispatch layer for surface assets: cargo robots that unload and reposition CLPS-delivered equipment are the first surface task category.</p>
+      </div>
+      <div>
+        <p><strong>Cislunar communications and PNT operators:</strong> Satellite constellation builders working on LunaNet-compatible relay infrastructure or orbital PNT services. Integration point: MCP endpoint routing through relay gateway, robot discovery via on-chain registry resolved through relay. Revenue model: relay capacity sold per task execution window.</p>
+        <p><strong>Space agencies and international partners:</strong> NASA partnership calls are open (HQ-MoonBase@nasa.gov). ESA, JAXA, CSA, UAE Space Agency, ISRO, and KASA have stated Moon Base participation interests. Yak&rsquo;s protocol is jurisdiction-agnostic; settlement in USDC removes bilateral currency agreements.</p>
+      </div>
+    </div>
+
+    <h3>Research &amp; Capital Partners (Both Tiers)</h3>
+    <div class="cols">
+      <div>
+        <p><strong>Researchers:</strong> Autonomous rendezvous &amp; proximity operations. Multi-agent coordination across orbital regimes. Autonomous navigation in PSRs (no GPS, near-zero visibility, extreme slopes). Regolith mechanics for manipulation and site prep. Privacy-preserving task matching for government/ITAR-restricted contracts. Liability frameworks for autonomous systems in space. Economics of deep-space and orbital robot labor markets.</p>
+      </div>
+      <div>
+        <p><strong>Strategic investors and programs:</strong> NASA SBIR/STTR, DARPA (Blackjack, Orbital Prime), ESA Business Applications and &Delta;-Lab, Space Force SpaceWERX, Lunar Exploration Accelerator Program (LEAP), UK Space Agency, JAXA J-SPARC. Commercial investors focused on the cislunar and orbital economies: in-space manufacturing, servicing infrastructure, resource extraction, and logistics. The protocol layer is pre-competitive infrastructure &mdash; the equivalent of what TCP/IP is to the internet economy.</p>
+      </div>
+    </div>
+
+    <div class="g3" style="margin-top:20px">
+      <div class="callout" style="background:#111827;border-left-color:#E8792B;padding:14px 16px">
+        <p style="margin-bottom:2px"><strong><a href="https://rafael.fyi/" target="_blank">Rafa</a></strong></p>
+        <p style="margin-bottom:8px;font-size:12px;color:#9CA3AF">Protocol design, governance &mdash; Berlin</p>
+        <p style="margin-bottom:0">Director of the <a href="https://zknation.io" target="_blank">ZKsync Association</a>. Architected ZKsync&rsquo;s governance smart-contract system, live since 2024. Core researcher in the <a href="https://summerofprotocols.com/wp-content/uploads/2024/06/17-e43-FERNANDEZ.pdf" target="_blank">Summer of Protocols</a>. Publishes on protocol design through <a href="https://npcmemo.substack.com/p/liquid-services-and-runtime-procurement" target="_blank">NPC Memo</a>.</p>
+      </div>
+      <div class="callout" style="background:#111827;border-left-color:#E8792B;padding:14px 16px">
+        <p style="margin-bottom:2px"><strong><a href="https://anurajrp.io/" target="_blank">Anuraj</a></strong></p>
+        <p style="margin-bottom:8px;font-size:12px;color:#9CA3AF">Robotics, embedded systems &mdash; Finland</p>
+        <p style="margin-bottom:0">15 years across embedded systems, PCB design, and robotics. MSc Space Technology and Robotics (Erasmus Mundus SpaceMaster). Built the <a href="https://anurajrp.io/robotics/tumbller-cryptobot-architecture/" target="_blank">Tumbller Cryptobot</a> and voice-controlled robot fleet via MCP. Demonstrated at Devcon 7 Bangkok.</p>
+      </div>
+      <div class="callout" style="background:#111827;border-left-color:#E8792B;padding:14px 16px">
+        <p style="margin-bottom:2px"><strong><a href="https://venkateshrao.com/" target="_blank">Venkat</a></strong></p>
+        <p style="margin-bottom:8px;font-size:12px;color:#9CA3AF">Aerospace, strategy, command systems &mdash; Seattle</p>
+        <p style="margin-bottom:0">PhD Aerospace Engineering, University of Michigan. Postdoctoral research in command and control systems at Cornell. Former senior researcher at Xerox. US Patent 8,086,501. Director of <a href="https://summerofprotocols.com/" target="_blank">Summer of Protocols</a>. Founder of Ribbonfarm. Author of <em>Tempo</em>.</p>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin:24px 0 16px">
+      <button class="cta-touch" onclick="showContact()">Get in Touch</button>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="footer-bar">
+    <span>Yak Robotics &mdash; Space Economy Brief</span>
+    <span>Demo: <a href="https://yakrobot.bid/demo">yakrobot.bid/demo</a> &mdash; NASA: <a href="https://www.nasa.gov/architecture" target="_blank">nasa.gov/architecture</a> &mdash; Code: <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace" target="_blank">github.com/YakRoboticsGarage/yakrover-marketplace</a></span>
+  </div>
+  <div style="text-align:center;padding-bottom:24px;font-size:11px;color:#6B7280">
+    Background images courtesy of <a href="https://images.nasa.gov" target="_blank" style="color:#6B7280;text-decoration:underline">NASA Image and Video Library</a>. Images are in the public domain.
+  </div>
+</div>
+
+<div class="fab">
+  <button class="fab-btn" onclick="togglePanel()">
+    <span>Notes</span>
+    <span class="fb-badge" id="commentBadge">0</span>
+  </button>
+</div>
+
+<div class="feedback-panel" id="feedbackPanel">
+  <div class="fp-header">
+    <span class="fp-title">
+      <button class="fp-refresh" id="refreshBtn" onclick="refreshComments()" title="Refresh">&#8635;</button>
+      <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace/issues?q=label%3Amemo-feedback" target="_blank" title="View all on GitHub" style="display:flex"><svg width="16" height="16" viewBox="0 0 16 16" fill="#6B7280"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <button class="fp-refresh" onclick="showContact()" title="Get in Touch" style="font-size:15px">&#9993;</button>
+    </span>
+    <button class="fp-close" onclick="togglePanel()">&times;</button>
+  </div>
+  <div class="fp-form">
+    <textarea id="panelComment" placeholder="Leave feedback on this memo..."></textarea>
+    <div class="fp-form-row">
+      <input class="fp-form-name" id="panelName" placeholder="Name (optional)">
+      <button class="fp-form-submit" id="panelSubmit" onclick="submitPanelComment()">Send</button>
+    </div>
+    <div class="fp-form-status" id="panelStatus"></div>
+  </div>
+  <div id="commentList"><div class="fp-empty">No feedback yet.</div></div>
+</div>
+
+<div class="contact-overlay" id="contactOverlay" onclick="if(event.target===this)hideContact()">
+  <div class="contact-box" id="contactBox">
+    <div id="sheetHandle" style="display:none;align-items:center;justify-content:center;padding:12px 0 4px;cursor:grab;user-select:none"><div style="width:36px;height:4px;background:#d0d0d0;border-radius:2px"></div></div>
+    <h3>Get in Touch</h3>
+    <input class="contact-field" id="contactName" placeholder="Your name">
+    <input class="contact-field" id="contactEmail" type="email" placeholder="Email (optional)">
+    <textarea class="contact-field contact-field-msg" id="contactMsg" placeholder="What are you working on? How can we collaborate?"></textarea>
+    <div class="contact-actions">
+      <button class="contact-cancel" onclick="hideContact()">Cancel</button>
+      <button class="cta-touch cta-touch-sm" id="contactSubmit" onclick="submitContact()">Send</button>
+    </div>
+    <div class="contact-status" id="contactStatus"></div>
+  </div>
+</div>
+
+<div class="sel-bar" id="selBar">
+  <button class="sel-bar-btn" onclick="openSelComment()">Comment</button>
+</div>
+
+<div class="sel-popover" id="selPopover">
+  <div class="sel-highlight" id="selText"></div>
+  <textarea class="sel-input" id="selComment" placeholder="Your feedback on this section..."></textarea>
+  <div class="sel-row">
+    <input class="sel-name" id="selName" placeholder="Name (optional)">
+    <button class="sel-submit" id="selSubmit" onclick="submitComment()">Send</button>
+  </div>
+  <div class="sel-status" id="selStatus"></div>
+</div>
+
+<script>
+// --- Breadcrumb scroll-spy ---
+(function() {
+  var sections = document.querySelectorAll('h2[id]');
+  var links = document.querySelectorAll('.breadcrumb-list a');
+  var nav = document.getElementById('breadcrumbNav');
+  var navH = nav ? nav.offsetHeight : 40;
+
+  links.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) {
+        var y = el.getBoundingClientRect().top + window.pageYOffset - navH - 8;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    });
+  });
+
+  function onScroll() {
+    var scrollY = window.pageYOffset + navH + 20;
+    var current = '';
+    sections.forEach(function(s) {
+      var top = s.getBoundingClientRect().top + window.pageYOffset;
+      if (top <= scrollY) current = s.id;
+    });
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+    var active = nav.querySelector('a.active');
+    if (active) {
+      var container = nav.querySelector('.container');
+      if(container) {
+          var nl = container.scrollLeft, nw = container.offsetWidth;
+          var al = active.offsetLeft, aw = active.offsetWidth;
+          if (al < nl + 20) container.scrollTo({ left: al - 20, behavior: 'smooth' });
+          else if (al + aw > nl + nw - 20) container.scrollTo({ left: al + aw - nw + 20, behavior: 'smooth' });
+      }
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
+// --- Copy as Markdown ---
+window.getPageAsMarkdown = function() {
+  var md = '# Yak Robotics — Space Economy Brief\n\n';
+  md += '*Runtime procurement for satellites, space stations, and the Moon Base*\n\n';
+  var sections = document.querySelectorAll('h2[id], h3');
+  sections.forEach(function(heading) {
+    var level = heading.tagName === 'H2' ? '## ' : '### ';
+    md += level + heading.textContent.trim() + '\n\n';
+    var el = heading.nextElementSibling;
+    while (el && el.tagName !== 'H2' && el.tagName !== 'H3') {
+      if (el.tagName === 'P') {
+        md += el.textContent.trim() + '\n\n';
+      } else if (el.tagName === 'UL' || el.tagName === 'OL') {
+        var items = el.querySelectorAll('li');
+        items.forEach(function(li) { md += '- ' + li.textContent.trim() + '\n'; });
+        md += '\n';
+      } else if (el.tagName === 'TABLE') {
+        var rows = el.querySelectorAll('tr');
+        rows.forEach(function(row, i) {
+          var cells = row.querySelectorAll('th, td');
+          var line = '| ';
+          cells.forEach(function(c) { line += c.textContent.trim() + ' | '; });
+          md += line + '\n';
+          if (i === 0) {
+            md += '| ';
+            cells.forEach(function() { md += '--- | '; });
+            md += '\n';
+          }
+        });
+        md += '\n';
+      } else if (el.classList && el.classList.contains('stack-row')) {
+        var label = el.querySelector('.stack-label');
+        var value = el.querySelector('.stack-value');
+        if (label && value) md += '**' + label.textContent.trim() + ':** ' + value.textContent.trim() + '\n';
+      } else if (el.classList && el.classList.contains('cols')) {
+        var ps = el.querySelectorAll('p');
+        ps.forEach(function(p) { md += p.textContent.trim() + '\n\n'; });
+      } else if (el.classList && el.classList.contains('callout')) {
+        var strong = el.querySelector('strong');
+        var text = el.querySelectorAll('p');
+        if (strong) md += '**' + strong.textContent.trim() + '**\n';
+        for (var t = 1; t < text.length; t++) md += text[t].textContent.trim() + '\n';
+        md += '\n';
+      } else if (el.classList && el.classList.contains('flow')) {
+        var boxes = el.querySelectorAll('.flow-box');
+        boxes.forEach(function(b) { md += b.querySelector('strong').textContent.trim() + ' → '; });
+        md = md.slice(0, -3) + '\n\n';
+      }
+      el = el.nextElementSibling;
+    }
+  });
+  md += '---\n\nDemo: https://yakrobot.bid/demo/ | NASA Architecture: https://www.nasa.gov/architecture | Code: https://github.com/YakRoboticsGarage/yakrover-marketplace\n';
+  return md;
+};
+
+window.copyAsMarkdown = function() {
+  var md = window.getPageAsMarkdown();
+  navigator.clipboard.writeText(md).then(function() {
+    var btn = document.getElementById('copyMdBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy as Markdown'; }, 1500);
+  });
+};
+
+var API = 'https://yakrobot-api.rafaeldf2.workers.dev';
+var panelOpen = false;
+
+function togglePanel() {
+  panelOpen = !panelOpen;
+  document.getElementById('feedbackPanel').classList.toggle('open', panelOpen);
+  document.body.classList.toggle('panel-open', panelOpen);
+  if (panelOpen) loadComments();
+}
+
+function loadComments() {
+  fetch(API + '/api/memo/comments').then(function(r) { return r.json(); }).then(function(d) {
+    var list = d.comments || [];
+    document.getElementById('commentBadge').textContent = list.length;
+    if (!list.length) {
+      document.getElementById('commentList').innerHTML = '<div class="fp-empty">Highlight any text to leave a comment.</div>';
+      return;
+    }
+    var h = '';
+    list.forEach(function(c) {
+      h += '<div class="fp-comment">';
+      if (c.highlight) h += '<div class="fp-comment-highlight">"' + esc(c.highlight.slice(0, 120)) + (c.highlight.length > 120 ? '...' : '') + '"</div>';
+      h += '<div class="fp-comment-text">' + esc(c.comment) + '</div>';
+      var when = c.timestamp ? new Date(c.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      h += '<div class="fp-comment-meta">' + esc(c.name || 'Anonymous') + (when ? ' · ' + when : '') + (c.section ? ' · ' + esc(c.section) : '') + (c.issue_url ? ' · <a href="' + esc(c.issue_url) + '" target="_blank" style="color:#2D5F8A">thread</a>' : '') + '</div>';
+      h += '</div>';
+    });
+    document.getElementById('commentList').innerHTML = h;
+  }).catch(function() {});
+}
+
+fetch(API + '/api/memo/comments').then(function(r) { return r.json(); }).then(function(d) {
+  document.getElementById('commentBadge').textContent = (d.comments || []).length;
+}).catch(function() {});
+
+var currentHighlight = '';
+var currentSection = '';
+var selRect = null;
+
+document.addEventListener('mouseup', function(e) {
+  var bar = document.getElementById('selBar');
+  var pop = document.getElementById('selPopover');
+  if (bar.contains(e.target) || pop.contains(e.target) || document.getElementById('feedbackPanel').contains(e.target)) return;
+
+  bar.classList.remove('visible');
+  pop.classList.remove('visible');
+
+  var sel = window.getSelection();
+  var text = (sel ? sel.toString().trim() : '');
+  if (text.length < 3) return;
+
+  currentHighlight = text.slice(0, 500);
+
+  var node = sel.anchorNode;
+  currentSection = '';
+  while (node && node !== document.body) {
+    if (node.previousElementSibling) {
+      var prev = node.previousElementSibling;
+      if (prev.tagName === 'H2') { currentSection = prev.textContent; break; }
+    }
+    node = node.parentElement;
+  }
+  if (!currentSection) {
+    var all = document.querySelectorAll('h2');
+    var range = sel.getRangeAt(0);
+    for (var i = all.length - 1; i >= 0; i--) {
+      if (range.compareBoundaryPoints(Range.START_TO_START, document.createRange()) >= 0) {
+        currentSection = all[i].textContent;
+        break;
+      }
+    }
+  }
+
+  var rect = sel.getRangeAt(0).getBoundingClientRect();
+  selRect = rect;
+  bar.style.top = (window.scrollY + rect.top - 36) + 'px';
+  bar.style.left = (rect.left + rect.width / 2 - 40) + 'px';
+  bar.classList.add('visible');
+});
+
+function openSelComment() {
+  var bar = document.getElementById('selBar');
+  var pop = document.getElementById('selPopover');
+  bar.classList.remove('visible');
+
+  document.getElementById('selText').textContent = '"' + currentHighlight.slice(0, 100) + (currentHighlight.length > 100 ? '...' : '') + '"';
+  document.getElementById('selComment').value = '';
+  document.getElementById('selStatus').textContent = '';
+  document.getElementById('selSubmit').disabled = false;
+
+  if (selRect) {
+    pop.style.top = (window.scrollY + selRect.bottom + 8) + 'px';
+    pop.style.left = Math.min(selRect.left, window.innerWidth - 300) + 'px';
+  }
+  pop.classList.add('visible');
+  setTimeout(function() { document.getElementById('selComment').focus(); }, 50);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('selBar').classList.remove('visible');
+    document.getElementById('selPopover').classList.remove('visible');
+    hideContact();
+  }
+});
+
+function submitComment() {
+  var comment = document.getElementById('selComment').value.trim();
+  if (!comment) return;
+  var name = document.getElementById('selName').value.trim();
+  var btn = document.getElementById('selSubmit');
+  var status = document.getElementById('selStatus');
+  btn.disabled = true;
+  status.textContent = 'Submitting...';
+
+  fetch(API + '/api/memo/comment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      highlight: currentHighlight,
+      comment: comment,
+      section: currentSection,
+      name: name || 'Anonymous',
+    }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    status.textContent = 'Submitted — thank you!';
+    setTimeout(function() {
+      document.getElementById('selPopover').classList.remove('visible');
+    }, 1500);
+    loadComments();
+  }).catch(function(e) {
+    status.textContent = 'Error — please try again.';
+    btn.disabled = false;
+  });
+}
+
+function submitPanelComment() {
+  var comment = document.getElementById('panelComment').value.trim();
+  if (!comment) return;
+  var name = document.getElementById('panelName').value.trim();
+  var btn = document.getElementById('panelSubmit');
+  var status = document.getElementById('panelStatus');
+  btn.disabled = true;
+  status.textContent = 'Submitting...';
+
+  fetch(API + '/api/memo/comment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      highlight: '',
+      comment: comment,
+      section: 'General',
+      name: name || 'Anonymous',
+    }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    status.textContent = 'Submitted — thank you!';
+    document.getElementById('panelComment').value = '';
+    btn.disabled = false;
+    setTimeout(function() { status.textContent = ''; }, 2000);
+    loadComments();
+  }).catch(function() {
+    status.textContent = 'Error — please try again.';
+    btn.disabled = false;
+  });
+}
+
+function refreshComments() {
+  var btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  loadComments();
+  setTimeout(function() { btn.classList.remove('spinning'); }, 600);
+}
+
+function showContact() {
+  var overlay = document.getElementById('contactOverlay');
+  overlay.classList.add('visible');
+  document.getElementById('contactName').value = '';
+  document.getElementById('contactEmail').value = '';
+  document.getElementById('contactMsg').value = '';
+  document.getElementById('contactStatus').textContent = '';
+  document.getElementById('contactSubmit').disabled = false;
+  document.body.style.overflow = 'hidden';
+  var box = document.getElementById('contactBox');
+  box.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+  box.style.transform = '';
+  // show sheet handle on mobile
+  var handle = document.getElementById('sheetHandle');
+  if (window.innerWidth <= 768) handle.style.display = 'flex';
+  setTimeout(function() { document.getElementById('contactName').focus(); }, 350);
+}
+
+function hideContact() {
+  var box = document.getElementById('contactBox');
+  if (window.innerWidth <= 768) {
+    box.style.transition = 'transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94)';
+    box.style.transform = 'translateY(100%)';
+    setTimeout(function() {
+      document.getElementById('contactOverlay').classList.remove('visible');
+      box.style.transform = '';
+      document.body.style.overflow = '';
+    }, 260);
+  } else {
+    document.getElementById('contactOverlay').classList.remove('visible');
+    document.body.style.overflow = '';
+  }
+}
+
+// Swipe-to-dismiss contact sheet on mobile
+(function() {
+  var handle = document.getElementById('sheetHandle');
+  var box = document.getElementById('contactBox');
+  var overlay = document.getElementById('contactOverlay');
+  var dragging = false, startY = 0, dy = 0;
+
+  handle.addEventListener('pointerdown', function(e) {
+    if (window.innerWidth > 768) return;
+    dragging = true; startY = e.clientY; dy = 0;
+    box.style.transition = 'none';
+    handle.setPointerCapture(e.pointerId);
+  });
+  document.addEventListener('pointermove', function(e) {
+    if (!dragging) return;
+    dy = Math.max(0, e.clientY - startY);
+    box.style.transform = 'translateY(' + dy + 'px)';
+    overlay.style.opacity = Math.max(0, 1 - dy / box.offsetHeight);
+  });
+  document.addEventListener('pointerup', function() {
+    if (!dragging) return;
+    dragging = false;
+    overlay.style.opacity = '';
+    if (dy / box.offsetHeight > 0.3) {
+      hideContact();
+    } else {
+      box.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+      box.style.transform = 'translateY(0)';
+    }
+  });
+})();
+
+function submitContact() {
+  var msg = document.getElementById('contactMsg').value.trim();
+  if (!msg) { document.getElementById('contactStatus').textContent = 'Please enter a message.'; return; }
+  var name = document.getElementById('contactName').value.trim();
+  var email = document.getElementById('contactEmail').value.trim();
+  var btn = document.getElementById('contactSubmit');
+  var status = document.getElementById('contactStatus');
+  btn.disabled = true;
+  status.textContent = 'Sending...';
+
+  fetch(API + '/api/memo/contact', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name || 'Anonymous', email: email, message: msg }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    status.textContent = 'Sent — thank you! We\'ll be in touch.';
+    setTimeout(hideContact, 2000);
+  }).catch(function() {
+    status.textContent = 'Error — please try again.';
+    btn.disabled = false;
+  });
+}
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+</script>
+
+</body>
+</html>
