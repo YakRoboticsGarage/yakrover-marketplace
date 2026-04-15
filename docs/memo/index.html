@@ -537,7 +537,7 @@ body.panel-open { margin-right: 320px; }
 </ul>
 
 <div class="cta-row">
-  <a href="javascript:void(0)" onclick="document.getElementById('claudeBlock').style.display=document.getElementById('claudeBlock').style.display==='none'?'block':'none'" class="btn btn-primary">Try with Claude &darr;</a>
+  <a href="javascript:void(0)" onclick="var el=document.getElementById('claudeBlock');el.style.display=el.offsetParent===null?'block':'none'" class="btn btn-primary">Try with Claude &darr;</a>
   <span class="cta-sep">or</span>
   <a href="https://yakrobot.bid/demo/" target="_blank" class="btn btn-ghost">Visual Simulator &#8599;</a>
 </div>
