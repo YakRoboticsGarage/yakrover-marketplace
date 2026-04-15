@@ -409,9 +409,10 @@ body.panel-open { margin-right: 320px; }
 </div>
 
 <div id="claudeBlock" style="display:none;margin-top:14px;padding:16px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:6px">
-  <p style="font-size:13px;color:#4A5568;margin-bottom:10px"><strong>Step 1.</strong> Run this in your terminal to connect and open Claude Code:</p>
-  <div style="background:#f0f2f5;border-radius:4px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#1A1F26;overflow-x:auto;white-space:nowrap" id="memoClaudeCmd">claude mcp add-json yakrover '{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}' && claude</div>
+  <p style="font-size:13px;color:#4A5568;margin-bottom:10px"><strong>Step 1.</strong> Install the plugin in Claude Code:</p>
+  <div style="background:#f0f2f5;border-radius:4px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#1A1F26;overflow-x:auto;white-space:nowrap" id="memoClaudeCmd">claude plugin add --from YakRoboticsGarage/yakrover-marketplace</div>
   <button class="cta-touch cta-touch-sm" style="font-size:11px;padding:5px 12px;margin-top:8px" onclick="navigator.clipboard.writeText(document.getElementById('memoClaudeCmd').textContent);this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy Command'},1500)">Copy Command</button>
+  <p style="font-size:12px;color:#9CA3AF;margin-top:6px;margin-bottom:0">This auto-configures the marketplace MCP server &mdash; no manual setup needed.</p>
   <p style="font-size:13px;color:#4A5568;margin-top:12px;margin-bottom:8px"><strong>Step 2.</strong> Say this to Claude:</p>
   <div style="background:#f0f2f5;border-radius:4px;padding:10px 12px;font-size:13px;color:#4A5568;font-style:italic" id="memoClaudePrompt">Use yakrover to help me with an aerial LiDAR topo survey for a 12-acre highway corridor near Kalamazoo, MI</div>
   <button class="cta-touch cta-touch-sm" style="font-size:11px;padding:5px 12px;margin-top:8px" onclick="navigator.clipboard.writeText(document.getElementById('memoClaudePrompt').textContent);this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy Prompt'},1500)">Copy Prompt</button>
