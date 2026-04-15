@@ -2,13 +2,35 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Yak Robotics — Space Economy Brief</title>
+<meta name="description" content="Runtime procurement for satellites, space stations, and the Moon Base. Auction engine, on-chain robot identity, and settlement for space operations.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Yak Robotics — Space Economy Brief">
+<meta property="og:description" content="Runtime procurement for satellites, space stations, and the Moon Base. Auction engine, on-chain robot identity, and settlement for space operations.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yakrobot.bid/memo-space/">
+<meta property="og:image" content="https://yakrobot.bid/memo/og-image.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Yak Robotics — Space Economy Brief">
+<meta name="twitter:description" content="Runtime procurement for satellites, space stations, and the Moon Base. Auction engine, on-chain robot identity, and settlement for space operations.">
+<meta name="twitter:image" content="https://yakrobot.bid/memo/og-image.png">
+
 <link rel="icon" href="yak-icon.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button, input, textarea, select { font: inherit; }
+
+/* ---- FOCUS ---- */
+a:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible {
+  outline: 2px solid #E8792B;
+  outline-offset: 2px;
+}
 
 @page { size: letter; margin: 0.6in 0.7in; }
 
@@ -171,6 +193,26 @@ a:hover { color: #93C5FD; text-decoration: underline; }
 }
 .fab-btn:hover { border-color: #E8792B; color: #F9FAFB; }
 .fb-badge { background: #E8792B; color: #fff; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 8px; min-width: 18px; text-align: center; }
+
+/* Selection action bar — appears on text highlight */
+.sel-bar {
+  position: absolute; z-index: 300;
+  background: #1A1F26; border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5); padding: 4px 8px;
+  display: none; font-family: 'JetBrains Mono', monospace;
+}
+.sel-bar.visible { display: flex; align-items: center; gap: 4px; }
+.sel-bar-btn {
+  background: none; border: none; color: #f0f2f5;
+  font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+  padding: 4px 8px; border-radius: 4px;
+  transition: background 0.15s; white-space: nowrap;
+}
+.sel-bar-btn:hover { background: rgba(255,255,255,0.15); }
+.sel-bar::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: #1A1F26;
+}
 
 /* Selection popover */
 .sel-popover {
@@ -353,11 +395,29 @@ body > *:not(script) { position: relative; z-index: 1; }
   .feedback-panel { width: 280px; }
   body.panel-open { margin-right: 0; }
   .cta-touch-desktop { display: none; }
-  .sel-popover { display: none !important; }
+  .sel-popover, .sel-bar { display: none !important; }
   .breadcrumb-nav .container { padding: 0 20px; }
   .breadcrumb-list a { padding: 8px 10px; font-size: 10px; }
-  .fab { top: 42px; }
+  .fab { display: none; }
+  .breadcrumb-notes { display: block; }
   .topic-section { padding: 40px 0; }
+  /* Contact as bottom sheet on mobile */
+  .contact-overlay.visible { align-items: flex-end; }
+  .contact-box {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    width: 100%; max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 0 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+    will-change: transform;
+    max-height: 85vh; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #111827;
+  }
+  .contact-overlay.visible .contact-box { transform: translateY(0); }
+  #sheetHandle { display: flex !important; }
 }
 
 /* Print override — back to light for paper */
@@ -368,11 +428,13 @@ body > *:not(script) { position: relative; z-index: 1; }
   strong, h3 { color: #1A1F26 !important; }
   .callout, .callout-dark { background: #FEF0E3 !important; color: #1A1F26 !important; }
   a, .footer-bar a { color: #2D5F8A !important; }
-  .feedback-panel, .fab, .sel-popover, .contact-overlay, .breadcrumb-nav { display: none !important; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 11px; color: #6B7280; }
+  .feedback-panel, .fab, .sel-popover, .sel-bar, .contact-overlay, .breadcrumb-nav { display: none !important; }
   body.panel-open { margin-right: 0; }
   .cta-touch-inline { display: none !important; }
   .topic-section::before { display: none !important; }
   .topic-section { border: none !important; padding: 20px 0 !important; }
+  section { page-break-inside: avoid; }
 }
 </style>
 </head>
@@ -389,6 +451,7 @@ body > *:not(script) { position: relative; z-index: 1; }
       <li><a href="#verticals">Task Verticals</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
       <li><a href="#join">Join Us</a></li>
+      <li class="breadcrumb-notes"><a href="javascript:void(0)" onclick="togglePanel()" style="color:#E8792B">Feedback</a></li>
     </ul>
   </div>
 </nav>
@@ -780,7 +843,8 @@ body > *:not(script) { position: relative; z-index: 1; }
 </div>
 
 <div class="contact-overlay" id="contactOverlay" onclick="if(event.target===this)hideContact()">
-  <div class="contact-box">
+  <div class="contact-box" id="contactBox">
+    <div id="sheetHandle" style="display:none;align-items:center;justify-content:center;padding:12px 0 4px;cursor:grab;user-select:none"><div style="width:36px;height:4px;background:#d0d0d0;border-radius:2px"></div></div>
     <h3>Get in Touch</h3>
     <input class="contact-field" id="contactName" placeholder="Your name">
     <input class="contact-field" id="contactEmail" type="email" placeholder="Email (optional)">
@@ -791,6 +855,10 @@ body > *:not(script) { position: relative; z-index: 1; }
     </div>
     <div class="contact-status" id="contactStatus"></div>
   </div>
+</div>
+
+<div class="sel-bar" id="selBar">
+  <button class="sel-bar-btn" onclick="openSelComment()">Comment</button>
 </div>
 
 <div class="sel-popover" id="selPopover">
@@ -949,17 +1017,19 @@ fetch(API + '/api/memo/comments').then(function(r) { return r.json(); }).then(fu
 
 var currentHighlight = '';
 var currentSection = '';
+var selRect = null;
 
 document.addEventListener('mouseup', function(e) {
+  var bar = document.getElementById('selBar');
   var pop = document.getElementById('selPopover');
-  if (pop.contains(e.target) || document.getElementById('feedbackPanel').contains(e.target)) return;
+  if (bar.contains(e.target) || pop.contains(e.target) || document.getElementById('feedbackPanel').contains(e.target)) return;
+
+  bar.classList.remove('visible');
+  pop.classList.remove('visible');
 
   var sel = window.getSelection();
   var text = (sel ? sel.toString().trim() : '');
-  if (text.length < 3) {
-    pop.classList.remove('visible');
-    return;
-  }
+  if (text.length < 3) return;
 
   currentHighlight = text.slice(0, 500);
 
@@ -972,20 +1042,45 @@ document.addEventListener('mouseup', function(e) {
     }
     node = node.parentElement;
   }
+  if (!currentSection) {
+    var all = document.querySelectorAll('h2');
+    var range = sel.getRangeAt(0);
+    for (var i = all.length - 1; i >= 0; i--) {
+      if (range.compareBoundaryPoints(Range.START_TO_START, document.createRange()) >= 0) {
+        currentSection = all[i].textContent;
+        break;
+      }
+    }
+  }
+
+  var rect = sel.getRangeAt(0).getBoundingClientRect();
+  selRect = rect;
+  bar.style.top = (window.scrollY + rect.top - 36) + 'px';
+  bar.style.left = (rect.left + rect.width / 2 - 40) + 'px';
+  bar.classList.add('visible');
+});
+
+function openSelComment() {
+  var bar = document.getElementById('selBar');
+  var pop = document.getElementById('selPopover');
+  bar.classList.remove('visible');
 
   document.getElementById('selText').textContent = '"' + currentHighlight.slice(0, 100) + (currentHighlight.length > 100 ? '...' : '') + '"';
   document.getElementById('selComment').value = '';
   document.getElementById('selStatus').textContent = '';
   document.getElementById('selSubmit').disabled = false;
 
-  var rect = sel.getRangeAt(0).getBoundingClientRect();
-  pop.style.top = (window.scrollY + rect.bottom + 8) + 'px';
-  pop.style.left = Math.min(rect.left, window.innerWidth - 300) + 'px';
+  if (selRect) {
+    pop.style.top = (window.scrollY + selRect.bottom + 8) + 'px';
+    pop.style.left = Math.min(selRect.left, window.innerWidth - 300) + 'px';
+  }
   pop.classList.add('visible');
-});
+  setTimeout(function() { document.getElementById('selComment').focus(); }, 50);
+}
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
+    document.getElementById('selBar').classList.remove('visible');
     document.getElementById('selPopover').classList.remove('visible');
     hideContact();
   }
@@ -1059,18 +1154,70 @@ function refreshComments() {
 }
 
 function showContact() {
-  document.getElementById('contactOverlay').classList.add('visible');
+  var overlay = document.getElementById('contactOverlay');
+  overlay.classList.add('visible');
   document.getElementById('contactName').value = '';
   document.getElementById('contactEmail').value = '';
   document.getElementById('contactMsg').value = '';
   document.getElementById('contactStatus').textContent = '';
   document.getElementById('contactSubmit').disabled = false;
-  document.getElementById('contactName').focus();
+  document.body.style.overflow = 'hidden';
+  var box = document.getElementById('contactBox');
+  box.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+  box.style.transform = '';
+  // show sheet handle on mobile
+  var handle = document.getElementById('sheetHandle');
+  if (window.innerWidth <= 768) handle.style.display = 'flex';
+  setTimeout(function() { document.getElementById('contactName').focus(); }, 350);
 }
 
 function hideContact() {
-  document.getElementById('contactOverlay').classList.remove('visible');
+  var box = document.getElementById('contactBox');
+  if (window.innerWidth <= 768) {
+    box.style.transition = 'transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94)';
+    box.style.transform = 'translateY(100%)';
+    setTimeout(function() {
+      document.getElementById('contactOverlay').classList.remove('visible');
+      box.style.transform = '';
+      document.body.style.overflow = '';
+    }, 260);
+  } else {
+    document.getElementById('contactOverlay').classList.remove('visible');
+    document.body.style.overflow = '';
+  }
 }
+
+// Swipe-to-dismiss contact sheet on mobile
+(function() {
+  var handle = document.getElementById('sheetHandle');
+  var box = document.getElementById('contactBox');
+  var overlay = document.getElementById('contactOverlay');
+  var dragging = false, startY = 0, dy = 0;
+
+  handle.addEventListener('pointerdown', function(e) {
+    if (window.innerWidth > 768) return;
+    dragging = true; startY = e.clientY; dy = 0;
+    box.style.transition = 'none';
+    handle.setPointerCapture(e.pointerId);
+  });
+  document.addEventListener('pointermove', function(e) {
+    if (!dragging) return;
+    dy = Math.max(0, e.clientY - startY);
+    box.style.transform = 'translateY(' + dy + 'px)';
+    overlay.style.opacity = Math.max(0, 1 - dy / box.offsetHeight);
+  });
+  document.addEventListener('pointerup', function() {
+    if (!dragging) return;
+    dragging = false;
+    overlay.style.opacity = '';
+    if (dy / box.offsetHeight > 0.3) {
+      hideContact();
+    } else {
+      box.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+      box.style.transform = 'translateY(0)';
+    }
+  });
+})();
 
 function submitContact() {
   var msg = document.getElementById('contactMsg').value.trim();
