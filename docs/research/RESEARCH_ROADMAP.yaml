@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-14"  # R-007b complete; IMP-072/073/074/075 added; R-045/R-046 spawned
+  last_updated: "2026-04-15"  # R-045 complete; IMP-078/079/080/081 added; R-048/R-049 spawned
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -670,13 +670,17 @@ topics:
     title: "State surveying board platform-intermediary liability — does the marketplace face enforcement risk?"
     module: M36_pls_review
     hypothesis: "The NC Board targeted the drone operator directly in 360 Virtual Drone v. Ritter. But if YAK facilitates transactions where unlicensed operators deliver topographic survey products in states requiring PLS licensure, the platform itself may face enforcement as an aider/abettor of unlicensed practice. Research: (1) Has any state board pursued a marketplace/platform rather than the individual operator? (2) Does the 'facilitating data-acquisition subcontracts, not surveying services' framing provide legal shield? (3) Are there marketplace safe-harbor precedents in professional licensing law (analogous to DMCA safe harbor for IP)?"
-    status: queued
+    status: complete
     priority: high
     estimated_sessions: 1
+    completed_date: "2026-04-15"
     depends_on: [R-007b]
     spawned_from: R-007b
     spawned_date: "2026-04-14"
-    notes: "Key questions: (1) Has any state surveying/engineering board sent cease-and-desist to a platform intermediary vs. individual operator? (2) Does 'knowledge' of unlicensed practice create liability for the platform? (3) NC Board already targets companies by name — YAK Platform operating in NC markets needs clear legal framing. (4) Compare to Upwork/Fiverr terms for licensed-profession services — how do they disclaim liability?"
+    output_file: "docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md"
+    improvement_proposals: [IMP-078, IMP-079, IMP-080, IMP-081]
+    spawned: [R-048, R-049]
+    notes: "Key findings: (1) No documented case of state board pursuing a marketplace platform — all enforcement targets individual operators/companies. (2) NY OPD has explicit prohibition on unlicensed intermediaries between clients and licensed surveyors (unique to NY). (3) Section 230 CDA does not apply to professional licensing enforcement. (4) FlyGuys model (subcontractor to licensed firms, not direct-to-end-client) is the established legally safe structure. (5) No professional licensing safe harbor equivalent to DMCA exists. (6) Tier 3 risk mitigation = CoA/surveying firm license (Zillow/Redfin analogue). 4 proposals + 2 new topics spawned."
 
   - id: R-046
     title: "ASPRS Certified Photogrammetrist (CP) as drone operator credential for YAK platform"
@@ -703,3 +707,29 @@ topics:
     spawned_from: "git:7836a9b (IMP-071 added 2026-04-14)"
     spawned_date: "2026-04-14"
     notes: "IMP-071 forward-references 'R-053 (Stripe MPP analysis)' — use R-047 for this topic. Key questions: (1) Does x402 support hold-and-release/escrow, or only instant settlement? (2) How does Cloudflare Workers Agents SDK x402 integration work with our existing Worker (worker/src/index.js)? (3) What is Stripe MPP and how does it compare to x402 for agent-initiated payments? (4) Does the zero-fee model apply to construction-scale ($10K+) payments or is it micro-payment-only? (5) Security: x402 signatures — are they replay-protected?"
+
+  # ===== SPAWNED BY R-045 =====
+
+  - id: R-048
+    title: "Certificate of Authorization (CoA) requirements for surveying firms in MI, OH, NC, NY"
+    module: M36_pls_review
+    hypothesis: "If YAK needs Tier 3 risk mitigation (operating as a licensed surveying entity), it must understand what a CoA requires in its primary markets. Requirements vary: some states require a licensed PLS as a partner/employee, others accept advisory relationships. Harbor Compliance and state board websites should have full requirements. Cost and PLS retention complexity will determine feasibility."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-045]
+    spawned_from: R-045
+    spawned_date: "2026-04-15"
+    notes: "Key questions: (1) MI (LARA): what is the firm registration requirement for professional surveyors? Can a tech LLC register? (2) OH (State Board of Registration for Professional Engineers and Surveyors): CoA requirements? (3) NC (NC Board of Examiners): firm certificate requirements? (4) NY (NY OPD): licensed surveyor required in LLC ownership? Percentage? (5) Harbor Compliance 50-state CoA guide covers this — fetch and summarize."
+
+  - id: R-049
+    title: "PLS in Responsible Charge subcontract model — Aerotas/FlyGuys agreement structure"
+    module: M36_pls_review
+    hypothesis: "The 'data collector subcontractor operates under a PLS in responsible charge' model is legally valid (confirmed by R-007b and R-045). But the contract must explicitly establish responsible charge. Research: (1) What contract language establishes PLS responsible charge for a drone subcontractor? (2) How do Aerotas and FlyGuys structure their subcontractor agreements? (3) Is there a NSPS or ASPRS model subcontract template? (4) What obligations does the 'responsible charge' PLS actually have (site visits, GCP checks, seal review)? (5) Could YAK's platform generate a standard subcontract addendum that establishes this relationship at task award time?"
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-045]
+    spawned_from: R-045
+    spawned_date: "2026-04-15"
+    notes: "Key questions: (1) Model subcontract language for responsible charge delegation? (2) Aerotas resources page has drone survey legal overview — does it address responsible charge subcontracts? (3) NSPS (National Society of Professional Surveyors) model documents? (4) If the winning operator is a licensed PLS themselves, does the platform still need a responsible charge declaration? (5) Implementation: at task award, YAK sends a 'PLS Responsible Charge Addendum' as part of the operator acceptance flow."

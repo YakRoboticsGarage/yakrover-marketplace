@@ -1290,3 +1290,91 @@ proposals:
   proposed_date: '2026-04-14'
   decision_date: null
   decision_notes: null
+
+- id: IMP-078
+  title: Add "PLS in Responsible Charge" declaration to bid submission for topo tasks
+  description: >
+    When an operator submits a bid on a task where pls_required is true (see IMP-079),
+    require them to declare either: (a) they hold a valid PLS license in the project
+    state (license number field), or (b) they operate under a licensed PLS firm in
+    responsible charge (firm name + supervising PLS name + license number). This
+    declaration is stored with the bid record and surfaced to the buyer before
+    award. Prevents unlicensed operators from winning topo-category tasks without
+    platform awareness, and establishes the legally-valid "data collector under
+    PLS responsible charge" model used by FlyGuys and Aerotas. Addresses the
+    primary legal gap identified in R-045: no PLS role declaration at bid time.
+  module: M7_bid_scorer
+  research_source: R-045
+  evidence: 'docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md — Section 3 (FlyGuys model) and Section 8 (Tier 2 mitigation)'
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-079
+  title: Add pls_required boolean field to TaskSpec for topo-category tasks
+  description: >
+    Add pls_required: bool field to the TaskSpec dataclass and schema. Set True
+    for task types that constitute "practice of surveying" under 360 Virtual Drone
+    and analogous state statutes: topo_survey, corridor_survey, site_survey,
+    control_survey, as_built, aerial_survey. Set False for: progress_monitoring,
+    gpr_scan, orthomosaic (non-measurable), inspection, thermal, volumetrics.
+    This field enables the IMP-078 bidding gate and surfaces compliance information
+    in the buyer task-creation UI ("This task type requires a licensed Professional
+    Land Surveyor in the project state"). Depends on IMP-068 (pls_seal_format from R-007).
+  module: M5_auction_engine
+  research_source: R-045
+  evidence: 'docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md — Section 6 (codebase gaps) and Section 8 (Tier 2 mitigation)'
+  effort: small
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-080
+  title: Update platform Terms of Service with professional licensing disclaimer and state-specific notices
+  description: >
+    Add to YAK marketplace Terms of Service: (1) "YAK is a technology platform, not
+    a licensed surveying firm. YAK does not provide professional land surveying services."
+    (2) "Operators are solely responsible for ensuring their work complies with applicable
+    state professional licensing laws. For topographic survey deliverables, a licensed
+    Professional Land Surveyor must be in responsible charge in the project state."
+    (3) Per-state disclosure for highest-risk states: NY (explicit OPD prohibition on
+    unlicensed intermediaries), NC (4th Circuit binding; active board enforcement), OR
+    (OSBEELS explicit UAS guidance). This is Tier 1 mitigation — a necessary baseline
+    even if Tier 2/3 are also implemented. Required before commercial launch in any
+    of these markets.
+  module: system
+  research_source: R-045
+  evidence: 'docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md — Section 2 (NY prohibition), Section 6 (risk matrix), Section 8 (Tier 1 mitigation)'
+  effort: small
+  priority: critical
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-081
+  title: Legal memo — evaluate Certificate of Authorization as surveying firm in MI, OH, NC
+  description: >
+    Commission a legal memo from a licensed surveying firm attorney (or compliance
+    service such as Harbor Compliance) to evaluate: (1) What is required for YAK to
+    obtain a Certificate of Authorization (CoA) as a surveying firm in MI, OH, and NC?
+    (2) What PLS relationship is required — employee, partner, or advisory? (3) Does
+    YAK's current "platform fee" model constitute engaging in unlicensed practice in
+    these states, especially in light of NY OPD's explicit intermediary prohibition?
+    (4) Cost estimate for CoA registration in each state. This is the Tier 3 path
+    (Zillow/Redfin analogue for professional licensing) and must be completed before
+    YAK operationalizes at scale in these markets. See R-048 for research pre-work.
+  module: system
+  research_source: R-045
+  evidence: 'docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md — Section 5 (Zillow/Redfin model) and Section 8 (Tier 3 mitigation)'
+  effort: large
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
