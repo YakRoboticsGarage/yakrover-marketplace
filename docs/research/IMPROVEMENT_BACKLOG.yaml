@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
   last_updated: '2026-04-16'
-  total_items: 49
-  implemented: 10
-  deferred: 4
+  total_items: 89
+  implemented: 34
+  deferred: 17
   rejected: 1
-  proposed: 34
-  source: Automated daily research agent + weekly synthesis
-  last_sync: "docs-sync (2026-04-16) — IMP-048/049 added; MCP tool count fixed 35→36 across CLAUDE.md, README.md, ROADMAP_v4.md, PRODUCT_MODULE_MAP.md; LOC updated ~17,042→~17,336; commit/research stats corrected in README.md"
+  proposed: 37
+  source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
+  last_sync: "docs-sync 2026-04-16 — MCP tool count corrected to 41 in CLAUDE.md/README/ROADMAP/MODULE_MAP; tests 308, LOC ~19,297; ROADMAP v1.0 historical stats restored. Prior: R-028 added IMP-085/086/087 (Stripe payouts_enabled gate, check_stripe_account_status, account.updated webhook)"
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -414,7 +414,7 @@ proposals:
   evidence: auction/rfp_processor.py:26 and :424 — identical _load_reference definitions
   effort: small
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-05'
   decision_date: null
   decision_notes: null
@@ -432,7 +432,7 @@ proposals:
   evidence: CLAUDE.md env vars section vs .env.example — BASE_SEPOLIA_RPC_URL missing from example
   effort: small
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-05'
   decision_date: null
   decision_notes: null
@@ -451,7 +451,7 @@ proposals:
   evidence: chatbot/src/index.js:607 — plain string equality on secret comparison
   effort: small
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-05'
   decision_date: null
   decision_notes: null
@@ -487,10 +487,10 @@ proposals:
   evidence: docs/research/automated/R-034_erc2612_permit_relay_security.md
   effort: small
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-14'
+  decision_notes: Added ethers.verifyTypedData() pre-verification to handleRelayUsdc (direct permit path). handleExecutePayment already had it for the ERC-2612 fallback path. Rejects with 400 before spending gas if recovered signer doesn't match owner.
 - id: IMP-029
   title: Add relay wallet gas balance monitoring via Cloudflare Cron Trigger
   description: 'Add a Cron Trigger to wrangler.toml (e.g., "*/15 * * * *") that runs every 15
@@ -504,7 +504,7 @@ proposals:
   evidence: docs/research/automated/R-034_erc2612_permit_relay_security.md
   effort: small
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
   decision_date: null
   decision_notes: null
@@ -521,7 +521,7 @@ proposals:
   evidence: docs/research/automated/R-034_erc2612_permit_relay_security.md
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
   decision_date: null
   decision_notes: null
@@ -553,7 +553,7 @@ proposals:
   evidence: auction/api.py:231 — defined, zero call sites
   effort: trivial
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
   decision_date: null
   decision_notes: null
@@ -567,10 +567,10 @@ proposals:
   evidence: auction/engine.py:1107-1165 — no tests, no call sites outside engine
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-14'
+  decision_notes: Tests added in test_engine.py (TestAbandonTask class). 3 tests covering happy path, wrong-state guard, and provider_cancelled. Also wired to auction_cancel_task MCP tool.
 - id: IMP-034
   title: Deduplicate _load_reference() double-definition in rfp_processor.py
   description: '_load_reference() is defined twice in rfp_processor.py (lines 26 and 348) with a # type:ignore[no-redef]
@@ -581,7 +581,7 @@ proposals:
   evidence: auction/rfp_processor.py:26 and 348 — type:ignore[no-redef] suppressor
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-06'
   decision_date: null
   decision_notes: null
@@ -647,10 +647,10 @@ proposals:
   evidence: Tasks lost on every flyctl deploy — confirmed 2026-04-06
   effort: medium
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-07'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-16'
+  decision_notes: Added 1GB Fly volume (yakrover_data) in ams, mounted at /data. Set AUCTION_DB_PATH=/data/auction.db in fly.toml. No code changes — SyncTaskStore already supports file-based SQLite.
 - id: IMP-039
   title: WalletConnect v2 for mobile USDC payments
   description: 'Mobile browsers lack window.ethereum. Add WalletConnect v2 SDK for mobile wallet connection.'
@@ -683,10 +683,10 @@ proposals:
   evidence: Manual flyctl deploy required
   effort: small
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-07'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-14'
+  decision_notes: Added .github/workflows/deploy-fly.yml with separate marketplace and fleet jobs. Deploys on push to main, skips docs-only changes. Requires FLY_API_TOKEN secret.
 - id: IMP-042
   title: Robot-side IPFS delivery upload (robot uploads CID, marketplace verifies)
   description: 'Robot uploads own delivery data to IPFS, returns CID. Marketplace verifies against schema.'
@@ -707,7 +707,7 @@ proposals:
   evidence: 1rpc.io 500 error during live payment — 2026-04-06
   effort: small
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-07'
   decision_date: null
   decision_notes: null
@@ -723,7 +723,7 @@ proposals:
   evidence: 'mcp_robot_adapter.py line 104: except Exception: pass — connection failures are invisible'
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-07'
   decision_date: null
   decision_notes: null
@@ -740,10 +740,10 @@ proposals:
   evidence: 'core.py:667 — log() wraps print(), no levels or timestamps'
   effort: small
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-07'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-14'
+  decision_notes: Replaced print()-based log() with stdlib logging.getLogger("yakrover"). WARNING for ERROR/TIMEOUT/REJECT tags, INFO for all others. Updated test_core and test_engine to use caplog.
 - id: IMP-046
   title: pyproject.toml version field is stale (1.0.0 vs v1.3 codebase)
   description: >
@@ -757,10 +757,10 @@ proposals:
   evidence: 'pyproject.toml line 3: version = "1.0.0" — git tag is v1.3-milestone-ach-payment'
   effort: trivial
   priority: low
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-08'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-14'
+  decision_notes: Bumped to 1.4.1 to match current milestone.
 - id: IMP-047
   title: test_fakerover_bid.py is blanket-excluded from CI rather than marker-gated
   description: >
@@ -776,46 +776,787 @@ proposals:
   evidence: '.github/workflows/test.yml unit-tests job: --ignore=auction/tests/test_fakerover_bid.py — 8 tests never run in CI'
   effort: small
   priority: medium
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-08'
   decision_date: null
   decision_notes: null
 - id: IMP-048
-  title: Bump pyproject.toml version to 1.4.0 (supersedes IMP-046)
+  title: Remove dead _registration.chains field in mcp_demo_5 frontend
   description: >
-    pyproject.toml declares version = "1.0.0". IMP-046 proposed bumping to "1.3.0" but
-    was proposed before v1.4 completed (2026-04-09). The correct target is now "1.4.0"
-    to match the v1.4-milestone-operator-registration tag. Any tooling reading the package
-    version (pip show, importlib.metadata) will report 1.0.0 otherwise. No behaviour change.
-    Mark IMP-046 deferred (superseded by this item).
-  module: system
-  research_source: code-audit-2026-04-16
-  evidence: 'pyproject.toml line 3: version = "1.0.0" — git tag is v1.4-milestone-operator-registration'
+    After the single-chain registration refactor (commit 48527a7), the
+    window._registration state object still initialises with a `chains: {}` field
+    (demo/marketplace/index.html line 1913) but the field is never written to or
+    read back. Registration now tracks a single chain via _registration.chain
+    (singular). The dead field creates misleading state shape and could confuse
+    future contributors who assume multi-chain tracking is still active. Remove
+    `chains: {}` from the initialiser and confirm no downstream code reads it.
+  module: M28_mcp_demo
+  research_source: code-audit-2026-04-10
+  evidence: 'demo/marketplace/index.html line 1913: chains: {} — grep _registration.chains returns no matches'
   effort: trivial
   priority: low
+  status: implemented
+  proposed_date: '2026-04-10'
+  decision_date: null
+  decision_notes: null
+- id: IMP-049
+  title: Promote on-chain registration constants from function scope to module scope
+  description: >
+    In auction/mcp_tools.py, the constants SENSOR_TO_CATEGORY (line 1079),
+    CHAIN_CONFIG (line 1089), and DEFAULT_CHAIN (line 1095) are defined inside
+    register_auction_tools() rather than at module level. They have no dependency
+    on function arguments and behave as pure module constants captured by closure.
+    Defining them at module scope improves readability (constants are visible at
+    file top), enables direct import in tests without calling register_auction_tools,
+    and makes the module structure consistent with other constants in auction/.
+    No behavioural change; straightforward mechanical move.
+  module: M24_mcp_tool_layer
+  research_source: code-audit-2026-04-10
+  evidence: 'auction/mcp_tools.py lines 1079-1095 — three constants inside register_auction_tools() with no closure dependency on function args'
+  effort: small
+  priority: low
+  status: implemented
+  proposed_date: '2026-04-10'
+  decision_date: null
+  decision_notes: null
+- id: IMP-050
+  title: auction_eas_attest ignores chain_id parameter when building the on-chain transaction
+  description: >
+    auction_eas_attest (auction/mcp_tools.py line 1481) accepts a chain_id parameter
+    but hardcodes both the RPC provider ("https://sepolia.base.org") and the transaction
+    chainId (84532) regardless of what the caller passes. If chain_id=8453 (Base mainnet)
+    is supplied, the attestation payload encodes "mainnet" but the transaction is submitted
+    to Sepolia, silently minting a misleading attestation on the wrong network.
+    The fix is to route through CHAIN_CONFIG (already defined at line 1089) exactly as
+    auction_register_robot_onchain does: look up the chain entry, use its rpc_url and
+    chain_id for the Web3 provider and transaction dict. EAS_ADDRESS is the same on both
+    chains so no address switch is needed. Also consider moving EAS_ADDRESS, EAS_SCHEMA_UID,
+    and EAS_ABI out of register_auction_tools() scope into module constants (complements IMP-049).
+  module: M24_mcp_tool_layer
+  research_source: code-audit-2026-04-11
+  evidence: 'auction/mcp_tools.py line 1509: w3 = Web3(HTTPProvider("https://sepolia.base.org")) — hardcoded; line 1533: "chainId": 84532 — hardcoded; CHAIN_CONFIG at line 1089 already maps 84532 and 8453'
+  effort: small
+  priority: medium
+  status: implemented
+  proposed_date: '2026-04-11'
+  decision_date: '2026-04-14'
+  decision_notes: Now resolves RPC URL and chainId from CHAIN_CONFIG based on chain_id parameter. Explorer URL switches between base-sepolia and base mainnet EASScan.
+- id: IMP-051
+  title: Delete stale deprecated fallback block in mcp_robot_adapter.py
+  description: >
+    auction/mcp_robot_adapter.py lines 345-360 contain a DEPRECATED FALLBACK block —
+    a commented-out robot-name-based hardcoded tool lookup (tumbller_move, fakerover_move,
+    etc.) with an explicit TODO: "Remove entirely once dynamic resolution is verified in
+    production." Dynamic _resolve_tools() has been the sole resolver since v1.4
+    (2026-04-10) and has operated across a 100-robot fleet through the EAS attestation
+    sprint without regressions. The block is dead code. Delete lines 345-360 and the
+    surrounding comment header. The live warn logs (lines 361-364) that fire when no
+    tool is found should be retained — they are the correct failure signal.
+  module: M9_mock_fleet
+  research_source: code-audit-2026-04-11
+  evidence: 'auction/mcp_robot_adapter.py line 348: TODO: Remove entirely once dynamic resolution is verified in production. — 100-robot fleet deployed and attested post-v1.4; dynamic resolution confirmed'
+  effort: trivial
+  priority: low
+  status: implemented
+  proposed_date: '2026-04-11'
+  decision_date: '2026-04-12'
+  decision_notes: Deleted 16 lines of dead tumbller/fakerover hardcoded tool fallback. Dynamic _resolve_tools() verified across 100 robots and 9 categories.
+# ============================================================
+# v1.4.1 100-Robot Fleet Sprint Items (2026-04-12)
+# Source: docs/BACKLOG.md merged into canonical backlog
+# ============================================================
+- id: IMP-052
+  title: Delivery schema end-to-end verification across all 9 RFP presets
+  description: 'Category-specific delivery schemas implemented (auction/delivery_schemas.py) with 8 schema types mapped to 17 task categories. Category servers updated to return matching structured data. Auto-injection in engine.py. Adapter passes through category-specific delivery_data. GPR tested — need to verify remaining 8 presets (LiDAR, photo, thermal, bridge, corridor, tunnel, confined, env_sensing) pass QA end-to-end.'
+  module: M35_deliverable_qa
+  research_source: v1.4.1-fleet-sprint
+  evidence: auction/delivery_schemas.py, infra/fleet-sim/category_server.py
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-053
+  title: Realistic delivery payload data quality per survey standard
+  description: 'Current simulated data has correct structure but randomly generated values. Should align with industry standards: ASPRS accuracy classes for LiDAR (RMSEz 0.02-0.08m), ASCE 38 quality levels for GPR, ASTM C1153 for thermal, NBI condition states for bridges, USIBD LOA for terrestrial. Research output from R-052 agent has detailed specs per category. Add sensor model names, standards compliance fields, realistic file size estimates.'
+  module: M35_deliverable_qa
+  research_source: R-052
+  evidence: Research agent output (survey deliverable formats)
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-054
+  title: Sensor vocabulary management — canonical registry + term mapping
+  description: 'Claude generates sensors_required from RFP text. Sometimes produces names not in fleet vocabulary (e.g., robotic_total_station). Fleet has finite set: aerial_lidar, gpr, photogrammetry, thermal_camera, rtk_gps, terrestrial_lidar, temperature, humidity. Need: (a) canonical sensor registry in auction/core.py, (b) mapping layer for equivalent terms (total_station → rtk_gps, lidar → aerial_lidar), (c) graceful fallback for unknown sensors (suggest closest match, not silent fail). New sensor types should be addable without code changes.'
+  module: M1_core_types
+  research_source: v1.4.1-fleet-sprint
+  evidence: 'RFP preset "Aerial LiDAR Topo" generated robotic_total_station sensor, excluding GLAS-LIDAR-01 which has aerial_lidar+rtk_gps'
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-055
+  title: Multi-task RFP decomposition with parallel auctions
+  description: 'One RFP can require multiple survey types (e.g., I-94 = aerial topo + GPR subsurface + bridge inspection). Currently posts one task per Hire Operator click. Need: Claude decomposes into N tasks, user sees preview and confirms, N auctions run in parallel with shared rfp_id, N winner cards displayed. Each task settles independently. Reference: docs/research/automated/R-051_imr_llm_multi_robot_task_planning.md (disjunctive graphs for scheduling).'
+  module: M2_auction_engine
+  research_source: R-051
+  evidence: docs/PLAN_100_ROBOT_FLEET.md Phase 8
+  effort: large
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-056
+  title: RFP corpus expansion to 50 Michigan projects
+  description: 'docs/research/market/RESEARCH_MICHIGAN_RFP_EXAMPLES.md has 43 Michigan RFPs researched. Need 7 more to reach 50 target. Each decomposed into structured task specs with lat/lng coordinates. Sources: MDOT bid lettings, RCOC, DWSD CIP, EGLE dam program, MSU/U-M campus projects.'
+  module: M30_rfp_processing
+  research_source: v1.4.1-fleet-sprint
+  evidence: docs/research/market/RESEARCH_MICHIGAN_RFP_EXAMPLES.md
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-057
+  title: EAS attestation frontend performance optimization
+  description: 'Frontend sidebar queries EAS GraphQL at page load (~500 attestations across 2 chains). At 100 robots takes 1-2s. At 1000+ could become slow or hit rate limits. Consider caching attestations server-side or in localStorage with 5-min TTL.'
+  module: M41_demo_frontend
+  research_source: v1.4.1-fleet-sprint
+  evidence: demo/marketplace/index.html loadEASAttestations function
+  effort: small
+  priority: medium
+  status: implemented
+  proposed_date: '2026-04-12'
+  decision_date: '2026-04-14'
+  decision_notes: Added localStorage cache with 5-min TTL for EAS attestations. Cache key yakrover_eas_attestations. Falls through to GraphQL on miss or expiry.
+- id: IMP-058
+  title: EAS attestation as registration gate (not just discovery filter)
+  description: 'Currently EAS attestation filters at discovery time (post-registration). For production: attestation should gate marketplace participation — unattested robots can register on-chain but do not appear in discovery until platform attests. Separates "registered on ERC-8004" from "verified by marketplace". The auction_eas_attest MCP tool exists for platform admin use. Design: auto-attest on registration vs manual review queue vs verification checklist.'
+  module: M42_attestation
+  research_source: v1.4.1-fleet-sprint
+  evidence: scripts/eas_attest.py, auction/mcp_tools.py (auction_eas_attest)
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-059
+  title: IPFS vs off-chain delivery storage architecture
+  description: 'Current delivery payloads are small JSON metadata uploaded to IPFS via Pinata. Real survey deliverables are 50MB-10GB. IPFS is impractical for multi-GB files. Need: metadata manifest on IPFS (what was delivered + content hashes), actual files on off-chain storage (S3 presigned URLs, Filecoin CIDs, or operator-hosted). Buyer downloads from off-chain, verifies hash against IPFS manifest.'
+  module: M35_deliverable_qa
+  research_source: v1.4.1-fleet-sprint
+  evidence: docs/PLAN_100_ROBOT_FLEET.md Phase 10
+  effort: large
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: null
+- id: IMP-060
+  title: IPFS enrichment scaling (batch/cache for 1000+ robots)
+  description: 'Frontend fetches each robot IPFS card in batches of 10. Works at 100 robots. At 1000+ need server-side cache (cache tool lists per MCP endpoint URL) or aggregated query.'
+  module: M41_demo_frontend
+  research_source: v1.4.1-fleet-sprint
+  evidence: demo/marketplace/index.html enrichRobotsFromIPFS function
+  effort: small
+  priority: low
+  status: deferred
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: Defer until robot count exceeds 200.
+- id: IMP-061
+  title: Sidebar virtualization for 1000+ robots
+  description: '100 DOM elements render fine. At 1000+ needs virtual scroll or pagination to prevent browser lag.'
+  module: M41_demo_frontend
+  research_source: v1.4.1-fleet-sprint
+  evidence: demo/marketplace/index.html renderRobotsSidebar
+  effort: medium
+  priority: low
+  status: deferred
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: Defer until robot count exceeds 300.
+- id: IMP-062
+  title: Parallel bid engine with async concurrency
+  description: 'bid_engine() calls are sequential per eligible robot via MCPRobotAdapter. 20 eligible = 20 serial HTTP calls (~2s each = 40s). Convert to asyncio.gather with per-robot timeout (10s) for parallel bidding. Cap at 30 concurrent requests.'
+  module: M2_auction_engine
+  research_source: v1.4.1-fleet-sprint
+  evidence: auction/engine.py get_bids method
+  effort: medium
+  priority: low
+  status: deferred
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: Defer until auction latency becomes user-facing issue.
+- id: IMP-063
+  title: Subgraph pagination for 200+ robots per chain
+  description: 'Subgraph query uses first:200. At 200+ robots per chain needs cursor-based pagination. Both server-side (mcp_server.py) and frontend (index.html) queries affected.'
+  module: M41_demo_frontend
+  research_source: v1.4.1-fleet-sprint
+  evidence: mcp_server.py, demo/marketplace/index.html
+  effort: small
+  priority: low
+  status: deferred
+  proposed_date: '2026-04-12'
+  decision_date: null
+  decision_notes: Defer until approaching 200 robots on a single chain.
+- id: IMP-064
+  title: Add stripe_account_id to OperatorProfile and enforce it at activation
+  description: >
+    OperatorProfile has no field for the operator's Stripe Connect Express account ID.
+    An operator can currently be activated for bidding and win tasks without completing
+    Stripe onboarding, causing payout failure at settlement. Add stripe_account_id: str | None
+    to OperatorProfile. In activate(), check that stripe_account_id is set and non-None before
+    allowing activation. The v1.4 3-step registration UI should write the Connect account ID
+    back to the registry on completion.
+  module: M10_compliance
+  research_source: R-027
+  evidence: docs/research/automated/R-027_operator_identity_verification.md
+  effort: small
+  priority: high
+  status: implemented
+  proposed_date: '2026-04-12'
+  decision_date: '2026-04-14'
+  decision_notes: Added stripe_account_id field to OperatorProfile. activate() now checks it is set. update_profile() allows setting it. Test added for missing Stripe check. Existing tests updated.
+- id: IMP-065
+  title: Tiered compliance gate — NOT_REQUIRED for task-type-irrelevant docs
+  description: >
+    The verify_operator() 'compliant' flag returns False if any of 6 doc types is MISSING,
+    including pls_license, sam_registration, dot_prequalification, dbe_certification —
+    which are irrelevant for most drone-only tasks. Add a task_type (or required_docs list)
+    parameter to verify_operator() that populates NOT_REQUIRED status for non-applicable docs.
+    Always required: faa_part_107, insurance_coi. Conditionally required: pls_license
+    (PLS-stamped deliverables only), sam_registration (federal-funded tasks), dot_prequalification
+    (DOT contracts), dbe_certification (DBE set-aside tasks).
+  module: M10_compliance
+  research_source: R-027
+  evidence: docs/research/automated/R-027_operator_identity_verification.md
+  effort: small
+  priority: medium
+  status: deferred
+  proposed_date: '2026-04-12'
+  decision_date: '2026-04-14'
+  decision_notes: Deferred — PLS and compliance gating deferred until production robots are stable. verify_operator() compliant flag is informational only, not enforced in bid/activation paths.
+- id: IMP-066
+  title: Middesk entity-level KYB trigger at first large task win (>=$25K)
+  description: >
+    When an operator first wins a task with value >= $25K, trigger a Middesk KYB check
+    (entity name + address → Secretary of State registration, IRS EIN match, OFAC screening).
+    Store result on OperatorProfile as kyb_status: {vendor, result, checked_at}. If FAIL
+    (entity not found, SoS inactive, OFAC hit), hold payout and flag for manual review.
+    Middesk covers 100% of US businesses with 92% of records updated within 10 days.
+    Pricing: ~$500/month floor; per-check negotiated. Requires IMP-065 first.
+  module: M10_compliance
+  research_source: R-027
+  evidence: docs/research/automated/R-027_operator_identity_verification.md
+  effort: medium
+  priority: medium
+  status: deferred
+  proposed_date: '2026-04-12'
+  decision_date: '2026-04-14'
+  decision_notes: Deferred — depends on IMP-065 (also deferred). KYB gating premature without production operators.
+- id: IMP-067
+  title: SAM.gov Entity registration check for federal-funded tasks
+  description: >
+    Add check_sam_entity_registration(entity_name) to compliance.py alongside existing
+    check_sam_exclusion(). Uses the SAM.gov Entity Management API v4 (same free API key,
+    1000 req/day for registered accounts). For tasks tagged federal_funded=True (MDOT
+    federal-aid projects), check both active registration and exclusion. Currently we check
+    debarment but not active registration status — both are required for federal contract work.
+  module: M10_compliance
+  research_source: R-027
+  evidence: docs/research/automated/R-027_operator_identity_verification.md
+  effort: small
+  priority: low
+  status: deferred
+  proposed_date: '2026-04-12'
+  decision_date: '2026-04-14'
+  decision_notes: Deferred — compliance gating deferred until production robots are stable.
+- id: IMP-068
+  title: Add pls_seal_format and pls_license_state to Level 3 delivery schemas
+  description: >
+    Add two fields to the Level 3 delivery validation schema in deliverable_qa.py and delivery_schemas.py:
+    (1) pls_seal_format — enum: pki_digital_cert | docusign_advanced | docusign_esign | image_embed | wet_stamp.
+    Required when pls_review_status is present.
+    (2) pls_license_state — two-letter state code of the issuing PLS board (e.g. "MI", "OH").
+    Required for all Level 3 tasks.
+    In _check_level_3(), add WARN when pls_seal_format in (image_embed, docusign_esign) and task state
+    is OH, NJ, VA, or NV (states requiring PKI-based signing). Also WARN when pls_license_state != task
+    project_state and no comity agreement is documented.
+  module: M35_deliverable_qa
+  research_source: R-007
+  evidence: docs/research/automated/R-007_electronic_survey_seal_stamp_regulations.md
+  effort: small
+  priority: high
+  status: deferred
+  proposed_date: '2026-04-13'
+  decision_date: '2026-04-14'
+  decision_notes: Deferred — PLS gating deferred until production robots are stable.
+- id: IMP-069
+  title: State seal requirement table in compliance module
+  description: >
+    Create auction/pls_seal_requirements.py with STATE_SEAL_REQUIREMENTS dict mapping state codes to:
+    min_seal_level (image | esign | pki_cert), dot_level (higher requirement for DOT submissions),
+    and notes string for human-readable guidance.
+    Pre-populate for MI, OH, TX, CA, FL, VA, NJ, NV.
+    Expose via MCP tool get_state_seal_requirements(state_code, is_dot_project).
+    Ohio (OAC 4733-23-01) requires PKI-based digital signature; Texas TxDOT explicitly permits DocuSign.
+    Drives Level 3 QA validation and operator onboarding UI warnings.
+  module: M36_pls_review
+  research_source: R-007
+  evidence: docs/research/automated/R-007_electronic_survey_seal_stamp_regulations.md
+  effort: medium
+  priority: medium
+  status: deferred
+  proposed_date: '2026-04-13'
+  decision_date: '2026-04-14'
+  decision_notes: Deferred — PLS gating deferred until production robots are stable.
+- id: IMP-071
+  title: Evaluate x402 + Cloudflare Workers for agent-to-robot payment
+  description: >
+    Coinbase's x402 protocol uses HTTP 402 Payment Required for pay-per-request
+    stablecoin payments. Cloudflare Workers now has native x402 support via the
+    Agents SDK. The x402 Foundation (Coinbase + Cloudflare) launched April 2026.
+    119M+ transactions on Base, $600M annualized volume, zero protocol fees.
+    Evaluate whether x402 could replace or complement our current settlement
+    flow for robot task payments — particularly for agent-initiated micropayments
+    where Stripe's minimum doesn't apply. Key question: x402 is pay-per-request
+    (no escrow), but our flow needs hold-and-release. Could x402 handle the
+    payment initiation while Stripe Connect or smart contract handles escrow?
+    Related: R-053 (Stripe MPP analysis), AD-27 (settlement interface is protocol).
+    Sources: https://x.com/0xyoussea/status/2042286187956879447,
+    https://docs.cdp.coinbase.com/x402/welcome,
+    https://blog.cloudflare.com/x402/,
+    https://developers.cloudflare.com/agents/agentic-payments/x402/
+  module: M16_settlement
+  research_source: null
+  evidence: null
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-14'
+  decision_date: null
+  decision_notes: null
+- id: IMP-070
+  title: Operator onboarding — digital certificate guidance for DOT-tier operators
+  description: >
+    Add pls_seal_capability field to OperatorProfile (enum: image_only | docusign_esign | pki_cert).
+    During operator registration (3-step UI), if the operator selects task categories involving
+    topo/LiDAR deliverables AND DOT states, show an inline informational panel explaining that
+    Ohio, Virginia, New Jersey, and Florida require a PKI digital certificate from a Certificate
+    Authority (IdenTrust, GlobalSign) — NOT standard DocuSign e-signature — for sealed PLS deliverables.
+    ~$100-200/year/user. Surfaces the compliance requirement before bidding, reducing Level 3 QA failures.
+  module: M10_compliance
+  research_source: R-007
+  evidence: docs/research/automated/R-007_electronic_survey_seal_stamp_regulations.md
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-13'
+  decision_date: null
+  decision_notes: null
+- id: IMP-072
+  title: Add `pls_required` flag to task spec and RFP processor
+  description: >
+    Add `pls_required: bool` and `pls_supervision_model: Literal["operator_is_pls",
+    "operator_subcontracts_pls", "not_required"]` to the task spec schema.
+    Set pls_required=true automatically for task categories topo_survey, corridor_survey,
+    site_survey, control_survey, as_built, aerial_survey. The rfp_processor should
+    populate this field based on task_category and project state. The bid submission
+    flow should surface this to the operator before they bid. This enables bid gating
+    (IMP-073) and correct agreement generation (PLS supervision clause in ConsensusDocs 750).
+    Codebase: auction/core.py VALID_TASK_CATEGORIES, auction/mcp_tools.py
+    auction_post_task / auction_parse_rfp.
+  module: M36_pls_review
+  research_source: R-007b
+  evidence: docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md
+  effort: small
+  priority: high
+  status: deferred
+  proposed_date: '2026-04-14'
+  decision_date: '2026-04-14'
+  decision_notes: Deferred — PLS gating deferred until production robots are stable. Optional at onboarding, should not gate bids.
+- id: IMP-073
+  title: Pre-bid PLS role declaration gate for survey task categories
+  description: >
+    Before an operator submits a bid on a task where pls_required=true (IMP-072),
+    require them to declare their PLS role: (a) "I am a licensed PLS in [project state]"
+    — triggers pls_license doc upload/check, OR (b) "I am a data-collection subcontractor
+    operating under PLS firm [name] [license#]" — requires supervising PLS firm name
+    and license number on file. Operators who cannot make either declaration are blocked
+    from bidding on that task category. Also fix the inverse problem in verify_operator()
+    (compliance.py:124): compliant=True should not require pls_license for task categories
+    that do not require PLS (e.g. bridge_inspection, subsurface_scan, thermal_inspection).
+    Per R-027 note: verify_operator() needs task_type context. This addresses both the
+    over-restriction (non-topo operators penalized for lacking PLS) and the under-restriction
+    (topo operators with no PLS gate).
+  module: M10_compliance
+  research_source: R-007b
+  evidence: docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md
+  effort: medium
+  priority: high
+  status: deferred
+  proposed_date: '2026-04-14'
+  decision_date: '2026-04-14'
+  decision_notes: Deferred — PLS gating deferred until production robots are stable.
+- id: IMP-074
+  title: Platform T&C operator certification clause for licensing compliance
+  description: >
+    Add an explicit acknowledgment clause to operator registration T&Cs:
+    "For tasks requiring a Professional Land Surveyor (PLS) license in the project state,
+    I certify that I hold the required license OR am operating as a data-collection
+    subcontractor under a licensed PLS firm in responsible charge. I acknowledge that
+    the platform is not responsible for my compliance with state occupational licensing
+    laws and that violations may result in civil or criminal penalties." This shifts
+    liability to the operator and protects the platform as an intermediary facilitating
+    a data-acquisition subcontract. Applies to 4th Circuit states (NC, VA, WV, MD, SC)
+    immediately; recommended for OR, MI, OH, TX, CA as well.
+  module: M10_compliance
+  research_source: R-007b
+  evidence: docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md
+  effort: small
+  priority: high
+  status: deferred
+  proposed_date: '2026-04-14'
+  decision_date: '2026-04-14'
+  decision_notes: Deferred — PLS gating deferred until production robots are stable.
+- id: IMP-075
+  title: Operator profile — "Survey Role" field and data_collector_subcontractor declaration
+  description: >
+    In the operator registration UI (Step 1 — Profile), add a "Survey Role" field
+    for operators who select survey-related task categories: (a) Licensed PLS,
+    (b) Data Collection Subcontractor (operating under PLS supervision), or
+    (c) Not bidding on licensed-survey tasks. If "Data Collection Subcontractor":
+    collect the supervising PLS firm name, state, and license number. Store as
+    survey_role and supervising_pls fields on OperatorProfile. Used by bid gating
+    (IMP-073) and agreement generation to correctly populate the PLS supervision clause
+    in ConsensusDocs 750 subcontracts. Industry precedent: Aerotas and FlyGuys operate
+    on this data-acquisition subcontractor model — it is the primary viable path for
+    unlicensed drone operators in states following the NC ruling.
+  module: M10_compliance
+  research_source: R-007b
+  evidence: docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md
+  effort: small
+  priority: medium
+  status: deferred
+  proposed_date: '2026-04-14'
+  decision_date: '2026-04-14'
+  decision_notes: Deferred — PLS gating deferred until production robots are stable. Optional at onboarding.
+- id: IMP-076
+  title: Remove two dead imports in api.py flagged by ruff F401
+  description: >
+    auction/api.py imports `typing.Any` (line 18) and
+    `fastapi.middleware.cors.CORSMiddleware` (line 28) but neither is referenced
+    anywhere in the file. Ruff F401 flags both on every `ruff check` run. `Any`
+    is in a `TYPE_CHECKING` block so it's harmless, but `CORSMiddleware` inside
+    the try/except FastAPI import block is misleading — it implies CORS is
+    configured when it is not. Remove both imports. No behaviour change; silences
+    two ruff warnings that add noise to CI lint output.
+  module: api
+  research_source: code-audit-2026-04-14
+  evidence: 'ruff check auction/ --select=F401: api.py:18 typing.Any, api.py:28 CORSMiddleware — both unused'
+  effort: trivial
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-14'
+  decision_date: null
+  decision_notes: null
+- id: IMP-077
+  title: Decompose auction_register_robot_onchain into mode-specific helpers
+  description: >
+    `auction_register_robot_onchain` in mcp_tools.py is a large function handling
+    three distinct registration modes (platform-signed relay, operator wallet direct,
+    Claude Code SDK), chain selection, dry-run path, and on-chain retry logic — all
+    inline. Each mode has different auth flows and failure paths. Extract into three
+    private helpers: `_register_platform_signed()`, `_register_operator_wallet()`,
+    and `_register_via_sdk()`. The MCP-facing function becomes a thin dispatcher.
+    Benefits: each mode can be unit-tested in isolation without the full MCP stack,
+    error messages become mode-specific rather than generic. No behaviour change.
+  module: M24_mcp_tool_layer
+  research_source: code-audit-2026-04-14
+  evidence: 'auction/mcp_tools.py — auction_register_robot_onchain handles 3 registration modes, chain selection, and retry logic inline'
+  effort: medium
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-14'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-078
+  title: Add "PLS in Responsible Charge" declaration to bid submission for topo tasks
+  description: >
+    When an operator submits a bid on a task where pls_required is true (see IMP-079),
+    require them to declare either: (a) they hold a valid PLS license in the project
+    state (license number field), or (b) they operate under a licensed PLS firm in
+    responsible charge (firm name + supervising PLS name + license number). This
+    declaration is stored with the bid record and surfaced to the buyer before
+    award. Prevents unlicensed operators from winning topo-category tasks without
+    platform awareness, and establishes the legally-valid "data collector under
+    PLS responsible charge" model used by FlyGuys and Aerotas. Addresses the
+    primary legal gap identified in R-045: no PLS role declaration at bid time.
+  module: M7_bid_scorer
+  research_source: R-045
+  evidence: 'docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md — Section 3 (FlyGuys model) and Section 8 (Tier 2 mitigation)'
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-079
+  title: Add pls_required boolean field to TaskSpec for topo-category tasks
+  description: >
+    Add pls_required: bool field to the TaskSpec dataclass and schema. Set True
+    for task types that constitute "practice of surveying" under 360 Virtual Drone
+    and analogous state statutes: topo_survey, corridor_survey, site_survey,
+    control_survey, as_built, aerial_survey. Set False for: progress_monitoring,
+    gpr_scan, orthomosaic (non-measurable), inspection, thermal, volumetrics.
+    This field enables the IMP-078 bidding gate and surfaces compliance information
+    in the buyer task-creation UI ("This task type requires a licensed Professional
+    Land Surveyor in the project state"). Depends on IMP-068 (pls_seal_format from R-007).
+  module: M5_auction_engine
+  research_source: R-045
+  evidence: 'docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md — Section 6 (codebase gaps) and Section 8 (Tier 2 mitigation)'
+  effort: small
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-080
+  title: Update platform Terms of Service with professional licensing disclaimer and state-specific notices
+  description: >
+    Add to YAK marketplace Terms of Service: (1) "YAK is a technology platform, not
+    a licensed surveying firm. YAK does not provide professional land surveying services."
+    (2) "Operators are solely responsible for ensuring their work complies with applicable
+    state professional licensing laws. For topographic survey deliverables, a licensed
+    Professional Land Surveyor must be in responsible charge in the project state."
+    (3) Per-state disclosure for highest-risk states: NY (explicit OPD prohibition on
+    unlicensed intermediaries), NC (4th Circuit binding; active board enforcement), OR
+    (OSBEELS explicit UAS guidance). This is Tier 1 mitigation — a necessary baseline
+    even if Tier 2/3 are also implemented. Required before commercial launch in any
+    of these markets.
+  module: system
+  research_source: R-045
+  evidence: 'docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md — Section 2 (NY prohibition), Section 6 (risk matrix), Section 8 (Tier 1 mitigation)'
+  effort: small
+  priority: critical
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+- id: IMP-088
+  title: Demand signal system — log unmet requests as operator market intelligence
+  description: >
+    When a buyer posts a task or searches for robots and no operator can fulfill the request,
+    log the unmet demand as structured data (task category, location, capability requirements,
+    budget range, timestamp). Expose via two new MCP tools: auction_log_unmet_demand (called
+    on no-match) and auction_get_demand_signals (queried by operators). Operators see real
+    demand data: "3 GPR requests in Montana in last 30 days, avg budget $3,500, no operators
+    within 200km." Turns failed auctions into market intelligence. Storage: SQLite table
+    unmet_demands in SyncTaskStore. Surface in tool responses on no-match and in operator
+    dashboard queries. Per multi-agent architecture critique (SKILL_ARCHITECTURE_PLAN_v2.md):
+    demand signal is a data layer and MCP tools, not a standalone skill or workflow.
+  module: M2_auction_engine
+  research_source: SKILL_ARCHITECTURE_PLAN_v2
+  evidence: 'docs/architecture/SKILL_ARCHITECTURE_PLAN_v2.md — multi-agent critique consensus'
+  effort: medium
+  priority: high
   status: proposed
   proposed_date: '2026-04-16'
   decision_date: null
   decision_notes: null
-- id: IMP-049
-  title: Split mcp_tools.py (1,619 lines) into domain-grouped sub-modules
+
+- id: IMP-081
+  title: Legal memo — evaluate Certificate of Authorization as surveying firm in MI, OH, NC
   description: >
-    auction/mcp_tools.py has grown to 1,619 lines housing 36 tools across 5 distinct domains:
-    (1) auction lifecycle (post_task, accept_bid, confirm_delivery, ~10 tools), (2) RFP
-    processing (parse_rfp, extract_requirements, ~4 tools), (3) compliance and bond
-    verification (~6 tools), (4) operator/fleet management (~8 tools), (5) feedback and
-    events (~8 tools). Proposed split: mcp_tools_auction.py, mcp_tools_rfp.py,
-    mcp_tools_compliance.py, mcp_tools_fleet.py, mcp_tools_feedback.py, with mcp_tools.py
-    retained as a thin re-export shim so all 35 existing import paths continue to work.
-    Evaluate whether the navigation improvement justifies the added file count — the existing
-    single file is navigable with a text search. Risk: accidental circular imports if
-    domain modules call each other. Lower priority than IMP-010 (engine.py split, rejected)
-    because mcp_tools.py has no internal state coupling.
+    Commission a legal memo from a licensed surveying firm attorney (or compliance
+    service such as Harbor Compliance) to evaluate: (1) What is required for YAK to
+    obtain a Certificate of Authorization (CoA) as a surveying firm in MI, OH, and NC?
+    (2) What PLS relationship is required — employee, partner, or advisory? (3) Does
+    YAK's current "platform fee" model constitute engaging in unlicensed practice in
+    these states, especially in light of NY OPD's explicit intermediary prohibition?
+    (4) Cost estimate for CoA registration in each state. This is the Tier 3 path
+    (Zillow/Redfin analogue for professional licensing) and must be completed before
+    YAK operationalizes at scale in these markets. See R-048 for research pre-work.
+  module: system
+  research_source: R-045
+  evidence: 'docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md — Section 5 (Zillow/Redfin model) and Section 8 (Tier 3 mitigation)'
+  effort: large
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+- id: IMP-082
+  title: check_hard_constraints() ignores certifications_required — operators without PLS can win PLS-required tasks
+  description: >
+    auction/core.py check_hard_constraints() (line 473) filters on sensors, indoor_capable,
+    battery, and distance_meters only. The certifications_required field in task specs
+    (e.g. certifications_required: ["licensed_surveyor"]) is never checked. An operator
+    without a PLS license can win — and be paid for — a task that legally requires a
+    licensed surveyor stamp. This is a production-blocking safety gap independently
+    documented in PRODUCT_MODULE_MAP.md (M36 gap table) and related to IMP-079
+    (pls_required flag on task schema) — but the bidding gate itself is missing.
+    Fix: read certifications_required from task.capability_requirements["hard"],
+    compare against robot_capabilities.get("certifications", []), append rejection
+    reason if any required cert is absent. Roughly 5 lines of code; no behaviour
+    change for tasks that do not set certifications_required.
+  module: M10_compliance_checker
+  research_source: code-audit-2026-04-15
+  evidence: 'auction/core.py:473 check_hard_constraints() — certifications_required key never read; PRODUCT_MODULE_MAP.md M36 gap table confirms'
+  effort: small
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+- id: IMP-083
+  title: Split mcp_tools.py (1,619 LOC) into domain modules
+  description: >
+    auction/mcp_tools.py has grown to 1,619 lines covering six unrelated domains:
+    auction lifecycle (post/bid/accept/execute/confirm/reject), RFP processing + site
+    recon, compliance (bond verifier, SAM, operator, terms comparator), agreement
+    generation, tracking/event feed, and operator registration + on-chain. Each domain
+    maps to a distinct product module (M24 in the product map). Proposed split into
+    four files co-located in auction/: mcp_tools_auction.py (lifecycle + quick_hire),
+    mcp_tools_compliance.py (bond/SAM/terms/operator), mcp_tools_rfp.py (RFP parsing
+    + site recon + agreement), mcp_tools_tracking.py (event feed + progress + feedback).
+    The register_auction_tools() factory calls each sub-registrar. Zero API change for
+    callers; isolates compliance/payment logic from lifecycle logic for safer code review.
   module: M24_mcp_tool_layer
-  research_source: code-audit-2026-04-16
-  evidence: 'auction/mcp_tools.py: 1,619 lines, 36 tools across 5 functional domains'
+  research_source: code-audit-2026-04-15
+  evidence: 'auction/mcp_tools.py: 1619 lines — largest file in codebase, six unrelated domains'
   effort: medium
   priority: low
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+- id: IMP-084
+  title: Pin GitHub Action versions to SHA digests in CI workflow
+  description: >
+    .github/workflows/test.yml uses floating major-version tags for all actions:
+    actions/checkout@v4 and astral-sh/setup-uv@v4. Floating tags can be silently
+    redirected by the action author. For a codebase that handles real Stripe payments
+    and on-chain USDC transfers, a compromised action could exfiltrate STRIPE_TEST_KEY
+    or inject malicious code into build artifacts. Pin each action to its current SHA
+    (e.g. actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 for v4.2.2) and
+    add a comment with the human-readable version tag. Add Dependabot or Renovate for
+    automated SHA updates. One-time 30-minute change; eliminates supply-chain injection
+    risk on a money-handling CI pipeline.
+  module: system
+  research_source: code-audit-2026-04-15
+  evidence: '.github/workflows/test.yml — actions/checkout@v4, astral-sh/setup-uv@v4: floating tags on money-handling CI'
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-15'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-085
+  title: Check payouts_enabled in activate() before allowing operator activation
+  description: >
+    OperatorRegistry.activate() checks that stripe_account_id is non-None (IMP-064),
+    but does NOT call get_account() to verify that payouts_enabled is True. An operator
+    who started Stripe onboarding but didn't finish ID verification has a valid
+    stripe_account_id but cannot receive payouts — yet the current code lets them
+    activate and win tasks. Fix: after the stripe_account_id check in activate(), call
+    StripeService.get_account(stripe_account_id) and verify payouts_enabled is True.
+    If False, return an issue with the disabled_reason from the requirements hash.
+    In stub mode (no Stripe key), skip the check and log a warning.
+    Implementation is ~5 lines using the existing get_account() method.
+  module: M15_stripe_service
+  research_source: R-028
+  evidence: 'docs/research/automated/R-028_stripe_connect_kyc_operator_verification.md — Section 6 (codebase gap: activate() checks account exists, not payouts_enabled)'
+  effort: small
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-16'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-086
+  title: Add check_stripe_account_status() helper to stripe_service.py
+  description: >
+    Add a check_stripe_account_status(account_id) method to StripeService that
+    returns a clean struct rather than the raw Account dict:
+    {"payouts_enabled": bool, "charges_enabled": bool, "currently_due": list[str],
+    "disabled_reason": str | None, "status": "verified" | "pending" | "blocked" | "error"}.
+    "verified" = payouts_enabled AND charges_enabled AND currently_due == [].
+    This helper is called by activate() (IMP-085), by pre-bid validation in engine.py,
+    and by the account.updated webhook handler (IMP-087). Stub mode returns
+    {"status": "verified", "payouts_enabled": True, "charges_enabled": True,
+    "currently_due": [], "disabled_reason": null} so tests pass without real Stripe keys.
+    Eliminates repetitive dict-parsing at every call site.
+  module: M15_stripe_service
+  research_source: R-028
+  evidence: 'docs/research/automated/R-028_stripe_connect_kyc_operator_verification.md — Section 6 (get_account() returns raw dict; callers must parse payouts_enabled, requirements, disabled_reason)'
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-16'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-087
+  title: Handle account.updated webhook to auto-suspend OFAC-flagged operators
+  description: >
+    worker/src/index.js handles Stripe payment webhooks but does not process
+    account.updated events for connected accounts. When Stripe OFAC-flags an operator
+    post-activation (e.g. sanctions list hit, KYC failure, payout hold), the platform
+    has no mechanism to auto-suspend them — they remain active and eligible to bid.
+    Add a webhook handler for account.updated that checks payouts_enabled on the
+    updated account. When it transitions to False on an account linked to an active
+    operator, call the auction API to set operator status to suspended and log the
+    disabled_reason. Requires a separate Connect webhook endpoint (or a shared endpoint
+    that routes by event type). Stripe requires a separate webhook secret for account-level
+    Connect events vs payment events.
+  module: M15_stripe_service
+  research_source: R-028
+  evidence: 'docs/research/automated/R-028_stripe_connect_kyc_operator_verification.md — Section 6 (no webhook handling for Connect account status changes) and Finding 1 (Stripe OFAC screening is ongoing, not one-time)'
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-16'
+  decision_date: null
+  decision_notes: null
+- id: IMP-089
+  title: Operator session identity — persistent state tied to authenticated operator
+  description: >
+    Operators currently interact with the marketplace statelessly — no concept of "my bids",
+    "my earnings", or "my fleet" across sessions. With SQLite persistence (IMP-038), the
+    marketplace stores auction data but cannot attribute it to a returning operator. Needed:
+    (1) Operator identity binding — use one of: API key (simplest), wallet address (already
+    on-chain via ERC-8004), or Stripe Connect account ID (already required for payouts via
+    IMP-064). Stripe Connect ID is the pragmatic choice — operators already have one after
+    onboarding. (2) Session-aware MCP tools — auction_my_bids(operator_id), auction_my_earnings
+    (operator_id), auction_my_fleet(operator_id). These query SQLite filtered by operator.
+    (3) Authentication at MCP layer — bearer token or OAuth flow so the MCP server knows
+    which operator is calling. Current MCP server has MCP_BEARER_TOKEN but it is a single
+    shared token, not per-operator. Considerations: per-operator tokens add complexity
+    (token issuance, storage, rotation). Alternative: operator passes their robot_id or
+    operator_id as a parameter and the system trusts it (acceptable for demo, not for
+    production). For production: OAuth via Stripe Connect or wallet-based auth (EIP-4361
+    Sign-In with Ethereum). Depends on IMP-064 (stripe_account_id on OperatorProfile)
+    and IMP-038 (SQLite persistence).
+  module: M10_compliance
+  research_source: SKILL_ARCHITECTURE_PLAN_v2
+  evidence: 'User question during IMP-038 implementation — operator needs persistent session to see their history'
+  effort: medium
+  priority: high
   status: proposed
   proposed_date: '2026-04-16'
   decision_date: null

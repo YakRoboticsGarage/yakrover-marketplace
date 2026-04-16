@@ -1,5 +1,7 @@
 """Agreement generation module.
 
+Vertical: construction (ConsensusDocs 750, AIA A401 subcontract templates)
+
 Generates structured subcontract agreements from task specs, winning bids,
 and compliance data using ConsensusDocs 750 or AIA A401 templates.
 """

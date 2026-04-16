@@ -4,28 +4,28 @@
 # Deploy scripts should read from this file rather than hardcoding slugs.
 #
 # Format: url → slug + source directory
-# Updated: 2026-04-09
+# Updated: 2026-04-12
 
 sites:
   - url: "https://yakrobot.bid/"
     slug: gleaming-sierra-28gb
-    source: demo/index.html
+    source: demo/landing/
     description: Main interactive demo — MDOT I-94 RFQ walkthrough
 
   - url: "https://yakrobot.bid/demo/"
     slug: sturdy-riddle-vvar
-    source: docs/mcp_demo_5/index.html
-    description: Live auction demo — Claude orchestrates real MCP tools, 3-method payment, operator registration
+    source: demo/marketplace/
+    description: Live auction demo — 100-robot fleet, EAS attestation, 9 RFP presets
 
   - url: "https://yakrobot.bid/yaml/"
     slug: wistful-mantra-9vnz
-    source: docs/site/
+    source: demo/explorer/
     description: Product brief — curated view of PRODUCT_DSL_v2.yaml
 
   - url: "https://yakrobot.bid/pitch/"
     slug: bronze-osprey-nsj6
-    source: docs/pitch/
-    description: Pitch deck — investor/partner presentation
+    source: github.com/rafaeldavid/robotTAM/pitch/
+    description: Pitch deck — managed in robotTAM repo
 
 # Archived slugs (no longer actively deployed)
 archived:

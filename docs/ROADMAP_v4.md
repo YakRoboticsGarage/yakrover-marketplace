@@ -2,8 +2,8 @@
 
 **Project:** yakrover-auction-explorer
 **Owner:** Product
-**Last updated:** 2026-04-09 (rev 5.1, v1.4 complete — operator registration + code review)
-**Status:** v1.0 built. v1.1 complete. v1.2 complete. v1.3 complete. **v1.4 complete** (36 MCP tools, on-chain ERC-8004 registration, 100-finding code review resolved). Demo at yakrobot.bid/demo.
+**Last updated:** 2026-04-12 (rev 5.6, protocol separation assessment + roadmap integration)
+**Status:** v1.0–v1.4 built. **v1.4.1 complete** (41 MCP tools, 100 test robots on Base Sepolia, 9 category MCP servers, EAS attestation, geographic filtering, busy state, 8 delivery schemas, 9 RFP presets). Repo restructured. Demo at yakrobot.bid/demo.
 
 > All product decisions and technical constraints referenced by ID live in `docs/DECISIONS.md`.
 > Feature requirements for the next build: `docs/FEATURE_REQUIREMENTS_v15.md`.
@@ -23,7 +23,7 @@ Every feature on this roadmap exists to serve a named user. If a feature cannot 
 | **v1.0 (built)** | Sarah — Facilities Manager | Buyer | Warehouse sensor readings via AI assistant |
 | | Robot Operator (fleet) | Operator | Registers fleet, configures pricing, receives payouts |
 | | Claude (AI Agent) | Agent | Translates intent to structured tasks, runs auctions |
-| **v1.4 (next)** | Alex — Independent Operator | Operator | Signs up, registers equipment, uploads credentials, receives Stripe Connect payouts |
+| **v1.4 (built)** | Alex — Independent Operator | Operator | Signs up, registers equipment, uploads credentials, receives Stripe Connect payouts |
 | | Controller / AP Manager | Controller | Configures company account, payment methods, agent spending limits |
 | **v1.5** | Marco — Senior Estimator | Buyer | Pre-bid surveys, progress monitoring via AI assistant |
 | | Drone/Robot Operator (regional) | Operator | Bids on construction survey tasks, uploads data |
@@ -42,12 +42,12 @@ Every feature on this roadmap exists to serve a named user. If a feature cannot 
 Three parallel workstreams to validate demand before building the next version:
 
 ### 1. GC Outreach
-- Engagement packages for general contractors (see `docs/wave1/`)
+- Engagement packages for general contractors (see [robotTAM/outreach](https://github.com/rafaeldavid/robotTAM/tree/main/outreach))
 - Target: 5-10 GC conversations to validate survey pain points, willingness to use a marketplace, and pricing expectations
 - Deliverable: Validated demand signal or pivot insight
 
 ### 2. Operator Outreach
-- Engagement packages for drone/robot operators (see `docs/wave1/`)
+- Engagement packages for drone/robot operators (see [robotTAM/outreach](https://github.com/rafaeldavid/robotTAM/tree/main/outreach))
 - Target: 5-10 operator conversations to validate supply-side economics, willingness to bid on tasks, and equipment readiness
 - Deliverable: Letter-of-intent pipeline or operator onboarding commitments
 
@@ -90,10 +90,10 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - Internal wallet ledger with debit/credit log (per TC-2)
 - Stripe wallet onboarding + Connect Express payouts (per TC-2, TC-3)
 - Persistent state via SQLite `SyncTaskStore`
-- 36 MCP tools: auction lifecycle, RFP processing, bond verification, operator compliance, agreement generation
+- 35 MCP tools: auction lifecycle, RFP processing, bond verification, operator compliance, agreement generation
 - Structured error responses, `available_actions`, `next_action` patterns (per AD-13, AD-14, AD-15)
 - Standards-aligned task specs: ASPRS accuracy classes, USGS quality levels, EPSG CRS codes, structured deliverables
-- 284 passing tests, ~17,336 LOC
+- 284 passing tests, ~17,042 LOC
 - Live demo at yakrobot.bid, yakrobot.bid/demo (Claude tool_use), yakrobot.bid/yaml (ontology explorer)
 - Chatbot worker on Cloudflare, MCP server with Cloudflare Tunnel
 
@@ -140,7 +140,7 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 | **Demo** | https://yakrobot.bid/demo/ |
 | **Revert tags** | `v1.1-milestone-payment-e2e` (Sepolia), `v1.1-milestone-base-mainnet` (mainnet + UX) |
 
-> **Detailed plan:** `docs/research/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`
+> **Detailed plan:** `docs/architecture/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`
 
 ### What's built
 - **Robot discovery from browser** — direct subgraph query + on-chain `getAgentWallet()` RPC call. No server dependency. Discovers `fleet_provider: yakrover` robots on Base + Sepolia.
@@ -202,7 +202,7 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 - [x] ~~Unskip fakerover bid tests~~ — rewritten for new bid format (8 tests, 0 skipped, all pass)
 
 ### Next phase
-- [ ] **ACH bank transfer** — Add `us_bank_account` to Stripe Payment Element. Same hold/capture pattern as card. GCs prefer ACH for tasks >$3K. See `docs/research/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`.
+- [ ] **ACH bank transfer** — Add `us_bank_account` to Stripe Payment Element. Same hold/capture pattern as card. GCs prefer ACH for tasks >$3K. See `docs/architecture/PLAN_PAYMENT_SETTLEMENT_DEMO_v4.md`.
 - [ ] **Payment method selection in UI** — Dispatch phase shows 3 buttons (Card / Bank Transfer / Crypto) instead of sidebar dropdown. User picks at moment of payment.
 - [ ] **Operator award notification** — MCP call `robot_task_awarded` to notify operator they won + payment is held. Currently robot only learns at execution time. Coordinate with Anuraj.
 - [x] ~~Stable tunnel URLs~~ — yakrover.online DNS active, Fly.io custom domains with SSL.
@@ -267,15 +267,18 @@ ACH does not support authorize/capture. Card uses Stripe manual capture (real ho
 
 ---
 
-## v1.4 — Operator Sign-Up and Registration (NEXT)
+## v1.4 — Operator Sign-Up and Registration (COMPLETE 2026-04-10)
 
 | | |
 |---|---|
-| **Timeline** | After v1.3 |
+| **Timeline** | 2026-04-08 to 2026-04-10 |
 | **Serves** | Alex (independent operator), Controller (AP manager) |
 | **Goal** | Production operator registration, credential verification, and Stripe Connect onboarding. First real operator onboarded. |
 | **Gate for v1.5** | At least 1 operator registered and activated |
-| **Robot verification** | Liveness probe on registration (MCP endpoint reachable). See PLAN_OPERATOR_REGISTRATION.md for v1.5+ verification roadmap (capability attestation, signed telemetry, delivery cross-verification). |
+| **Robot verification** | Liveness probe on registration (MCP endpoint reachable). See docs/architecture/PLAN_OPERATOR_REGISTRATION.md for v1.5+ verification roadmap (capability attestation, signed telemetry, delivery cross-verification). |
+| **Revert tag** | `v1.4-milestone-operator-registration` |
+| **Critique** | `docs/architecture/CRITIQUE_OPERATOR_REGISTRATION_AND_DEMO.md` |
+| **Assessment** | `docs/architecture/ASSESSMENT_TECHNICAL_STACK.md` |
 
 ### What exists (backend — all implemented)
 
@@ -300,23 +303,101 @@ All 6 MCP tools for operator management are built and tested:
 - **Operator profile view** — visible to buyers at bid review: equipment, certifications, coverage area, compliance status
 - **Deployment** — production hosting for the registration flow (Cloudflare Workers or Fly.io)
 
-### Done (v1.4 build progress)
+### Done (v1.4 — all complete)
 
+**Session 1 (2026-04-08 to 2026-04-09):**
 - Mock fleet archived — auction engine starts empty, uses only on-chain discovered robots
 - `auction_register_robot_onchain` MCP tool — registers on Base mainnet + Sepolia, hot-adds to fleet
 - 3-step registration UI in demo (Profile → Equipment → Payment & Bidding)
 - Three registration modes: platform signs, operator wallet, Claude Code / MCP
 - FakeRover- prefix enforcement for demo, admin passcode bypass for real robots
 - Hide FakeRovers toggle — filters both sidebar display and server-side auction fleet
+- Product ontology (PRODUCT_DSL_v2.yaml) updated to v2.5 — dry factual language, operator value props, v1.4 milestone
+- Product brief site rebuilt at yakrobot.bid/yaml
+- Single-chain registration (replaced multi-chain)
+- Two-step on-chain registration (mint → 3s delay → IPFS metadata write)
+- 100-finding code review completed + all resolved + re-review regressions fixed
+- Demo feedback button → GitHub issues
+- Technical stack assessment written (docs/architecture/ASSESSMENT_TECHNICAL_STACK.md)
+- Error UX: unique IDs, pre-filled GitHub issues, sticky non-bumping bar
+- Non-root Dockerfile
 
-### Next steps (v1.4 remaining)
+**Session 2 (2026-04-10):**
+- Critique of operator registration and demo engine (docs/architecture/CRITIQUE_OPERATOR_REGISTRATION_AND_DEMO.md)
+- Full execution path traced: browser → Worker → Claude → MCP → engine → robot adapter → robot MCP
+- 5 priorities addressed: MCP endpoint URL in registration, What's Next guidance, tool discovery, re-discovery on every auction, execution source transparency
+- Dynamic MCP tool resolution: `_resolve_tools()` matches by name patterns instead of hardcoded if/else
+- Fallback commented out (TODO to remove after production verification)
+- Berlin-04/05/06 agent cards being fixed — wrong MCP endpoint (marketplace instead of fleet)
+- Registration now writes robot's MCP endpoint to IPFS agent card (not marketplace)
+- Registration discovers robot's actual tools from its MCP server
+- `bid_pct` removed from IPFS (competitive intelligence — kept private)
+- Email removed from registration (PII)
+- All registration fields stored on-chain/IPFS (stripe_connect_id, company, location, model, sensors, preferred_usdc_wallet)
+
+**Session 3 (2026-04-10):**
+- **Buyer-friendly language audit (30+ changes):** Replaced blockchain/crypto jargon with professional registry language across entire demo UI. "On-chain" → "registered", "MCP endpoint" → "Robot Control URL", "USDC Wallet" → "Stablecoin Payment Address", "gas" → "covered by platform", "ERC-8004" → "identity registry", "agent card" → "published profile", "mint" → "register", "8004scan" → "Identity registry". Chain selector labels: "Base Mainnet" → "Production (Base)".
+- **Operator profile popup redesign:** Two-tier layout — top section shows Equipment, Capabilities, Sensors, Task types, Payment methods, Company/Location. Collapsible "Verification & technical details" section has Registration #, Registry network, Payment address with inline hyperlinks to 8004scan and block explorer (replaced 3 separate buttons). Close button / Available pill overlap fixed with flexbox header.
+- **IPFS agent card enrichment:** `enrichRobotsFromIPFS()` fetches each robot's IPFS card after subgraph discovery to read `services[0].mcpTools` per ERC-8004 registration-v1 schema. The subgraph doesn't index nested service fields, so tools were showing as empty for all robots. Now Berlin FakeRovers correctly show 6 commands.
+- **On-chain metadata decoding:** `decodeHexMeta()` converts hex-encoded metadata values (robot_type, task_categories, fleet_domain, equipment_model, operator_company, operator_location, sensors) to readable strings. Previously displayed as raw hex.
+- **Discovery race condition fix:** Replaced `Promise.race(Promise.all(subgraphs), 5s timeout)` with `Promise.allSettled(subgraphs)`. Slow Ethereum mainnet query no longer drops Base mainnet results where FakeRovers live. Each chain uses its own 8s AbortController timeout.
+- **Registration email validation fix:** Validation still checked `!email` after email was removed as PII — always failed since email hardcoded to `''`.
+- **Aerial LiDAR default fix:** Removed pre-checked checkbox and `|| 'aerial_lidar'` fallback that silently set sensor type even when unchecked.
+- **Interface language mapping:** Added `gtm.interface_language` to PRODUCT_DSL_v2.yaml — 20+ technical-to-interface term mappings with context for when technical language is acceptable.
+- **Sample certification documents:** 4 realistic mockups matching real document formats — FAA Part 107 (credit-card PNG), ACORD 25 COI (letter PDF with grid layout), Michigan PLS (wall certificate PDF), OSHA 30-Hour (green DOL card PNG).
+
+### Remaining cleanup (deferred to v1.5)
 
 - **Remove `RuntimeRegisteredRobot` dependency on `mock_fleet.py`.** Currently inherits `bid_engine()` and `execute()` from `ConstructionMockRobot`. Should implement its own ~30 lines each, or be replaced entirely by `MCPRobotAdapter` once operators run their own MCP servers. This decouples registration from the mock fleet — `mock_fleet.py` becomes a test-only utility.
 - **Refactor tests to use `RuntimeRegisteredRobot`.** 274 tests currently import `create_demo_fleet()` / `create_construction_fleet()` directly. Not blocking but adds unnecessary coupling to archived mock fleet.
-- **Base Sepolia registration debugging.** Berlin-04 registered on Base mainnet but Sepolia failed silently. Investigate SDK timeout or gas issue on Sepolia.
+- **Fix Berlin-04/05/06 agent cards.** Wrong MCP endpoint in IPFS metadata (marketplace instead of fleet). Need to rewrite agent cards with correct fleet MCP endpoint.
+- **Berlin-01/02/03 empty mcpTools in agent card.** IPFS cards have tools in `services[0].mcpTools` (correct per ERC-8004 spec) but subgraph doesn't index nested fields. Frontend now works around this via IPFS enrichment. Agent cards don't need re-uploading — the enrichment handles it.
+
+### Scale testing and mass registration (v1.5+)
+
+The demo currently has ~10 registered robots. Before the marketplace can handle real operator onboarding, it must be tested at 100+ and then 1,000+ registered operators with diverse equipment and geographies. This requires:
+
+**1. Test/production registration flag:**
+- Add `is_test` boolean metadata field to on-chain registration (written via `setMetadata`). Values: `true` for test/demo robots, `false` (or absent) for production operators.
+- Registration form: admin mode sets `is_test: true`; real operator registrations default to `false`.
+- Frontend fleet filter: add "Hide test robots" toggle (similar to existing "Hide FakeRovers" but driven by metadata, not name prefix). Replaces the brittle `FakeRover-` prefix convention.
+- Subgraph query: filter by `is_test` metadata to separate test fleet from production fleet.
+- Backend: `discover_and_swap_fleet()` accepts `include_test` parameter.
+
+**2. Automated registration script:**
+- Script to batch-register N robots with varied profiles: different equipment types (DJI M350, Skydio X10, Spot, ELIOS 3, custom ground rovers), sensor combinations, locations (MI, AZ, NV, NM metros), company names, and pricing.
+- Uses `auction_register_robot_onchain` MCP tool or direct agent0-sdk calls.
+- Configurable: chain, count, equipment distribution, geographic spread.
+- All batch-registered robots get `is_test: true` metadata.
+- Rate limiting: respect chain gas costs and RPC rate limits. Estimate ~$0.005/registration on Base = $0.50 for 100, $5 for 1,000.
+
+**3. Scale testing targets:**
+
+| Target | What to verify | When |
+|--------|----------------|------|
+| **100 robots** | Sidebar rendering, subgraph query performance, bid scoring with large fleet, IPFS enrichment latency, discovery time | v1.5 |
+| **1,000 robots** | Pagination/virtualization needed in sidebar, subgraph `first: 50` limit must increase, auction scoring performance under load, MCP server memory with 1K fleet objects | v2.0 |
+
+**4. Known scaling concerns:**
+- Subgraph query uses `first: 50` — needs pagination or increased limit for >50 robots
+- IPFS enrichment fetches each card sequentially in `Promise.allSettled` — at 1K robots this is too many parallel fetches. Need batch or cache.
+- Sidebar renders all robots in DOM — needs virtualized list at 100+
+- `_robots_by_id` dict in AuctionEngine grows linearly — fine to 10K, profile at 100K
+- Bid scoring runs `score_bids()` on all eligible robots per task — O(n) but each bid involves network call to robot MCP. At 1K robots, need async parallel bidding with timeout.
 
 ### Deferred to later milestones
 
+- **Sensor vocabulary management.** Claude generates `sensors_required` from RFP text (e.g., "robotic_total_station" from surveying terminology). The fleet has a finite set of registered sensor types (`aerial_lidar`, `gpr`, `photogrammetry`, `thermal_camera`, `rtk_gps`, `terrestrial_lidar`, `temperature`, `humidity`). When Claude produces a sensor name not in the fleet vocabulary, no robot matches and the auction fails. Needs: (a) a canonical sensor registry that Claude references, (b) a mapping layer that translates equivalent terms (e.g., "total station" → "rtk_gps" for positioning tasks), (c) graceful fallback when an unknown sensor is requested (suggest closest match vs hard fail). This is separate from restricting Claude — new sensor types are a valid outcome when new robot categories are added.
+
+- **Realistic delivery payload per robot category.** Currently `robot_execute_task` returns generic waypoint + sensor readings. Each category should return deliverables matching what the real robot produces — correct file formats, realistic sizes, proper metadata:
+  - Aerial LiDAR: LAS 1.4 point cloud metadata (point count, density, CRS, classified ground/non-ground). Real size: 50–500 MB.
+  - Aerial Photo: Orthomosaic metadata (GSD, pixel dims, GeoTIFF bounds), photo count + overlap. Real size: 1–10 GB.
+  - Ground GPR: DZT scan metadata (antenna freq, trace count, depth), utility detection table (type, depth, lat/lng). Real size: 10–100 MB per scan line.
+  - Thermal: Radiometric mosaic metadata (temp range, emissivity), anomaly table (location, severity). Real size: 50–200 MB.
+  - Bridge/Skydio: Inspection photo set metadata, element-level condition coding (NBI format). Real size: 2–5 GB.
+  - Raises question: what gets uploaded to IPFS (metadata + sample) vs stored off-chain (full dataset)? How does the buyer download and verify?
+
+- **Remove hardcoded tool name fallback in MCPRobotAdapter.** The old tumbller/fakerover name-based fallback is commented out (2026-04-10). Dynamic tool resolution via `_resolve_tools()` is active. Once verified working in production with multiple robot types, delete the commented-out fallback code entirely. See `auction/mcp_robot_adapter.py` lines 320-333.
 - Robot execution livestream (MJPEG/HLS camera feed) — moved to post-v1.4
 - Platform administration tooling (relay wallet monitoring, health aggregation) — partially done in v1.3 deploy scripts
 
@@ -402,15 +483,20 @@ R-050 unifies these into a coherent end-to-end protocol where the marketplace is
 ### Current operational inventory
 | Category | Items | Management |
 |----------|-------|-----------|
-| Worker secrets | ANTHROPIC_API_KEY, GITHUB_TOKEN, RELAY_PRIVATE_KEY, PINATA_JWT, STRIPE_SECRET_KEY (pending), STRIPE_WEBHOOK_SECRET (pending) | Cloudflare dashboard / `wrangler secret put` |
-| On-chain wallets | Platform (`0xe333...8e5`), Relay (`0x4b59...0d9`) | Manual funding, no balance alerts |
-| External services | Stripe, Pinata, Cloudflare Workers, here.now, The Graph subgraph | Separate dashboards, no unified monitoring |
-| Scheduled agents | Daily research (9am), Daily docs-sync + code review (7pm) | claude.ai/code/scheduled |
-| Domains | yakrobot.bid (here.now + Cloudflare), mcp.yakrobot.bid (tunnel, DNS pending) | Porkbun + here.now |
+| Worker secrets | ANTHROPIC_API_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PINATA_JWT, RELAY_PRIVATE_KEY, MCP_API_TOKEN, TELEGRAM_BOT_TOKEN | `wrangler secret put` / 1Password |
+| MCP server secrets | SIGNER_PVT_KEY, PINATA_JWT, MCP_API_TOKEN | Fly.io secrets (`fly secrets set`) / 1Password |
+| Fleet operator keys | 18 operator wallets (`.fleet_wallets.json`) | Local file (gitignored) / 1Password |
+| On-chain wallets | Platform (`0xe333...8e5`), Relay (`0x4b59...0d9`) | Manual funding. **Balance monitor active** (Cron Trigger, daily 09:00 UTC, Telegram alert). |
+| External services | Stripe, Pinata, Cloudflare Workers, Fly.io, here.now, The Graph subgraph | Separate dashboards, no unified monitoring |
+| Scheduled tasks | Daily research (9am), Daily docs-sync + code review (7pm) | claude.ai/code/scheduled |
+| Cron Triggers | Relay wallet balance monitor (daily 09:00 UTC → Telegram alert if < 0.005 ETH) | Cloudflare Worker (`yakrobot-api`) |
+| Domains | yakrobot.bid (here.now + Cloudflare), mcp.yakrobot.bid (Fly.io) | Porkbun + here.now |
 
 ### What's needed
-- [ ] Operational runbook: how to rotate each secret, fund wallets, deploy worker
-- [ ] Relay wallet balance monitoring (ETH runs out = payments stop)
+- [x] ~~Relay wallet balance monitoring~~ — Cron Trigger on `yakrobot-api`, daily 09:00 UTC, alerts via Telegram if < 0.005 ETH (warn) or < 0.001 ETH (critical)
+- [x] ~~Stripe webhook signature verification~~ — HMAC-SHA256 verification in Worker, replay protection (5 min window)
+- [x] ~~MCP server auth~~ — Bearer token required on all REST endpoints (tool calls, tool list, feedback)
+- [ ] Operational runbook: how to rotate each secret, fund wallets, deploy worker — see `docs/guides/OPERATIONS.md`
 - [ ] Service health endpoint aggregation (/api/health on worker, subgraph status, etc.)
 - [ ] Key rotation strategy per secret (frequency, procedure, who has access)
 - [ ] Production: KMS-backed signing for relay wallet (not env var)
@@ -497,6 +583,13 @@ Marco's assistant posts a construction survey task with structured specs -- accu
 - Claude OAuth integration
 - SSE live feed, robot discovery cards
 
+**Protocol separation preparation (AD-27):**
+- Add LICENSE file: MIT for protocol modules, BSL 1.1 for commercial modules
+- Enforce dependency direction: protocol modules (`auction/core.py`, `engine.py`, `deliverable_qa.py`, `reputation.py`, `wallet.py`, `store.py`, `discovery_bridge.py`) never import commercial modules. Lint rule in ruff config.
+- Extract `SettlementInterface` to standalone module (separate from Stripe implementation)
+- Define MCP tool schemas as language-agnostic JSON Schema (37 tools)
+- See `docs/architecture/ASSESSMENT_PROTOCOL_SEPARATION.md`
+
 **Development infrastructure:**
 - CI/CD: GitHub Actions (unit + ruff + mypy on every push)
 - pytest markers: unit / stripe / blockchain / fleet
@@ -514,6 +607,7 @@ Marco's assistant posts a construction survey task with structured specs -- accu
 - No auto-generated subcontracts (v2.0)
 - No automated ACORD 25 parsing (v2.0) -- v1.5 captures COI fields manually
 - No PLS license board API integration (v2.0) -- v1.5 captures license number and expiration only
+- No MPP/SPT agent-initiated payment (v2.0) -- see R-053
 - No escrow milestone management (v2.5)
 - No retainage tracking (v2.5)
 - No lien waiver automation (v2.5)
@@ -544,6 +638,14 @@ Diane posts an inspection with `privacy: true`. Her task spec is encrypted, matc
 - Robot-to-robot schedule coordination: airspace deconfliction, sequential access
 - Merged deliverable package: all subtask outputs combined into one data delivery
 - Upstream PRs: `bid()` on `RobotPlugin`, fleet MCP auction tools
+
+**Agent-initiated payment (MPP):**
+- Stripe Machine Payments Protocol integration for buyer agent (R-053)
+- Controller pre-authorizes Shared Payment Token (SPT) with spending limit
+- Claude agent pays via SPT on task award — no human checkout form
+- Backend: Stripe Connect holds funds (manual capture), releases on QA pass
+- Hybrid: MPP front-end (agent autonomy) + Connect back-end (escrow safety)
+- Requires: MPP enabled on Stripe account, `mppx` server-side handler
 
 **Construction-specific features:**
 - **Project-based task grouping:** All tasks for SR-89A live under one project. Pre-bid, monthly monitoring, and as-built linked to same baseline.
@@ -610,6 +712,14 @@ Diane posts an inspection with `privacy: true`. Her task spec is encrypted, matc
 - TEE-based confidential compute for encrypted task matching (PP-4, PP-5)
 - Viewer keys for audit (PP-7)
 - BBS+ credential schema operational (FD-2)
+
+**Protocol separation — Phase 1 (AD-27):**
+- Extract `rtap-core` Python package from `auction/` — publish to PyPI. Third-party developers can `pip install rtap-core` and build on the protocol.
+- Publish Task, Bid, Delivery, and MCP tool schemas as versioned JSON Schema documents.
+- Apply license: MIT for protocol code (`auction/core.py`, `engine.py`, `deliverable_qa.py`, `reputation.py`, `wallet.py`, `store.py`, `discovery_bridge.py`), BSL 1.1 for commercial code.
+- Enforce dependency direction: protocol modules never import commercial modules (lint rule).
+- Publish scoring algorithm specification (weights, normalization, hard constraint filters) as a versioned spec.
+- See `docs/architecture/ASSESSMENT_PROTOCOL_SEPARATION.md` for full analysis.
 
 **Frontend Phase 2-3:**
 - Payment flow (Stripe Checkout + WalletConnect)
@@ -697,6 +807,13 @@ Infrastructure scored third (3.65/5) with the strongest regulatory tailwind -- f
 - BBS+ anonymous reputation at operational scale
 - Privacy Pools on Base if 0xbow has deployed (PP-16)
 - Government contract compliance: encrypted specs, audit trails, viewer keys for oversight
+
+**Protocol separation — Phase 2 (AD-27):**
+- Evaluate foundation vs lighter governance structure (Uniswap-style forum) for protocol stewardship at current network size.
+- Deploy `RobotTaskEscrow.sol` as ownerless, immutable contract on Base. Any RTAP-compatible marketplace can use it.
+- Multi-marketplace operator portability: operator registers once (ERC-8004), bids across any RTAP marketplace. Protocol spec for cross-marketplace bid routing.
+- Scoring specification v1.0: published, versioned algorithm spec. Changes require governance proposal.
+- Reference frontend: minimal open-source UI that implements RTAP, separate from yakrobot.bid.
 
 **Convergence features:**
 - BBS+ credentials unified across all verticals

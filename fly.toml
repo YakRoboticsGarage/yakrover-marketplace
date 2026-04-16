@@ -5,6 +5,11 @@ primary_region = 'ams'
 
 [env]
   PYTHONPATH = '.'
+  AUCTION_DB_PATH = '/data/auction.db'
+
+[mounts]
+  source = 'yakrover_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8001

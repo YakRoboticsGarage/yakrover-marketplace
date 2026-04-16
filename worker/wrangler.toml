@@ -1,0 +1,37 @@
+name = "yakrobot-api"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://yakrobot.bid"
+MODEL = "claude-haiku-4-5-20251001"
+MAX_TOKENS = 1024
+MCP_SERVER_URL = "https://mcp.yakrobot.bid"
+TELEGRAM_CHAT_ID = "1748482631"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "070591697c364587919800322a50184f"
+
+[[kv_namespaces]]
+binding = "FEEDBACK_KV"
+id = "13e99192baa4498b9879087c0fec8746"
+
+# Set secrets via:
+#   npx wrangler secret put ANTHROPIC_API_KEY
+#   npx wrangler secret put STRIPE_SECRET_KEY         # sk_live_... or sk_test_...
+#   npx wrangler secret put STRIPE_WEBHOOK_SECRET      # whsec_...
+#   npx wrangler secret put PINATA_JWT                 # Pinata API JWT for IPFS uploads
+
+# Daily relay wallet balance check (09:00 UTC)
+[triggers]
+crons = ["0 9 * * *"]
+
+# Secrets for balance monitor:
+#   npx wrangler secret put TELEGRAM_BOT_TOKEN   # Telegram bot API token
+#   npx wrangler secret put MCP_API_TOKEN         # MCP server auth
+
+# Custom domain route (uncomment after routing is set up):
+# [[routes]]
+# pattern = "yakrobot.bid/api/chat"
+# custom_domain = true

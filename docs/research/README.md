@@ -4,7 +4,7 @@
 
 | File | What it is |
 |------|-----------|
-| **[PRODUCT_DSL_v2.yaml](PRODUCT_DSL_v2.yaml)** | The product ontology — 3,243 lines. Read this first. |
+| **[PRODUCT_DSL_v2.yaml](PRODUCT_DSL_v2.yaml)** | The product ontology — 3,494 lines. Read this first. |
 | **[SYNTHESIS_JTBD_WEDGE_PROPOSAL.md](SYNTHESIS_JTBD_WEDGE_PROPOSAL.md)** | Why construction surveying. Marco's JTBD, 5 tasks, costs, robots, lunar path. |
 
 ## Market Research

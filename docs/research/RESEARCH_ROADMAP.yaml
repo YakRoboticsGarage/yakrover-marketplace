@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-09"  # R-META-001 complete; duplicate IDs fixed (R-026/027/028 renamed R-039/040/041); R-007/R-027 reset to queued; IMP-021/023/027 marked implemented; R-042/043/044 spawned; R-006b/c downgraded; R-036 downgraded
+  last_updated: "2026-04-16"  # R-028 complete; IMP-085/086/087 added; R-050 spawned
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -129,11 +129,15 @@ topics:
     title: "Electronic survey seal/stamp regulations by state"
     module: M36_pls_review
     hypothesis: "Michigan and other states may have specific regulations on electronic vs physical PLS seals — DocuSign approach may not be legal everywhere"
-    status: queued
+    status: complete
     priority: critical
     estimated_sessions: 1
+    completed_date: "2026-04-13"
     depends_on: [R-006]
-    notes: "Reset from in_progress→queued by R-META-001 (2026-04-09). Previous session started but produced no output file. Must be re-run from scratch."
+    output_file: "docs/research/automated/R-007_electronic_survey_seal_stamp_regulations.md"
+    improvement_proposals: [IMP-068, IMP-069, IMP-070]
+    spawned: [R-007a, R-007b]
+    notes: "Hypothesis CONFIRMED. DocuSign e-signature fails PKI requirement in OH (OAC 4733-23-01), NJ, VA, NV. TX is most permissive (TxDOT explicitly permits DocuSign). MI is permissive by statute. CA permits e-seal but practice-of-surveying definition is broad (PLS licensure risk). 2024 NC federal court ruling confirms drone topo = surveying = PLS required. Codebase gap: no pls_seal_format in Level 3 delivery schema. 3 proposals + 2 new topics spawned."
 
   - id: R-008
     title: "ACORD 25 COI PDF field extraction methods"
@@ -329,20 +333,29 @@ topics:
     title: "Robot operator identity verification — individuals and businesses"
     module: M10_compliance
     hypothesis: "The platform should verify the operator entity (individual or business), not chase individual PLS license numbers. Business registry checks, KYC/KYB services (Middesk, Berbix, Stripe Identity, Persona), and existing compliance data (insurance COI, SAM.gov) may be sufficient to establish operator trust without per-credential verification."
-    status: queued
+    status: complete
     priority: critical
     estimated_sessions: 2
+    completed_date: "2026-04-12"
     depends_on: []
-    notes: "Reset from in_progress→queued by R-META-001 (2026-04-09). Previous session started but produced no output file. Must be re-run from scratch. Key questions: (1) What does a GC actually need to trust an operator? Business registration? Insurance? References? (2) What KYB/KYC services exist for marketplace operator verification? Cost, coverage, API? (3) How do other construction marketplaces (Procore, BuildOps) verify contractors? (4) Can Stripe Connect Express onboarding (which already does KYC) serve as sufficient operator verification? (5) What's the minimum viable trust for the demo ($0.50) vs production ($45K)? (6) Should verification level scale with task value?"
+    output_file: "docs/research/automated/R-027_operator_identity_verification.md"
+    improvement_proposals: [IMP-064, IMP-065, IMP-066, IMP-067]
+    spawned: [R-028]
+    notes: "Key findings: (1) Stripe Connect Express KYC is the right mandatory baseline gate — zero marginal cost, covers regulatory KYC. (2) Middesk is the right entity-level KYB for tasks >= $25K. (3) INFORM Act does not apply to services. (4) Most serious construction survey operators are LLCs (Stripe USDC payout path less relevant). (5) Current verify_operator() 'compliant' flag is incorrectly strict — needs task_type context. (6) OperatorProfile missing stripe_account_id — operators can be activated without payout path. R-028 (Stripe Identity as KYC) is now unblocked."
 
   - id: R-028
     title: "Stripe Identity and Connect KYC as operator verification"
     module: M10_compliance
     hypothesis: "Stripe Connect Express already performs KYC/KYB during onboarding — identity verification, business registration check, sanctions screening. If an operator has a verified Connect account, that may be sufficient platform trust for most task values."
-    status: queued
+    status: complete
     priority: high
     estimated_sessions: 1
+    completed_date: "2026-04-16"
     depends_on: [R-027]
+    output_file: "docs/research/automated/R-028_stripe_connect_kyc_operator_verification.md"
+    improvement_proposals: [IMP-085, IMP-086, IMP-087]
+    spawned: [R-050]
+    notes: "Hypothesis confirmed with caveats. payouts_enabled=True on Connect Express account is sufficient baseline trust for <$10K tasks (ID, SSN/EIN, OFAC, PEP screening included). Critical gap: activate() checks stripe_account_id != None but does NOT call get_account() to verify payouts_enabled=True — operator with incomplete onboarding can be activated. Stripe Identity ($1.50/check) is the right escalation for auto-verification failures. Stripe does NOT verify SoS registration (Middesk IMP-066 remains correct for $25K+ tasks). account.updated webhook needed to auto-suspend OFAC-flagged operators post-activation."
 
   # ===== PLATFORM ADMINISTRATION =====
 
@@ -625,3 +638,117 @@ topics:
     spawned_from: "R-META-001 (IMP-039 proposed but unresearched)"
     spawned_date: "2026-04-09"
     notes: "Key questions: (1) WalletConnect v2 in vanilla JS — SDK, bundle size, setup? (2) signTypedData_v4 support (required for EIP-3009 EIP-712 messages)? (3) Cloudflare Worker CORS for WalletConnect relay calls? (4) WalletConnect vs @metamask/sdk for mobile-first single-page demo? (5) Session reconnect model across page refreshes?"
+
+  # ===== SPAWNED BY R-007 =====
+
+  - id: R-007a
+    title: "PKI digital certificate providers for PLS seal workflows"
+    module: M36_pls_review
+    hypothesis: "IdenTrust TrustID and DocuSign Advanced may offer a practical workflow for PLS operators to apply PKI-certified seals — but the cost ($100-200/year/user) and integration complexity may be a barrier. Research the specific API/workflow for each provider."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-007]
+    spawned_from: R-007
+    spawned_date: "2026-04-13"
+    notes: "Key questions: (1) IdenTrust TrustID PE pricing and integration with Adobe/Bluebeam? (2) DocuSign Advanced Signatures API — does it apply a PKI cert to the PDF byte stream? (3) Can a marketplace platform automate PKI certificate application on behalf of an operator, or must the licensee hold the cert hardware token personally? (4) Estoppel risk: if platform applies seal programmatically, is the PLS still in responsible charge? (5) Cost-effectiveness at 10 tasks/month vs 100 tasks/month."
+
+  - id: R-007b
+    title: "2024 North Carolina drone mapping court ruling — operator liability implications"
+    module: M36_pls_review
+    hypothesis: "The 2024 federal appeals court ruling that aerial drone mapping requires a surveyor's license creates direct liability for drone operators on the YAK platform who lack a PLS license yet bid on topographic deliverable tasks. Platform terms may need to address this."
+    status: complete
+    priority: high
+    estimated_sessions: 1
+    completed_date: "2026-04-14"
+    depends_on: [R-007]
+    spawned_from: R-007
+    spawned_date: "2026-04-13"
+    output_file: "docs/research/automated/R-007b_nc_drone_mapping_ruling_operator_liability.md"
+    improvement_proposals: [IMP-072, IMP-073, IMP-074, IMP-075]
+    spawned: [R-045, R-046]
+    notes: "Case confirmed: 360 Virtual Drone Services LLC v. Ritter, 102 F.4th 263 (4th Cir. 2024). SCOTUS petition pending (No. 24-279, supplemental brief Dec 2025 — no cert yet). 4th Cir. (VA/WV/MD/NC/SC) directly binding; OR (OSBEELS) has explicit drone UAS guidance. 'Data collector subcontractor' model IS legally valid — drone op works under PLS in responsible charge (Aerotas/FlyGuys model). Codebase gaps: no pls_required flag on task specs; verify_operator() pls_license check applies to ALL task types (over-restriction for non-topo operators); no PLS role declaration in operator onboarding. 4 proposals + 2 new topics spawned."
+
+  # ===== SPAWNED BY R-007b =====
+
+  - id: R-045
+    title: "State surveying board platform-intermediary liability — does the marketplace face enforcement risk?"
+    module: M36_pls_review
+    hypothesis: "The NC Board targeted the drone operator directly in 360 Virtual Drone v. Ritter. But if YAK facilitates transactions where unlicensed operators deliver topographic survey products in states requiring PLS licensure, the platform itself may face enforcement as an aider/abettor of unlicensed practice. Research: (1) Has any state board pursued a marketplace/platform rather than the individual operator? (2) Does the 'facilitating data-acquisition subcontracts, not surveying services' framing provide legal shield? (3) Are there marketplace safe-harbor precedents in professional licensing law (analogous to DMCA safe harbor for IP)?"
+    status: complete
+    priority: high
+    estimated_sessions: 1
+    completed_date: "2026-04-15"
+    depends_on: [R-007b]
+    spawned_from: R-007b
+    spawned_date: "2026-04-14"
+    output_file: "docs/research/automated/R-045_surveying_board_platform_intermediary_liability.md"
+    improvement_proposals: [IMP-078, IMP-079, IMP-080, IMP-081]
+    spawned: [R-048, R-049]
+    notes: "Key findings: (1) No documented case of state board pursuing a marketplace platform — all enforcement targets individual operators/companies. (2) NY OPD has explicit prohibition on unlicensed intermediaries between clients and licensed surveyors (unique to NY). (3) Section 230 CDA does not apply to professional licensing enforcement. (4) FlyGuys model (subcontractor to licensed firms, not direct-to-end-client) is the established legally safe structure. (5) No professional licensing safe harbor equivalent to DMCA exists. (6) Tier 3 risk mitigation = CoA/surveying firm license (Zillow/Redfin analogue). 4 proposals + 2 new topics spawned."
+
+  - id: R-046
+    title: "ASPRS Certified Photogrammetrist (CP) as drone operator credential for YAK platform"
+    module: M36_pls_review
+    hypothesis: "ASPRS offers a Certified Photogrammetrist (CP) credential requiring demonstrated UAS mapping competency and a written exam. Some state DOTs and clients accept CP as evidence of professional competency for non-boundary survey deliverables (progress monitoring, volumetrics, orthomosaics). If YAK supported 'asprs_cp_certificate' as a compliance document type, operators could signal professional competency even without a PLS license — relevant for clients who need demonstrable qualifications but don't legally require a PLS."
+    status: queued
+    priority: low
+    estimated_sessions: 1
+    depends_on: [R-007b]
+    spawned_from: R-007b
+    spawned_date: "2026-04-14"
+    notes: "Key questions: (1) Is ASPRS CP accepted by any state DOT as a qualification for drone survey subcontracting? (2) Does CP reduce E&O insurance premiums for operators? (3) What is the exam/experience requirement for CP vs. PLS? (4) Should YAK add asprs_cp_certificate to VALID_DOC_TYPES in compliance.py? (5) Which task categories (non-topo) could accept CP as a sufficient credential?"
+
+  # ===== SPAWNED BY IMP-071 (git:7836a9b, 2026-04-14) =====
+
+  - id: R-047
+    title: "x402 protocol + Cloudflare Workers Agents SDK — agent payment evaluation"
+    module: M16_settlement
+    hypothesis: "Coinbase's x402 protocol (HTTP 402 Payment Required for pay-per-request stablecoin micropayments) launched April 2026 with native Cloudflare Workers support via the Agents SDK. 119M+ transactions on Base, $600M annualized volume, zero protocol fees. IMP-071 proposed evaluating x402 as a complement or replacement for the current settlement flow for agent-initiated payments. Key question: x402 is pay-per-request (no hold/escrow), but YAK needs commit-on-hire hold-and-release. Could x402 handle payment initiation while Stripe Connect or smart contract handles escrow? Also evaluate Stripe MPP (Managed Payment Platform) which may address similar agent-to-agent payment needs."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: []
+    spawned_from: "git:7836a9b (IMP-071 added 2026-04-14)"
+    spawned_date: "2026-04-14"
+    notes: "IMP-071 forward-references 'R-053 (Stripe MPP analysis)' — use R-047 for this topic. Key questions: (1) Does x402 support hold-and-release/escrow, or only instant settlement? (2) How does Cloudflare Workers Agents SDK x402 integration work with our existing Worker (worker/src/index.js)? (3) What is Stripe MPP and how does it compare to x402 for agent-initiated payments? (4) Does the zero-fee model apply to construction-scale ($10K+) payments or is it micro-payment-only? (5) Security: x402 signatures — are they replay-protected?"
+
+  # ===== SPAWNED BY R-045 =====
+
+  - id: R-048
+    title: "Certificate of Authorization (CoA) requirements for surveying firms in MI, OH, NC, NY"
+    module: M36_pls_review
+    hypothesis: "If YAK needs Tier 3 risk mitigation (operating as a licensed surveying entity), it must understand what a CoA requires in its primary markets. Requirements vary: some states require a licensed PLS as a partner/employee, others accept advisory relationships. Harbor Compliance and state board websites should have full requirements. Cost and PLS retention complexity will determine feasibility."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-045]
+    spawned_from: R-045
+    spawned_date: "2026-04-15"
+    notes: "Key questions: (1) MI (LARA): what is the firm registration requirement for professional surveyors? Can a tech LLC register? (2) OH (State Board of Registration for Professional Engineers and Surveyors): CoA requirements? (3) NC (NC Board of Examiners): firm certificate requirements? (4) NY (NY OPD): licensed surveyor required in LLC ownership? Percentage? (5) Harbor Compliance 50-state CoA guide covers this — fetch and summarize."
+
+  - id: R-049
+    title: "PLS in Responsible Charge subcontract model — Aerotas/FlyGuys agreement structure"
+    module: M36_pls_review
+    hypothesis: "The 'data collector subcontractor operates under a PLS in responsible charge' model is legally valid (confirmed by R-007b and R-045). But the contract must explicitly establish responsible charge. Research: (1) What contract language establishes PLS responsible charge for a drone subcontractor? (2) How do Aerotas and FlyGuys structure their subcontractor agreements? (3) Is there a NSPS or ASPRS model subcontract template? (4) What obligations does the 'responsible charge' PLS actually have (site visits, GCP checks, seal review)? (5) Could YAK's platform generate a standard subcontract addendum that establishes this relationship at task award time?"
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-045]
+    spawned_from: R-045
+    spawned_date: "2026-04-15"
+    notes: "Key questions: (1) Model subcontract language for responsible charge delegation? (2) Aerotas resources page has drone survey legal overview — does it address responsible charge subcontracts? (3) NSPS (National Society of Professional Surveyors) model documents? (4) If the winning operator is a licensed PLS themselves, does the platform still need a responsible charge declaration? (5) Implementation: at task award, YAK sends a 'PLS Responsible Charge Addendum' as part of the operator acceptance flow."
+
+  # ===== SPAWNED BY R-028 =====
+
+  - id: R-050
+    title: "Stripe Connect account.updated webhook — implementation guide for operator status sync"
+    module: M15_stripe_service
+    hypothesis: "The platform needs to receive account.updated webhook events from Stripe for all connected accounts (Express) to detect post-activation status changes: OFAC flags, KYC failures, payout holds. When payouts_enabled changes to False on an active operator's account, the marketplace must auto-suspend the operator. Research: (1) Does Stripe require a separate Connect webhook endpoint and webhook secret for account-level events vs payment events? (2) What is the event signature validation pattern for Connect account webhooks? (3) How does the platform subscribe to events for all connected accounts (not just one)? (4) What changes are needed in worker/src/index.js to handle account.updated and route to the auction API? (5) Are there other Connect account events relevant to operator status (e.g., account.application.deauthorized, person.updated)?"
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-028]
+    spawned_from: R-028
+    spawned_date: "2026-04-16"
+    notes: "Blocks IMP-087. Key questions: (1) Separate webhook secret for Connect events? (2) worker/src/index.js event routing pattern? (3) account.updated payload structure — does it include payouts_enabled directly? (4) Rate limiting / deduplication — same operator may get multiple status updates. (5) Can the auction API receive a PATCH /operators/:id/status from the worker, or does it need a dedicated endpoint?"

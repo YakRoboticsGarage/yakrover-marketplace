@@ -1,5 +1,7 @@
 """Compliance verification for robot operators.
 
+Vertical: construction (FAA Part 107, PLS, ACORD 25, DOT, DBE)
+
 Stores and checks operator compliance documents: FAA Part 107,
 insurance COI, PLS license, SAM.gov registration, DOT prequalification,
 and DBE certification.

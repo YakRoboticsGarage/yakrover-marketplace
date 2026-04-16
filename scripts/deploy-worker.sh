@@ -15,7 +15,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CHATBOT_DIR="$REPO_ROOT/chatbot"
+WORKER_DIR="$REPO_ROOT/worker"
 WORKER_NAME="yakrobot-chat"
 WORKER_URL="https://${WORKER_NAME}.rafaeldf2.workers.dev"
 CONFIG="wrangler.toml"
@@ -46,20 +46,20 @@ for f in "$REPO_ROOT/wrangler.jsonc" "$REPO_ROOT/wrangler.json" "$REPO_ROOT/wran
 done
 
 if [[ ${#ROGUE_CONFIGS[@]} -gt 0 ]]; then
-  fail "Rogue wrangler config(s) in parent directory — wrangler will use these instead of chatbot/wrangler.toml:"
+  fail "Rogue wrangler config(s) in parent directory — wrangler will use these instead of worker/wrangler.toml:"
   for f in "${ROGUE_CONFIGS[@]}"; do echo "       $f"; done
   echo "       Move or delete them before deploying."
   exit 1
 fi
 ok "No rogue wrangler configs in parent directories"
 
-# 2. chatbot/wrangler.toml exists and has correct name
-if [[ ! -f "$CHATBOT_DIR/$CONFIG" ]]; then
-  fail "$CHATBOT_DIR/$CONFIG not found"
+# 2. worker/wrangler.toml exists and has correct name
+if [[ ! -f "$WORKER_DIR/$CONFIG" ]]; then
+  fail "$WORKER_DIR/$CONFIG not found"
   exit 1
 fi
 
-TOML_NAME=$(grep '^name' "$CHATBOT_DIR/$CONFIG" | head -1 | sed 's/.*= *"\(.*\)"/\1/')
+TOML_NAME=$(grep '^name' "$WORKER_DIR/$CONFIG" | head -1 | sed 's/.*= *"\(.*\)"/\1/')
 if [[ "$TOML_NAME" != "$WORKER_NAME" ]]; then
   fail "wrangler.toml name is '$TOML_NAME', expected '$WORKER_NAME'"
   exit 1
@@ -67,18 +67,18 @@ fi
 ok "wrangler.toml name = $WORKER_NAME"
 
 # 3. Source file exists
-if [[ ! -f "$CHATBOT_DIR/src/index.js" ]]; then
+if [[ ! -f "$WORKER_DIR/src/index.js" ]]; then
   fail "src/index.js not found"
   exit 1
 fi
-LINES=$(wc -l < "$CHATBOT_DIR/src/index.js" | tr -d ' ')
+LINES=$(wc -l < "$WORKER_DIR/src/index.js" | tr -d ' ')
 ok "src/index.js exists ($LINES lines)"
 
 # 4. Check new endpoints are in source
 REQUIRED_ROUTES=("/api/create-ach-intent" "/api/transfer-to-operator" "/api/capture-payment" "/api/create-payment-intent" "/api/stripe-config")
 MISSING_ROUTES=()
 for route in "${REQUIRED_ROUTES[@]}"; do
-  if ! grep -q "$route" "$CHATBOT_DIR/src/index.js"; then
+  if ! grep -q "$route" "$WORKER_DIR/src/index.js"; then
     MISSING_ROUTES+=("$route")
   fi
 done
@@ -97,7 +97,7 @@ if [[ "$CHECK_ONLY" == true ]]; then
 else
   echo ""
   echo "Deploying..."
-  cd "$CHATBOT_DIR"
+  cd "$WORKER_DIR"
   npx wrangler@3 deploy -c "$CONFIG" 2>&1 | tee /tmp/wrangler-deploy.log
 
   # Verify it deployed to the right worker
@@ -121,7 +121,7 @@ fi
 
 echo ""
 echo "Checking secrets..."
-cd "$CHATBOT_DIR"
+cd "$WORKER_DIR"
 SECRETS=$(npx wrangler@3 secret list -c "$CONFIG" 2>/dev/null || echo "[]")
 
 REQUIRED_SECRETS=("ANTHROPIC_API_KEY" "STRIPE_SECRET_KEY" "STRIPE_PUBLISHABLE_KEY" "RELAY_PRIVATE_KEY" "PINATA_JWT")

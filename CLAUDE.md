@@ -9,8 +9,9 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 **v1.1 status:** Complete (2026-04-06). Real Tumbller robot moves + reads sensors via MCP. Marketplace + fleet on Fly.io (always on). Stripe inline authorize/capture. USDC gasless on Base. Demo-3 self-sustaining. Tags: `v1.1-milestone-tumbller-live`.
 **v1.2 status:** Demo-5 stable (2026-04-07). Single-signature USDC on Base mainnet. No platform fee. Professional buyer-facing UI. Always-on infrastructure (Fly.io + yakrover.online).
 **v1.3 status:** ACH bank transfer + 3-method payment selector (2026-04-08). Buyer chooses Card / Bank Transfer / Stablecoin at checkout. US Stripe account. Structured deploy scripts. Tags: `v1.3-milestone-ach-payment`.
-**v1.4 status:** Operator registration (2026-04-09). On-chain ERC-8004 registration on Base mainnet + Sepolia via agent0-sdk. 3-step UI (Profile > Equipment > Payment & Bidding). 3 registration modes (platform signs, operator wallet, Claude Code/MCP). Mock fleet archived — auction uses only on-chain discovered robots. 100-finding code review completed and all resolved. 36 MCP tools. Non-root Dockerfile. Tags: `v1.4-milestone-operator-registration`.
-**Next:** v1.5 (settlement abstraction + construction task specs + privacy foundation). Gated on v1.4 (at least 1 operator onboarded). See `docs/FEATURE_REQUIREMENTS_v15.md`.
+**v1.4 status:** Complete (2026-04-10). On-chain ERC-8004 registration on Base mainnet via agent0-sdk. 3-step UI (Profile > Equipment > Payment & Bidding). 3 registration modes (platform signs, operator wallet, Claude Code/MCP). Mock fleet archived — auction uses only on-chain discovered robots. 100-finding code review + re-review regressions fixed. Critique of operator registration and demo engine addressed. Dynamic MCP tool resolution (`_resolve_tools()` pattern matching). Registration writes robot's actual MCP endpoint + discovered tools to IPFS agent card. Privacy cleanup: bid_pct and email removed from IPFS. Buyer-friendly language audit (30+ UI strings). IPFS enrichment for ERC-8004 tool discovery. Discovery race condition fix. Operator profile popup redesign. Interface language mapping in ontology. Tags: `v1.4-milestone-operator-registration`.
+**v1.4.1 status:** 100-robot demo fleet (2026-04-11). 100 test robots registered on Base Sepolia across 18 operators, 14 real robot models, 9 MCP category servers on Fly.io. EAS attestation (100 demo_fleet + 1 live_production on Base mainnet). Geographic filtering (haversine hard cutoff). Busy state tracking. 9 MDOT RFP presets with lat/lng. EAS-based sidebar + server filtering. 41 MCP tools.
+**Next:** v1.5 (settlement abstraction + construction task specs + SvelteKit frontend migration). Gated on v1.4. Immediate next: delivery schema per task type (QA currently fails for non-temperature tasks), realistic delivery payloads, multi-task RFP decomposition. See `docs/FEATURE_REQUIREMENTS_v15.md` and `docs/PLAN_100_ROBOT_FLEET.md`.
 **Live sites:** [yakrobot.bid/demo](https://yakrobot.bid/demo/) (current demo), [yakrobot.bid](https://yakrobot.bid), [yakrobot.bid/yaml](https://yakrobot.bid/yaml), [yakrobot.bid/pitch](https://yakrobot.bid/pitch). Older demos archived in `docs/archive/`.
 
 ## Architecture
@@ -18,11 +19,11 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 - **Auction engine:** `auction/` — Task, Bid, AuctionResult, score_bids(), state machine, settlement abstraction
 - **Payment:** Stripe Connect (fiat) + USDC on Base via x402 (crypto, v1.5). Construction scale: $10K-$200K per project, not micro-payments.
 - **Escrow:** `RobotTaskEscrow.sol` on Base with 4-mode settlement abstraction (FD-1, v1.5)
-- **Fleet:** Robot/operator discovery via ERC-8004, 36 MCP tools for agent interaction
+- **Fleet:** Robot/operator discovery via ERC-8004, 41 MCP tools for agent interaction
 - **Persistence:** SQLite via `SyncTaskStore`
-- **Demo site:** `demo/index.html` — interactive demo at [yakrobot.bid](https://yakrobot.bid)
-- **Live demo:** `docs/mcp_demo_5/index.html` — Claude orchestrates real auction at [yakrobot.bid/demo](https://yakrobot.bid/demo/)
-- **Chatbot worker:** `chatbot/src/index.js` — Cloudflare Worker proxying to Anthropic API
+- **Demo site:** `demo/landing/index.html` — interactive demo at [yakrobot.bid](https://yakrobot.bid)
+- **Live demo:** `demo/marketplace/index.html` — Claude orchestrates real auction at [yakrobot.bid/demo](https://yakrobot.bid/demo/)
+- **API worker:** `worker/src/index.js` — Cloudflare Worker (payment, demo proxy, feedback)
 - **Hosting:** here.now (yakrobot.bid) + Cloudflare Workers (/api/*)
 
 ## Key Commands
@@ -79,45 +80,52 @@ yakrover-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 36 MCP tool handlers
+│   ├── mcp_tools.py             # 41 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
 │   ├── reputation.py            # ReputationTracker
+│   ├── mcp_robot_adapter.py     # MCPRobotAdapter — bridges to real robot MCP servers
 │   ├── discovery_bridge.py      # ERC-8004 robot discovery
-│   ├── mock_fleet.py            # Simulated robots for testing
+│   ├── mock_fleet.py            # Simulated robots for testing + RuntimeRegisteredRobot
 │   ├── demo.py                  # Demo script
-│   └── tests/                   # 284 tests + integration stubs
+│   └── tests/                   # 308 tests + integration stubs
 │
-├── demo/                        # Live website (yakrobot.bid)
-│   └── index.html               # Full interactive demo
+├── demo/                        # Live demo sites (published via here.now)
+│   ├── marketplace/index.html   # Live auction demo (yakrobot.bid/demo)
+│   ├── landing/index.html       # Landing page (yakrobot.bid)
+│   └── explorer/                # YAML ontology explorer (yakrobot.bid/yaml)
 │
-├── chatbot/                     # Cloudflare Worker (yakrobot-chat)
+├── worker/                      # Cloudflare Worker — payment, demo proxy, feedback
 │   └── src/index.js             # Chat + demo API proxy
 │
-├── mcp_server.py                # Standalone REST API (36 MCP tools, Cloudflare Tunnel)
+├── infra/                       # Deployment configs (Fly.io)
+│   ├── fleet/                   # Fleet MCP server (yakrover-fleet)
+│   └── fleet-sim/               # 9 category simulator servers + deploy script
 │
-├── docs/                        # Documentation
-│   ├── mcp_demo_5/index.html    # Live demo (yakrobot.bid/demo)
+├── data/                        # Static data files
+│   ├── fleet_manifest.yaml      # 100-robot fleet database
+│   └── sample_certs/            # Realistic sample credentials (FAA, ACORD 25, PLS, OSHA)
+│
+├── scripts/                     # CLI tools
+│   ├── register_fleet.py        # Batch robot registration
+│   └── eas_attest.py            # EAS attestation management
+│
+├── mcp_server.py                # Standalone REST API (41 MCP tools)
+│
+├── docs/                        # Technical documentation
 │   ├── ROADMAP_v4.md            # Construction → Mining → Infra → Lunar
-│   ├── USER_JOURNEY_CONSTRUCTION_v01.md  # Marco's journey
-│   ├── FEATURE_REQUIREMENTS_v15.md       # v1.5 build spec
+│   ├── PLAN_100_ROBOT_FLEET.md  # 100-robot demo fleet plan
 │   ├── DECISIONS.md             # All product/technical decisions
-│   ├── DEVELOPMENT_STRATEGY.md  # Testing & code safety (5-layer strategy)
 │   ├── SCOPE.md                 # Version boundaries
-│   ├── DIAGRAM_SYSTEM.md        # System architecture diagrams
-│   ├── DIAGRAM_USER_JOURNEY.md  # User journey diagrams
-│   ├── research/                # 52 research docs (see research/README.md)
-│   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (3,243 lines)
+│   ├── architecture/            # System design, tech assessments, diagrams
+│   ├── research/                # 75 research docs (see research/README.md)
+│   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (3,600+ lines)
+│   │   ├── IMPROVEMENT_BACKLOG.yaml  # 63 tracked improvement items
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
-│   │   ├── technical/           # Architecture, execution gaps
 │   │   └── operator/            # Onboarding, equipment, sensors
-│   └── feedback/                # Audits, critiques, founder feedback
-│
-├── docs/wave1/                  # GC + operator engagement packages
-│   ├── docs/pitch/                  # Pitch deck source
-│   ├── docs/site/                   # YAML ontology explorer (yakrobot.bid/yaml)
+│   ├── feedback/                # Product feedback synthesis pipeline
 │
 ├── .claude/
 │   ├── skills/
@@ -129,14 +137,14 @@ yakrover-marketplace/
 │
 ├── .github/workflows/test.yml   # CI: tests + ruff + mypy
 ├── CLAUDE.md                    # Payment safety rules for Claude (this file)
-├── _REPORT-STYLE.md             # Report formatting and tone guide
-├── serve_with_auction.py        # MCP gateway server
+├── docs/REPORT-STYLE.md         # Report formatting and tone guide
+├── docs/guides/GETTING_STARTED.md  # Setup guide
 └── pyproject.toml               # Dependencies, ruff, mypy config
 ```
 
 ## Style Guide
 
-All reports, engagement packages, and outreach documents follow the conventions in **`_REPORT-STYLE.md`**. See also [tropes.fyi](https://tropes.fyi) for anti-patterns to avoid in writing.
+All reports, engagement packages, and outreach documents follow the conventions in **`docs/REPORT-STYLE.md`**. See also [tropes.fyi](https://tropes.fyi) for anti-patterns to avoid in writing.
 
 ## Environment Variables
 

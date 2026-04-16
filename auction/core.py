@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import logging
+import math
 import os
 import secrets
 import uuid
@@ -18,6 +20,15 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
+
+
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calculate great-circle distance between two points in km."""
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 # ---------------------------------------------------------------------------
 # Optional eth_account import for Ed25519 signing (v1.0)
@@ -123,6 +134,12 @@ VALID_TASK_CATEGORIES = frozenset(
         "subsurface_scan",
         "environmental_survey",
         "control_survey",
+        "topo_survey",
+        "thermal_inspection",
+        "corridor_survey",
+        "volumetric",
+        "confined_space",
+        "utility_detection",
     ]
 )
 
@@ -188,7 +205,9 @@ def infer_task_category(capability_requirements: dict) -> str:
     sensors = hard.get("sensors_required", [])
     if not isinstance(sensors, list):
         return "env_sensing"
-    sensors_lower = [s.lower() for s in sensors if isinstance(s, str)]
+    from auction.sensor_registry import normalize_sensor
+
+    sensors_lower = [normalize_sensor(s) for s in sensors if isinstance(s, str)]
     if any(s in sensors_lower for s in ("rgb_camera", "thermal_camera")):
         # thermal_camera + aerial_lidar → bridge_inspection
         if "thermal_camera" in sensors_lower and "aerial_lidar" in sensors_lower:
@@ -275,6 +294,11 @@ def validate_task_spec(task_spec: dict) -> list[str]:
                 errors.append(
                     f"capability_requirements.hard.sensors_required must be a list, got {type(sensors).__name__}"
                 )
+            elif sensors is not None:
+                # Normalize sensor names to canonical forms
+                from auction.sensor_registry import normalize_sensors
+
+                hard["sensors_required"] = normalize_sensors(sensors)
 
         # If payload is provided, validate its structure
         payload = cap_req.get("payload")
@@ -382,6 +406,9 @@ class Task:
     # Construction task extensions
     task_decomposition: dict = field(default_factory=dict)
     project_metadata: dict = field(default_factory=dict)
+    # Job site location for geographic filtering
+    latitude: float | None = None
+    longitude: float | None = None
 
     def __post_init__(self) -> None:
         if self.budget_ceiling < Decimal("0.50"):
@@ -490,9 +517,12 @@ def check_hard_constraints(
     else:
         robot_sensors = set(raw_sensors)
 
-    # 1. Required sensors — robot must have ALL
+    # 1. Required sensors — robot must have ALL (normalize both sides)
+    from auction.sensor_registry import normalize_sensor
+
+    normalized_robot_sensors = {normalize_sensor(s) for s in robot_sensors}
     for required_sensor in hard.get("sensors_required", []):
-        if required_sensor not in robot_sensors:
+        if normalize_sensor(required_sensor) not in normalized_robot_sensors:
             rejections.append(f"missing_sensor:{required_sensor}")
 
     # 2. Indoor capability
@@ -664,9 +694,18 @@ def verify_bid(bid: Bid, key: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
+_logger = logging.getLogger("yakrover")
+
+_WARNING_TAGS = frozenset({"ERROR", "TIMEOUT", "REJECT"})
+
+
 def log(tag: str, message: str) -> None:
-    """Print a tagged log line. Tag is left-padded to 10 chars with brackets."""
-    print(f"[{tag:<8s}] {message}")
+    """Emit a tagged log line via stdlib logging.
+
+    Tags in _WARNING_TAGS are emitted at WARNING level; all others at INFO.
+    """
+    level = logging.WARNING if tag in _WARNING_TAGS else logging.INFO
+    _logger.log(level, "[%-8s] %s", tag, message)
 
 
 # ---------------------------------------------------------------------------

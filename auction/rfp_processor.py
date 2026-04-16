@@ -1,5 +1,7 @@
 """RFP processing module — converts construction RFP text into structured task specs.
 
+Vertical: construction (MDOT, AASHTO, federal highway RFP formats)
+
 Two modes:
 1. LLM-powered (default when ANTHROPIC_API_KEY is set): calls Claude with the
    rfp-to-robot-spec skill prompt + reference docs for semantic extraction.

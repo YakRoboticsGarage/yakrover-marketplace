@@ -4,7 +4,7 @@
 > Other documents reference this file rather than restating these items.
 > When a decision changes, update it **only here**.
 
-**Last updated:** 2026-04-06 (v1.1 complete — real robots via MCP, Fly.io always-on, Stripe inline)
+**Last updated:** 2026-04-12 (v1.4.1 complete — 100-robot fleet, EAS attestation, delivery schemas)
 
 ---
 
@@ -446,3 +446,16 @@ The following decisions are defined in `ROADMAP_v4.md` and govern all versions f
 | **PP-2** | Hidden Wallet Addresses | Robot wallet addresses never appear in public API responses. Platform-internal `robot_id` only. |
 
 See `ROADMAP_v4.md` § "Foundational Design Decisions" for full rationale.
+
+### New Decisions (v1.4.1, 2026-04-11/12)
+
+| ID | Decision | Summary |
+|----|----------|---------|
+| **AD-20** | EAS Over Metadata Attestation | Platform attestation uses EAS (Ethereum Attestation Service), not ERC-8004 `setMetadata`. `setMetadata` is owner-only — platform can't attest operator-owned robots. EAS is a separate on-chain attestation signed by the platform wallet, revocable, with structured schema. Schema UID: `0x70a6cca5...` on Base Sepolia + mainnet. |
+| **AD-21** | Per-Category MCP Servers | Each robot category gets its own Fly.io app (9 total), not a single server with namespace routing. Single-server approach caused tool name collisions (`ground_gpr_robot_submit_bid` vs `robot_submit_bid`). Per-category servers match the 8004 protocol — each robot's MCP endpoint has plain tool names. |
+| **AD-22** | Geographic Hard Cutoff | Robot excluded if task location > `service_radius_km` (haversine distance). Hard filter, not a scoring factor. Robots without location metadata still bid on all tasks. |
+| **AD-23** | Busy State Duration by Task Type | Winning robot gets `_busy_until` set for task-type-specific duration. `env_sensing`: 15s. `topo_survey`: 1hr. `corridor_survey`: 2hr. Robot excluded from bidding while busy. |
+| **AD-24** | Delivery Schema Per Task Category | QA validates delivery data against category-specific schemas (8 types). Auto-injected by engine if not in task spec. Schemas in `auction/delivery_schemas.py`. |
+| **AD-25** | Fleet Taxonomy via EAS | Three attestation types: `live_production` (real robots), `demo_fleet` (test fleet), `legacy` (deprecated). Discovery filters by attestation. Revocable. |
+| **AD-26** | Business Docs in Separate Repo | Pitch, outreach, financial model moved to `rafaeldavid/robotTAM`. Engineering repo contains only code + technical docs. |
+| **AD-27** | Protocol/Commercial Separation | Auction engine (`auction/core.py`, `engine.py`, `deliverable_qa.py`, `reputation.py`, `wallet.py`, `store.py`, `discovery_bridge.py`) is the protocol layer — MIT-licensed, no commercial imports. Commercial layer (Stripe, frontend, worker, EAS curation) imports protocol, never the reverse. Full separation at v3.0; dependency direction enforced from v1.5. See `docs/architecture/ASSESSMENT_PROTOCOL_SEPARATION.md`. |

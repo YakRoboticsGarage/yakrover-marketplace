@@ -529,6 +529,8 @@ class TestMCPToolsRegistered:
                 # Operator registration
                 "auction_register_operator",
                 "auction_register_robot_onchain",
+                "auction_onboard_operator_guided",
+                "auction_update_operator_profile",
                 "auction_add_equipment",
                 "auction_activate_operator",
                 # Phase 5: Agreement generation and project management
@@ -540,6 +542,11 @@ class TestMCPToolsRegistered:
                 "auction_get_task_feed",
                 # Phase 7: Feedback
                 "auction_submit_feedback",
+                # EAS attestation
+                "auction_eas_attest",
+                # Demand signals
+                "auction_log_unmet_demand",
+                "auction_get_demand_signals",
             ]
         )
 

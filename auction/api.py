@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from auction.engine import AuctionEngine
@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 # Optional FastAPI import — api.py is only used when serving the web frontend
 try:
     from fastapi import APIRouter, HTTPException, Request
-    from fastapi.middleware.cors import CORSMiddleware
 
     _HAS_FASTAPI = True
 except ImportError:

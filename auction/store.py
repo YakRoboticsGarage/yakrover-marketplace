@@ -577,6 +577,28 @@ _SCHEMA_DDL = """
         ON events(actor_id);
     CREATE INDEX IF NOT EXISTS idx_events_ts
         ON events(timestamp);
+
+    CREATE TABLE IF NOT EXISTS unmet_demands (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_id TEXT,
+        task_category TEXT NOT NULL,
+        location_lat REAL,
+        location_lng REAL,
+        location_description TEXT,
+        capability_requirements_json TEXT DEFAULT '{}',
+        budget_min REAL,
+        budget_max REAL,
+        reason TEXT,
+        status TEXT DEFAULT 'open',
+        created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_unmet_category
+        ON unmet_demands(task_category);
+    CREATE INDEX IF NOT EXISTS idx_unmet_status
+        ON unmet_demands(status);
+    CREATE INDEX IF NOT EXISTS idx_unmet_created
+        ON unmet_demands(created_at);
 """
 
 
@@ -769,8 +791,107 @@ class SyncTaskStore:
                 "request_id": r["request_id"],
                 "actor_id": r["actor_id"],
                 "actor_role": r["actor_role"],
-                "data": _json.loads(r["data_json"]),
+                "data": json.loads(r["data_json"]),
                 "timestamp": r["timestamp"],
             }
             for r in rows
         ]
+
+    # ------------------------------------------------------------------
+    # Unmet demand signals
+    # ------------------------------------------------------------------
+
+    def save_unmet_demand(
+        self,
+        task_category: str,
+        *,
+        request_id: str | None = None,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        location_description: str = "",
+        capability_requirements: dict | None = None,
+        budget_min: float | None = None,
+        budget_max: float | None = None,
+        reason: str = "",
+    ) -> int:
+        """Log an unmet demand signal. Returns the row id."""
+        db = self._conn()
+        now = datetime.now(UTC).isoformat()
+        cursor = db.execute(
+            """INSERT INTO unmet_demands
+                (request_id, task_category, location_lat, location_lng,
+                 location_description, capability_requirements_json,
+                 budget_min, budget_max, reason, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?)""",
+            (
+                request_id,
+                task_category,
+                latitude,
+                longitude,
+                location_description,
+                _dumps(capability_requirements or {}),
+                budget_min,
+                budget_max,
+                reason,
+                now,
+            ),
+        )
+        db.commit()
+        return cursor.lastrowid  # type: ignore[return-value]
+
+    def get_demand_signals(
+        self,
+        *,
+        task_category: str | None = None,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        radius_km: float = 200,
+        limit: int = 50,
+        status: str = "open",
+    ) -> list[dict]:
+        """Query unmet demand signals, optionally filtered by category and location."""
+        db = self._conn()
+        clauses = ["status = ?"]
+        params: list[Any] = [status]
+
+        if task_category:
+            clauses.append("task_category = ?")
+            params.append(task_category)
+
+        where = " AND ".join(clauses)
+        cursor = db.execute(
+            f"SELECT * FROM unmet_demands WHERE {where} ORDER BY created_at DESC LIMIT ?",
+            (*params, limit),
+        )
+        rows = cursor.fetchall()
+        results = []
+        for r in rows:
+            entry: dict[str, Any] = {
+                "id": r["id"],
+                "request_id": r["request_id"],
+                "task_category": r["task_category"],
+                "location": {
+                    "latitude": r["location_lat"],
+                    "longitude": r["location_lng"],
+                    "description": r["location_description"],
+                },
+                "capability_requirements": json.loads(r["capability_requirements_json"]),
+                "budget_range": {"min": r["budget_min"], "max": r["budget_max"]},
+                "reason": r["reason"],
+                "status": r["status"],
+                "created_at": r["created_at"],
+            }
+            # Haversine distance filter if location provided
+            if latitude is not None and longitude is not None and r["location_lat"] is not None:
+                import math
+
+                lat1, lat2 = math.radians(latitude), math.radians(r["location_lat"])
+                dlat = lat2 - lat1
+                dlng = math.radians(r["location_lng"] - longitude)
+                a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2) ** 2
+                dist_km = 6371 * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+                if dist_km > radius_km:
+                    continue
+                entry["distance_km"] = round(dist_km, 1)
+            results.append(entry)
+        return results

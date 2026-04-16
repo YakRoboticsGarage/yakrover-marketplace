@@ -160,6 +160,7 @@ class TestActivate:
         registry.add_equipment(op.operator_id, "aerial_lidar", "L2")
         op.certifications.append("faa_part_107")
         registry.set_insurance(op.operator_id, cgl="$2M")
+        op.stripe_account_id = "acct_test_123"
 
     def test_activate_success(self, registry: OperatorRegistry, registered_op: OperatorProfile) -> None:
         self._prepare_for_activation(registry, registered_op)
@@ -190,10 +191,72 @@ class TestActivate:
         assert result["status"] == "pending"
         assert any("Insurance" in i for i in result["issues"])
 
+    def test_activate_no_stripe(self, registry: OperatorRegistry, registered_op: OperatorProfile) -> None:
+        registry.add_equipment(registered_op.operator_id, "aerial_lidar", "L2")
+        registered_op.certifications.append("faa_part_107")
+        registry.set_insurance(registered_op.operator_id, cgl="$2M")
+        result = registry.activate(registered_op.operator_id)
+        assert result["status"] == "pending"
+        assert any("Stripe" in i for i in result["issues"])
+
     def test_activate_multiple_issues(self, registry: OperatorRegistry, registered_op: OperatorProfile) -> None:
         result = registry.activate(registered_op.operator_id)
         assert result["status"] == "pending"
-        assert len(result["issues"]) == 3
+        assert len(result["issues"]) == 4
+
+    def test_activate_stripe_payouts_disabled_with_fallback(self, registry: OperatorRegistry, registered_op: OperatorProfile) -> None:
+        """When Stripe payouts not enabled, falls back to test account."""
+        self._prepare_for_activation(registry, registered_op)
+
+        class MockStripe:
+            stub_mode = False
+            def get_account(self, acct_id):
+                return {"payouts_enabled": False, "requirements": {"disabled_reason": "pending_verification"}}
+
+        result = registry.activate(registered_op.operator_id, stripe_service=MockStripe(), use_test_account_fallback=True)
+        assert result["status"] == "active"
+        assert "stripe_warning" in result
+        assert "test account" in result["stripe_warning"].lower()
+        assert registered_op.stripe_account_id == OperatorRegistry.TEST_STRIPE_ACCOUNT
+
+    def test_activate_stripe_payouts_disabled_no_fallback(self, registry: OperatorRegistry, registered_op: OperatorProfile) -> None:
+        """When Stripe payouts not enabled and no fallback, blocks activation."""
+        self._prepare_for_activation(registry, registered_op)
+
+        class MockStripe:
+            stub_mode = False
+            def get_account(self, acct_id):
+                return {"payouts_enabled": False, "requirements": {"disabled_reason": "pending_verification"}}
+
+        result = registry.activate(registered_op.operator_id, stripe_service=MockStripe(), use_test_account_fallback=False)
+        assert result["status"] == "pending"
+        assert any("payouts not enabled" in i for i in result["issues"])
+
+    def test_activate_stripe_error_with_fallback(self, registry: OperatorRegistry, registered_op: OperatorProfile) -> None:
+        """When Stripe API errors, falls back to test account."""
+        self._prepare_for_activation(registry, registered_op)
+
+        class MockStripe:
+            stub_mode = False
+            def get_account(self, acct_id):
+                return {"error": "No such account", "error_type": "InvalidRequestError"}
+
+        result = registry.activate(registered_op.operator_id, stripe_service=MockStripe(), use_test_account_fallback=True)
+        assert result["status"] == "active"
+        assert "stripe_warning" in result
+
+    def test_activate_stripe_payouts_enabled(self, registry: OperatorRegistry, registered_op: OperatorProfile) -> None:
+        """When Stripe payouts enabled, activates normally with no warning."""
+        self._prepare_for_activation(registry, registered_op)
+
+        class MockStripe:
+            stub_mode = False
+            def get_account(self, acct_id):
+                return {"payouts_enabled": True, "charges_enabled": True}
+
+        result = registry.activate(registered_op.operator_id, stripe_service=MockStripe())
+        assert result["status"] == "active"
+        assert "stripe_warning" not in result
 
 
 class TestListOperators:
@@ -215,6 +278,7 @@ class TestListOperators:
         registry.add_equipment(op.operator_id, "lidar", "L2")
         op.certifications.append("faa_part_107")
         registry.set_insurance(op.operator_id, cgl="$2M")
+        op.stripe_account_id = "acct_test_456"
         registry.activate(op.operator_id)
 
         active = registry.list_operators(status="active")

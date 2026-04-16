@@ -106,6 +106,55 @@ def _error_response(exc: Exception) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Module-level constants (moved from register_auction_tools scope)
+# ---------------------------------------------------------------------------
+
+# Default equipment models by sensor type (used by onboard_operator_guided)
+COMMON_MODELS = {
+    "aerial_lidar": "DJI Matrice 350 RTK + Zenmuse L2",
+    "photogrammetry": "DJI Matrice 350 RTK + Zenmuse P1",
+    "thermal_camera": "DJI Matrice 350 RTK + Zenmuse H30T",
+    "terrestrial_lidar": "Boston Dynamics Spot + Leica BLK ARC",
+    "gpr": "Boston Dynamics Spot + GSSI StructureScan Mini XT",
+    "rtk_gps": "Trimble R12i",
+    "robotic_total_station": "Leica TS16",
+}
+
+# Sensor type → default task category (used by register_robot_onchain)
+SENSOR_TO_CATEGORY = {
+    "aerial_lidar": "env_sensing",
+    "terrestrial_lidar": "env_sensing",
+    "photogrammetry": "visual_inspection",
+    "gpr": "env_sensing",
+    "rtk_gps": "env_sensing",
+    "thermal_camera": "visual_inspection",
+    "robotic_total_station": "env_sensing",
+}
+
+# Blockchain chain configs (used by register_robot_onchain and eas_attest)
+CHAIN_CONFIG = {
+    "base-mainnet": {"chain_id": 8453, "rpc": "https://mainnet.base.org"},
+    "base-sepolia": {"chain_id": 84532, "rpc": "https://sepolia.base.org"},
+    "eth-mainnet": {"chain_id": 1, "rpc": "https://ethereum-rpc.publicnode.com"},
+    "eth-sepolia": {"chain_id": 11155111, "rpc": "https://ethereum-sepolia-rpc.publicnode.com"},
+}
+DEFAULT_CHAIN = "base-mainnet"
+
+# EAS (Ethereum Attestation Service) contract ABI — attest function only
+EAS_ABI = [
+    {
+        "inputs": [{"components": [{"name": "schema", "type": "bytes32"},
+            {"components": [{"name": "recipient", "type": "address"}, {"name": "expirationTime", "type": "uint64"},
+             {"name": "revocable", "type": "bool"}, {"name": "refUID", "type": "bytes32"},
+             {"name": "data", "type": "bytes"}, {"name": "value", "type": "uint256"}],
+            "name": "data", "type": "tuple"}], "name": "request", "type": "tuple"}],
+        "name": "attest", "outputs": [{"name": "", "type": "bytes32"}],
+        "stateMutability": "payable", "type": "function",
+    },
+]
+
+
+# ---------------------------------------------------------------------------
 # Tool registration
 # ---------------------------------------------------------------------------
 
@@ -508,18 +557,17 @@ def register_auction_tools(
         robot_id: str,
         country: str = "FI",
     ) -> dict:
-        """Onboard a robot operator by creating a Stripe Connect Express account.
+        """DEPRECATED — use auction_onboard_operator_guided instead.
 
-        Returns the Connect account details (or a stub dict in stub mode).
+        This tool only creates a Stripe Connect account. The guided version
+        handles the full registration flow: profile, equipment, credentials,
+        on-chain identity, and payment setup in one step.
         """
-        if stripe_service is None:
-            return {"error": "Stripe service not configured", "error_type": "ConfigError"}
-        try:
-            result = stripe_service.create_connect_account(email=email, country=country)
-            result["robot_id"] = robot_id
-            return _decimals_to_strings(result)
-        except Exception as exc:
-            return _error_response(exc)
+        return _error_response_structured(
+            "DEPRECATED",
+            "auction_onboard_operator is deprecated. Use auction_onboard_operator_guided instead.",
+            "auction_onboard_operator_guided handles profile, equipment, credentials, and payment in one flow.",
+        )
 
     @mcp.tool()
     async def auction_get_operator_status(robot_id: str) -> dict:
@@ -989,38 +1037,17 @@ def register_auction_tools(
         coverage_states: list | None = None,
         max_range_miles: int = 200,
     ) -> dict:
-        """Register a new operator on the marketplace.
+        """DEPRECATED — use auction_onboard_operator_guided instead.
 
-        Creates an operator profile. After registration, the operator must:
-        1. Add equipment via auction_add_equipment
-        2. Upload compliance docs via auction_upload_compliance_doc
-        3. Set insurance via auction_register_operator (update)
-        4. Call auction_activate_operator to start bidding
-
-        Args:
-            company_name: Legal business name
-            contact_name: Primary contact person
-            contact_email: Contact email
-            location: Base location (e.g., "Detroit, MI")
-            coverage_states: States where operator can work (e.g., ["MI", "OH"])
-            max_range_miles: Maximum travel distance from base
+        This tool only creates a basic profile. The guided version handles
+        profile, equipment, on-chain registration, and payment setup in one
+        step with smart defaults.
         """
-        try:
-            if not hasattr(engine, "_operator_registry"):
-                from auction.operator_registry import OperatorRegistry
-
-                engine._operator_registry = OperatorRegistry()
-            profile = engine._operator_registry.register(
-                company_name,
-                contact_name,
-                contact_email,
-                location,
-                coverage_states or [],
-                max_range_miles,
-            )
-            return engine._operator_registry.get_profile(profile.operator_id)
-        except Exception as exc:
-            return _error_response(exc)
+        return _error_response_structured(
+            "DEPRECATED",
+            "auction_register_operator is deprecated. Use auction_onboard_operator_guided instead.",
+            "auction_onboard_operator_guided handles the full registration flow with smart defaults.",
+        )
 
     @mcp.tool()
     async def auction_add_equipment(
@@ -1073,41 +1100,236 @@ def register_auction_tools(
             return _error_response(exc)
 
     # ------------------------------------------------------------------
+    # Guided operator onboarding (conversational wrapper)
+    # ------------------------------------------------------------------
+
+    @mcp.tool()
+    async def auction_onboard_operator_guided(
+        company_name: str,
+        equipment_type: str,
+        location: str,
+        robot_name: str = "",
+        model: str = "",
+        description: str = "",
+        min_bid_dollars: float = 0.50,
+        bid_aggressiveness: int = 80,
+        mcp_endpoint_url: str = "",
+        operator_wallet: str = "",
+        usdc_wallet: str = "",
+        stripe_connect_id: str = "",
+        service_radius_km: int = 100,
+        chain: str = "base-mainnet",
+    ) -> dict:
+        """Register a new operator and their robot on the marketplace. This is
+        the recommended entry point for new operators.
+
+        IMPORTANT — How to use this tool conversationally:
+
+        When an operator says something like "I want to register my drone" or
+        "How do I get my robot on the marketplace?", gather the following
+        information through natural conversation. Ask one or two questions at
+        a time, not all at once.
+
+        REQUIRED (ask for these):
+        1. company_name — "What's your company or business name?"
+        2. equipment_type — "What kind of equipment do you have?" Map their
+           answer to one of: aerial_lidar, photogrammetry, thermal_camera,
+           terrestrial_lidar, gpr, rtk_gps, robotic_total_station.
+           If they say "drone with LiDAR" → aerial_lidar.
+           If they say "Spot robot" → terrestrial_lidar.
+           If they say "ground-penetrating radar" → gpr.
+        3. location — "Where are you based?" (city, state)
+
+        HAS SMART DEFAULTS (only ask if the operator wants to customize):
+        - robot_name: auto-generated from company + equipment if not provided
+        - model: auto-selected based on equipment_type (common commercial model)
+        - description: auto-generated from name + equipment + location
+        - min_bid_dollars: $0.50 default (operator's minimum acceptable price)
+        - bid_aggressiveness: 80% default (bids at 80% of the buyer's budget)
+        - service_radius_km: 100km default
+        - chain: base-mainnet (production blockchain, no cost to operator)
+
+        OPTIONAL (mention these exist, don't require):
+        - mcp_endpoint_url: their robot's MCP server URL (for live execution)
+        - operator_wallet: crypto wallet to receive robot ownership
+        - usdc_wallet: wallet for stablecoin payments
+        - stripe_connect_id: Stripe account for card/bank payments
+
+        After calling this tool, explain what happened in plain English:
+        - Their robot is now registered and can receive task bids
+        - Show them where to view it (yakrobot.bid/demo)
+        - Mention they can add credentials later (FAA Part 107, insurance)
+        - If they didn't provide an MCP endpoint, explain that their robot
+          will use simulated execution until they connect real hardware
+
+        TO UPDATE AN EXISTING PROFILE: Use auction_update_operator_profile
+        instead. That tool lets operators change location, pricing, equipment,
+        payment details, or MCP endpoint after initial registration.
+
+        Example conversation:
+          Operator: "I want to register my drone for survey work"
+          You: "Great! Let me get you set up. What's your company name?"
+          Operator: "Acme Aerial"
+          You: "And what kind of sensor does your drone carry?"
+          Operator: "LiDAR — I have a Matrice 350"
+          You: "Where are you based?"
+          Operator: "Detroit, Michigan"
+          You: [call this tool with company_name="Acme Aerial",
+                equipment_type="aerial_lidar", location="Detroit, MI"]
+        """
+        # Auto-generate defaults
+        sensor_label = equipment_type.replace("_", " ").title()
+        if not robot_name:
+            robot_name = f"{company_name} — {sensor_label}"
+        if not model:
+            model = COMMON_MODELS.get(equipment_type, equipment_type)
+        if not description:
+            description = f"{robot_name}. {model} for {sensor_label.lower()} surveys. Based in {location}."
+
+        min_bid_cents = max(1, int(min_bid_dollars * 100))
+        bid_pct = max(0.01, min(1.0, bid_aggressiveness / 100.0))
+
+        # Auto-flag as test if no real hardware connected
+        is_test = not mcp_endpoint_url
+
+        # Delegate to the full registration tool
+        return await auction_register_robot_onchain(
+            name=robot_name,
+            description=description,
+            company_name=company_name,
+            location=location,
+            equipment_type=equipment_type,
+            model=model,
+            min_bid_cents=min_bid_cents,
+            bid_pct=bid_pct,
+            mcp_endpoint_url=mcp_endpoint_url,
+            operator_wallet=operator_wallet,
+            usdc_wallet=usdc_wallet,
+            stripe_connect_id=stripe_connect_id,
+            service_radius_km=service_radius_km,
+            chain=chain,
+            is_test=is_test,
+        )
+
+    # ------------------------------------------------------------------
     # On-chain robot registration (v1.4)
     # ------------------------------------------------------------------
 
-    SENSOR_TO_CATEGORY = {
-        "aerial_lidar": "env_sensing",
-        "terrestrial_lidar": "env_sensing",
-        "photogrammetry": "visual_inspection",
-        "gpr": "env_sensing",
-        "rtk_gps": "env_sensing",
-        "thermal_camera": "visual_inspection",
-        "robotic_total_station": "env_sensing",
-    }
+    @mcp.tool()
+    async def auction_update_operator_profile(
+        robot_id: str,
+        company_name: str = "",
+        location: str = "",
+        model: str = "",
+        min_bid_cents: int = 0,
+        bid_pct: float = 0.0,
+        mcp_endpoint_url: str = "",
+        usdc_wallet: str = "",
+        stripe_connect_id: str = "",
+        service_radius_km: int = 0,
+    ) -> dict:
+        """Update an existing operator's profile or robot configuration.
 
-    CHAIN_CONFIG = {
-        "base-mainnet": {"chain_id": 8453, "rpc": "https://mainnet.base.org"},
-        "base-sepolia": {"chain_id": 84532, "rpc": "https://sepolia.base.org"},
-        "eth-mainnet": {"chain_id": 1, "rpc": "https://ethereum-rpc.publicnode.com"},
-        "eth-sepolia": {"chain_id": 11155111, "rpc": "https://ethereum-sepolia-rpc.publicnode.com"},
-    }
-    DEFAULT_CHAIN = "base-mainnet"
+        Use this when an operator wants to change their location, pricing,
+        equipment, payment details, or MCP endpoint after initial registration.
+
+        Provide the robot_id (e.g. "8453:42") and only the fields to update.
+        Fields left empty/zero are not changed.
+
+        Changes are applied to the in-memory fleet robot immediately.
+        On-chain metadata updates (location, pricing, wallet) require a
+        separate IPFS re-upload which is not yet automated — note this to
+        the operator and log the change for manual sync.
+        """
+        # Find the robot in the fleet
+        robot = engine._robots_by_id.get(robot_id)
+        if not robot:
+            return _error_response_structured(
+                "ROBOT_NOT_FOUND",
+                f"No robot with ID '{robot_id}' in the current fleet.",
+                "Use auction_get_fleet_status to list available robots.",
+            )
+
+        changes = []
+
+        if company_name:
+            robot.operator_company = company_name
+            changes.append(f"company_name → {company_name}")
+        if location:
+            robot.name = robot.name  # preserve name
+            if hasattr(robot, "_location"):
+                robot._location = location
+            changes.append(f"location → {location}")
+        if model and hasattr(robot, "equipment_model"):
+            robot.equipment_model = model
+            changes.append(f"model → {model}")
+        if min_bid_cents > 0 and hasattr(robot, "_min_bid_cents"):
+            robot._min_bid_cents = min_bid_cents
+            changes.append(f"min_bid_cents → {min_bid_cents}")
+        if 0 < bid_pct <= 1.0 and hasattr(robot, "_bid_pct"):
+            robot._bid_pct = bid_pct
+            changes.append(f"bid_pct → {bid_pct}")
+        if mcp_endpoint_url and hasattr(robot, "mcp_endpoint"):
+            robot.mcp_endpoint = mcp_endpoint_url
+            changes.append(f"mcp_endpoint → {mcp_endpoint_url}")
+        if service_radius_km > 0 and hasattr(robot, "_service_radius_km"):
+            robot._service_radius_km = service_radius_km
+            changes.append(f"service_radius_km → {service_radius_km}")
+
+        # Update operator registry if it exists
+        if hasattr(engine, "_operator_registry") and engine._operator_registry:
+            try:
+                # Find operator by company name match
+                for op in engine._operator_registry._operators.values():
+                    if op.company_name == (company_name or getattr(robot, "operator_company", "")):
+                        update_fields = {}
+                        if company_name:
+                            update_fields["company_name"] = company_name
+                        if location:
+                            update_fields["location"] = location
+                        if update_fields:
+                            engine._operator_registry.update_profile(op.operator_id, **update_fields)
+                        break
+            except Exception:
+                pass  # Registry update is best-effort
+
+        if not changes:
+            return {"robot_id": robot_id, "status": "no_changes", "message": "No fields to update. Provide at least one field with a new value."}
+
+        return {
+            "robot_id": robot_id,
+            "status": "updated",
+            "changes": changes,
+            "note": "Changes applied to in-memory fleet. On-chain metadata sync requires IPFS re-upload (not yet automated).",
+            "message": f"Updated {len(changes)} field(s) for {robot.name}.",
+        }
+
+    # ------------------------------------------------------------------
+    # On-chain robot registration (v1.4)
+    # ------------------------------------------------------------------
 
     @mcp.tool()
     async def auction_register_robot_onchain(
         name: str,
         description: str,
         company_name: str,
-        contact_email: str,
-        location: str,
-        equipment_type: str,
-        model: str,
+        contact_email: str = "",
+        location: str = "",
+        equipment_type: str = "aerial_lidar",
+        model: str = "",
         min_bid_cents: int = 50,
         bid_pct: float = 0.80,
         operator_wallet: str = "",
+        stripe_connect_id: str = "",
+        usdc_wallet: str = "",
+        mcp_endpoint_url: str = "",
         equipment_types: list[str] | None = None,
         chain: str = "base-mainnet",
+        is_test: bool = False,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        service_radius_km: int | None = None,
+        home_type: str = "",
     ) -> dict:
         """Register a robot on-chain (ERC-8004) and add to bidding fleet.
 
@@ -1128,8 +1350,6 @@ def register_auction_tools(
             return _error_response_structured("INVALID_NAME", "name is required.", "Provide a non-empty robot name.")
         if not company_name or not company_name.strip():
             return _error_response_structured("INVALID_COMPANY", "company_name is required.", "Provide a company or operator name.")
-        if not contact_email or "@" not in contact_email:
-            return _error_response_structured("INVALID_EMAIL", "contact_email is not a valid email.", "Use format: user@domain.com")
         if not location or not location.strip():
             return _error_response_structured("INVALID_LOCATION", "location is required.", "e.g. Detroit, MI")
         # Validate equipment_type — allow known types and custom types (from "Other" input)
@@ -1160,10 +1380,10 @@ def register_auction_tools(
                 "Set PINATA_JWT to your Pinata v3 API JWT.",
             )
 
-        mcp_base = os.environ.get("MCP_PUBLIC_URL", "https://mcp.yakrover.online")
-        mcp_endpoint = mcp_base + "/mcp"
-        fleet_endpoint = mcp_base + "/fleet/mcp"
-        tool_names = list(mcp._tool_manager._tools.keys())
+        marketplace_base = os.environ.get("MCP_PUBLIC_URL", "https://mcp.yakrover.online")
+        marketplace_endpoint = marketplace_base + "/mcp"
+        # The robot's MCP endpoint — where it actually lives (not the marketplace)
+        robot_mcp_url = mcp_endpoint_url or "https://fleet.yakrover.online/fakerover/mcp"
         all_sensor_list = equipment_types if equipment_types else [equipment_type]
         task_categories = sorted({SENSOR_TO_CATEGORY.get(s, "env_sensing") for s in all_sensor_list})
         task_category = ",".join(task_categories)
@@ -1197,6 +1417,7 @@ def register_auction_tools(
                 )
 
             chain_result = {}
+            robot_tools = []
             try:
                 from agent0_sdk import SDK
                 sdk = SDK(
@@ -1208,7 +1429,7 @@ def register_auction_tools(
                 )
 
                 agent = sdk.createAgent(name=name, description=description, image="")
-                agent.setMCP(mcp_endpoint, auto_fetch=False)
+                agent.setMCP(robot_mcp_url, auto_fetch=False)
 
                 mcp_ep = next(
                     (ep for ep in agent.registration_file.endpoints
@@ -1217,15 +1438,51 @@ def register_auction_tools(
                 )
                 if mcp_ep is None:
                     raise ValueError("agent0-sdk did not create an MCP endpoint — check SDK version")
-                mcp_ep.meta["mcpTools"] = tool_names
-                mcp_ep.meta["fleetEndpoint"] = fleet_endpoint
+
+                # Discover the robot's actual tools from its MCP server
+                robot_tools = []
+                try:
+                    import httpx
+                    probe = httpx.post(
+                        robot_mcp_url,
+                        json={"jsonrpc": "2.0", "method": "initialize",
+                              "params": {"protocolVersion": "2025-03-26", "capabilities": {},
+                                         "clientInfo": {"name": "registrar", "version": "1.0"}}, "id": 1},
+                        headers={"Accept": "text/event-stream",
+                                 "Authorization": f"Bearer {os.environ.get('FLEET_MCP_TOKEN', '')}"},
+                        timeout=10.0,
+                    )
+                    if probe.status_code == 200:
+                        import json as _json
+                        tools_resp = httpx.post(
+                            robot_mcp_url,
+                            json={"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 2},
+                            headers={"Accept": "text/event-stream",
+                                     "Mcp-Session-Id": probe.headers.get("mcp-session-id", ""),
+                                     "Authorization": f"Bearer {os.environ.get('FLEET_MCP_TOKEN', '')}"},
+                            timeout=10.0,
+                        )
+                        for line in tools_resp.text.splitlines():
+                            if line.startswith("data: "):
+                                try:
+                                    msg = _json.loads(line[6:])
+                                    for t in msg.get("result", {}).get("tools", []):
+                                        if isinstance(t, dict) and "name" in t:
+                                            robot_tools.append(t["name"])
+                                except Exception:
+                                    pass
+                except Exception:
+                    pass  # tool discovery failed — will use fallback defaults
+
+                mcp_ep.meta["mcpTools"] = robot_tools if robot_tools else ["robot_submit_bid", "robot_execute_task"]
+                mcp_ep.meta["fleetEndpoint"] = marketplace_endpoint
 
                 agent.setTrust(reputation=True)
                 agent.setActive(True)
                 if hasattr(agent, "setX402Support"):
                     agent.setX402Support(False)
 
-                agent.setMetadata({
+                metadata = {
                     "category": "robot",
                     "robot_type": "survey_platform",
                     "fleet_provider": "yakrover",
@@ -1233,13 +1490,68 @@ def register_auction_tools(
                     "min_bid_price": str(min_bid_cents),
                     "accepted_currencies": "usd,usdc",
                     "task_categories": task_category,
-                })
+                }
+                if stripe_connect_id:
+                    metadata["stripe_connect_id"] = stripe_connect_id
+                # Additional operator metadata (written on-chain via setMetadata + included in IPFS agent card)
+                metadata["operator_company"] = company_name
+                metadata["operator_location"] = location
+                metadata["equipment_model"] = model
+                # bid_pct intentionally NOT stored on-chain or IPFS — competitive intelligence
+                metadata["sensors"] = ",".join(all_sensors)
+                if usdc_wallet:
+                    metadata["preferred_usdc_wallet"] = usdc_wallet
+                # Geographic and fleet metadata
+                if is_test:
+                    metadata["is_test"] = "true"
+                if latitude is not None:
+                    metadata["latitude"] = str(latitude)
+                if longitude is not None:
+                    metadata["longitude"] = str(longitude)
+                if service_radius_km is not None:
+                    metadata["service_radius_km"] = str(service_radius_km)
+                if home_type:
+                    metadata["home_type"] = home_type
+                # Platform attestation: EAS (Ethereum Attestation Service) — not metadata.
+                # See PLAN_100_ROBOT_FLEET.md Section 9 for EAS integration plan.
+                agent.setMetadata(metadata)
 
-                tx = agent.registerIPFS()
-                result = tx.wait_mined(timeout=120)
+                # Step 1: Mint token with on-chain metadata (no IPFS URI yet)
+                import time as _time
+                metadata_entries = agent._collectMetadataForRegistration()
+                tx1_hash = sdk.web3_client.transact_contract(
+                    sdk.identity_registry,
+                    "register",
+                    "",  # empty URI — set in step 2
+                    metadata_entries,
+                )
+                receipt = sdk.web3_client.wait_for_transaction(tx1_hash, timeout=120)
+                agent_id_int = agent._extractAgentIdFromReceipt(receipt)
+                agent_id = f"{cfg['chain_id']}:{agent_id_int}"
+                agent.registration_file.agentId = agent_id
+                agent.registration_file.updatedAt = int(_time.time())
 
-                agent_id = str(getattr(result, "agentId", ""))
-                agent_uri = str(getattr(result, "agentURI", ""))
+                # Step 2: Upload IPFS agent card + set URI (with delay for RPC state propagation)
+                agent_uri = ""
+                _time.sleep(3)  # let RPC nodes sync minted token state
+                try:
+                    ipfs_cid = sdk.ipfs_client.addRegistrationFile(
+                        agent.registration_file,
+                        chainId=cfg["chain_id"],
+                        identityRegistryAddress=sdk.identity_registry.address,
+                    )
+                    tx2_hash = sdk.web3_client.transact_contract(
+                        sdk.identity_registry,
+                        "setAgentURI",
+                        agent_id_int,
+                        f"ipfs://{ipfs_cid}",
+                    )
+                    sdk.web3_client.wait_for_transaction(tx2_hash, timeout=60)
+                    agent_uri = f"ipfs://{ipfs_cid}"
+                    agent.registration_file.agentURI = agent_uri
+                except Exception as uri_exc:
+                    # Mint succeeded but IPFS/URI failed — robot is on-chain, card is missing
+                    agent_uri = f"pending ({str(uri_exc)[:80]})"
 
                 chain_result = {
                     "agent_id": agent_id,
@@ -1272,34 +1584,38 @@ def register_auction_tools(
                         "status": "ok",
                         "agent_id": str(agent.registration_file.agentId),
                         "agent_uri": str(getattr(agent.registration_file, "agentURI", "") or ""),
-                        "warning": f"Minted but post-registration step failed: {error_msg}",
+                        "warning": f"Registered on-chain. Metadata update pending: {error_msg}",
                     }
                 else:
                     chain_result = {"status": "error", "error": error_msg}
 
             # 3. Create fleet robot if registration succeeded
             registration_ok = chain_result.get("status") == "ok"
+            execution_mode = "pending"
             if registration_ok:
-                from auction.mock_fleet import RuntimeRegisteredRobot
                 sensors = list(all_sensors)
-                capability_metadata = {
-                    "sensors": sensors,
-                    "mobility_type": "aerial" if any("aerial" in s or s == "photogrammetry" for s in sensors) else "ground",
-                    "indoor_capable": False,
-                    "equipment": [{"type": s, "model": model} for s in sensors],
-                    "coverage_area": {"base": location},
-                }
-                robot = RuntimeRegisteredRobot(
-                    robot_id=op_id,
-                    name=name,
+
+                # Always create MCPRobotAdapter — it handles unreachable endpoints
+                # gracefully (bid returns None, execution falls back to robot_execute_task)
+                from auction.mcp_robot_adapter import MCPRobotAdapter
+                bearer = os.environ.get("FLEET_MCP_TOKEN", "")
+                robot = MCPRobotAdapter(
+                    robot_id=name,
+                    mcp_endpoint=mcp_endpoint_url or "",
+                    wallet=usdc_wallet or "",
+                    chain_id=cfg["chain_id"],
+                    description=description,
+                    bearer_token=bearer,
+                    mcp_tools=robot_tools if robot_tools else None,
                     sensors=sensors,
-                    capability_metadata=capability_metadata,
-                    reputation_metadata={"completion_rate": 0.95},
-                    signing_key=f"reg_{op_id}",
-                    bid_pct=bid_pct,
-                    sla_seconds=3600,
-                    ai_confidence=0.85,
+                    equipment_model=model,
                 )
+
+                if mcp_endpoint_url and robot.is_reachable(timeout=10.0):
+                    execution_mode = "live"
+                else:
+                    execution_mode = "registered (MCP endpoint not yet reachable)"
+
                 with engine._fleet_lock:
                     if op_id not in engine._robots_by_id:
                         engine.robots.append(robot)
@@ -1322,6 +1638,7 @@ def register_auction_tools(
                 "chain": target_chain,
                 "chain_result": chain_result,
                 "fleet_size": len(engine.robots),
+                "execution_mode": execution_mode,
                 "message": message,
             }
 
@@ -1329,6 +1646,103 @@ def register_auction_tools(
             return await asyncio.to_thread(_blocking_register)
         except Exception as exc:
             return _error_response(exc)
+
+    # ------------------------------------------------------------------
+    # Attestation management tools
+    # ------------------------------------------------------------------
+    # Platform attestation via EAS (Ethereum Attestation Service)
+    # ------------------------------------------------------------------
+
+    from auction.contracts import EAS_ADDRESS, EAS_SCHEMA_UID
+
+    @mcp.tool()
+    async def auction_eas_attest(
+        agent_id: int,
+        chain_id: int = 84532,
+        fleet_type: str = "demo_fleet",
+        fleet_name: str = "yakrover-demo-100",
+        attestor_role: str = "platform_admin",
+        notes: str = "",
+        attester_address: str = "",
+    ) -> dict:
+        """Create an EAS attestation for a robot from the platform wallet.
+
+        Attestation types: live_production, demo_fleet, legacy.
+        Attestor roles: platform_admin, operator, auditor, community.
+        """
+        import asyncio
+
+        signer_key = os.environ.get("SIGNER_PVT_KEY")
+        if not signer_key:
+            return _error_response_structured("MISSING_SIGNER_KEY", "SIGNER_PVT_KEY not set.", "")
+
+        valid_types = ["live_production", "demo_fleet", "legacy"]
+        if fleet_type not in valid_types:
+            return _error_response_structured("INVALID_FLEET_TYPE", f"fleet_type must be one of {valid_types}", "")
+
+        # Resolve chain config from chain_id parameter
+        chain_cfg = None
+        for _cname, _ccfg in CHAIN_CONFIG.items():
+            if _ccfg["chain_id"] == chain_id:
+                chain_cfg = _ccfg
+                break
+        if chain_cfg is None:
+            valid_ids = [c["chain_id"] for c in CHAIN_CONFIG.values()]
+            return _error_response_structured("INVALID_CHAIN", f"chain_id {chain_id} not in CHAIN_CONFIG. Valid: {valid_ids}", "")
+
+        # Pick explorer based on network
+        explorer_base = "https://base-sepolia.easscan.org" if chain_id == 84532 else "https://base.easscan.org"
+
+        def _blocking():
+            import eth_abi as _eth_abi
+            from web3 import Web3 as _Web3
+
+            w3 = _Web3(_Web3.HTTPProvider(chain_cfg["rpc"]))
+            eas = w3.eth.contract(
+                address=_Web3.to_checksum_address(EAS_ADDRESS), abi=EAS_ABI
+            )
+            account = w3.eth.account.from_key(signer_key)
+
+            encoded_data = _eth_abi.encode(
+                ["uint256", "uint256", "string", "string", "string", "string"],
+                [agent_id, chain_id, fleet_type, fleet_name, attestor_role, notes],
+            )
+
+            tx = eas.functions.attest(
+                (
+                    bytes.fromhex(EAS_SCHEMA_UID[2:]),
+                    (
+                        _Web3.to_checksum_address(attester_address if attester_address.startswith("0x") else "0x0000000000000000000000000000000000000000"),
+                        0, True, b"\x00" * 32, encoded_data, 0,
+                    ),
+                )
+            ).build_transaction({
+                "from": account.address,
+                "nonce": w3.eth.get_transaction_count(account.address),
+                "gasPrice": w3.eth.gas_price,
+                "chainId": chain_id,
+                "value": 0,
+            })
+
+            signed = w3.eth.account.sign_transaction(tx, signer_key)
+            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+            receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=60)
+
+            uid = "unknown"
+            for log in receipt["logs"]:
+                if log["address"].lower() == EAS_ADDRESS.lower() and len(log["data"]) >= 32:
+                    uid = "0x" + log["data"].hex()[:64]
+                    break
+
+            return {
+                "attestation_uid": uid,
+                "agent_id": agent_id,
+                "fleet_type": fleet_type,
+                "attestor": account.address,
+                "explorer": f"{explorer_base}/attestation/view/{uid}",
+            }
+
+        return await asyncio.to_thread(_blocking)
 
     # ------------------------------------------------------------------
     # Phase 5: Agreement generation and project management tools
@@ -1617,3 +2031,101 @@ def register_auction_tools(
             }
         except Exception as exc:
             return _error_response(exc)
+
+    # ------------------------------------------------------------------
+    # Phase 7: Demand signals — market intelligence from unmet requests
+    # ------------------------------------------------------------------
+
+    @mcp.tool()
+    async def auction_log_unmet_demand(
+        task_category: str,
+        reason: str,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        location_description: str = "",
+        budget_min: float | None = None,
+        budget_max: float | None = None,
+        request_id: str = "",
+    ) -> dict:
+        """Log an unmet demand signal when no robot can fulfill a request.
+
+        Call this when a task search or auction finds no matching operators.
+        The signal is stored and visible to operators checking demand in their area.
+        Turns failed auctions into market intelligence.
+
+        Args:
+            task_category: The task category that had no match (e.g. "subsurface_scan").
+            reason: Why no match was found (e.g. "No robots with GPR within 200km").
+            latitude: Task location latitude (optional).
+            longitude: Task location longitude (optional).
+            location_description: Human-readable location (e.g. "Rural Montana, US-93 corridor").
+            budget_min: Minimum budget the buyer indicated (optional).
+            budget_max: Maximum budget the buyer indicated (optional).
+            request_id: Associated task request_id if one was posted (optional).
+        """
+        if engine.store is None:
+            return {"error": True, "error_code": "NO_STORE", "message": "SQLite persistence not configured. Set AUCTION_DB_PATH."}
+
+        row_id = engine.store.save_unmet_demand(
+            task_category,
+            request_id=request_id or None,
+            latitude=latitude,
+            longitude=longitude,
+            location_description=location_description,
+            capability_requirements={},
+            budget_min=budget_min,
+            budget_max=budget_max,
+            reason=reason,
+        )
+        return {
+            "logged": True,
+            "demand_id": row_id,
+            "task_category": task_category,
+            "reason": reason,
+            "note": "Demand signal recorded. Operators checking nearby demand will see this request.",
+        }
+
+    @mcp.tool()
+    async def auction_get_demand_signals(
+        task_category: str = "",
+        latitude: float | None = None,
+        longitude: float | None = None,
+        radius_km: float = 200,
+        limit: int = 20,
+    ) -> dict:
+        """Query unmet demand signals — what buyers are looking for but can't find.
+
+        Operators use this to identify market gaps in their area and decide
+        where to invest in equipment or expand coverage. Returns recent
+        unmet requests sorted by newest first.
+
+        Args:
+            task_category: Filter by category (e.g. "subsurface_scan"). Empty for all.
+            latitude: Center point for geographic filter (optional).
+            longitude: Center point for geographic filter (optional).
+            radius_km: Search radius in kilometers (default 200).
+            limit: Maximum results to return (default 20).
+        """
+        if engine.store is None:
+            return {"error": True, "error_code": "NO_STORE", "message": "SQLite persistence not configured. Set AUCTION_DB_PATH."}
+
+        signals = engine.store.get_demand_signals(
+            task_category=task_category or None,
+            latitude=latitude,
+            longitude=longitude,
+            radius_km=radius_km,
+            limit=limit,
+        )
+
+        # Aggregate summary
+        categories = {}
+        for s in signals:
+            cat = s["task_category"]
+            categories[cat] = categories.get(cat, 0) + 1
+
+        return {
+            "total": len(signals),
+            "category_summary": categories,
+            "signals": signals,
+            "note": "Showing unmet demand signals. Each represents a buyer request that found no matching operator.",
+        }

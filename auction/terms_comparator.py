@@ -1,5 +1,7 @@
 """Legal terms comparison module.
 
+Vertical: construction (ConsensusDocs 750, AIA, anti-indemnity statutes)
+
 Compares operator standard terms vs. GC subcontract terms across 12 dimensions.
 Wraps the logic from the legal-terms-compare Claude Code skill.
 """

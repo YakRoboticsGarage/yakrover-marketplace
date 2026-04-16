@@ -1,0 +1,318 @@
+# YakRover Technical Presentation DSL
+# Source of truth for all presentation outputs (slides, memo, brief)
+# Schema: section → content blocks → evidence
+# Date: April 13, 2026
+
+---
+meta:
+  title: "YakRover"
+  subtitle: "A Protocol for Verified Physical-World Task Execution"
+  org: "yakroboticsgarage.com"
+  demo: "https://yakrobot.bid/demo"
+  repo: "github.com/YakRoboticsGarage/robot-marketplace"
+  version: "v1.4.1"
+  date: "April 2026"
+
+sections:
+
+  - id: problem
+    title: "Problem Statement"
+    content:
+      - "Digital service procurement is structured: an API call carries a machine-readable specification, execution is metered, delivery is verified algorithmically, and settlement occurs in milliseconds. Infrastructure for this exists at scale (Stripe, AWS, MCP)."
+      - "Physical service procurement is unstructured: a phone call carries a verbal scope, executor selection is relationship-based, delivery is verified by human inspection, and settlement follows a 30-60 day invoice cycle. No equivalent infrastructure exists."
+      - "The structural gap is not in any single step. It is in the absence of machine-readable task specification, algorithmic executor matching, automated completion verification, and programmatic settlement for physical-world work. Each of these components exists in isolation in adjacent domains. They have not been integrated into a protocol for physical tasks."
+
+  - id: converging_conditions
+    title: "Converging Technical Conditions"
+    items:
+      - heading: "Autonomous data collection is production-deployed."
+        body: "DroneDeploy operates docked drones on 100+ construction projects as of October 2025 (Horizons 2025 announcement). Komatsu's SMARTCONSTRUCTION platform is deployed at 35,000 sites in Japan (Bentley Systems press release, November 2025). These are operational deployments, not pilots."
+      - heading: "Design models are becoming contractual deliverables."
+        body: "Japan's MLIT i-Construction program achieved 86% ICT adoption on government earthwork projects within 6 years of mandate (2016-2022). Norway's Statens vegvesen V770 handbook established model-based delivery as standard practice, producing 50%+ change order reduction across pilot projects."
+      - heading: "Regulatory specifications encode tolerances as numerical values."
+        body: "MDOT Standard Specifications for Construction (2020 ed.), Section 205.03.N defines subgrade tolerance as +/-1 inch with subbase. Section 302.03.A defines aggregate base tolerance as +/-1/2 inch. These are published regulatory values, deterministic and machine-parseable. Verified against source documents."
+      - heading: "The specialist workforce is in structural demographic decline."
+        body: "Average US Professional Land Surveyor age is 57-60 years (ASCE, NSPS). 51% of engineering firms report turning down work due to staffing shortages (ACEC Q4 2024). The PLS licensing pipeline requires a minimum of 8 years (NCEES). Equivalent shortages are documented in Japan, South Korea, Australia, and Europe."
+      - heading: "AI agents are acquiring structured tool-use capabilities."
+        body: "Anthropic's Model Context Protocol (released 2024) has produced thousands of community tool servers enabling structured AI-to-service interaction. Agent-mediated procurement of physical services does not exist today. The infrastructure for it is being built."
+
+  - id: preconditions
+    title: "Preconditions for Physical-World Task Liquidity"
+    preamble: "A physical-world task becomes algorithmically procurable when four conditions are simultaneously met."
+    items:
+      - heading: "Structured specification"
+        body: "The task is describable in machine-readable terms sufficient to determine completion criteria."
+        example: "MDOT Section 205.03.N: tolerance +/-0.0833 ft"
+      - heading: "Qualified executor discovery"
+        body: "Credentials, equipment, and availability are verifiable against authoritative databases."
+        example: "FAA Part 107 + state PLS license + insurance COI"
+      - heading: "Machine-verifiable completion"
+        body: "An algorithm can determine whether the task was completed within specification without human inspection."
+        example: "RMSE against checkpoints; surface subtraction"
+      - heading: "Programmatic settlement"
+        body: "Payment can be triggered by verified completion without manual invoice processing."
+        example: "Escrow release on verification pass"
+    footer: "Construction survey on DOT highway projects satisfies all four conditions with currently available technology. Other domains satisfy subsets. The number of domains satisfying all four is increasing as sensor accuracy improves and regulatory standards are digitized."
+
+  - id: robotic_execution
+    title: "How Robotic Execution Changes Transaction Structure"
+    preamble: "The distinction between human and robotic task execution is not primarily about labor cost or speed. It is about the information properties of the execution, which determine whether the task can be procured algorithmically."
+    comparison:
+      human:
+        label: "Human executor"
+        properties:
+          - "Execution varies with skill, judgment, and fatigue."
+          - "Quality assessment requires a separate human reviewer."
+          - "Trust is relational, built through repeated engagement over years."
+          - "Availability is opaque and requires direct inquiry."
+      robot:
+        label: "Robotic executor"
+        properties:
+          - "Execution follows a programmed mission with instrument-level variance."
+          - "Quality is computed from the data itself (RMSE, checkpoint validation)."
+          - "Trust is systemic: output is verified algorithmically."
+          - "Availability is a queryable system state."
+    footer: "A platform that dispatches human operators and manages logistics improves efficiency. A platform that dispatches robots and verifies their output algorithmically changes the procurement structure from relationship-based to verification-based. The trust model is different, not just the cost model."
+
+  - id: protocol_stack
+    title: "Sample Protocol Stack"
+    layers:
+      - label: "Protocol"
+        value: "Runtime procurement and verified execution of physical-world tasks"
+      - label: "Task class"
+        value: "End-to-end procurement for physical-world ground truth measurement"
+      - label: "Industry"
+        value: "Construction survey, inspection, material delivery, environmental compliance"
+      - label: "Product job"
+        value: "Continuous verification that digital designs are based on accurate world models and as-built reporting matches physical developments"
+      - label: "Offering"
+        value: "Certified data provision with integrated deviation analysis"
+      - label: "Service Domain"
+        value: "MDOT highway construction -- selected for verification loop tightness"
+    footer: "Each layer narrows the one above it without contradicting it. The protocol is domain-agnostic. The Service Domain was selected because it has the most fully structured specification-to-verification loop: numerical tolerances, arithmetic comparison, and machine-computable proof."
+
+  - id: case_study
+    title: "Service Domain Case Study: Michigan Department of Transportation Highway Construction"
+    content:
+      - "The Service Domain was selected by evaluating which physical-world task class has the tightest specification-to-verification loop. MDOT highway construction survey scores highest because:"
+      - "The specifications are published regulatory documents. MDOT Standard Specifications for Construction (2020 ed.) is publicly available and defines acceptance criteria as numerical values with section references."
+      - "The tolerances are deterministic. Subgrade tolerance is +/-0.75 inches without subbase (Section 205.03.N). Aggregate base tolerance is +/-0.5 inches (Section 302.03.A). These are not subjective assessments. They are arithmetic thresholds verified against source documents."
+      - "The verification operation is subtraction. As-built surface elevation minus design surface elevation at each measurement point. The result is a deviation value compared against the tolerance threshold. This is TIN interpolation followed by arithmetic, implemented with standard computational geometry libraries."
+      - "The quality proof is a computed metric. Root mean square error against checkpoints, per ASPRS Positional Accuracy Standards (2015), is a machine-computable number that does not require human interpretation."
+    footer: "Other construction domains involve less structured verification loops. Bridge inspection requires subjective defect severity classification. Environmental compliance involves regulatory interpretation. Material delivery involves logistics coordination. Ground truth measurement on DOT projects is arithmetic against published numbers."
+
+  - id: components
+    title: "Protocol Components and Development Status"
+    preamble: "The codebase is at version 1.4.1. The protocol layer and robot federation are functional. The domain-specific verification engine for construction survey has not been implemented. All components are functional but have not been load-tested at production scale."
+    components:
+      - name: "Coordination Layer"
+        description: "MCP tool interface, task lifecycle state machine, federated robot communication"
+        implementation: "MCP-native interface (FastMCP over Streamable HTTP). Reverse auction engine with 11-state task lifecycle, 4-factor weighted bid scoring, geographic filtering, and busy-state tracking. Deployed on Fly.io."
+        status: "Alpha, functional"
+      - name: "Task Registry"
+        description: "Structured task specifications indexed by regulatory standard"
+        implementation: "18 task categories with structured capability requirements (ASPRS accuracy classes, CRS EPSG codes, sensor requirements, deliverable formats). RFP-to-structured-spec conversion via LLM with keyword fallback."
+        status: "Alpha, functional"
+      - name: "Executor Registry"
+        description: "Credentials, equipment, quality history, availability"
+        implementation: "ERC-8004 robot identity on Base (mainnet + Sepolia). MCP endpoints, sensor capabilities, and geographic metadata on-chain/IPFS. Discovery via The Graph subgraph. EAS attestation for fleet verification. 1 production + 100 demo registrations deployed."
+        status: "Alpha, deployed on mainnet"
+      - name: "Credential Verification"
+        description: "Executor qualification checking against authoritative databases"
+        implementation: "Six compliance document types. SAM.gov Exclusions API (live) for debarment checks. Bond verification against Treasury Circular 570 data (live, 500+ surety companies). PLS license and insurance verification are schema-complete with stub implementations."
+        status: "SAM.gov and bond live; PLS and insurance stubs"
+      - name: "Verification Engine"
+        description: "Specification lookup, measurement comparison, compliance judgment"
+        implementation: "Four-level QA framework exists (schema validation, standards compliance, PLS review) with eight category-specific delivery schemas. Geospatial surface comparison, specification database, and compliance report generation are the next development phase."
+        status: "QA framework functional; geospatial verification not implemented"
+      - name: "Settlement Layer"
+        description: "Escrow, verification-triggered payment release"
+        implementation: "Stripe PaymentIntents (authorize/capture), Connect Express for operator payouts, ACH bank transfer. USDC on Base via EIP-3009 (gasless). Four-mode settlement abstraction designed; Mode 1 (immediate, transparent) is operational. Modes 2-4 are designed but not implemented."
+        status: "Mode 1 operational; modes 2-4 designed"
+      - name: "Robot Federation"
+        description: "Communication bridge to heterogeneous robot MCP servers"
+        implementation: "MCPRobotAdapter bridges protocol to individual robot MCP servers. Nine category simulator servers deployed on Fly.io. Dynamic tool resolution for heterogeneous robot capabilities. One physical robot (Tumbller) connected. No production survey robots connected."
+        status: "Simulators operational; no production survey robots"
+    footer: "The verification engine is the domain-specific component that varies by vertical application. All other components are domain-agnostic and shared across verticals."
+
+  - id: architecture
+    title: "System Architecture"
+    layers:
+      - name: "Vertical application layers"
+        label: "(domain-specific, per vertical)"
+        content: "Construction Survey | Bridge Inspection | Environmental | Mining"
+        note: "Each adds: specification database + verification function + compliance report template"
+        maturity: "Not yet implemented for any vertical"
+      - name: "Protocol Layer"
+        label: "(Alpha, Functional)"
+        content: "Task Registry, Executor Registry (ERC-8004), Coordination (MCP tools), Settlement (Stripe + USDC), Credentials (SAM.gov, Treasury Circular 570)"
+        maturity: "Functional alpha"
+      - name: "Robot federation layer"
+        content: "Category MCP servers, MCPRobotAdapter, On-chain discovery via The Graph, EAS attestation"
+        maturity: "Functional with simulators"
+    footer: "The protocol and federation layers are domain-agnostic. Adding a vertical application does not require changes to the protocol. The vertical layer is where the domain-specific verification logic, specification databases, and report formats reside."
+
+  - id: verticals
+    title: "Vertical Feasibility Assessment"
+    preamble: "Each domain is assessed against the four preconditions for task liquidity. Feasibility depends on whether all four are met with currently available technology."
+    domains:
+      - name: "Highway survey"
+        spec_source: "State DOT tolerances"
+        verification: "Surface subtraction, RMSE"
+        assessment: "All four preconditions met"
+      - name: "Environmental monitoring"
+        spec_source: "EPA/EGLE permit thresholds"
+        verification: "Sensor reading vs. threshold"
+        assessment: "Met for quantifiable parameters"
+      - name: "Solar/wind inspection"
+        spec_source: "IEC standards"
+        verification: "Thermal anomaly detection"
+        assessment: "Production-deployed (Zeitview)"
+      - name: "Mining/quarry"
+        spec_source: "MSHA + operational specs"
+        verification: "Volumetric analysis"
+        assessment: "Same sensor stack as construction"
+      - name: "Agricultural"
+        spec_source: "USDA/NRCS standards"
+        verification: "Spectral index comparison"
+        assessment: "Met for remote-sensing parameters"
+      - name: "Bridge inspection"
+        spec_source: "NBI/AASHTO element-level"
+        verification: "Point-to-model + CV classification"
+        assessment: "Partially met; defect severity requires human judgment"
+    footer: "Each feasible vertical requires encoding its specification database and implementing its verification function as a module in the verification engine. The protocol layer is shared. The engineering cost per vertical is the specification encoding and comparison function, not protocol infrastructure."
+
+  - id: expansion
+    title: "Vertical Expansion and Market Context"
+    expansion_path:
+      heading: "Expansion path by specification encoding"
+      content:
+        - "The protocol expands by encoding additional specification databases. Each state DOT publishes its own standard specifications with its own tolerance values and section references. The schema is the same; the data content differs per state."
+        - "Michigan MDOT is the initial domain ($2.6B FY2026 highway program; survey at approximately 1% = ~$26M/yr). Adjacent state DOTs (Ohio, Indiana, Illinois, Wisconsin) represent approximately $150M/yr combined. National DOT survey at 1-2% of $120B/yr highway spending is $1.2-2.4B/yr."
+        - "Cross-domain expansion (bridge inspection, environmental, mining) follows the same pattern: encode the domain's specification database and implement the comparison function. The protocol does not change."
+    market_context:
+      heading: "Market context"
+      content:
+        - "US construction rework attributable to poor or inaccessible project data is estimated at $14.3B/yr (FMI/PlanGrid 2018). This figure represents the total value pool that improved verification addresses, not the directly addressable market for the protocol."
+        - "The Robot-as-a-Service market is estimated at $28.5B (2024), growing at 17.9% CAGR to $76.6B by 2030. The protocol operates within this broader transition from owned equipment to service-based robotic execution."
+      sources: "MDOT FY2026 Five-Year Transportation Program. FMI/PlanGrid 2018. Survey at ~1% per primary interview (Virgil Klebba, April 2026), consistent with FHWA benchmarks."
+
+  - id: ecosystem
+    title: "Ecosystem Integration Surfaces"
+    preamble: "The protocol is designed to be source-agnostic: it accepts measurement data from any field instrument or platform and adds specification-aware verification. This positions it as a complementary layer within existing tool ecosystems rather than a replacement for any installed system."
+    partners:
+      - name: "DroneDeploy"
+        relationship: "Data source"
+        surface: "Docked drone and ground robot data as verification input. Vertical commercial products built on the protocol would be able to verify against regulatory requirements such as DOT specifications."
+      - name: "Propeller Aero"
+        relationship: "Data source"
+        surface: "AeroPoints and DirtMate surface data as verification input. Propeller provides visualization; protocol-based applications add specification-referenced compliance judgment."
+      - name: "Trimble / SITECH"
+        relationship: "Equipment ecosystem"
+        surface: "TBC surface exports as verification input. Machine control as-built data as continuous monitoring source. SITECH dealer network as potential distribution channel."
+      - name: "Komatsu / EARTHBRAIN"
+        relationship: "Platform integration"
+        surface: "SMARTCONSTRUCTION dashboard data as verification input. Bentley partnership (Nov 2025) creates interoperability path."
+      - name: "Procore / Autodesk"
+        relationship: "Workflow integration"
+        surface: "Structured compliance reports delivered to project management platforms. Deviation data populates issue tracking systems."
+      - name: "Robot operators"
+        relationship: "Executor supply"
+        surface: "Licensed drone operators (FAA Part 107), ground robot operators, and survey firms serve as the qualified executor pool. Examples in Michigan: DroneView Technologies, Emmet Drones, Midwest Aero Technologies, Drone Brothers (350-pilot managed network)."
+
+  - id: roadmap
+    title: "Protocol Roadmap"
+    phases:
+      - version: "v1.4.1 (current)"
+        name: "Protocol layer with simulated fleet"
+        description: "MCP-native protocol interface, auction engine, on-chain executor identity, multi-modal settlement, federated robot communication, credential verification. Nine category simulators. No domain verification engine. No production survey robots connected."
+      - version: "v1.5"
+        name: "Domain verification engine and settlement abstraction"
+        description: "Construction survey verification engine: geospatial data ingestion, surface comparison, MDOT specification database, compliance report generation. Settlement modes 2-4 (batched, private). Task encryption (ECDH + AES-256-GCM). Sealed-bid auction scoring. First real operator integration."
+        gate: "v1.4 complete (met) and initial market validation conversations (in progress)."
+      - version: "v2.0"
+        name: "Multi-robot coordination and operator tooling"
+        description: "Compound survey workflows (aerial + ground + GPR in a single task). Operator-facing dashboard with demand visibility. Live credential API connections (PLS license boards, insurance verification). Weather-aware scheduling. Agent-initiated payment (Stripe MPP)."
+        gate: "v1.5 complete and 5+ active operators on the network."
+      - version: "v2.5-3.0"
+        name: "Vertical expansion and privacy infrastructure"
+        description: "Mining/quarry specification database. Infrastructure inspection (NBI bridge deliverables, 23 CFR 650). Privacy layer: ZK proofs for government contract compliance (SP1), Horizen L3 for private settlement (EU AMLR Article 79 constraints evaluated), BBS+ anonymous reputation credentials."
+        gate: "v2.0 complete, 15+ robots per metro area, Horizen L3 testnet evaluation complete."
+
+  - id: challenges
+    title: "Technical Challenges"
+    privacy:
+      heading: "Privacy and settlement"
+      items:
+        - heading: "Task privacy"
+          body: "ECDH key exchange with AES-256-GCM encryption for RFP contents. On-chain memos carry only H(request_id || salt), never raw identifiers (design decision FD-4)."
+        - heading: "Settlement privacy"
+          body: "Four-mode abstraction supports transparent and private settlement. Horizen L3 is under evaluation for Mode 2. EU AMLR Article 79 eliminates fully private chains from consideration, constraining the design space."
+        - heading: "Reputation privacy"
+          body: "BBS+ anonymous credentials are planned for v3.0 to enable operator quality attestation without revealing individual transaction history."
+    scale:
+      heading: "Scale and onboarding"
+      items:
+        - heading: "Operator supply density"
+          body: "The protocol requires sufficient qualified operators per geographic region. Michigan has 15+ identified drone operators doing construction work. Density in rural highway corridors is uncertain."
+        - heading: "Credential API fragmentation"
+          body: "PLS licensing is administered state-by-state across 50 separate authorities with varying levels of digital accessibility. Insurance verification varies by carrier. No federated credential API exists. Each connection requires individual integration work."
+        - heading: "Trust bootstrapping"
+          body: "Engineering firms select subcontractors through qualifications-based selection (Brooks Act, 23 CFR 172). Platform-dispatched operators must establish trust through managed curation and demonstrated quality, not through marketplace ratings."
+        - heading: "DOT acceptance"
+          body: "MDOT has not formally accepted drone-derived data for pay quantity determination. Acceptance is growing through the MTRI UAV program but is not yet standard practice in contract specifications."
+
+  - id: agent_flow
+    title: "Protocol Interface: Human and Agent Procurement"
+    preamble: "The protocol exposes the same MCP tool interface regardless of whether the buyer is a human or an AI agent. The data model, tool signatures, and lifecycle state machine are identical in both cases. The difference is in who initiates the tool calls and how much autonomy the buyer exercises at each decision point."
+    human_flow:
+      label: "Current: human buyer via MCP"
+      steps:
+        - "PM posts task via MCP tool"
+        - "Protocol discovers qualified executors"
+        - "PM reviews bids and quality scores"
+        - "PM accepts bid"
+        - "Robot executes mission"
+        - "Verification engine produces compliance report"
+        - "Settlement on PM approval"
+    agent_flow:
+      label: "Future: agent buyer via MCP"
+      steps:
+        - "Agent posts task via same MCP tool"
+        - "Protocol discovers qualified executors"
+        - "Agent evaluates quality scores programmatically"
+        - "Agent presents candidates to PM for approval"
+        - "PM approves; robot executes"
+        - "Verification engine produces compliance report"
+        - "Auto-settlement on verification pass"
+    footer: "The transition from human to agent buyer does not require protocol changes. The structured data architecture serves both interfaces from day one. No rebuild is required when agents become procurement actors."
+
+  - id: organization
+    title: "YakRobotics Garage"
+    content:
+      - "YakRobotics Garage is the development organization building the YakRover protocol. The project is open-source and available at github.com/YakRoboticsGarage/robot-marketplace."
+      - "The organization's focus is on the protocol layer for verified physical-world task execution, with construction survey as the initial domain application. The protocol is designed to be extended by third parties who build domain-specific verification layers for their own verticals."
+      - "The current development team has backgrounds in institutional governance system design (ZKsync Association), protocol research (Summer of Protocols, Ethereum Foundation), and materials science engineering (University of Pennsylvania). Domain access to Michigan heavy civil construction is through family connections with 40+ years of industry tenure."
+
+  - id: partnership
+    title: "Seeking Partners and Contributors"
+    preamble: "YakRobotics Garage is seeking organizations and individuals to collaborate on bringing agent-mediated procurement of physical-world tasks to production. The protocol is open-source and designed for extension by domain experts. The following areas represent the primary collaboration surfaces."
+    categories:
+      - heading: "Agent runtime services"
+        body: "Organizations building AI agent infrastructure, MCP tool ecosystems, agent-to-agent communication protocols, or runtime procurement systems. The protocol's MCP-native interface is designed for interoperability with emerging agent frameworks. Collaboration areas include agent-mediated task discovery, programmatic credential verification, and structured settlement triggered by machine verification."
+      - heading: "Autonomous robot development and dispatch"
+        body: "Teams developing autonomous drone platforms, ground survey robots, or robotic fleet management systems. The protocol's federated robot communication layer (MCP-to-MCP) is designed to integrate any robot that exposes a structured tool interface. Collaboration areas include real robot integration, autonomous mission planning, multi-robot coordination, and sensor payload standardization."
+      - heading: "Vertical domain experts and service procurers"
+        body: "Engineering firms, DOT agencies, inspection companies, environmental consultants, mining operators, and agricultural service providers who procure physical-world verification tasks and can contribute domain-specific specification databases, verification criteria, and compliance report requirements. These partners define what 'correct' means in their domain."
+      - heading: "Researchers"
+        body: "Academics and applied researchers working on construction robotics, geospatial computation, computational geometry for surface comparison, autonomous navigation in unstructured environments, privacy-preserving settlement (ZK proofs, BBS+ credentials), or the economics of agent-mediated physical-world marketplaces. The protocol's open architecture and structured data model are designed to support research collaboration."
+
+  - id: closing
+    call_to_action: "Join us to bring agent-mediated procurement of physical-world tasks to production."
+    links:
+      - label: "yakroboticsgarage.com"
+        url: "https://yakroboticsgarage.com"
+      - label: "yakrobot.bid/demo"
+        url: "https://yakrobot.bid/demo"
+      - label: "github.com/YakRoboticsGarage/robot-marketplace"
+        url: "https://github.com/YakRoboticsGarage/robot-marketplace"

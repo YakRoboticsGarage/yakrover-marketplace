@@ -1,0 +1,62 @@
+name: Deploy to Fly.io
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'data/**'
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      marketplace: ${{ steps.filter.outputs.marketplace }}
+      fleet: ${{ steps.filter.outputs.fleet }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: dorny/paths-filter@6852f92c20ea7fd3b0c25de3b5112db3a98da050 # v3
+        id: filter
+        with:
+          filters: |
+            marketplace:
+              - 'auction/**'
+              - 'mcp_server.py'
+              - 'fly.toml'
+              - 'Dockerfile'
+              - 'pyproject.toml'
+              - 'uv.lock'
+            fleet:
+              - 'infra/fleet/**'
+
+  marketplace:
+    needs: changes
+    if: needs.changes.outputs.marketplace == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-marketplace
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # master
+      - name: Deploy marketplace
+        run: flyctl deploy --config fly.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  fleet:
+    needs: changes
+    if: needs.changes.outputs.fleet == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-fleet
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # master
+      - name: Deploy fleet
+        run: flyctl deploy --config infra/fleet/fly.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

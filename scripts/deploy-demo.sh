@@ -2,8 +2,8 @@
 # Deploy the demo frontend to here.now (yakrobot.bid/mcp-demo).
 #
 # Usage:
-#   ./scripts/deploy-demo.sh                  # deploy demo-5 to yakrobot.bid/mcp-demo
-#   ./scripts/deploy-demo.sh --dir docs/mcp_demo_5  # explicit source dir
+#   ./scripts/deploy-demo.sh                  # deploy marketplace demo to yakrobot.bid/demo
+#   ./scripts/deploy-demo.sh --dir demo/marketplace  # explicit source dir
 #
 set -euo pipefail
 
@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Slug from docs/SLUG_REGISTRY.yaml — yakrobot.bid/demo/
 SLUG="sturdy-riddle-vvar"
-DEMO_DIR="${1:-$REPO_ROOT/docs/mcp_demo_5}"
+DEMO_DIR="${1:-$REPO_ROOT/demo/marketplace}"
 
 # Parse --dir flag
 if [[ "${1:-}" == "--dir" ]]; then

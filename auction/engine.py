@@ -40,6 +40,7 @@ from auction.core import (
     Task,
     TaskState,
     check_hard_constraints,
+    haversine_km,
     log,
     score_bids,
     validate_task_spec,
@@ -576,7 +577,19 @@ class AuctionEngine:
             payment_method=task_spec.get("payment_method", "auto"),
             task_decomposition=task_spec.get("task_decomposition", {}),
             project_metadata=task_spec.get("project_metadata", {}),
+            latitude=task_spec.get("latitude"),
+            longitude=task_spec.get("longitude"),
         )
+
+        # Auto-inject delivery schema if not provided by caller
+        cap_req = task.capability_requirements
+        if isinstance(cap_req, dict) and "delivery_schema" not in cap_req:
+            try:
+                from auction.delivery_schemas import get_delivery_schema
+                schema = get_delivery_schema(task.task_category)
+                cap_req["delivery_schema"] = schema
+            except ImportError:
+                pass  # delivery_schemas module not available
 
         record = TaskRecord(
             request_id=task.request_id,
@@ -588,17 +601,39 @@ class AuctionEngine:
         self._transition(record, TaskState.POSTED, "post_task()")
         self._tasks[task.request_id] = record
 
-        # Hard constraint filter (AD-5)
+        # Hard constraint filter (AD-5) + geographic + busy state
         eligible: list = []
         filter_reasons: dict[str, list[str]] = {}
 
         for robot in self.robots:
-            ok, reasons = check_hard_constraints(task, robot.capability_metadata)
-            if ok:
+            reasons_list: list[str] = []
+
+            # Sensor/capability check
+            ok, cap_reasons = check_hard_constraints(task, robot.capability_metadata)
+            if not ok:
+                reasons_list.extend(cap_reasons)
+
+            # Geographic hard cutoff — robot won't bid outside service radius
+            if task.latitude is not None and task.longitude is not None:
+                robot_lat = getattr(robot, '_latitude', None)
+                robot_lng = getattr(robot, '_longitude', None)
+                robot_radius = getattr(robot, '_service_radius_km', None)
+                if robot_lat is not None and robot_lng is not None and robot_radius is not None:
+                    dist = haversine_km(robot_lat, robot_lng, task.latitude, task.longitude)
+                    if dist > robot_radius:
+                        reasons_list.append(f"out_of_range:{dist:.0f}km>{robot_radius}km")
+
+            # Busy state — robot is executing another task
+            busy_until = getattr(robot, '_busy_until', None)
+            if busy_until is not None and busy_until > datetime.now(UTC):
+                remaining = (busy_until - datetime.now(UTC)).total_seconds()
+                reasons_list.append(f"busy:{remaining:.0f}s_remaining")
+
+            if not reasons_list:
                 eligible.append(robot)
             else:
-                filter_reasons[robot.robot_id] = reasons
-                log("FILTER", f"{robot.robot_id} excluded: {', '.join(reasons)}")
+                filter_reasons[robot.robot_id] = reasons_list
+                log("FILTER", f"{robot.robot_id} excluded: {', '.join(reasons_list)}")
 
         record.eligible_robots = eligible
         record.filter_reasons = filter_reasons
@@ -773,6 +808,24 @@ class AuctionEngine:
 
         # No upfront payment — full settlement on delivery confirmation
         record.winning_bid = bid
+
+        # Set robot busy — cannot bid on other tasks until this one completes
+        # Duration based on task type (see PLAN_100_ROBOT_FLEET.md Section 10)
+        import datetime as _dt
+        task_cat = record.task.task_category
+        duration_map = {
+            "env_sensing": 15, "sensor_reading": 15,  # seconds (in-situ)
+            "topo_survey": 60 * 60, "aerial_survey": 45 * 60, "corridor_survey": 2 * 60 * 60,
+            "subsurface_scan": 90 * 60, "utility_detection": 90 * 60,
+            "visual_inspection": 30 * 60, "progress_monitoring": 45 * 60,
+            "bridge_inspection": 60 * 60, "thermal_inspection": 30 * 60,
+            "as_built": 2 * 60 * 60, "confined_space": 45 * 60,
+            "volumetric": 30 * 60, "control_survey": 60 * 60,
+            "site_survey": 60 * 60, "environmental_survey": 45 * 60,
+        }
+        busy_seconds = duration_map.get(task_cat, 30 * 60)  # default 30 min
+        robot._busy_until = _dt.datetime.now(_dt.timezone.utc) + _dt.timedelta(seconds=busy_seconds)
+        log("BUSY", f"{robot_id} busy for {busy_seconds}s (task: {task_cat})")
 
         # BIDDING -> BID_ACCEPTED
         self._transition(

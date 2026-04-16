@@ -129,6 +129,41 @@ class StripeService:
         except stripe.error.StripeError as exc:
             return {"error": str(exc), "error_type": type(exc).__name__}
 
+    def check_stripe_account_status(self, account_id: str) -> dict:
+        """Check a Connect account's payout and charge readiness.
+
+        Returns a structured dict with status, payouts_enabled, charges_enabled,
+        currently_due requirements, and disabled_reason. In stub mode returns
+        a verified-good response so tests pass without real Stripe keys.
+        """
+        if self.stub_mode:
+            return {
+                "status": "verified",
+                "payouts_enabled": True,
+                "charges_enabled": True,
+                "currently_due": [],
+                "disabled_reason": None,
+            }
+
+        account_data = self.get_account(account_id)
+        if account_data.get("error"):
+            return {
+                "status": "error",
+                "payouts_enabled": False,
+                "charges_enabled": False,
+                "currently_due": [],
+                "disabled_reason": account_data["error"],
+            }
+
+        requirements = account_data.get("requirements", {})
+        return {
+            "status": "verified" if account_data.get("payouts_enabled") else "pending",
+            "payouts_enabled": account_data.get("payouts_enabled", False),
+            "charges_enabled": account_data.get("charges_enabled", False),
+            "currently_due": requirements.get("currently_due", []),
+            "disabled_reason": requirements.get("disabled_reason"),
+        }
+
     # ------------------------------------------------------------------
     # Transfers (operator payouts)
     # ------------------------------------------------------------------

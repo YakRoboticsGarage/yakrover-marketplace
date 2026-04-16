@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Yak Robotics — Partner Brief</title>
+<meta name="description" content="Runtime procurement for physical-world tasks. Auction engine, on-chain robot identity, and settlement for construction survey.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Yak Robotics — Partner Brief">
+<meta property="og:description" content="Runtime procurement for physical-world tasks. Auction engine, on-chain robot identity, and settlement for construction survey.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yakrobot.bid/memo/">
+<meta property="og:image" content="https://yakrobot.bid/memo/og-image.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Yak Robotics — Partner Brief">
+<meta name="twitter:description" content="Runtime procurement for physical-world tasks. Auction engine, on-chain robot identity, and settlement for construction survey.">
+<meta name="twitter:image" content="https://yakrobot.bid/memo/og-image.png">
+
+<link rel="icon" href="yak-icon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ---- DESIGN TOKENS ---- */
+:root {
+  /* Colors */
+  --color-brand: #E8792B;
+  --color-brand-dark: #d06a22;
+  --color-brand-ring: rgba(232,121,43,0.1);
+  --color-heading: #1A1F26;
+  --color-body: #4A5568;
+  --color-muted: #6B7280;
+  --color-hint: #9CA3AF;
+  --color-blue: #1B3A5C;
+  --color-link: #2D5F8A;
+  --color-complete: #1a7a6d;
+  --color-border: #e2e8f0;
+  --color-border-light: #CBD5E0;
+  --color-bg: #fafaf7;
+  --color-bg-light: #f0f2f5;
+  --color-bg-panel: #fafaf8;
+  --color-bg-callout: #FEF0E3;
+  --color-handle: #d0d0d0;
+  --color-popover: #1A1F26;
+  --color-popover-text: #f0f2f5;
+  --color-overlay: rgba(0,0,0,0.4);
+
+  /* Spacing (4px base) */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+  --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+  --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+
+  /* Type scale */
+  /* Major third scale (1.25 ratio), base 16px */
+  --text-xs: 10px;   /* labels, badges */
+  --text-sm: 13px;   /* hints, footnotes, meta */
+  --text-base: 16px; /* body text */
+  --text-md: 16px;   /* alias for body */
+  --text-lg: 16px;   /* alias for body */
+  --text-xl: 20px;   /* h3, subsection heads */
+  --text-2xl: 25px;  /* h2, section heads */
+  --text-3xl: 31px;  /* h1, page title */
+
+  /* Radii */
+  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px;
+  --radius-drawer: 16px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --shadow-drawer: 0 -4px 24px rgba(0,0,0,0.15);
+
+  /* Transitions */
+  --ease-fast: 0.15s ease;
+  --ease-drawer: 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+
+/* ---- RESET ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button, input, textarea, select { font: inherit; }
+
+@page { size: letter; margin: 0.6in 0.7in; }
+
+/* ---- BASE ---- */
+body {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: var(--text-lg);
+  line-height: 1.7;
+  color: var(--color-heading);
+  background: var(--color-bg);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 60px var(--sp-12);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- FOCUS ---- */
+a:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* ---- HEADER ---- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 2px solid var(--color-brand);
+  padding: var(--sp-8) var(--sp-6) var(--sp-3);
+  margin: 0 -60px 28px;
+  background: linear-gradient(to bottom, rgba(26,31,38,0.82), rgba(26,31,38,0.92)), url('header-bg.png') center/cover no-repeat;
+  position: relative;
+}
+.header h1 { font-family: 'JetBrains Mono', monospace; font-size: var(--text-3xl); font-weight: 700; color: var(--color-bg); }
+.header .meta { font-family: 'JetBrains Mono', monospace; font-size: var(--text-base); color: rgba(255,255,255,0.6); }
+
+/* ---- SUBTITLE ROW ---- */
+.subtitle-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: var(--sp-6);
+}
+.subtitle { font-family: 'JetBrains Mono', monospace; font-size: var(--text-2xl); color: var(--color-heading); font-weight: 500; margin: 0; }
+.header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+/* ---- TYPOGRAPHY ---- */
+h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-brand);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 28px;
+  margin-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 5px;
+}
+h3 { font-family: 'JetBrains Mono', monospace; font-size: var(--text-xl); font-weight: 600; color: var(--color-heading); margin-top: var(--sp-6); margin-bottom: var(--sp-2); }
+p { margin-bottom: var(--sp-3); color: var(--color-body); }
+
+/* ---- LINKS ---- */
+a { color: var(--color-link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a[href^="http"]::after { content: "\00a0\2197"; font-size: 0.65em; vertical-align: super; color: var(--color-hint); text-decoration: none; }
+a[href^="https://yakrobot"]::after,
+a[href^="https://github.com/YakRoboticsGarage"]::after,
+a[href^="javascript"]::after,
+a[href^="#"]::after,
+a.btn::after,
+a.btn-primary::after,
+a.btn-ghost::after { content: none; }
+
+.header-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-sm); color: var(--color-muted); text-decoration: none;
+  cursor: pointer; transition: all var(--ease-fast);
+}
+.header-link:hover { color: var(--color-brand); font-weight: 700; text-decoration: underline; }
+
+/* ---- LAYOUT ---- */
+.cols { display: flex; gap: var(--sp-8); }
+.cols > div { flex: 1; }
+
+/* ---- SUMMARY LIST ---- */
+.summary-list { padding-left: var(--sp-5); color: var(--color-body); }
+.summary-list li { margin-bottom: var(--sp-3); }
+.summary-list li:last-child { margin-bottom: 0; }
+
+/* ---- CTA BUTTONS ---- */
+.cta-row { display: flex; gap: var(--sp-3); justify-content: center; align-items: center; margin-top: var(--sp-4); flex-wrap: wrap; }
+.cta-sep { color: var(--color-muted); font-size: var(--text-base); }
+
+.btn {
+  font-family: 'JetBrains Mono', monospace;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 5px; padding: 10px 22px;
+  font-size: var(--text-base); font-weight: 600; text-decoration: none;
+  letter-spacing: 0.02em; line-height: 1.4; height: var(--sp-10);
+  box-sizing: border-box; cursor: pointer;
+}
+.btn-primary { background: var(--color-brand); color: var(--color-bg); border: 2px solid var(--color-brand); }
+.btn-primary:hover { background: var(--color-brand-dark); border-color: var(--color-brand-dark); text-decoration: none; }
+.btn-ghost { background: var(--color-bg); color: var(--color-blue); border: 2px solid var(--color-border-light); }
+.btn-ghost:hover { border-color: var(--color-blue); text-decoration: none; }
+
+.cta-touch {
+  display: inline-block; background: var(--color-brand); color: var(--color-bg); border: none;
+  border-radius: 5px; padding: 10px 22px; font-family: 'JetBrains Mono', monospace; font-size: var(--text-base);
+  font-weight: 600; cursor: pointer; text-decoration: none; letter-spacing: 0.02em;
+  transition: background var(--ease-fast);
+}
+.cta-touch:hover { background: var(--color-brand-dark); }
+.cta-touch-sm { padding: 7px var(--sp-4); font-size: var(--text-sm); }
+.cta-center { text-align: center; margin: var(--sp-5) 0 var(--sp-4); }
+
+/* ---- CLAUDE BLOCK ---- */
+.claude-block {
+  display: none; margin-top: var(--sp-3); padding: var(--sp-4) var(--sp-5);
+  background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+}
+.claude-step { font-size: var(--text-base); color: var(--color-body); margin-bottom: var(--sp-3); }
+.claude-step:last-child { margin-bottom: 0; }
+.claude-cmd {
+  background: var(--color-bg-light); border-radius: var(--radius-sm); padding: 10px var(--sp-3);
+  font-family: 'JetBrains Mono', monospace; font-size: var(--text-sm); color: var(--color-heading);
+  overflow-x: auto; white-space: nowrap;
+}
+.claude-prompt {
+  background: var(--color-bg-light); border-radius: var(--radius-sm); padding: 10px var(--sp-3);
+  font-size: var(--text-base); color: var(--color-body); font-style: italic;
+}
+.claude-hint { font-size: var(--text-sm); color: var(--color-hint); margin-top: var(--sp-2); margin-bottom: 0; }
+.claude-copy { font-size: 11px; padding: 5px var(--sp-3); margin-top: var(--sp-2); }
+
+/* ---- TEAM ---- */
+.team-card {
+  background: var(--color-bg); border-left: 3px solid var(--color-blue);
+  padding: var(--sp-3) var(--sp-4); margin: var(--sp-3) 0; font-size: var(--text-lg);
+}
+.team-name { font-family: 'JetBrains Mono', monospace; margin-bottom: 2px; }
+.team-role { margin-bottom: var(--sp-2); font-size: var(--text-sm); color: var(--color-muted); }
+.team-bio { margin-bottom: 0; }
+
+/* ---- TABLE ---- */
+table { width: 100%; border-collapse: collapse; margin: var(--sp-3) 0 var(--sp-4); }
+th { font-family: 'JetBrains Mono', monospace; text-align: left; font-size: var(--text-base); font-weight: 600; color: var(--color-blue); padding: var(--sp-2) 10px; border-bottom: 1px solid var(--color-blue); }
+td { font-size: var(--text-md); padding: 7px 10px; border-bottom: 1px solid var(--color-bg-light); color: var(--color-body); }
+td.phase { font-weight: 600; }
+td.phase-complete { color: var(--color-complete); font-weight: 600; }
+
+/* ---- STACK ---- */
+.stack-row {
+  display: flex; gap: var(--sp-3); align-items: baseline;
+  padding: 5px 0; border-left: 2px solid var(--color-brand); padding-left: var(--sp-3);
+  margin-bottom: 3px;
+}
+.stack-label { font-family: 'JetBrains Mono', monospace; font-size: var(--text-sm); font-weight: 600; color: var(--color-brand); text-transform: uppercase; width: 100px; flex-shrink: 0; }
+.stack-value { font-size: var(--text-md); color: var(--color-heading); }
+
+/* ---- FLOW ---- */
+.flow { display: flex; align-items: center; gap: 0; margin: var(--sp-2) 0; }
+.flow-box { flex: 1; border: 1px solid var(--color-border-light); padding: var(--sp-2) var(--sp-2); text-align: center; background: var(--color-bg-light); }
+.flow-box strong { font-size: var(--text-base); display: block; color: var(--color-heading); }
+.flow-box span { font-size: var(--text-sm); color: var(--color-muted); }
+.flow-sep { color: var(--color-brand); padding: 0 var(--sp-1); font-size: var(--text-2xl); }
+
+/* ---- CALLOUT ---- */
+.callout {
+  background: var(--color-bg-callout);
+  border-left: 3px solid var(--color-brand);
+  padding: 10px var(--sp-3);
+  margin: var(--sp-3) 0;
+  font-size: var(--text-lg);
+}
+
+/* ---- FOOTNOTE ---- */
+.footnote { font-size: var(--text-sm); color: var(--color-muted); margin-top: var(--sp-2); }
+
+/* ---- EVIDENCE POPOVER ---- */
+.ev { position: relative; cursor: pointer; border-bottom: 1px dashed var(--color-brand); color: inherit; }
+.ev-pop {
+  display: none; position: absolute; bottom: calc(100% + var(--sp-2)); left: 50%;
+  transform: translateX(-50%); background: var(--color-popover); color: var(--color-popover-text);
+  border-radius: var(--radius-md); padding: 10px var(--sp-3); font-size: var(--text-sm); line-height: 1.6;
+  width: max-content; max-width: 320px; z-index: 500;
+  box-shadow: var(--shadow-md); white-space: normal;
+}
+.ev-pop::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: var(--color-popover);
+}
+.ev.active .ev-pop { display: block; }
+
+/* ---- PAGE BREAK ---- */
+.page-break { page-break-before: always; margin-top: 0; }
+
+/* ---- FOOTER ---- */
+.footer-bar {
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ---- COLLABORATION LAYER ---- */
+
+/* Floating action bar */
+.fab {
+  position: fixed; top: var(--sp-3); right: var(--sp-4); z-index: 201;
+  display: flex; align-items: center; gap: var(--sp-1);
+}
+.fab-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: var(--sp-2) 10px; cursor: pointer; font-family: inherit;
+  font-size: var(--text-sm); color: var(--color-body); box-shadow: var(--shadow-sm);
+  transition: all var(--ease-fast);
+}
+.fab-btn:hover { border-color: var(--color-brand); color: var(--color-heading); }
+.fb-badge { background: var(--color-brand); color: var(--color-bg); font-size: var(--text-xs); font-weight: 600; padding: 1px 5px; border-radius: var(--sp-2); min-width: var(--sp-5); text-align: center; }
+
+/* Side panel */
+.feedback-panel {
+  position: fixed; top: 0; right: 0; width: 320px; height: 100vh;
+  background: var(--color-bg-panel); border-left: 1px solid var(--color-border);
+  overflow-y: auto; padding: var(--sp-4); z-index: 200;
+  transform: translateX(100%); transition: transform 0.25s ease;
+  font-size: var(--text-base);
+}
+.feedback-panel.open { transform: translateX(0); }
+.fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-3); }
+.fp-title { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--text-md); font-weight: 600; color: var(--color-heading); }
+.fp-close { cursor: pointer; color: var(--color-muted); font-size: var(--text-2xl); border: none; background: none; padding: 2px var(--sp-2); }
+.fp-close:hover { color: var(--color-heading); }
+.fp-comment { border-bottom: 1px solid var(--color-border); padding: 10px 0; }
+.fp-comment:last-child { border-bottom: none; }
+.fp-comment-highlight { font-size: var(--text-sm); color: var(--color-brand); font-style: italic; margin-bottom: var(--sp-1); border-left: 2px solid var(--color-brand); padding-left: var(--sp-2); }
+.fp-comment-text { font-size: var(--text-base); color: var(--color-body); }
+.fp-comment-meta { font-size: 11px; color: var(--color-hint); margin-top: 3px; }
+.fp-empty { color: var(--color-hint); text-align: center; padding: var(--sp-8) 0; font-size: var(--text-base); }
+
+/* Panel form */
+.fp-form { border-bottom: 1px solid var(--color-border); padding-bottom: var(--sp-3); margin-bottom: var(--sp-3); }
+.fp-form textarea { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--sp-2); font: inherit; font-size: var(--text-base); resize: none; min-height: 60px; outline: none; }
+.fp-form textarea:focus { border-color: var(--color-brand); }
+.fp-form-row { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); align-items: center; }
+.fp-form-name { flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 5px var(--sp-2); font: inherit; font-size: var(--text-sm); outline: none; }
+.fp-form-name:focus { border-color: var(--color-brand); }
+.fp-form-submit { background: var(--color-brand); color: var(--color-bg); border: none; border-radius: var(--radius-sm); padding: 5px var(--sp-3); font: inherit; font-size: var(--text-sm); font-weight: 600; cursor: pointer; white-space: nowrap; }
+.fp-form-submit:hover { background: var(--color-brand-dark); }
+.fp-form-submit:disabled { opacity: 0.5; cursor: default; }
+.fp-form-status { font-size: 11px; color: var(--color-muted); margin-top: var(--sp-1); }
+
+/* Panel refresh */
+.fp-refresh { cursor: pointer; color: var(--color-muted); font-size: 18px; border: none; background: none; padding: 0 var(--sp-1); transition: transform 0.3s; line-height: 1; display: inline-flex; align-items: center; height: 16px; }
+.fp-refresh:hover { color: var(--color-brand); }
+.fp-refresh.spinning { animation: spin 0.6s linear; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Selection popover */
+/* Selection action bar — appears on text highlight */
+.sel-bar {
+  position: absolute; z-index: 300;
+  background: var(--color-popover); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md); padding: var(--sp-1) var(--sp-2);
+  display: none; font-family: 'JetBrains Mono', monospace;
+}
+.sel-bar.visible { display: flex; align-items: center; gap: var(--sp-1); }
+.sel-bar-btn {
+  background: none; border: none; color: var(--color-popover-text);
+  font: inherit; font-size: var(--text-sm); font-weight: 600; cursor: pointer;
+  padding: var(--sp-1) var(--sp-2); border-radius: var(--radius-sm);
+  transition: background var(--ease-fast); white-space: nowrap;
+}
+.sel-bar-btn:hover { background: rgba(255,255,255,0.15); }
+.sel-bar::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: var(--color-popover);
+}
+
+/* Selection comment popover — appears on "Comment" click */
+.sel-popover {
+  position: absolute; z-index: 300;
+  background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md); padding: var(--sp-3); width: 280px;
+  display: none; font-family: 'JetBrains Mono', monospace;
+}
+.sel-popover.visible { display: block; }
+.sel-highlight { font-size: 11px; color: var(--color-brand); font-style: italic; margin-bottom: var(--sp-2); max-height: var(--sp-10); overflow: hidden; }
+.sel-input { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--sp-2); font: inherit; font-size: var(--text-base); resize: none; min-height: 60px; outline: none; }
+.sel-input:focus { border-color: var(--color-brand); }
+.sel-row { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); align-items: center; }
+.sel-name { flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-2); font: inherit; font-size: var(--text-sm); outline: none; }
+.sel-name:focus { border-color: var(--color-brand); }
+.sel-submit {
+  background: var(--color-brand); color: var(--color-bg); border: none; border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-3); font: inherit; font-size: var(--text-sm); font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+.sel-submit:hover { background: var(--color-brand-dark); }
+.sel-submit:disabled { opacity: 0.5; cursor: default; }
+.sel-status { font-size: 11px; color: var(--color-muted); margin-top: var(--sp-2); }
+
+/* ---- OVERLAYS & DRAWERS ---- */
+
+/* Contact — desktop: centered modal */
+.contact-overlay {
+  position: fixed; inset: 0; background: var(--color-overlay); z-index: 400;
+  display: none; align-items: center; justify-content: center;
+  transition: opacity 0.2s ease-out;
+}
+.contact-overlay.visible { display: flex; }
+.contact-box {
+  background: var(--color-bg); border-radius: var(--radius-lg); padding: var(--sp-6); width: 380px;
+  max-width: 90vw; box-shadow: var(--shadow-lg);
+  font-family: 'JetBrains Mono', monospace;
+}
+.contact-box h3 { font-size: var(--text-xl); margin-bottom: var(--sp-3); }
+.contact-field { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--sp-3); font: inherit; font-size: var(--text-xl); margin-bottom: var(--sp-3); outline: none; }
+.contact-field:focus { border-color: var(--color-brand); box-shadow: 0 0 0 3px var(--color-brand-ring); }
+.contact-field-msg { min-height: 80px; resize: vertical; }
+.sheet-handle { display: none; }
+.sheet-handle-bar { width: 36px; height: var(--sp-1); background: var(--color-handle); border-radius: 2px; }
+.contact-actions { display: flex; gap: var(--sp-2); justify-content: flex-end; margin-top: var(--sp-1); }
+.contact-cancel { background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 7px var(--sp-4); font: inherit; font-size: var(--text-sm); cursor: pointer; color: var(--color-muted); }
+.contact-cancel:hover { border-color: var(--color-border-light); }
+.contact-status { font-size: var(--text-sm); color: var(--color-muted); margin-top: var(--sp-2); }
+
+/* Feedback drawer — mobile only */
+.feedback-drawer-overlay {
+  position: fixed; inset: 0; background: var(--color-overlay); z-index: 400;
+  display: none; align-items: flex-end; justify-content: center;
+}
+.feedback-drawer-overlay.visible { display: flex; }
+.feedback-drawer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  width: 100%; background: var(--color-bg);
+  border-radius: var(--radius-drawer) var(--radius-drawer) 0 0;
+  box-shadow: var(--shadow-drawer);
+  padding: 0 var(--sp-5) calc(env(safe-area-inset-bottom, 0px) + var(--sp-5));
+  transform: translateY(100%);
+  transition: transform var(--ease-drawer);
+  will-change: transform; z-index: 401;
+  font-family: 'JetBrains Mono', monospace;
+}
+.feedback-drawer-overlay.visible .feedback-drawer { transform: translateY(0); }
+.fd-handle { display: flex; align-items: center; justify-content: center; padding: var(--sp-3) 0 var(--sp-1); cursor: grab; user-select: none; }
+.fd-handle-bar { width: 36px; height: var(--sp-1); background: var(--color-handle); border-radius: 2px; }
+.fd-title { font-size: var(--text-xl); font-weight: 600; color: var(--color-heading); margin-bottom: var(--sp-3); }
+.fd-field { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--sp-3); font: inherit; font-size: var(--text-xl); margin-bottom: var(--sp-3); outline: none; resize: none; }
+.fd-field:focus { border-color: var(--color-brand); box-shadow: 0 0 0 3px var(--color-brand-ring); }
+.fd-row { display: flex; gap: var(--sp-2); align-items: center; }
+.fd-name { flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--sp-3); font: inherit; font-size: var(--text-xl); outline: none; }
+.fd-name:focus { border-color: var(--color-brand); box-shadow: 0 0 0 3px var(--color-brand-ring); }
+.fd-submit { background: var(--color-brand); color: var(--color-bg); border: none; border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-5); font: inherit; font-size: var(--text-md); font-weight: 600; cursor: pointer; white-space: nowrap; }
+.fd-submit:hover { background: var(--color-brand-dark); }
+.fd-submit:disabled { opacity: 0.5; cursor: default; }
+.fd-status { font-size: var(--text-sm); color: var(--color-muted); margin-top: var(--sp-2); }
+
+/* ---- BREADCRUMB NAV ---- */
+.breadcrumb-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--color-bg); border-bottom: 1px solid var(--color-border);
+  margin: 0 -60px; padding: 0 60px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.breadcrumb-nav::-webkit-scrollbar { display: none; }
+.breadcrumb-list {
+  display: flex; gap: 0; list-style: none; padding: 0; margin: 0;
+  white-space: nowrap; justify-content: center;
+}
+.breadcrumb-list li { flex-shrink: 0; }
+.breadcrumb-list a {
+  font-family: 'JetBrains Mono', monospace;
+  display: block; padding: 10px var(--sp-3);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--color-muted);
+  text-decoration: none; border-bottom: 2px solid transparent;
+  transition: color var(--ease-fast), border-color var(--ease-fast);
+}
+.breadcrumb-list a:hover { color: var(--color-heading); }
+.breadcrumb-list a.active { color: var(--color-brand); border-bottom-color: var(--color-brand); }
+.breadcrumb-notes { display: none; }
+
+/* Shift body when panel open */
+body.panel-open { margin-right: 320px; }
+
+/* ---- PRINT ---- */
+@media print {
+  .feedback-panel, .fab, .sel-popover, .contact-overlay, .breadcrumb-nav,
+  .feedback-drawer-overlay, .cta-row, .cta-center, .claude-block, .header-actions { display: none !important; }
+  body { padding: 0; color: #000; }
+  body.panel-open { margin-right: 0; }
+  h2 { color: #000; border-bottom-color: #000; }
+  a { color: #000; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: var(--text-sm); color: var(--color-muted); }
+  section { page-break-inside: avoid; }
+  .ev-pop { display: none !important; }
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+  body { padding: 0 var(--sp-5) var(--sp-6); font-size: var(--text-md); }
+  .cols { flex-direction: column; gap: var(--sp-3); }
+  .header { flex-direction: column; gap: var(--sp-1); margin: 0 calc(-1 * var(--sp-5)) 28px; padding: var(--sp-8) var(--sp-5) var(--sp-3); }
+  .footer-bar { flex-direction: column; gap: var(--sp-1); }
+  .stack-row { flex-direction: column; gap: 2px; }
+  .stack-label { width: auto; }
+  .feedback-panel { width: 280px; }
+  body.panel-open { margin-right: 0; }
+  .cta-touch-desktop { display: none; }
+  .sel-popover, .sel-bar { display: none !important; }
+  .breadcrumb-nav { margin: 0 calc(-1 * var(--sp-5)); padding: 0 var(--sp-5); overflow-x: hidden; }
+  .breadcrumb-list a { padding: var(--sp-2) 10px; font-size: var(--text-xs); }
+  .breadcrumb-hide-mobile { display: none; }
+  .breadcrumb-notes a { color: var(--color-brand); }
+  .fab { display: none; }
+  .breadcrumb-notes { display: block; }
+  .subtitle { font-size: 20px; }
+  .header-actions { display: none; }
+  .ev-pop { position: fixed; bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 85vw; }
+  .ev-pop::after { display: none; }
+  /* Contact drawer */
+  .contact-overlay.visible { align-items: flex-end; }
+  .contact-box {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    width: 100%; max-width: 100%;
+    border-radius: var(--radius-drawer) var(--radius-drawer) 0 0;
+    padding: 0 var(--sp-5) calc(env(safe-area-inset-bottom, 0px) + var(--sp-5));
+    box-shadow: var(--shadow-drawer);
+    transform: translateY(100%);
+    transition: transform var(--ease-drawer);
+    will-change: transform;
+    max-height: 85vh; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .contact-overlay.visible .contact-box { transform: translateY(0); }
+  .sheet-handle {
+    display: flex; align-items: center; justify-content: center;
+    padding: var(--sp-3) 0 var(--sp-1); cursor: grab; user-select: none;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+
+<nav class="breadcrumb-nav" id="breadcrumbNav">
+  <ul class="breadcrumb-list">
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#team">Team</a></li>
+    <li class="breadcrumb-hide-mobile"><a href="#why-now">Why Now</a></li>
+    <li><a href="#protocol">Protocol</a></li>
+    <li class="breadcrumb-hide-mobile"><a href="#verticals">Verticals</a></li>
+    <li><a href="#join">Join Us</a></li>
+    <li class="breadcrumb-notes"><a href="javascript:void(0)" onclick="togglePanel()">Feedback</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<header class="header">
+  <h1>Yak Robotics</h1>
+  <div class="meta">Partner Brief &mdash; April 2026</div>
+</header>
+
+<div class="subtitle-row">
+  <p class="subtitle">Runtime procurement for physical-world tasks</p>
+  <div class="header-actions">
+    <a href="javascript:void(0)" onclick="showContact()" class="header-link">Get in Touch</a>
+    <a href="javascript:void(0)" onclick="copyAsMarkdown()" id="copyMdBtn" class="header-link">Copy as Markdown</a>
+  </div>
+</div>
+
+<section>
+<h2 id="summary">Executive Summary</h2>
+<ul class="summary-list">
+  <li><strong>US surveying and mapping services is an <a href="https://www.ibisworld.com/industry-statistics/market-size/surveying-mapping-services-united-states/" target="_blank">$11.5 billion per year market</a> (IBISWorld, 2025).</strong> The US construction industry loses <a href="https://www.prnewswire.com/news-releases/new-research-from-plangrid-and-fmi-identifies-factors-costing-the-construction-industry-more-than-177-billion-annually-300689826.html" target="_blank">$31 billion per year to rework</a> from poor project data and miscommunication (PlanGrid/FMI, 2018). Drones are deployed on thousands of job sites and engineering firms are adopting AI tooling to accelerate execution.</li>
+  <li><strong>But no one has built a procurement protocol that lets a software agent hire a physical robot.</strong> Physical-world tasks cannot be purchased like software. Algorithmic procurement exists for trucking (<a href="https://www.uberfreight.com" target="_blank">Uber Freight</a>) and logistics (<a href="https://www.flexport.com" target="_blank">Flexport</a>), but construction robotics adds credentialing complexity, deliverable verification against engineering standards, and multi-modal coordination that existing platforms do not address.</li>
+  <li><strong>The enabling infrastructure exists today:</strong> <a href="https://www.dronedeploy.com/product/dock-automation" target="_blank">dock-deployed drones</a>, <a href="https://wingtra.com/mapping-drone-wingtraone/technical-specifications/" target="_blank">fixed-wing survey platforms with multi-hour endurance</a>, <a href="https://mdotjboss.state.mi.us/stdplan/surveymanual.htm" target="_blank">machine-readable DOT specifications</a>, and <a href="https://www.anthropic.com/news/model-context-protocol" target="_blank">AI agents with tool-use capabilities</a> &mdash; alongside a <a href="https://www.bls.gov/oes/2023/may/oes173031.htm" target="_blank">declining workforce</a> in licensed technical professions like surveying.</li>
+  <li><strong>Robots don&rsquo;t just replace scarce labor, they widen the feasible action space of agents.</strong> Quality becomes computable, availability becomes queryable, and execution data accumulates for quality benchmarking. Each task becomes structurally compatible with algorithmic procurement in a way that human execution alone does not easily support.</li>
+  <li><strong>Yak Robotics has a working proof of concept:</strong> auction engine, on-chain robot identity, settlement via Stripe and stablecoin, credential verification, and a 100-robot test fleet with simulated execution.</li>
+  <li><strong>We are seeking partners</strong> in AI-agent procurement infrastructure, autonomous robotics, construction domain expertise, and research in robot navigation and regulation.</li>
+</ul>
+
+<div class="cta-row">
+  <a href="javascript:void(0)" onclick="var el=document.getElementById('claudeBlock');el.style.display=el.offsetParent===null?'block':'none'" class="btn btn-primary">Try with Claude &darr;</a>
+  <span class="cta-sep">or</span>
+  <a href="https://yakrobot.bid/demo/" target="_blank" class="btn btn-ghost">Visual Simulator &#8599;</a>
+</div>
+
+<div class="claude-block" id="claudeBlock">
+  <p class="claude-step"><strong>Step 1.</strong> Open <a href="https://claude.ai/claude-code" target="_blank">Claude Code</a> in your terminal and connect to the marketplace:</p>
+  <div class="claude-cmd" id="memoClaudeCmd">/mcp add-json yakrover '{"type":"http","url":"https://yakrover-marketplace.fly.dev/mcp"}'</div>
+  <button class="cta-touch cta-touch-sm claude-copy" onclick="navigator.clipboard.writeText(document.getElementById('memoClaudeCmd').textContent);this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy Command'},1500)">Copy Command</button>
+  <p class="claude-hint">One-time setup. The marketplace tools persist across sessions.</p>
+  <p class="claude-step"><strong>Step 2.</strong> Say this to Claude:</p>
+  <div class="claude-prompt" id="memoClaudePrompt">Use yakrover to help me with an aerial LiDAR topo survey for a 12-acre highway corridor near Kalamazoo, MI</div>
+  <button class="cta-touch cta-touch-sm claude-copy" onclick="navigator.clipboard.writeText(document.getElementById('memoClaudePrompt').textContent);this.textContent='Copied!';var b=this;setTimeout(function(){b.textContent='Copy Prompt'},1500)">Copy Prompt</button>
+  <p class="claude-hint">Claude will discover 100 test robots, run the auction, and return delivery data (simulated). <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace/blob/main/docs/guides/GETTING_STARTED.md" target="_blank">Full guide &rarr;</a></p>
+</div>
+</section>
+
+<section>
+<h2 id="team">Team</h2>
+<p>This project emerged from the <a href="https://www.yakcollective.org/" target="_blank">Yak Collective</a>, a community of over 30 independent researchers, engineers, and consultants. The <a href="https://www.yakcollective.org/study-groups/yak-robotics-garage" target="_blank">Yak Robotics Garage</a> study group has built open-source rovers since 2021 &mdash; from living-room prototypes to blockchain-controlled robots with on-chain identity. The auction protocol grew out of a question the group kept hitting: once you have a fleet of robots that can be discovered and commanded programmatically, how do you let software agents hire them?</p>
+<div>
+  <article class="team-card">
+    <p class="team-name"><strong><a href="https://rafael.fyi/" target="_blank">Rafa</a></strong></p>
+    <p class="team-role">Protocol design, governance &mdash; Berlin</p>
+    <p class="team-bio">Director of the <a href="https://zknation.io" target="_blank">ZKsync Association</a> &mdash; architected and deployed ZKsync&rsquo;s governance smart-contract system, live since 2024. Core researcher in the <a href="https://summerofprotocols.com/wp-content/uploads/2024/06/17-e43-FERNANDEZ.pdf" target="_blank">Summer of Protocols</a>. Publishes on protocol design through <a href="https://protocolized.summerofprotocols.com/p/finding-fault-lines-within-the-firm" target="_blank">Protocolized</a> and <a href="https://npcmemo.substack.com/p/liquid-services-and-runtime-procurement" target="_blank">NPC Memo</a>.</p>
+  </article>
+  <article class="team-card">
+    <p class="team-name"><strong><a href="https://anurajrp.io/" target="_blank">Anuraj</a></strong></p>
+    <p class="team-role">Robotics, embedded systems &mdash; Finland</p>
+    <p class="team-bio">15 years across embedded systems, PCB design, and robotics. MSc Space Technology and Robotics (Erasmus Mundus SpaceMaster). Built the <a href="https://anurajrp.io/robotics/tumbller-cryptobot-architecture/" target="_blank">Tumbller Cryptobot</a> and <a href="https://anurajrp.io/robotics/desi-jarvis-yakrover-mcp-voice-robot-control/" target="_blank">Desi Jarvis</a> voice-controlled robot fleet via MCP. Demonstrated at Devcon 7 Bangkok.</p>
+  </article>
+  <article class="team-card">
+    <p class="team-name"><strong><a href="https://venkateshrao.com/" target="_blank">Venkat</a></strong></p>
+    <p class="team-role">Aerospace, strategy, command systems &mdash; Seattle</p>
+    <p class="team-bio">PhD Aerospace Engineering, University of Michigan. Postdoctoral research in command and control systems at Cornell. Former senior researcher at Xerox. US Patent 8,086,501 (Method and System for Creative Collaborative Marketplaces). Director of <a href="https://summerofprotocols.com/" target="_blank">Summer of Protocols</a>. Founder of Ribbonfarm. Strategic advisor to Tesla and a16z. Author of <em>Tempo</em> (decision-making under uncertainty).</p>
+  </article>
+  <article class="team-card">
+    <p class="team-name"><strong><a href="https://oppon.holdings/#advisory" target="_blank">Michael</a></strong></p>
+    <p class="team-role">Fundraising, go-to-market, partnerships &mdash; London</p>
+    <p class="team-bio">Managing Director at <a href="https://uscapital.com/" target="_blank">US Capital Global</a>, a middle-market financing firm. 14 years at Google/DoubleClick managing strategic partnerships with WPP, Dentsu, and Publicis. Led ecosystem development for Sub-Saharan Africa from Google&rsquo;s Kenya office. Built and scaled a digital assets fund from $3 million to $30 million in assets under management. Series 7/63/3 licensed.</p>
+  </article>
+</div>
+
+<div class="cta-center">
+  <button class="cta-touch" onclick="showContact()">Get in Touch</button>
+</div>
+</section>
+
+<section>
+<h2 id="why-now">Why Now</h2>
+<p>Physical service procurement today is unstructured and inaccessible to software agents. The infrastructure to change that did not exist five years ago. It does now.</p>
+<p>Five trends make this possible now. Autonomous collection platforms are deployed at scale. Design deliverables have gone digital. Regulatory specifications are machine-readable. The technical workforce is declining. And AI agents can use tools. Construction survey on DOT highway projects is the clearest example &mdash; every precondition is met with currently available technology.</p>
+<ul class="summary-list">
+  <li><strong>Autonomous collection:</strong> <a href="https://www.dronedeploy.com/blog/dronedeploy-unveils-agentic-ai-and-robotics-products-at-horizons-2025" target="_blank">DroneDeploy's dock automation platform manages autonomous drone flights on 100+ construction sites</a> (Oct 2025). <a href="https://jp.smartconstruction.com/en/news/mobility-office-release" target="_blank">Komatsu SMARTCONSTRUCTION</a>: deployed across tens of thousands of sites in Japan. <a href="https://www.scrippsnews.com/investigations/russia-ukraine-war-on-the-ground/ukraines-ground-robots-now-running-9-000-missions-a-month" target="_blank">Ukrainian ground robot deployments</a> scaled from 2,900 to 9,000 missions per month over five months in 2026 (Scripps News), demonstrating rapid adoption of autonomous ground platforms under operational pressure.</li>
+  <li><strong>Digital design deliverables:</strong> <a href="https://www.mlit.go.jp/common/001325172.pdf" target="_blank">Japan i-Construction</a>: 86% ICT adoption on public earthwork projects in 6 years via mandate. <a href="https://bimcorner.com/bim-requirements-in-norway-part-1-svv/" target="_blank">Norway V770</a>: 50%+ change order reduction with model-based delivery.</li>
+  <li><strong>Numerical regulatory specs:</strong> <a href="https://www.michigan.gov/mdot/-/media/Project/Websites/MDOT/Business/Construction/Standard-Specifications-Construction/2020-Standard-Specifications-Construction.pdf" target="_blank">Michigan Department of Transportation (MDOT) Standard Specifications</a> define sub-inch tolerances for subgrade and aggregate base. Published, deterministic, machine-parseable.</li>
+  <li><strong>Workforce decline:</strong> Average US Professional Land Surveyor (PLS) age: 57&ndash;60 (<a href="https://landsurveyorsunited.com/articles/vanishing-lines-confronting-the-surveying-workforce-shortage" target="_blank">NSPS</a>). <a href="https://www.acec.org/wp-content/uploads/2024/10/ACEC-Research-Institute-Engineering-Business-Sentiment-2024-Q4-Final.pdf" target="_blank">51% of engineering firms report workforce-constrained capacity</a> (American Council of Engineering Companies, Q4 2024). 8-year licensing pipeline. Similar trends reported internationally.</li>
+  <li><strong>Agent tool-use:</strong> <a href="https://www.anthropic.com/news/model-context-protocol" target="_blank">Model Context Protocol</a> (MCP, Anthropic 2024): growing ecosystem of tool servers. Agent-mediated procurement of physical services does not exist today. The infrastructure is being built.</li>
+</ul>
+</section>
+
+<section>
+<h2 id="protocol">Protocol</h2>
+
+<h3>Components and Status</h3>
+<p>The protocol is implemented as seven modules, listed below. The verification engine is domain-specific; all others are domain-agnostic and shared across verticals.</p>
+<ul class="summary-list">
+  <li><strong>Coordination Layer:</strong> MCP-native interface, reverse auction engine (<span class="ev" onclick="toggleEv(this)">11-state lifecycle<span class="ev-pop">Bidding &rarr; Bid Accepted &rarr; In Progress &rarr; Delivered &rarr; Verified &rarr; Settled. Plus: Withdrawn, Rejected, Expired, Provider Cancelled, and re-pool back to Bidding.</span></span>, <span class="ev" onclick="toggleEv(this)">4-factor scoring<span class="ev-pop">Price (40%) + SLA commitment (25%) + AI confidence (20%) + Reputation (15%). Bids above budget ceiling excluded. See AD-6.</span></span>, geographic filtering). Deployed on Fly.io.</li>
+  <li><strong>Task Registry:</strong> <span class="ev" onclick="toggleEv(this)">18 task categories<span class="ev-pop">topo_survey, aerial_survey, site_survey, bridge_inspection, progress_monitoring, as_built, subsurface_scan, env_sensing, visual_inspection, thermal_inspection, corridor_survey, volumetric, confined_space, utility_detection, mapping, delivery_ground, environmental_survey, control_survey.</span></span> defined with structured capability requirements (ASPRS accuracy classes, CRS codes, sensors, deliverables). RFP to spec conversion.</li>
+  <li><strong>Executor Registry:</strong> On-chain robot identity (ERC-8004 standard on Base). Discovery via The Graph indexing protocol. Ethereum Attestation Service (EAS) for platform attestation. 1 physical robot on mainnet + 100 test registrations on testnet.</li>
+  <li><strong>Credential Verification:</strong> SAM.gov Exclusions API and bond verification against Treasury Circular 570 (500+ sureties) built as standalone modules, not yet integrated into auction flow.</li>
+  <li><strong>Verification Engine:</strong> <span class="ev" onclick="toggleEv(this)">4-level<span class="ev-pop">Level 0: None (buyer trusts vendor). Level 1: Basic (data exists, format valid, fields present). Level 2: Standards (point density, accuracy, CRS per ASPRS/USGS). Level 3: PLS review required before payment.</span></span> quality assurance framework with <span class="ev" onclick="toggleEv(this)">8 delivery schemas<span class="ev-pop">Aerial LiDAR, Aerial Photo, Aerial Thermal, Ground GPR, Ground LiDAR, Bridge Inspection, Corridor, Confined Space &mdash; each with category-specific required fields, accuracy metrics, and file format validation.</span></span> mapped across task categories. Tested with simulated data. Geospatial surface comparison is next phase.</li>
+  <li><strong>Settlement Layer:</strong> Stripe (authorize/capture), Connect Express, ACH bank transfer, USDC stablecoin on Base (gasless). <span class="ev" onclick="toggleEv(this)">4-mode abstraction<span class="ev-pop">Immediate Transparent (Base x402, v1.5). Immediate Private (Horizen L3 candidate, v2.1). Batched Transparent (DTN lunar, v2.1). Batched Private (convergence, v3.0). Currently card, bank, and stablecoin settlement are operational. The 4 modes formalize the timing &times; privacy design space.</span></span> designed to cover timing and privacy dimensions as the protocol scales.</li>
+  <li><strong>Robot Federation:</strong> MCP-to-MCP robot adapter with <span class="ev" onclick="toggleEv(this)">9 category simulators<span class="ev-pop">aerial-lidar, aerial-photo, aerial-thermal, ground-gpr, ground-lidar, confined, fixedwing, skydio, fakerover &mdash; each deployed on Fly.io as a standalone MCP server returning category-specific structured delivery data.</span></span> on Fly.io for mock execution. Dynamic tool resolution. 1 physical robot connected (Tumbller via MCP). No production survey robots yet.</li>
+</ul>
+
+<h3>Roadmap</h3>
+<table>
+  <tr><th>Phase</th><th>Technical Capability</th><th>Network Milestone</th></tr>
+  <tr><td class="phase-complete">Complete</td><td>Auction engine, on-chain robot identity, 3-method settlement, 100-robot test fleet, MCP interface</td><td>First dollar internally transferred. First task autonomously completed end to end.</td></tr>
+  <tr><td class="phase">Next</td><td>First external robot autonomous dispatch. Buyer payment settles end-to-end. Delivery verification.</td><td>First dollar from a real buyer. First payout to a real operator.</td></tr>
+  <tr><td class="phase">Growth</td><td>Multi-robot coordination. Operator self-service onboarding. Geospatial QA engine.</td><td>10 active operators. 100 completed tasks. Repeat buyer.</td></tr>
+  <tr><td class="phase">Scale</td><td>Cross-vertical expansion (mining, infrastructure). Privacy layer for government contracts.</td><td>100,000 active robots. Revenue covers operational costs.</td></tr>
+  <tr><td class="phase">Vision</td><td>Federated robot discovery across platforms. Agent-to-agent procurement without human initiation.</td><td>1 Billion addressable robots. Marketplace network effects.</td></tr>
+</table>
+
+<h3>Open Challenges</h3>
+<table>
+  <tr><th>Area</th><th>Challenge</th><th>Opportunity</th></tr>
+  <tr>
+    <td class="phase">Privacy</td>
+    <td>Construction RFPs contain sensitive site data, bid pricing, and timelines. Government contracts add ITAR/CUI restrictions. <a href="https://eur-lex.europa.eu/eli/reg/2024/1624/oj/eng" target="_blank">EU AML Regulation Article 79</a> constrains which privacy approaches are legally viable.</td>
+    <td>Private data matching in healthcare required decades of regulation and standards (HIPAA, HL7/FHIR) before platforms like <a href="https://www.epic.com/software/care-everywhere" target="_blank">Epic Care Everywhere</a> could connect <a href="https://www.epic.com/about" target="_blank">325 million patient records</a> across systems. Construction has no equivalent infrastructure. The opportunity is to build the matching layer from scratch in a domain where no incumbent standard exists.</td>
+  </tr>
+  <tr>
+    <td class="phase">Regulation</td>
+    <td><a href="https://www.faa.gov/newsroom/BVLOS_NPRM_website_version.pdf" target="_blank">FAA Part 108</a> (BVLOS) final rule expected mid-2026, per <a href="https://www.federalregister.gov/documents/2025/08/07/2025-14992/normalizing-unmanned-aircraft-systems-beyond-visual-line-of-sight-operations" target="_blank">Executive Order 14307</a>. Ground robots lack standardized navigation rules on construction sites.</td>
+    <td>BVLOS enables autonomous drone dispatch without per-flight waivers. This is the regulatory prerequisite for algorithmic procurement at scale. The first compliant marketplace captures the market before incumbents adapt to the new rules.</td>
+  </tr>
+  <tr>
+    <td class="phase">Scale</td>
+    <td>Operator supply density uncertain in rural corridors. Credential APIs fragmented across 50 state PLS boards. Trust requires managed curation. MDOT drone data acceptance not yet standard.</td>
+    <td>The demand signal system converts failed searches into operator recruitment data: each unmet request shows operators exactly where to invest in equipment and coverage.</td>
+  </tr>
+  <tr>
+    <td class="phase">Liability</td>
+    <td>A <a href="https://law.justia.com/cases/federal/appellate-courts/ca4/23-1472/23-1472-2024-05-20.html" target="_blank">2024 federal ruling</a> (<em>360 Virtual Drone Services v. Ritter</em>, 4th Circuit) held that drone survey data constitutes licensed surveying. Autonomous dispatch liability allocation is unsettled. <a href="https://www.faa.gov/newsroom/BVLOS_NPRM_website_version.pdf" target="_blank">Standard commercial drone insurance</a> is written for piloted operations. Coverage for fully autonomous missions is available but not yet standardized.</td>
+    <td>The liability framework for autonomous dispatch does not yet exist. The platform that defines it (operator certification requirements, proportional responsibility by autonomy level, standardized insurance minimums) sets the industry standard.</td>
+  </tr>
+  <tr>
+    <td class="phase">Software fragmentation</td>
+    <td>Construction is the <a href="https://www.mckinsey.com/capabilities/operations/our-insights/reinventing-construction-through-a-productivity-revolution" target="_blank">second-least digitized industry</a> (McKinsey). Poor interoperability costs <a href="https://nvlpubs.nist.gov/nistpubs/gcr/2004/NIST.GCR.04-867.pdf" target="_blank">$15.8 billion per year in 2002 dollars</a> (NIST, 2004). Two-thirds of interoperability costs occur during operations, not construction (<a href="https://nvlpubs.nist.gov/nistpubs/gcr/2004/NIST.GCR.04-867.pdf" target="_blank">NIST</a>).</td>
+    <td>No incumbent integration layer exists to displace. A marketplace that connects to the fragmented toolchain via standardized tool-use becomes the connective tissue the industry lacks. <a href="https://stripe.dev/blog/payment-api-design" target="_blank">Stripe became the payment layer</a> by integrating with everything rather than replacing anything.</td>
+  </tr>
+</table>
+</section>
+
+<section>
+<h2 id="verticals">Vertical Feasibility</h2>
+<table>
+  <tr><th>Domain</th><th>Specification</th><th>Verification</th><th>Assessment</th></tr>
+  <tr><td>Highway survey</td><td>State DOT tolerances</td><td>Surface subtraction, RMSE</td><td>Ready &mdash; numerically specified, robots deployed</td></tr>
+  <tr><td>Environmental</td><td>EPA / Michigan EGLE permits</td><td>Sensor threshold comparison</td><td>Ready &mdash; thresholds are quantitative</td></tr>
+  <tr><td>Solar/wind</td><td>International Electrotechnical Commission (IEC) standards</td><td>Thermal anomaly detection</td><td>Proven &mdash; Zeitview and others operate commercially</td></tr>
+  <tr><td>Mining</td><td>Mine Safety and Health Administration (MSHA) + operational specs</td><td>Volumetric analysis</td><td>Ready &mdash; same sensors as construction</td></tr>
+  <tr><td>Bridge inspection</td><td>National Bridge Inventory (NBI) / AASHTO</td><td>Point-to-model + computer vision</td><td>Partial &mdash; human judgment still required</td></tr>
+</table>
+<p class="footnote">Each vertical adds a specification database and verification function. Protocol layer is unchanged.</p>
+
+<h3>Sample Product Stack</h3>
+<div class="stack-row"><span class="stack-label">Protocol</span><span class="stack-value">Task posting, executor matching, and delivery verification for physical-world tasks</span></div>
+<div class="stack-row"><span class="stack-label">Task class</span><span class="stack-value">Structured procurement for physical-world survey and inspection tasks</span></div>
+<div class="stack-row"><span class="stack-label">Industry</span><span class="stack-value">Construction survey and inspection (first vertical)</span></div>
+<div class="stack-row"><span class="stack-label">Product job</span><span class="stack-value">Verify that as-built conditions match design specifications</span></div>
+<div class="stack-row"><span class="stack-label">Offering</span><span class="stack-value">Survey data delivery with schema-driven quality checks</span></div>
+<div class="stack-row"><span class="stack-label">Service Domain</span><span class="stack-value">MDOT highway construction &mdash; numerically specified tolerances with established verification methods</span></div>
+</section>
+
+<section>
+<h2 id="join">Join Us</h2>
+<ul class="summary-list">
+  <li><strong>Agent runtime services:</strong> The protocol&rsquo;s MCP interface is live &mdash; an AI agent can post a task, receive ranked bids from 100 robots, and settle payment in a single session. We are looking for teams building agent infrastructure who want to test physical-world tool-use against a working auction engine, not a mock API.</li>
+  <li><strong>Autonomous robot operators:</strong> One physical robot (Tumbller) is connected. We need operators who can register real survey platforms &mdash; dock-deployed drones, ground-based LiDAR rigs, GPR carts &mdash; and execute tasks end-to-end through the MCP adapter. The protocol handles identity, bidding, and payment; the operator handles the mission.</li>
+  <li><strong>Construction and survey firms:</strong> The verification engine needs real specification databases and real deliverables to validate against. We are looking for firms who procure survey services and would share RFP structures, acceptance criteria, and sample data to ground the QA pipeline in production standards rather than simulated benchmarks.</li>
+  <li><strong>Researchers:</strong> Open problems include geospatial surface comparison at survey-grade accuracy, autonomous navigation in unstructured construction environments, proportional liability allocation for AI-dispatched robots, and privacy-preserving settlement under EU AML constraints. We publish research openly and collaborate on protocol design.</li>
+</ul>
+
+<div class="cta-center">
+  <button class="cta-touch" onclick="showContact()">Get in Touch</button>
+</div>
+</section>
+
+</main>
+
+<footer class="footer-bar">
+  <span>Yak Robotics</span>
+  <span>Demo: <a href="https://yakrobot.bid/demo">yakrobot.bid/demo</a> &mdash; Code: <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace" target="_blank">github.com/YakRoboticsGarage/yakrover-marketplace</a></span>
+</footer>
+
+<!-- Collaboration layer — pinned floating button -->
+<div class="fab">
+  <button class="fab-btn" onclick="togglePanel()" aria-label="Open feedback panel">
+    <span>Notes</span>
+    <span class="fb-badge" id="commentBadge">0</span>
+  </button>
+</div>
+
+<div class="feedback-panel" id="feedbackPanel">
+  <div class="fp-header">
+    <span class="fp-title">
+      <button class="fp-refresh" id="refreshBtn" onclick="refreshComments()" title="Refresh" aria-label="Refresh comments">&#8635;</button>
+      <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace/issues?q=label%3Amemo-feedback" target="_blank" title="View all on GitHub" aria-label="View feedback on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <button class="fp-refresh" onclick="showContact()" title="Get in Touch" aria-label="Get in touch">&#9993;</button>
+    </span>
+    <button class="fp-close" onclick="togglePanel()" aria-label="Close panel">&times;</button>
+  </div>
+  <div class="fp-form">
+    <textarea id="panelComment" placeholder="Leave feedback on this memo..."></textarea>
+    <div class="fp-form-row">
+      <input class="fp-form-name" id="panelName" placeholder="Name (optional)">
+      <button class="fp-form-submit" id="panelSubmit" onclick="submitPanelComment()">Send</button>
+    </div>
+    <div class="fp-form-status" id="panelStatus"></div>
+  </div>
+  <div id="commentList"><div class="fp-empty">No feedback yet.</div></div>
+</div>
+
+<div class="contact-overlay" id="contactOverlay" onclick="if(event.target===this)hideContact()">
+  <div class="contact-box" id="contactBox">
+    <div class="sheet-handle" id="sheetHandle"><div class="sheet-handle-bar"></div></div>
+    <h3>Get in Touch</h3>
+    <input class="contact-field" id="contactName" placeholder="Your name">
+    <input class="contact-field" id="contactEmail" type="email" placeholder="Email (optional)">
+    <textarea class="contact-field contact-field-msg" id="contactMsg" placeholder="What are you working on? How can we collaborate?"></textarea>
+    <div class="contact-actions">
+      <button class="contact-cancel" onclick="hideContact()">Cancel</button>
+      <button class="cta-touch cta-touch-sm" id="contactSubmit" onclick="submitContact()">Send</button>
+    </div>
+    <div class="contact-status" id="contactStatus"></div>
+  </div>
+</div>
+
+<div class="feedback-drawer-overlay" id="fdOverlay" onclick="if(event.target===this)hideFeedbackDrawer()">
+  <div class="feedback-drawer" id="fdDrawer">
+    <div class="fd-handle" id="fdHandle"><div class="fd-handle-bar"></div></div>
+    <div class="fd-title">Leave Feedback</div>
+    <textarea class="fd-field" id="fdComment" placeholder="What did you think of this memo?" rows="3"></textarea>
+    <div class="fd-row">
+      <input class="fd-name" id="fdName" placeholder="Name (optional)">
+      <button class="fd-submit" id="fdSubmit" onclick="submitFeedbackDrawer()">Send</button>
+    </div>
+    <div class="fd-status" id="fdStatus"></div>
+  </div>
+</div>
+
+<div class="sel-bar" id="selBar">
+  <button class="sel-bar-btn" onclick="openSelComment()">Comment</button>
+</div>
+
+<div class="sel-popover" id="selPopover">
+  <div class="sel-highlight" id="selText"></div>
+  <textarea class="sel-input" id="selComment" placeholder="Your feedback on this section..."></textarea>
+  <div class="sel-row">
+    <input class="sel-name" id="selName" placeholder="Name (optional)">
+    <button class="sel-submit" id="selSubmit" onclick="submitComment()">Send</button>
+  </div>
+  <div class="sel-status" id="selStatus"></div>
+</div>
+
+<script>
+// --- Breadcrumb scroll-spy ---
+(function() {
+  var sections = document.querySelectorAll('h2[id]');
+  var links = document.querySelectorAll('.breadcrumb-list a');
+  var nav = document.getElementById('breadcrumbNav');
+  var navH = nav ? nav.offsetHeight : 40;
+
+  links.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) {
+        var y = el.getBoundingClientRect().top + window.pageYOffset - navH - 8;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    });
+  });
+
+  function onScroll() {
+    var scrollY = window.pageYOffset + navH + 20;
+    var current = '';
+    sections.forEach(function(s) {
+      if (s.offsetTop <= scrollY) current = s.id;
+    });
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+    var active = nav.querySelector('a.active');
+    if (active) {
+      var nl = nav.scrollLeft, nw = nav.offsetWidth;
+      var al = active.offsetLeft, aw = active.offsetWidth;
+      if (al < nl + 20) nav.scrollTo({ left: al - 20, behavior: 'smooth' });
+      else if (al + aw > nl + nw - 20) nav.scrollTo({ left: al + aw - nw + 20, behavior: 'smooth' });
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
+// --- Evidence popovers ---
+function toggleEv(el) {
+  var wasActive = el.classList.contains('active');
+  document.querySelectorAll('.ev.active').forEach(function(e) { e.classList.remove('active'); });
+  if (!wasActive) el.classList.add('active');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.ev')) {
+    document.querySelectorAll('.ev.active').forEach(function(el) { el.classList.remove('active'); });
+  }
+});
+
+// --- Copy as Markdown ---
+window.getPageAsMarkdown = function() {
+  var md = '# Yak Robotics — Partner Brief\n\n';
+  md += '*Runtime procurement for physical-world tasks*\n\n';
+  var sections = document.querySelectorAll('h2[id], h3');
+  sections.forEach(function(heading) {
+    var level = heading.tagName === 'H2' ? '## ' : '### ';
+    md += level + heading.textContent.trim() + '\n\n';
+    var el = heading.nextElementSibling;
+    while (el && el.tagName !== 'H2' && el.tagName !== 'H3') {
+      if (el.tagName === 'P') {
+        md += el.textContent.trim() + '\n\n';
+      } else if (el.tagName === 'UL' || el.tagName === 'OL') {
+        var items = el.querySelectorAll('li');
+        items.forEach(function(li) { md += '- ' + li.textContent.trim() + '\n'; });
+        md += '\n';
+      } else if (el.tagName === 'TABLE') {
+        var rows = el.querySelectorAll('tr');
+        rows.forEach(function(row, i) {
+          var cells = row.querySelectorAll('th, td');
+          var line = '| ';
+          cells.forEach(function(c) { line += c.textContent.trim() + ' | '; });
+          md += line + '\n';
+          if (i === 0) {
+            md += '| ';
+            cells.forEach(function() { md += '--- | '; });
+            md += '\n';
+          }
+        });
+        md += '\n';
+      } else if (el.classList && el.classList.contains('stack-row')) {
+        var label = el.querySelector('.stack-label');
+        var value = el.querySelector('.stack-value');
+        if (label && value) md += '**' + label.textContent.trim() + ':** ' + value.textContent.trim() + '\n';
+      } else if (el.classList && el.classList.contains('cols')) {
+        var ps = el.querySelectorAll('p');
+        ps.forEach(function(p) { md += p.textContent.trim() + '\n\n'; });
+      } else if (el.classList && el.classList.contains('callout')) {
+        var strong = el.querySelector('strong');
+        var text = el.querySelectorAll('p');
+        if (strong) md += '**' + strong.textContent.trim() + '**\n';
+        for (var t = 1; t < text.length; t++) md += text[t].textContent.trim() + '\n';
+        md += '\n';
+      } else if (el.classList && el.classList.contains('g3')) {
+        var callouts = el.querySelectorAll('.callout');
+        callouts.forEach(function(c) {
+          var name = c.querySelector('strong');
+          var ps2 = c.querySelectorAll('p');
+          if (name) md += '**' + name.textContent.trim() + '**\n';
+          for (var j = 1; j < ps2.length; j++) md += ps2[j].textContent.trim() + '\n';
+          md += '\n';
+        });
+      }
+      el = el.nextElementSibling;
+    }
+  });
+  md += '---\n\nDemo: https://yakrobot.bid/demo/ | Code: https://github.com/YakRoboticsGarage/yakrover-marketplace\n';
+  return md;
+};
+
+window.copyAsMarkdown = function() {
+  var md = window.getPageAsMarkdown();
+  navigator.clipboard.writeText(md).then(function() {
+    var btn = document.getElementById('copyMdBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy as Markdown'; }, 1500);
+  });
+};
+
+var API = 'https://yakrobot-api.rafaeldf2.workers.dev';
+var panelOpen = false;
+
+// --- Side panel / mobile feedback drawer ---
+function togglePanel() {
+  if (window.innerWidth <= 768) {
+    showFeedbackDrawer();
+    return;
+  }
+  panelOpen = !panelOpen;
+  document.getElementById('feedbackPanel').classList.toggle('open', panelOpen);
+  document.body.classList.toggle('panel-open', panelOpen);
+  if (panelOpen) loadComments();
+}
+
+function showFeedbackDrawer() {
+  var overlay = document.getElementById('fdOverlay');
+  var drawer = document.getElementById('fdDrawer');
+  overlay.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+  drawer.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+  drawer.style.transform = '';
+  document.getElementById('fdComment').value = '';
+  document.getElementById('fdName').value = '';
+  document.getElementById('fdStatus').textContent = '';
+  document.getElementById('fdSubmit').disabled = false;
+  setTimeout(function() { document.getElementById('fdComment').focus(); }, 350);
+}
+
+function hideFeedbackDrawer() {
+  var drawer = document.getElementById('fdDrawer');
+  var overlay = document.getElementById('fdOverlay');
+  drawer.style.transition = 'transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94)';
+  drawer.style.transform = 'translateY(100%)';
+  setTimeout(function() {
+    overlay.classList.remove('visible');
+    drawer.style.transform = '';
+    document.body.style.overflow = '';
+  }, 260);
+}
+
+function submitFeedbackDrawer() {
+  var msg = document.getElementById('fdComment').value.trim();
+  if (!msg) { document.getElementById('fdStatus').textContent = 'Please enter feedback.'; return; }
+  var name = document.getElementById('fdName').value.trim() || 'Anonymous';
+  var btn = document.getElementById('fdSubmit');
+  var status = document.getElementById('fdStatus');
+  btn.disabled = true;
+  status.textContent = 'Sending...';
+  fetch(API + '/api/memo/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comment: msg, name: name, highlight: '', page: 'memo' }),
+  }).then(function(r) {
+    if (!r.ok) throw new Error('Failed');
+    status.textContent = 'Sent! Thank you.';
+    btn.textContent = 'Sent';
+    setTimeout(hideFeedbackDrawer, 1500);
+  }).catch(function() {
+    status.textContent = 'Failed to send. Try again.';
+    btn.disabled = false;
+  });
+}
+
+// Swipe-to-dismiss for feedback drawer
+(function() {
+  var handle = document.getElementById('fdHandle');
+  var drawer = document.getElementById('fdDrawer');
+  var overlay = document.getElementById('fdOverlay');
+  var dragging = false, startY = 0, dy = 0;
+  handle.addEventListener('pointerdown', function(e) {
+    dragging = true; startY = e.clientY; dy = 0;
+    drawer.style.transition = 'none';
+    handle.setPointerCapture(e.pointerId);
+  });
+  document.addEventListener('pointermove', function(e) {
+    if (!dragging) return;
+    dy = Math.max(0, e.clientY - startY);
+    drawer.style.transform = 'translateY(' + dy + 'px)';
+    overlay.style.opacity = Math.max(0, 1 - dy / drawer.offsetHeight);
+  });
+  document.addEventListener('pointerup', function() {
+    if (!dragging) return;
+    dragging = false;
+    overlay.style.opacity = '';
+    if (dy / drawer.offsetHeight > 0.3) {
+      hideFeedbackDrawer();
+    } else {
+      drawer.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+      drawer.style.transform = 'translateY(0)';
+    }
+  });
+})();
+
+function loadComments() {
+  fetch(API + '/api/memo/comments').then(function(r) { return r.json(); }).then(function(d) {
+    var list = d.comments || [];
+    document.getElementById('commentBadge').textContent = list.length;
+    if (!list.length) {
+      document.getElementById('commentList').innerHTML = '<div class="fp-empty">Highlight any text to leave a comment.</div>';
+      return;
+    }
+    var h = '';
+    list.forEach(function(c) {
+      h += '<div class="fp-comment">';
+      if (c.highlight) h += '<div class="fp-comment-highlight">"' + esc(c.highlight.slice(0, 120)) + (c.highlight.length > 120 ? '...' : '') + '"</div>';
+      h += '<div class="fp-comment-text">' + esc(c.comment) + '</div>';
+      var when = c.timestamp ? new Date(c.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      h += '<div class="fp-comment-meta">' + esc(c.name || 'Anonymous') + (when ? ' · ' + when : '') + (c.section ? ' · ' + esc(c.section) : '') + (c.issue_url ? ' · <a href="' + esc(c.issue_url) + '" target="_blank">thread</a>' : '') + '</div>';
+      h += '</div>';
+    });
+    document.getElementById('commentList').innerHTML = h;
+  }).catch(function() {});
+}
+
+// Load badge count on page load
+fetch(API + '/api/memo/comments').then(function(r) { return r.json(); }).then(function(d) {
+  document.getElementById('commentBadge').textContent = (d.comments || []).length;
+}).catch(function() {});
+
+// --- Text selection — action bar + comment popover ---
+var currentHighlight = '';
+var currentSection = '';
+var selRect = null;
+
+document.addEventListener('mouseup', function(e) {
+  var bar = document.getElementById('selBar');
+  var pop = document.getElementById('selPopover');
+  if (bar.contains(e.target) || pop.contains(e.target) || document.getElementById('feedbackPanel').contains(e.target)) return;
+
+  // Hide both on new selection attempt
+  bar.classList.remove('visible');
+  pop.classList.remove('visible');
+
+  var sel = window.getSelection();
+  var text = (sel ? sel.toString().trim() : '');
+  if (text.length < 3) return;
+
+  currentHighlight = text.slice(0, 500);
+
+  // Find nearest section heading
+  var node = sel.anchorNode;
+  currentSection = '';
+  while (node && node !== document.body) {
+    if (node.previousElementSibling) {
+      var prev = node.previousElementSibling;
+      if (prev.tagName === 'H2') { currentSection = prev.textContent; break; }
+    }
+    node = node.parentElement;
+  }
+  if (!currentSection) {
+    var all = document.querySelectorAll('h2');
+    var range = sel.getRangeAt(0);
+    for (var i = all.length - 1; i >= 0; i--) {
+      if (range.compareBoundaryPoints(Range.START_TO_START, document.createRange()) >= 0) {
+        currentSection = all[i].textContent;
+        break;
+      }
+    }
+  }
+
+  // Show action bar above selection (selection stays intact)
+  var rect = sel.getRangeAt(0).getBoundingClientRect();
+  selRect = rect;
+  bar.style.top = (window.scrollY + rect.top - 36) + 'px';
+  bar.style.left = (rect.left + rect.width / 2 - 40) + 'px';
+  bar.classList.add('visible');
+});
+
+function openSelComment() {
+  var bar = document.getElementById('selBar');
+  var pop = document.getElementById('selPopover');
+  bar.classList.remove('visible');
+
+  document.getElementById('selText').textContent = '"' + currentHighlight.slice(0, 100) + (currentHighlight.length > 100 ? '...' : '') + '"';
+  document.getElementById('selComment').value = '';
+  document.getElementById('selStatus').textContent = '';
+  document.getElementById('selSubmit').disabled = false;
+
+  if (selRect) {
+    pop.style.top = (window.scrollY + selRect.bottom + 8) + 'px';
+    pop.style.left = Math.min(selRect.left, window.innerWidth - 300) + 'px';
+  }
+  pop.classList.add('visible');
+  setTimeout(function() { document.getElementById('selComment').focus(); }, 50);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('selBar').classList.remove('visible');
+    document.getElementById('selPopover').classList.remove('visible');
+  }
+});
+
+function submitComment() {
+  var comment = document.getElementById('selComment').value.trim();
+  if (!comment) return;
+  var name = document.getElementById('selName').value.trim();
+  var btn = document.getElementById('selSubmit');
+  var status = document.getElementById('selStatus');
+  btn.disabled = true;
+  status.textContent = 'Submitting...';
+
+  fetch(API + '/api/memo/comment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      highlight: currentHighlight,
+      comment: comment,
+      section: currentSection,
+      name: name || 'Anonymous',
+    }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    status.textContent = 'Submitted — thank you!';
+    setTimeout(function() {
+      document.getElementById('selPopover').classList.remove('visible');
+    }, 1500);
+    loadComments();
+  }).catch(function(e) {
+    status.textContent = 'Error — please try again.';
+    btn.disabled = false;
+  });
+}
+
+function submitPanelComment() {
+  var comment = document.getElementById('panelComment').value.trim();
+  if (!comment) return;
+  var name = document.getElementById('panelName').value.trim();
+  var btn = document.getElementById('panelSubmit');
+  var status = document.getElementById('panelStatus');
+  btn.disabled = true;
+  status.textContent = 'Submitting...';
+
+  fetch(API + '/api/memo/comment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      highlight: '',
+      comment: comment,
+      section: 'General',
+      name: name || 'Anonymous',
+    }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    status.textContent = 'Submitted — thank you!';
+    document.getElementById('panelComment').value = '';
+    btn.disabled = false;
+    setTimeout(function() { status.textContent = ''; }, 2000);
+    loadComments();
+  }).catch(function() {
+    status.textContent = 'Error — please try again.';
+    btn.disabled = false;
+  });
+}
+
+function refreshComments() {
+  var btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  loadComments();
+  setTimeout(function() { btn.classList.remove('spinning'); }, 600);
+}
+
+// --- Contact modal / mobile drawer ---
+function showContact() {
+  var overlay = document.getElementById('contactOverlay');
+  overlay.classList.add('visible');
+  document.getElementById('contactName').value = '';
+  document.getElementById('contactEmail').value = '';
+  document.getElementById('contactMsg').value = '';
+  document.getElementById('contactStatus').textContent = '';
+  document.getElementById('contactSubmit').disabled = false;
+  document.body.style.overflow = 'hidden';
+  var box = document.getElementById('contactBox');
+  box.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+  box.style.transform = '';
+  setTimeout(function() { document.getElementById('contactName').focus(); }, 350);
+}
+
+function hideContact() {
+  var box = document.getElementById('contactBox');
+  if (window.innerWidth <= 768) {
+    box.style.transition = 'transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94)';
+    box.style.transform = 'translateY(100%)';
+    setTimeout(function() {
+      document.getElementById('contactOverlay').classList.remove('visible');
+      box.style.transform = '';
+      document.body.style.overflow = '';
+    }, 260);
+  } else {
+    document.getElementById('contactOverlay').classList.remove('visible');
+    document.body.style.overflow = '';
+  }
+}
+
+// Swipe-to-dismiss on mobile
+(function() {
+  var handle = document.getElementById('sheetHandle');
+  var box = document.getElementById('contactBox');
+  var overlay = document.getElementById('contactOverlay');
+  var dragging = false, startY = 0, dy = 0;
+
+  handle.addEventListener('pointerdown', function(e) {
+    if (window.innerWidth > 768) return;
+    dragging = true; startY = e.clientY; dy = 0;
+    box.style.transition = 'none';
+    handle.setPointerCapture(e.pointerId);
+  });
+  document.addEventListener('pointermove', function(e) {
+    if (!dragging) return;
+    dy = Math.max(0, e.clientY - startY);
+    box.style.transform = 'translateY(' + dy + 'px)';
+    overlay.style.opacity = Math.max(0, 1 - dy / box.offsetHeight);
+  });
+  document.addEventListener('pointerup', function() {
+    if (!dragging) return;
+    dragging = false;
+    overlay.style.opacity = '';
+    if (dy / box.offsetHeight > 0.3) {
+      hideContact();
+    } else {
+      box.style.transition = 'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)';
+      box.style.transform = 'translateY(0)';
+    }
+  });
+})();
+
+function submitContact() {
+  var msg = document.getElementById('contactMsg').value.trim();
+  if (!msg) { document.getElementById('contactStatus').textContent = 'Please enter a message.'; return; }
+  var name = document.getElementById('contactName').value.trim();
+  var email = document.getElementById('contactEmail').value.trim();
+  var btn = document.getElementById('contactSubmit');
+  var status = document.getElementById('contactStatus');
+  btn.disabled = true;
+  status.textContent = 'Sending...';
+
+  fetch(API + '/api/memo/contact', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name || 'Anonymous', email: email, message: msg }),
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    status.textContent = 'Sent — thank you! We\'ll be in touch.';
+    setTimeout(hideContact, 2000);
+  }).catch(function() {
+    status.textContent = 'Error — please try again.';
+    btn.disabled = false;
+  });
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') hideContact();
+});
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+</script>
+
+</body>
+</html>

@@ -1,5 +1,7 @@
 """Payment bond verification module.
 
+Vertical: construction (Treasury Circular 570, surety bonds)
+
 Verifies payment bond documents against real Treasury Circular 570 data.
 Downloads and parses the official Excel file from fiscal.treasury.gov
 containing 500+ certified surety companies with underwriting limits

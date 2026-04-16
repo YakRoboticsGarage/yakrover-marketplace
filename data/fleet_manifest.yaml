@@ -1,0 +1,1603 @@
+meta:
+  version: '1.0'
+  generated: '2026-04-11'
+  chain: base-sepolia
+  chain_id: 84532
+  platform_signer: '0xc69bc0c54901532f0b39acce94d66eaac8156d57'
+  funding_amount_eth_per_operator: 0.003
+  total_robots: 100
+  total_operators: 18
+operators:
+- name: Great Lakes Aerial Survey
+  company: Great Lakes Aerial Survey LLC
+  location: Troy, MI
+  latitude: 42.6064
+  longitude: -83.1498
+  service_radius_km: 240
+  stripe_connect_id: acct_test_great_lakes_aerial_surve
+  robots:
+  - name: GLAS-LIDAR-01
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: &id001
+    - aerial_lidar
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.619
+    longitude: -83.1926
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.84
+    initial_reputation: 4.2
+    is_test: true
+    availability: online
+  - name: GLAS-LIDAR-02
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.6277
+    longitude: -83.1339
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.83
+    initial_reputation: 4.7
+    is_test: true
+    availability: online
+  - name: GLAS-LIDAR-03
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.5994
+    longitude: -83.1922
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.87
+    initial_reputation: 4.2
+    is_test: true
+    availability: online
+  - name: GLAS-LIDAR-04
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.5637
+    longitude: -83.1769
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.87
+    initial_reputation: 4.5
+    is_test: true
+    availability: online
+  - name: GLAS-PHOTO-05
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: &id002
+    - photogrammetry
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.5812
+    longitude: -83.1418
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.82
+    initial_reputation: 4.6
+    is_test: true
+    availability: online
+  - name: GLAS-PHOTO-06
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.634
+    longitude: -83.1319
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.84
+    initial_reputation: 4.3
+    is_test: true
+    availability: online
+  - name: GLAS-PHOTO-07
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.6476
+    longitude: -83.1645
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.83
+    initial_reputation: 4.1
+    is_test: true
+    availability: online
+  - name: GLAS-SCOUT-08
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: &id003
+    - photogrammetry
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.6377
+    longitude: -83.1405
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.89
+    initial_reputation: 4.6
+    is_test: true
+    availability: online
+  - name: GLAS-SCOUT-09
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.6097
+    longitude: -83.1072
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.88
+    initial_reputation: 4.3
+    is_test: true
+    availability: online
+  - name: GLAS-SCOUT-10
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors:
+    - photogrammetry
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.6006
+    longitude: -83.1678
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.84
+    initial_reputation: 4.2
+    is_test: true
+    availability: online
+- name: Motor City Drones
+  company: Motor City Drones Inc.
+  location: Detroit, MI
+  latitude: 42.3314
+  longitude: -83.0458
+  service_radius_km: 160
+  stripe_connect_id: acct_test_motor_city_drones
+  robots:
+  - name: 'MCD Matrice-L #1'
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.3611
+    longitude: -83.0351
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.84
+    initial_reputation: 4.4
+    is_test: true
+    availability: online
+  - name: 'MCD Matrice-L #2'
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.3498
+    longitude: -83.0867
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.81
+    initial_reputation: 3.7
+    is_test: true
+    availability: online
+  - name: 'MCD Skydio #3'
+    model: Skydio X10
+    model_key: SkydioX10
+    equipment_type: photogrammetry
+    sensors: &id004
+    - photogrammetry
+    - thermal_camera
+    mcp_endpoint: https://yakrover-skydio.fly.dev/mcp
+    latitude: 42.2935
+    longitude: -83.0699
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.81
+    initial_reputation: 3.6
+    is_test: true
+    availability: online
+  - name: 'MCD Skydio #4'
+    model: Skydio X10
+    model_key: SkydioX10
+    equipment_type: photogrammetry
+    sensors: *id004
+    mcp_endpoint: https://yakrover-skydio.fly.dev/mcp
+    latitude: 42.3436
+    longitude: -83.058
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.8
+    initial_reputation: 3.9
+    is_test: true
+    availability: online
+  - name: 'MCD Skydio #5'
+    model: Skydio X10
+    model_key: SkydioX10
+    equipment_type: photogrammetry
+    sensors: *id004
+    mcp_endpoint: https://yakrover-skydio.fly.dev/mcp
+    latitude: 42.3104
+    longitude: -83.0065
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.84
+    initial_reputation: 4.1
+    is_test: true
+    availability: online
+  - name: 'MCD M4E #6'
+    model: DJI Matrice 4 Enterprise
+    model_key: M4E
+    equipment_type: photogrammetry
+    sensors: &id005
+    - photogrammetry
+    - thermal_camera
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.3018
+    longitude: -83.0252
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.82
+    initial_reputation: 3.7
+    is_test: true
+    availability: online
+  - name: 'MCD M4E #7'
+    model: DJI Matrice 4 Enterprise
+    model_key: M4E
+    equipment_type: photogrammetry
+    sensors: *id005
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.3755
+    longitude: -83.0332
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.85
+    initial_reputation: 4.1
+    is_test: true
+    availability: online
+  - name: 'MCD Thermal #8'
+    model: DJI Matrice 350 RTK + Zenmuse H30T
+    model_key: M350+H30T
+    equipment_type: thermal_camera
+    sensors: &id006
+    - thermal_camera
+    - photogrammetry
+    mcp_endpoint: https://yakrover-aerial-thermal.fly.dev/mcp
+    latitude: 42.3623
+    longitude: -83.0209
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.78
+    initial_reputation: 3.7
+    is_test: true
+    availability: online
+  - name: 'MCD Thermal #9'
+    model: DJI Matrice 350 RTK + Zenmuse H30T
+    model_key: M350+H30T
+    equipment_type: thermal_camera
+    sensors: *id006
+    mcp_endpoint: https://yakrover-aerial-thermal.fly.dev/mcp
+    latitude: 42.3148
+    longitude: -83.0667
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.87
+    initial_reputation: 3.7
+    is_test: true
+    availability: online
+  - name: 'MCD M4E #10'
+    model: DJI Matrice 4 Enterprise
+    model_key: M4E
+    equipment_type: photogrammetry
+    sensors:
+    - photogrammetry
+    - thermal_camera
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.347
+    longitude: -83.0607
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.82
+    initial_reputation: 4.2
+    is_test: true
+    availability: online
+- name: Peninsular Survey Systems
+  company: Peninsular Survey Systems LLC
+  location: Lansing, MI
+  latitude: 42.7325
+  longitude: -84.5555
+  service_radius_km: 320
+  stripe_connect_id: acct_test_peninsular_survey_system
+  robots:
+  - name: PSS-PHOTO-001
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.7664
+    longitude: -84.5722
+    service_radius_km: 320
+    home_type: garage
+    bid_pct: 0.89
+    initial_reputation: 4.7
+    is_test: true
+    availability: online
+  - name: PSS-PHOTO-002
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.7698
+    longitude: -84.5592
+    service_radius_km: 320
+    home_type: garage
+    bid_pct: 0.87
+    initial_reputation: 4.4
+    is_test: true
+    availability: online
+  - name: PSS-PHOTO-003
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.738
+    longitude: -84.5769
+    service_radius_km: 320
+    home_type: garage
+    bid_pct: 0.94
+    initial_reputation: 4.6
+    is_test: true
+    availability: online
+  - name: PSS-CORR-004
+    model: Wingtra WingtraOne Gen 2
+    model_key: WingtraOne
+    equipment_type: aerial_lidar
+    sensors: &id007
+    - aerial_lidar
+    - photogrammetry
+    - rtk_gps
+    mcp_endpoint: https://yakrover-fixedwing.fly.dev/mcp
+    latitude: 42.7234
+    longitude: -84.5808
+    service_radius_km: 320
+    home_type: garage
+    bid_pct: 0.9
+    initial_reputation: 4.9
+    is_test: true
+    availability: online
+  - name: PSS-CORR-005
+    model: Wingtra WingtraOne Gen 2
+    model_key: WingtraOne
+    equipment_type: aerial_lidar
+    sensors: *id007
+    mcp_endpoint: https://yakrover-fixedwing.fly.dev/mcp
+    latitude: 42.6956
+    longitude: -84.5963
+    service_radius_km: 320
+    home_type: garage
+    bid_pct: 0.91
+    initial_reputation: 4.3
+    is_test: true
+    availability: online
+  - name: PSS-FLEX-006
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.7588
+    longitude: -84.5625
+    service_radius_km: 320
+    home_type: garage
+    bid_pct: 0.89
+    initial_reputation: 4.2
+    is_test: true
+    availability: online
+  - name: PSS-FLEX-007
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.7772
+    longitude: -84.5529
+    service_radius_km: 320
+    home_type: garage
+    bid_pct: 0.94
+    initial_reputation: 4.9
+    is_test: true
+    availability: online
+  - name: PSS-WEST-008
+    model: Freefly Astro
+    model_key: Astro
+    equipment_type: aerial_lidar
+    sensors: &id008
+    - aerial_lidar
+    - photogrammetry
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.6885
+    longitude: -84.5356
+    service_radius_km: 320
+    home_type: garage
+    bid_pct: 0.9
+    initial_reputation: 4.7
+    is_test: true
+    availability: online
+  - name: PSS-WEST-009
+    model: Freefly Astro
+    model_key: Astro
+    equipment_type: aerial_lidar
+    sensors: *id008
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.7115
+    longitude: -84.5428
+    service_radius_km: 320
+    home_type: garage
+    bid_pct: 0.89
+    initial_reputation: 4.3
+    is_test: true
+    availability: online
+- name: Wolverine Robotics
+  company: Wolverine Robotics Corp.
+  location: Ann Arbor, MI
+  latitude: 42.2808
+  longitude: -83.743
+  service_radius_km: 160
+  stripe_connect_id: acct_test_wolverine_robotics
+  robots:
+  - name: Badger-01
+    model: Boston Dynamics Spot + Leica BLK ARC
+    model_key: Spot+BLK
+    equipment_type: terrestrial_lidar
+    sensors: &id009
+    - terrestrial_lidar
+    - photogrammetry
+    mcp_endpoint: https://yakrover-ground-lidar.fly.dev/mcp
+    latitude: 42.2766
+    longitude: -83.7021
+    service_radius_km: 160
+    home_type: docked
+    bid_pct: 0.83
+    initial_reputation: 4.5
+    is_test: true
+    availability: online
+  - name: Badger-02
+    model: Boston Dynamics Spot + Leica BLK ARC
+    model_key: Spot+BLK
+    equipment_type: terrestrial_lidar
+    sensors: *id009
+    mcp_endpoint: https://yakrover-ground-lidar.fly.dev/mcp
+    latitude: 42.2809
+    longitude: -83.772
+    service_radius_km: 160
+    home_type: docked
+    bid_pct: 0.89
+    initial_reputation: 4.5
+    is_test: true
+    availability: online
+  - name: Badger-03
+    model: Boston Dynamics Spot + Leica BLK ARC
+    model_key: Spot+BLK
+    equipment_type: terrestrial_lidar
+    sensors: *id009
+    mcp_endpoint: https://yakrover-ground-lidar.fly.dev/mcp
+    latitude: 42.2626
+    longitude: -83.7305
+    service_radius_km: 160
+    home_type: docked
+    bid_pct: 0.82
+    initial_reputation: 4.3
+    is_test: true
+    availability: online
+  - name: Mole-04
+    model: Boston Dynamics Spot + GSSI StructureScan
+    model_key: Spot+GPR
+    equipment_type: gpr
+    sensors: &id010
+    - gpr
+    - rtk_gps
+    mcp_endpoint: https://yakrover-ground-gpr.fly.dev/mcp
+    latitude: 42.3044
+    longitude: -83.7395
+    service_radius_km: 160
+    home_type: docked
+    bid_pct: 0.85
+    initial_reputation: 4.4
+    is_test: true
+    availability: online
+  - name: Mole-05
+    model: Boston Dynamics Spot + GSSI StructureScan
+    model_key: Spot+GPR
+    equipment_type: gpr
+    sensors: *id010
+    mcp_endpoint: https://yakrover-ground-gpr.fly.dev/mcp
+    latitude: 42.2358
+    longitude: -83.7588
+    service_radius_km: 160
+    home_type: docked
+    bid_pct: 0.89
+    initial_reputation: 3.8
+    is_test: true
+    availability: online
+  - name: Wolverine-06
+    model: Flyability ELIOS 3
+    model_key: ELIOS3
+    equipment_type: terrestrial_lidar
+    sensors: &id011
+    - terrestrial_lidar
+    - photogrammetry
+    mcp_endpoint: https://yakrover-confined.fly.dev/mcp
+    latitude: 42.3149
+    longitude: -83.7131
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.81
+    initial_reputation: 4.0
+    is_test: true
+    availability: online
+  - name: Wolverine-07
+    model: Flyability ELIOS 3
+    model_key: ELIOS3
+    equipment_type: terrestrial_lidar
+    sensors: *id011
+    mcp_endpoint: https://yakrover-confined.fly.dev/mcp
+    latitude: 42.3149
+    longitude: -83.7027
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.85
+    initial_reputation: 3.9
+    is_test: true
+    availability: online
+  - name: Wolverine-08
+    model: Flyability ELIOS 3
+    model_key: ELIOS3
+    equipment_type: terrestrial_lidar
+    sensors: *id011
+    mcp_endpoint: https://yakrover-confined.fly.dev/mcp
+    latitude: 42.242
+    longitude: -83.7195
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.81
+    initial_reputation: 4.4
+    is_test: true
+    availability: online
+  - name: Hawk-09
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.2786
+    longitude: -83.7385
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.89
+    initial_reputation: 4.0
+    is_test: true
+    availability: online
+  - name: Hawk-10
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.2739
+    longitude: -83.769
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.87
+    initial_reputation: 4.2
+    is_test: true
+    availability: online
+  - name: Hawk-11
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.2539
+    longitude: -83.76
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.86
+    initial_reputation: 4.6
+    is_test: true
+    availability: online
+- name: Copper Country UAS
+  company: Copper Country UAS LLC
+  location: Houghton, MI
+  latitude: 47.1211
+  longitude: -88.5694
+  service_radius_km: 400
+  stripe_connect_id: acct_test_copper_country_uas
+  robots:
+  - name: CC-01
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 47.1155
+    longitude: -88.5678
+    service_radius_km: 400
+    home_type: garage
+    bid_pct: 0.71
+    initial_reputation: 2.7
+    is_test: true
+    availability: online
+  - name: CC-02
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 47.1065
+    longitude: -88.5614
+    service_radius_km: 400
+    home_type: garage
+    bid_pct: 0.71
+    initial_reputation: 2.8
+    is_test: true
+    availability: online
+  - name: CC-03
+    model: Freefly Astro
+    model_key: Astro
+    equipment_type: aerial_lidar
+    sensors: *id008
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 47.0825
+    longitude: -88.5576
+    service_radius_km: 400
+    home_type: garage
+    bid_pct: 0.79
+    initial_reputation: 2.8
+    is_test: true
+    availability: online
+  - name: CC-04
+    model: Autel EVO II Pro RTK
+    model_key: AutelEVO
+    equipment_type: photogrammetry
+    sensors: &id012
+    - photogrammetry
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 47.1535
+    longitude: -88.6081
+    service_radius_km: 400
+    home_type: garage
+    bid_pct: 0.76
+    initial_reputation: 2.8
+    is_test: true
+    availability: online
+  - name: CC-05
+    model: Autel EVO II Pro RTK
+    model_key: AutelEVO
+    equipment_type: photogrammetry
+    sensors: *id012
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 47.0954
+    longitude: -88.6025
+    service_radius_km: 400
+    home_type: garage
+    bid_pct: 0.75
+    initial_reputation: 3.7
+    is_test: true
+    availability: online
+- name: Saginaw Valley Mapping
+  company: Saginaw Valley Mapping LLC
+  location: Saginaw, MI
+  latitude: 43.4195
+  longitude: -83.9508
+  service_radius_km: 190
+  stripe_connect_id: acct_test_saginaw_valley_mapping
+  robots:
+  - name: SVM Hawk
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.417
+    longitude: -83.9252
+    service_radius_km: 190
+    home_type: garage
+    bid_pct: 0.74
+    initial_reputation: 3.4
+    is_test: true
+    availability: online
+  - name: SVM Falcon
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.3832
+    longitude: -83.957
+    service_radius_km: 190
+    home_type: garage
+    bid_pct: 0.77
+    initial_reputation: 3.1
+    is_test: true
+    availability: online
+  - name: SVM Osprey
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.4401
+    longitude: -83.9352
+    service_radius_km: 190
+    home_type: garage
+    bid_pct: 0.73
+    initial_reputation: 3.5
+    is_test: true
+    availability: online
+  - name: SVM Kestrel
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.4107
+    longitude: -83.9653
+    service_radius_km: 190
+    home_type: garage
+    bid_pct: 0.74
+    initial_reputation: 3.4
+    is_test: true
+    availability: online
+  - name: SVM Merlin
+    model: Anzu Robotics Raptor RTK
+    model_key: AnzuRaptor
+    equipment_type: photogrammetry
+    sensors: &id013
+    - photogrammetry
+    - thermal_camera
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.3916
+    longitude: -83.9554
+    service_radius_km: 190
+    home_type: garage
+    bid_pct: 0.75
+    initial_reputation: 3.1
+    is_test: true
+    availability: online
+  - name: SVM Harrier
+    model: Anzu Robotics Raptor RTK
+    model_key: AnzuRaptor
+    equipment_type: photogrammetry
+    sensors: *id013
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.397
+    longitude: -83.9127
+    service_radius_km: 190
+    home_type: garage
+    bid_pct: 0.81
+    initial_reputation: 3.1
+    is_test: true
+    availability: online
+  - name: SVM Eagle
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors:
+    - photogrammetry
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.4218
+    longitude: -83.9245
+    service_radius_km: 190
+    home_type: garage
+    bid_pct: 0.77
+    initial_reputation: 3.1
+    is_test: true
+    availability: online
+- name: Lakeshore Inspections
+  company: Lakeshore Inspections Co.
+  location: Grand Haven, MI
+  latitude: 43.0631
+  longitude: -86.2284
+  service_radius_km: 130
+  stripe_connect_id: acct_test_lakeshore_inspections
+  robots:
+  - name: Shore 1
+    model: Skydio X10
+    model_key: SkydioX10
+    equipment_type: photogrammetry
+    sensors: *id004
+    mcp_endpoint: https://yakrover-skydio.fly.dev/mcp
+    latitude: 43.0676
+    longitude: -86.2689
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.83
+    initial_reputation: 4.0
+    is_test: true
+    availability: online
+  - name: Shore 2
+    model: Skydio X10
+    model_key: SkydioX10
+    equipment_type: photogrammetry
+    sensors: *id004
+    mcp_endpoint: https://yakrover-skydio.fly.dev/mcp
+    latitude: 43.1054
+    longitude: -86.19
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.77
+    initial_reputation: 3.8
+    is_test: true
+    availability: online
+  - name: Shore 3
+    model: DJI Matrice 350 RTK + Zenmuse H30T
+    model_key: M350+H30T
+    equipment_type: thermal_camera
+    sensors: *id006
+    mcp_endpoint: https://yakrover-aerial-thermal.fly.dev/mcp
+    latitude: 43.0618
+    longitude: -86.2542
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.76
+    initial_reputation: 3.4
+    is_test: true
+    availability: online
+  - name: Shore 4
+    model: DJI Matrice 4 Enterprise
+    model_key: M4E
+    equipment_type: photogrammetry
+    sensors: *id005
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.0522
+    longitude: -86.1847
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.83
+    initial_reputation: 3.3
+    is_test: true
+    availability: online
+  - name: Shore 5
+    model: DJI Matrice 4 Enterprise
+    model_key: M4E
+    equipment_type: photogrammetry
+    sensors: *id005
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.059
+    longitude: -86.2353
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.85
+    initial_reputation: 4.0
+    is_test: true
+    availability: online
+  - name: Shore 6
+    model: DJI Matrice 4 Enterprise
+    model_key: M4E
+    equipment_type: photogrammetry
+    sensors:
+    - photogrammetry
+    - thermal_camera
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.0699
+    longitude: -86.2454
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.84
+    initial_reputation: 3.4
+    is_test: true
+    availability: online
+- name: I-94 Corridor Services
+  company: I-94 Corridor Services LLC
+  location: Kalamazoo, MI
+  latitude: 42.2917
+  longitude: -85.5872
+  service_radius_km: 160
+  stripe_connect_id: acct_test_i-94_corridor_services
+  robots:
+  - name: I94-L1
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.2967
+    longitude: -85.5675
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.79
+    initial_reputation: 3.4
+    is_test: true
+    availability: online
+  - name: I94-L2
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.3339
+    longitude: -85.5801
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.83
+    initial_reputation: 3.7
+    is_test: true
+    availability: online
+  - name: I94-P3
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.2518
+    longitude: -85.5796
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.85
+    initial_reputation: 3.7
+    is_test: true
+    availability: online
+  - name: I94-H4
+    model: Inspired Flight IF1200
+    model_key: IF1200
+    equipment_type: aerial_lidar
+    sensors: &id014
+    - aerial_lidar
+    - gpr
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.2608
+    longitude: -85.5457
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.78
+    initial_reputation: 3.3
+    is_test: true
+    availability: online
+  - name: I94-H5
+    model: Inspired Flight IF1200
+    model_key: IF1200
+    equipment_type: aerial_lidar
+    sensors: *id014
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 42.3003
+    longitude: -85.5714
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.77
+    initial_reputation: 3.4
+    is_test: true
+    availability: online
+  - name: I94-G6
+    model: Boston Dynamics Spot + GSSI StructureScan
+    model_key: Spot+GPR
+    equipment_type: gpr
+    sensors: *id010
+    mcp_endpoint: https://yakrover-ground-gpr.fly.dev/mcp
+    latitude: 42.3269
+    longitude: -85.6101
+    service_radius_km: 160
+    home_type: docked
+    bid_pct: 0.82
+    initial_reputation: 3.8
+    is_test: true
+    availability: online
+- name: DroneScan MI
+  company: DroneScan Michigan Inc.
+  location: Port Huron, MI
+  latitude: 42.9709
+  longitude: -82.4249
+  service_radius_km: 130
+  stripe_connect_id: acct_test_dronescan_mi
+  robots:
+  - name: DS-001
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.9636
+    longitude: -82.4174
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.74
+    initial_reputation: 2.2
+    is_test: true
+    availability: online
+  - name: DS-002
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.9443
+    longitude: -82.4054
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.67
+    initial_reputation: 1.8
+    is_test: true
+    availability: online
+  - name: DS-003
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.9864
+    longitude: -82.4429
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.72
+    initial_reputation: 1.9
+    is_test: true
+    availability: online
+  - name: DS-004
+    model: Autel EVO II Pro RTK
+    model_key: AutelEVO
+    equipment_type: photogrammetry
+    sensors: *id012
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.9324
+    longitude: -82.4287
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.75
+    initial_reputation: 2.8
+    is_test: true
+    availability: online
+  - name: DS-005
+    model: Autel EVO II Pro RTK
+    model_key: AutelEVO
+    equipment_type: photogrammetry
+    sensors:
+    - photogrammetry
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.9642
+    longitude: -82.414
+    service_radius_km: 130
+    home_type: garage
+    bid_pct: 0.64
+    initial_reputation: 2.4
+    is_test: true
+    availability: online
+- name: Blue Water Survey
+  company: Blue Water Survey LLC
+  location: Midland, MI
+  latitude: 43.6156
+  longitude: -84.2472
+  service_radius_km: 160
+  stripe_connect_id: acct_test_blue_water_survey
+  robots:
+  - name: BW-Blue
+    model: DJI Matrice 4 Enterprise
+    model_key: M4E
+    equipment_type: photogrammetry
+    sensors: *id005
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.5772
+    longitude: -84.273
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.79
+    initial_reputation: 2.3
+    is_test: true
+    availability: online
+  - name: BW-Teal
+    model: DJI Matrice 4 Enterprise
+    model_key: M4E
+    equipment_type: photogrammetry
+    sensors: *id005
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.6499
+    longitude: -84.213
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.72
+    initial_reputation: 2.4
+    is_test: true
+    availability: online
+  - name: BW-Aqua
+    model: DJI Matrice 350 RTK + Zenmuse H30T
+    model_key: M350+H30T
+    equipment_type: thermal_camera
+    sensors: *id006
+    mcp_endpoint: https://yakrover-aerial-thermal.fly.dev/mcp
+    latitude: 43.6457
+    longitude: -84.2289
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.8
+    initial_reputation: 2.7
+    is_test: true
+    availability: online
+  - name: BW-Navy
+    model: Anzu Robotics Raptor RTK
+    model_key: AnzuRaptor
+    equipment_type: photogrammetry
+    sensors: *id013
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.6295
+    longitude: -84.2915
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.73
+    initial_reputation: 3.0
+    is_test: true
+    availability: online
+  - name: BW-Cyan
+    model: Inspired Flight IF1200
+    model_key: IF1200
+    equipment_type: aerial_lidar
+    sensors: *id014
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 43.6303
+    longitude: -84.2077
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.71
+    initial_reputation: 2.2
+    is_test: true
+    availability: online
+  - name: BW-Wave-6
+    model: DJI Matrice 4 Enterprise
+    model_key: M4E
+    equipment_type: photogrammetry
+    sensors:
+    - photogrammetry
+    - thermal_camera
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.6366
+    longitude: -84.2569
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.79
+    initial_reputation: 2.6
+    is_test: true
+    availability: online
+- name: Jake Mitchell Aerial
+  company: Jake Mitchell Aerial Services
+  location: Traverse City, MI
+  latitude: 44.7631
+  longitude: -85.6206
+  service_radius_km: 100
+  stripe_connect_id: acct_test_jake_mitchell_aerial
+  robots:
+  - name: Jake's Matrice
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 44.7277
+    longitude: -85.6158
+    service_radius_km: 100
+    home_type: garage
+    bid_pct: 0.65
+    initial_reputation: 0.8
+    is_test: true
+    availability: online
+  - name: Jake's Mavic
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 44.7827
+    longitude: -85.6473
+    service_radius_km: 100
+    home_type: garage
+    bid_pct: 0.61
+    initial_reputation: 1.1
+    is_test: true
+    availability: online
+- name: Northern Drones LLC
+  company: Northern Drones LLC
+  location: Gaylord, MI
+  latitude: 45.0275
+  longitude: -84.6747
+  service_radius_km: 65
+  stripe_connect_id: acct_test_northern_drones_llc
+  robots:
+  - name: North-1
+    model: Autel EVO II Pro RTK
+    model_key: AutelEVO
+    equipment_type: photogrammetry
+    sensors: *id012
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 45.0265
+    longitude: -84.6382
+    service_radius_km: 65
+    home_type: garage
+    bid_pct: 0.56
+    initial_reputation: 0.7
+    is_test: true
+    availability: online
+  - name: North-2
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 45.0206
+    longitude: -84.6948
+    service_radius_km: 65
+    home_type: garage
+    bid_pct: 0.63
+    initial_reputation: 0.0
+    is_test: true
+    availability: online
+- name: River Rouge Robotics
+  company: River Rouge Robotics LLC
+  location: Dearborn, MI
+  latitude: 42.3223
+  longitude: -83.1763
+  service_radius_km: 80
+  stripe_connect_id: acct_test_river_rouge_robotics
+  robots:
+  - name: RRR-SPOT-01
+    model: Boston Dynamics Spot + Leica BLK ARC
+    model_key: Spot+BLK
+    equipment_type: terrestrial_lidar
+    sensors: *id009
+    mcp_endpoint: https://yakrover-ground-lidar.fly.dev/mcp
+    latitude: 42.3347
+    longitude: -83.1977
+    service_radius_km: 80
+    home_type: docked
+    bid_pct: 0.74
+    initial_reputation: 2.5
+    is_test: true
+    availability: online
+  - name: RRR-AIR-02
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.3158
+    longitude: -83.2205
+    service_radius_km: 80
+    home_type: garage
+    bid_pct: 0.77
+    initial_reputation: 1.9
+    is_test: true
+    availability: online
+  - name: RRR-SKY-03
+    model: Skydio X10
+    model_key: SkydioX10
+    equipment_type: photogrammetry
+    sensors: *id004
+    mcp_endpoint: https://yakrover-skydio.fly.dev/mcp
+    latitude: 42.3587
+    longitude: -83.1722
+    service_radius_km: 80
+    home_type: garage
+    bid_pct: 0.74
+    initial_reputation: 2.6
+    is_test: true
+    availability: online
+  - name: RRR-AIR-04
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors:
+    - photogrammetry
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.3388
+    longitude: -83.1782
+    service_radius_km: 80
+    home_type: garage
+    bid_pct: 0.72
+    initial_reputation: 2.1
+    is_test: true
+    availability: online
+- name: Mackinac Survey Co.
+  company: Mackinac Survey Company
+  location: St. Ignace, MI
+  latitude: 45.8711
+  longitude: -84.7267
+  service_radius_km: 160
+  stripe_connect_id: acct_test_mackinac_survey_co.
+  robots:
+  - name: MAC-01
+    model: Wingtra WingtraOne Gen 2
+    model_key: WingtraOne
+    equipment_type: aerial_lidar
+    sensors: *id007
+    mcp_endpoint: https://yakrover-fixedwing.fly.dev/mcp
+    latitude: 45.8394
+    longitude: -84.7603
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.81
+    initial_reputation: 2.6
+    is_test: true
+    availability: online
+  - name: MAC-02
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 45.8978
+    longitude: -84.6942
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.74
+    initial_reputation: 3.4
+    is_test: true
+    availability: online
+  - name: MAC-03
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 45.8485
+    longitude: -84.7625
+    service_radius_km: 160
+    home_type: garage
+    bid_pct: 0.81
+    initial_reputation: 3.2
+    is_test: true
+    availability: online
+- name: UP Drone Works
+  company: UP Drone Works
+  location: Marquette, MI
+  latitude: 46.5436
+  longitude: -87.3954
+  service_radius_km: 240
+  stripe_connect_id: acct_test_up_drone_works
+  robots:
+  - name: Yooper-1
+    model: Freefly Astro
+    model_key: Astro
+    equipment_type: aerial_lidar
+    sensors: *id008
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 46.5352
+    longitude: -87.3845
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.71
+    initial_reputation: 1.2
+    is_test: true
+    availability: online
+  - name: Yooper-2
+    model: Autel EVO II Pro RTK
+    model_key: AutelEVO
+    equipment_type: photogrammetry
+    sensors: *id012
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 46.5764
+    longitude: -87.3525
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.71
+    initial_reputation: 1.8
+    is_test: true
+    availability: online
+  - name: Yooper-3
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 46.5008
+    longitude: -87.3741
+    service_radius_km: 240
+    home_type: garage
+    bid_pct: 0.71
+    initial_reputation: 1.3
+    is_test: true
+    availability: online
+- name: Campus Robotics
+  company: Campus Robotics Inc.
+  location: East Lansing, MI
+  latitude: 42.737
+  longitude: -84.4839
+  service_radius_km: 50
+  stripe_connect_id: acct_test_campus_robotics
+  robots:
+  - name: Sparty-1
+    model: Skydio X10
+    model_key: SkydioX10
+    equipment_type: photogrammetry
+    sensors: *id004
+    mcp_endpoint: https://yakrover-skydio.fly.dev/mcp
+    latitude: 42.7642
+    longitude: -84.4511
+    service_radius_km: 50
+    home_type: garage
+    bid_pct: 0.58
+    initial_reputation: 0.8
+    is_test: true
+    availability: online
+  - name: Sparty-2
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.7629
+    longitude: -84.5192
+    service_radius_km: 50
+    home_type: garage
+    bid_pct: 0.66
+    initial_reputation: 0.9
+    is_test: true
+    availability: online
+  - name: Sparty-3
+    model: Boston Dynamics Spot + GSSI StructureScan
+    model_key: Spot+GPR
+    equipment_type: gpr
+    sensors: *id010
+    mcp_endpoint: https://yakrover-ground-gpr.fly.dev/mcp
+    latitude: 42.712
+    longitude: -84.4554
+    service_radius_km: 50
+    home_type: docked
+    bid_pct: 0.59
+    initial_reputation: 0.5
+    is_test: true
+    availability: online
+- name: Flint Aerial Solutions
+  company: Flint Aerial Solutions LLC
+  location: Flint, MI
+  latitude: 43.0125
+  longitude: -83.6875
+  service_radius_km: 100
+  stripe_connect_id: acct_test_flint_aerial_solutions
+  robots:
+  - name: FAS-L1
+    model: DJI Matrice 350 RTK + Zenmuse L2
+    model_key: M350+L2
+    equipment_type: aerial_lidar
+    sensors: *id001
+    mcp_endpoint: https://yakrover-aerial-lidar.fly.dev/mcp
+    latitude: 43.0391
+    longitude: -83.712
+    service_radius_km: 100
+    home_type: garage
+    bid_pct: 0.67
+    initial_reputation: 1.5
+    is_test: true
+    availability: online
+  - name: FAS-T2
+    model: DJI Matrice 350 RTK + Zenmuse H30T
+    model_key: M350+H30T
+    equipment_type: thermal_camera
+    sensors: *id006
+    mcp_endpoint: https://yakrover-aerial-thermal.fly.dev/mcp
+    latitude: 42.997
+    longitude: -83.6547
+    service_radius_km: 100
+    home_type: garage
+    bid_pct: 0.68
+    initial_reputation: 2.5
+    is_test: true
+    availability: online
+  - name: FAS-A3
+    model: Autel EVO II Pro RTK
+    model_key: AutelEVO
+    equipment_type: photogrammetry
+    sensors: *id012
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 43.0252
+    longitude: -83.6965
+    service_radius_km: 100
+    home_type: garage
+    bid_pct: 0.71
+    initial_reputation: 2.5
+    is_test: true
+    availability: online
+  - name: FAS-M4
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors:
+    - photogrammetry
+    - rtk_gps
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.983
+    longitude: -83.7053
+    service_radius_km: 100
+    home_type: garage
+    bid_pct: 0.76
+    initial_reputation: 2.0
+    is_test: true
+    availability: online
+- name: Drone Sisters
+  company: Drone Sisters LLC
+  location: Livonia, MI
+  latitude: 42.3684
+  longitude: -83.3527
+  service_radius_km: 80
+  stripe_connect_id: acct_test_drone_sisters
+  robots:
+  - name: Sister-Ada
+    model: DJI Matrice 350 RTK + Zenmuse P1
+    model_key: M350+P1
+    equipment_type: photogrammetry
+    sensors: *id002
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.408
+    longitude: -83.3874
+    service_radius_km: 80
+    home_type: garage
+    bid_pct: 0.62
+    initial_reputation: 1.8
+    is_test: true
+    availability: online
+  - name: Sister-Grace
+    model: Autel EVO II Pro RTK
+    model_key: AutelEVO
+    equipment_type: photogrammetry
+    sensors: *id012
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.4101
+    longitude: -83.3738
+    service_radius_km: 80
+    home_type: garage
+    bid_pct: 0.65
+    initial_reputation: 0.9
+    is_test: true
+    availability: online
+  - name: Sister-Rosalind
+    model: DJI Mavic 3 Enterprise RTK
+    model_key: Mavic3E
+    equipment_type: photogrammetry
+    sensors: *id003
+    mcp_endpoint: https://yakrover-aerial-photo.fly.dev/mcp
+    latitude: 42.389
+    longitude: -83.3695
+    service_radius_km: 80
+    home_type: garage
+    bid_pct: 0.66
+    initial_reputation: 1.4
+    is_test: true
+    availability: online
+  - name: Sister-Hedy
+    model: Skydio X10
+    model_key: SkydioX10
+    equipment_type: photogrammetry
+    sensors:
+    - photogrammetry
+    - thermal_camera
+    mcp_endpoint: https://yakrover-skydio.fly.dev/mcp
+    latitude: 42.3661
+    longitude: -83.3287
+    service_radius_km: 80
+    home_type: garage
+    bid_pct: 0.67
+    initial_reputation: 1.8
+    is_test: true
+    availability: online

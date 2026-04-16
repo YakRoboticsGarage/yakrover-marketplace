@@ -1,0 +1,10 @@
+{
+  "name": "yakrover",
+  "description": "Yak Robotics — robot task auction marketplace. Discover robots, post survey tasks, run auctions, and settle payments via MCP.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Yak Robotics Garage"
+  },
+  "homepage": "https://yakrobot.bid",
+  "repository": "https://github.com/YakRoboticsGarage/yakrover-marketplace"
+}
