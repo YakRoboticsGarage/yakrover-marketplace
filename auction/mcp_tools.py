@@ -106,6 +106,55 @@ def _error_response(exc: Exception) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Module-level constants (moved from register_auction_tools scope)
+# ---------------------------------------------------------------------------
+
+# Default equipment models by sensor type (used by onboard_operator_guided)
+COMMON_MODELS = {
+    "aerial_lidar": "DJI Matrice 350 RTK + Zenmuse L2",
+    "photogrammetry": "DJI Matrice 350 RTK + Zenmuse P1",
+    "thermal_camera": "DJI Matrice 350 RTK + Zenmuse H30T",
+    "terrestrial_lidar": "Boston Dynamics Spot + Leica BLK ARC",
+    "gpr": "Boston Dynamics Spot + GSSI StructureScan Mini XT",
+    "rtk_gps": "Trimble R12i",
+    "robotic_total_station": "Leica TS16",
+}
+
+# Sensor type → default task category (used by register_robot_onchain)
+SENSOR_TO_CATEGORY = {
+    "aerial_lidar": "env_sensing",
+    "terrestrial_lidar": "env_sensing",
+    "photogrammetry": "visual_inspection",
+    "gpr": "env_sensing",
+    "rtk_gps": "env_sensing",
+    "thermal_camera": "visual_inspection",
+    "robotic_total_station": "env_sensing",
+}
+
+# Blockchain chain configs (used by register_robot_onchain and eas_attest)
+CHAIN_CONFIG = {
+    "base-mainnet": {"chain_id": 8453, "rpc": "https://mainnet.base.org"},
+    "base-sepolia": {"chain_id": 84532, "rpc": "https://sepolia.base.org"},
+    "eth-mainnet": {"chain_id": 1, "rpc": "https://ethereum-rpc.publicnode.com"},
+    "eth-sepolia": {"chain_id": 11155111, "rpc": "https://ethereum-sepolia-rpc.publicnode.com"},
+}
+DEFAULT_CHAIN = "base-mainnet"
+
+# EAS (Ethereum Attestation Service) contract ABI — attest function only
+EAS_ABI = [
+    {
+        "inputs": [{"components": [{"name": "schema", "type": "bytes32"},
+            {"components": [{"name": "recipient", "type": "address"}, {"name": "expirationTime", "type": "uint64"},
+             {"name": "revocable", "type": "bool"}, {"name": "refUID", "type": "bytes32"},
+             {"name": "data", "type": "bytes"}, {"name": "value", "type": "uint256"}],
+            "name": "data", "type": "tuple"}], "name": "request", "type": "tuple"}],
+        "name": "attest", "outputs": [{"name": "", "type": "bytes32"}],
+        "stateMutability": "payable", "type": "function",
+    },
+]
+
+
+# ---------------------------------------------------------------------------
 # Tool registration
 # ---------------------------------------------------------------------------
 
@@ -1076,16 +1125,6 @@ def register_auction_tools(
     # Guided operator onboarding (conversational wrapper)
     # ------------------------------------------------------------------
 
-    COMMON_MODELS = {
-        "aerial_lidar": "DJI Matrice 350 RTK + Zenmuse L2",
-        "photogrammetry": "DJI Matrice 350 RTK + Zenmuse P1",
-        "thermal_camera": "DJI Matrice 350 RTK + Zenmuse H30T",
-        "terrestrial_lidar": "Boston Dynamics Spot + Leica BLK ARC",
-        "gpr": "Boston Dynamics Spot + GSSI StructureScan Mini XT",
-        "rtk_gps": "Trimble R12i",
-        "robotic_total_station": "Leica TS16",
-    }
-
     @mcp.tool()
     async def auction_onboard_operator_guided(
         company_name: str,
@@ -1290,24 +1329,6 @@ def register_auction_tools(
     # ------------------------------------------------------------------
     # On-chain robot registration (v1.4)
     # ------------------------------------------------------------------
-
-    SENSOR_TO_CATEGORY = {
-        "aerial_lidar": "env_sensing",
-        "terrestrial_lidar": "env_sensing",
-        "photogrammetry": "visual_inspection",
-        "gpr": "env_sensing",
-        "rtk_gps": "env_sensing",
-        "thermal_camera": "visual_inspection",
-        "robotic_total_station": "env_sensing",
-    }
-
-    CHAIN_CONFIG = {
-        "base-mainnet": {"chain_id": 8453, "rpc": "https://mainnet.base.org"},
-        "base-sepolia": {"chain_id": 84532, "rpc": "https://sepolia.base.org"},
-        "eth-mainnet": {"chain_id": 1, "rpc": "https://ethereum-rpc.publicnode.com"},
-        "eth-sepolia": {"chain_id": 11155111, "rpc": "https://ethereum-sepolia-rpc.publicnode.com"},
-    }
-    DEFAULT_CHAIN = "base-mainnet"
 
     @mcp.tool()
     async def auction_register_robot_onchain(
@@ -1655,17 +1676,6 @@ def register_auction_tools(
     # ------------------------------------------------------------------
 
     from auction.contracts import EAS_ADDRESS, EAS_SCHEMA_UID
-    EAS_ABI = [
-        {
-            "inputs": [{"components": [{"name": "schema", "type": "bytes32"},
-                {"components": [{"name": "recipient", "type": "address"}, {"name": "expirationTime", "type": "uint64"},
-                 {"name": "revocable", "type": "bool"}, {"name": "refUID", "type": "bytes32"},
-                 {"name": "data", "type": "bytes"}, {"name": "value", "type": "uint256"}],
-                "name": "data", "type": "tuple"}], "name": "request", "type": "tuple"}],
-            "name": "attest", "outputs": [{"name": "", "type": "bytes32"}],
-            "stateMutability": "payable", "type": "function",
-        },
-    ]
 
     @mcp.tool()
     async def auction_eas_attest(
