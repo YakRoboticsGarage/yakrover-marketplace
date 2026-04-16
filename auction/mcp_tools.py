@@ -557,18 +557,17 @@ def register_auction_tools(
         robot_id: str,
         country: str = "FI",
     ) -> dict:
-        """Onboard a robot operator by creating a Stripe Connect Express account.
+        """DEPRECATED — use auction_onboard_operator_guided instead.
 
-        Returns the Connect account details (or a stub dict in stub mode).
+        This tool only creates a Stripe Connect account. The guided version
+        handles the full registration flow: profile, equipment, credentials,
+        on-chain identity, and payment setup in one step.
         """
-        if stripe_service is None:
-            return {"error": "Stripe service not configured", "error_type": "ConfigError"}
-        try:
-            result = stripe_service.create_connect_account(email=email, country=country)
-            result["robot_id"] = robot_id
-            return _decimals_to_strings(result)
-        except Exception as exc:
-            return _error_response(exc)
+        return _error_response_structured(
+            "DEPRECATED",
+            "auction_onboard_operator is deprecated. Use auction_onboard_operator_guided instead.",
+            "auction_onboard_operator_guided handles profile, equipment, credentials, and payment in one flow.",
+        )
 
     @mcp.tool()
     async def auction_get_operator_status(robot_id: str) -> dict:
@@ -1038,38 +1037,17 @@ def register_auction_tools(
         coverage_states: list | None = None,
         max_range_miles: int = 200,
     ) -> dict:
-        """Register a new operator on the marketplace.
+        """DEPRECATED — use auction_onboard_operator_guided instead.
 
-        Creates an operator profile. After registration, the operator must:
-        1. Add equipment via auction_add_equipment
-        2. Upload compliance docs via auction_upload_compliance_doc
-        3. Set insurance via auction_register_operator (update)
-        4. Call auction_activate_operator to start bidding
-
-        Args:
-            company_name: Legal business name
-            contact_name: Primary contact person
-            contact_email: Contact email
-            location: Base location (e.g., "Detroit, MI")
-            coverage_states: States where operator can work (e.g., ["MI", "OH"])
-            max_range_miles: Maximum travel distance from base
+        This tool only creates a basic profile. The guided version handles
+        profile, equipment, on-chain registration, and payment setup in one
+        step with smart defaults.
         """
-        try:
-            if not hasattr(engine, "_operator_registry"):
-                from auction.operator_registry import OperatorRegistry
-
-                engine._operator_registry = OperatorRegistry()
-            profile = engine._operator_registry.register(
-                company_name,
-                contact_name,
-                contact_email,
-                location,
-                coverage_states or [],
-                max_range_miles,
-            )
-            return engine._operator_registry.get_profile(profile.operator_id)
-        except Exception as exc:
-            return _error_response(exc)
+        return _error_response_structured(
+            "DEPRECATED",
+            "auction_register_operator is deprecated. Use auction_onboard_operator_guided instead.",
+            "auction_onboard_operator_guided handles the full registration flow with smart defaults.",
+        )
 
     @mcp.tool()
     async def auction_add_equipment(
