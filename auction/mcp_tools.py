@@ -2043,3 +2043,101 @@ def register_auction_tools(
             }
         except Exception as exc:
             return _error_response(exc)
+
+    # ------------------------------------------------------------------
+    # Phase 7: Demand signals — market intelligence from unmet requests
+    # ------------------------------------------------------------------
+
+    @mcp.tool()
+    async def auction_log_unmet_demand(
+        task_category: str,
+        reason: str,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        location_description: str = "",
+        budget_min: float | None = None,
+        budget_max: float | None = None,
+        request_id: str = "",
+    ) -> dict:
+        """Log an unmet demand signal when no robot can fulfill a request.
+
+        Call this when a task search or auction finds no matching operators.
+        The signal is stored and visible to operators checking demand in their area.
+        Turns failed auctions into market intelligence.
+
+        Args:
+            task_category: The task category that had no match (e.g. "subsurface_scan").
+            reason: Why no match was found (e.g. "No robots with GPR within 200km").
+            latitude: Task location latitude (optional).
+            longitude: Task location longitude (optional).
+            location_description: Human-readable location (e.g. "Rural Montana, US-93 corridor").
+            budget_min: Minimum budget the buyer indicated (optional).
+            budget_max: Maximum budget the buyer indicated (optional).
+            request_id: Associated task request_id if one was posted (optional).
+        """
+        if engine.store is None:
+            return {"error": True, "error_code": "NO_STORE", "message": "SQLite persistence not configured. Set AUCTION_DB_PATH."}
+
+        row_id = engine.store.save_unmet_demand(
+            task_category,
+            request_id=request_id or None,
+            latitude=latitude,
+            longitude=longitude,
+            location_description=location_description,
+            capability_requirements={},
+            budget_min=budget_min,
+            budget_max=budget_max,
+            reason=reason,
+        )
+        return {
+            "logged": True,
+            "demand_id": row_id,
+            "task_category": task_category,
+            "reason": reason,
+            "note": "Demand signal recorded. Operators checking nearby demand will see this request.",
+        }
+
+    @mcp.tool()
+    async def auction_get_demand_signals(
+        task_category: str = "",
+        latitude: float | None = None,
+        longitude: float | None = None,
+        radius_km: float = 200,
+        limit: int = 20,
+    ) -> dict:
+        """Query unmet demand signals — what buyers are looking for but can't find.
+
+        Operators use this to identify market gaps in their area and decide
+        where to invest in equipment or expand coverage. Returns recent
+        unmet requests sorted by newest first.
+
+        Args:
+            task_category: Filter by category (e.g. "subsurface_scan"). Empty for all.
+            latitude: Center point for geographic filter (optional).
+            longitude: Center point for geographic filter (optional).
+            radius_km: Search radius in kilometers (default 200).
+            limit: Maximum results to return (default 20).
+        """
+        if engine.store is None:
+            return {"error": True, "error_code": "NO_STORE", "message": "SQLite persistence not configured. Set AUCTION_DB_PATH."}
+
+        signals = engine.store.get_demand_signals(
+            task_category=task_category or None,
+            latitude=latitude,
+            longitude=longitude,
+            radius_km=radius_km,
+            limit=limit,
+        )
+
+        # Aggregate summary
+        categories = {}
+        for s in signals:
+            cat = s["task_category"]
+            categories[cat] = categories.get(cat, 0) + 1
+
+        return {
+            "total": len(signals),
+            "category_summary": categories,
+            "signals": signals,
+            "note": "Showing unmet demand signals. Each represents a buyer request that found no matching operator.",
+        }

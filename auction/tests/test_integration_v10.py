@@ -544,6 +544,9 @@ class TestMCPToolsRegistered:
                 "auction_submit_feedback",
                 # EAS attestation
                 "auction_eas_attest",
+                # Demand signals
+                "auction_log_unmet_demand",
+                "auction_get_demand_signals",
             ]
         )
 
