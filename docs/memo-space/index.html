@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Yak Robotics — Space Economy Brief</title>
-<meta name="description" content="Runtime procurement for satellites, space stations, and the Moon Base. Auction engine, on-chain robot identity, and settlement for space operations.">
+<title>Yak Robotics Garage — Space Economy Brief</title>
+<meta name="description" content="Full-stack infrastructure management protocol — yakrover-identity, yakrover-security, yakrover-discovery (teleoperation and autonomous agents), yakrover-payments, and yakrover-marketplace — for any managed infrastructure in space operations.">
 
 <!-- Open Graph -->
-<meta property="og:title" content="Yak Robotics — Space Economy Brief">
-<meta property="og:description" content="Runtime procurement for satellites, space stations, and the Moon Base. Auction engine, on-chain robot identity, and settlement for space operations.">
+<meta property="og:title" content="Yak Robotics Garage — Space Economy Brief">
+<meta property="og:description" content="Full-stack infrastructure management protocol — yakrover-identity, yakrover-security, yakrover-discovery (teleoperation and autonomous agents), yakrover-payments, and yakrover-marketplace — for any managed infrastructure in space operations.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://yakrobot.bid/memo-space/">
 <meta property="og:image" content="https://yakrobot.bid/memo/og-image.png">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Yak Robotics — Space Economy Brief">
-<meta name="twitter:description" content="Runtime procurement for satellites, space stations, and the Moon Base. Auction engine, on-chain robot identity, and settlement for space operations.">
+<meta name="twitter:title" content="Yak Robotics Garage — Space Economy Brief">
+<meta name="twitter:description" content="Full-stack infrastructure management protocol — yakrover-identity, yakrover-security, yakrover-discovery (teleoperation and autonomous agents), yakrover-payments, and yakrover-marketplace — for any managed infrastructure in space operations.">
 <meta name="twitter:image" content="https://yakrobot.bid/memo/og-image.png">
 
 <link rel="icon" href="yak-icon.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 button, input, textarea, select { font: inherit; }
@@ -35,8 +35,8 @@ a:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visib
 @page { size: letter; margin: 0.6in 0.7in; }
 
 body {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 15px;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 16px;
   line-height: 1.7;
   color: #E5E7EB;
   background: #0B0F1A;
@@ -60,11 +60,12 @@ body {
   margin-top: 28px;
   margin-bottom: 28px;
 }
-.header h1 { font-size: 26px; font-weight: 700; color: #F9FAFB; }
-.header .meta { font-size: 13px; color: #9CA3AF; }
+.header h1 { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 700; color: #F9FAFB; }
+.header .meta { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #9CA3AF; }
 
 /* section titles */
 h2 {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 15px;
   font-weight: 700;
   color: #E8792B;
@@ -76,7 +77,7 @@ h2 {
   padding-bottom: 5px;
 }
 
-h3 { font-size: 16px; font-weight: 600; color: #F9FAFB; margin-top: 24px; margin-bottom: 6px; }
+h3 { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; color: #F9FAFB; margin-top: 24px; margin-bottom: 6px; }
 
 p { margin-bottom: 10px; color: #A0AEC0; }
 li { color: #A0AEC0; }
@@ -93,8 +94,8 @@ em { color: #D1D5DB; }
 
 /* table */
 table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; }
-th { text-align: left; font-size: 13px; font-weight: 600; color: #60A5FA; padding: 8px 10px; border-bottom: 1px solid #3B5275; }
-td { font-size: 14px; padding: 7px 10px; border-bottom: 1px solid #1F2937; color: #A0AEC0; }
+th { font-family: 'JetBrains Mono', monospace; text-align: left; font-size: 13px; font-weight: 600; color: #60A5FA; padding: 8px 10px; border-bottom: 1px solid #3B5275; }
+td { font-size: 15px; padding: 7px 10px; border-bottom: 1px solid #1F2937; color: #A0AEC0; }
 
 /* stack */
 .stack-row {
@@ -102,8 +103,8 @@ td { font-size: 14px; padding: 7px 10px; border-bottom: 1px solid #1F2937; color
   padding: 5px 0; border-left: 2px solid #E8792B; padding-left: 12px;
   margin-bottom: 3px;
 }
-.stack-label { font-size: 12px; font-weight: 600; color: #E8792B; text-transform: uppercase; width: 100px; flex-shrink: 0; }
-.stack-value { font-size: 14px; color: #E5E7EB; }
+.stack-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: #E8792B; text-transform: uppercase; width: 100px; flex-shrink: 0; }
+.stack-value { font-size: 15px; color: #E5E7EB; }
 
 /* flow */
 .flow { display: flex; align-items: center; gap: 0; margin: 8px 0; }
@@ -147,6 +148,7 @@ a:hover { color: #93C5FD; text-decoration: underline; }
 
 /* footer bar */
 .footer-bar {
+  font-family: 'JetBrains Mono', monospace;
   margin-top: 24px;
   padding: 24px 0 48px 0;
   border-top: 1px solid #1F2937;
@@ -187,7 +189,7 @@ a:hover { color: #93C5FD; text-decoration: underline; }
 .fab-btn {
   display: flex; align-items: center; gap: 5px;
   background: #1F2937; border: 1px solid #374151; border-radius: 6px;
-  padding: 6px 10px; cursor: pointer; font-family: inherit;
+  padding: 6px 10px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
   font-size: 12px; color: #D1D5DB; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
   transition: all 0.15s;
 }
@@ -240,7 +242,7 @@ a:hover { color: #93C5FD; text-decoration: underline; }
 /* Get in Touch button */
 .cta-touch {
   display: inline-block; background: #E8792B; color: #fff; border: none;
-  border-radius: 5px; padding: 10px 22px; font: inherit; font-size: 13px;
+  border-radius: 5px; padding: 10px 22px; font-family: 'JetBrains Mono', monospace; font-size: 13px;
   font-weight: 600; cursor: pointer; text-decoration: none; letter-spacing: 0.02em;
   transition: background 0.15s;
 }
@@ -287,6 +289,7 @@ a:hover { color: #93C5FD; text-decoration: underline; }
 
 /* Header text links */
 .header-link {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 12px; color: #9CA3AF; text-decoration: none;
   cursor: pointer; transition: all 0.15s;
 }
@@ -312,6 +315,7 @@ body.panel-open { margin-right: 320px; }
 }
 .breadcrumb-list li { flex-shrink: 0; }
 .breadcrumb-list a {
+  font-family: 'JetBrains Mono', monospace;
   display: block; padding: 10px 14px;
   font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
   text-transform: uppercase; color: #9CA3AF;
@@ -388,6 +392,7 @@ body > *:not(script) { position: relative; z-index: 1; }
   .container { padding: 0 20px; }
   .cols { flex-direction: column; gap: 12px; }
   .g3 { flex-direction: column; gap: 12px; }
+  .team-grid { grid-template-columns: 1fr !important; }
   .header { flex-direction: column; gap: 4px; }
   .footer-bar { flex-direction: column; gap: 4px; padding-bottom: 24px; }
   .stack-row { flex-direction: column; gap: 2px; }
@@ -462,12 +467,12 @@ body > *:not(script) { position: relative; z-index: 1; }
 
 <div class="container">
   <div class="header">
-    <h1>Yak Robotics</h1>
+    <h1>Yak Robotics Garage</h1>
     <div class="meta">Space Economy Brief &mdash; April 2026</div>
   </div>
 
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-    <p style="font-size:18px;color:#F9FAFB;font-weight:500;margin:0">Runtime procurement for satellites, space stations, and the Moon Base</p>
+    <p style="font-size:18px;color:#F9FAFB;font-weight:500;margin:0">Full-stack infrastructure management &mdash; identity, discovery, teleoperation, autonomous agents, and marketplace &mdash; for satellites, space stations, rovers, ISRU units, and the Moon Base</p>
     <div class="cta-touch-desktop" style="display:flex;gap:16px;align-items:center">
       <a href="javascript:void(0)" onclick="copyAsMarkdown()" id="copyMdBtn" class="header-link">Copy as Markdown</a>
       <a href="javascript:void(0)" onclick="showContact()" class="header-link">Get in Touch</a>
@@ -482,7 +487,7 @@ body > *:not(script) { position: relative; z-index: 1; }
       <li style="margin-bottom:10px"><strong>The space economy has become a multi-operator market.</strong> Over 10,000 active satellites orbit Earth as of 2026, up from ~2,500 in 2020. Commercial space stations (Axiom, Orbital Reef, Starlab, Vast Haven) are scheduled to replace the ISS by 2031. On March 24, 2026, NASA announced a permanent Moon Base at the lunar South Pole. Each tier has reached a scale where no single vendor can serve the market alone.</li>
       <li style="margin-bottom:10px"><strong>Each tier converges on the same structural problem.</strong> Task posting, executor matching, credential verification, delivery verification, and settlement &mdash; these are unsolved across Earth observation tasking, in-space servicing (ISAM), commercial station logistics, and lunar surface operations. Bilateral contracts still dominate where a protocol layer should exist. The unit economics of space have matured faster than the procurement infrastructure that serves them.</li>
       <li style="margin-bottom:10px"><strong>Physics forces autonomous dispatch at every tier.</strong> LEO satellites have 10-minute passes &mdash; no time for human coordination across ground stations. Earth&ndash;Moon round-trip latency is 2.6 seconds &mdash; no real-time teleoperation. At both ends, the execution decision must happen at the edge. Autonomous dispatch is not a nice-to-have; it is a property of the physical environment.</li>
-      <li style="margin-bottom:10px"><strong>Yak Robotics already built the protocol.</strong> Seven-module architecture: coordination, task registry, executor registry (ERC-8004 on Base), credential verification, verification engine, settlement (USDC + Stripe + ACH), robot federation. Operational today for construction surveying. Domain-agnostic by design. Extension to orbital and lunar operations is a schema exercise, not an architecture redesign.</li>
+      <li style="margin-bottom:10px"><strong>Yak Robotics Garage already built the YakRover Protocol.</strong> A full-stack infrastructure management protocol with five modules: yakrover-identity (hardware-anchored authentication), yakrover-security (multi-party authorization), yakrover-discovery (on-chain registry, MCP teleoperation, and autonomous agent dispatch), yakrover-payments (autonomous settlement), and yakrover-marketplace (task procurement). yakrover-marketplace is the top layer &mdash; after a task is awarded, the rest of the stack keeps running: yakrover-discovery handles teleoperation and autonomous agent dispatch for the infrastructure endpoint, yakrover-identity handles authentication, and yakrover-payments settles autonomously. Applicable to any managed infrastructure endpoint &mdash; rovers, satellites, ISRU units, relay nodes, space station subsystems. Operational today for construction surveying.</li>
       <li style="margin-bottom:10px"><strong>Relay constellations are the MCP gateway for the whole stack.</strong> Starlink in LEO, LunaNet in cislunar space, and upcoming commercial relay networks are the substrate for robot discovery and control at distance. On-chain robot identity (ERC-8004) is relay-agnostic &mdash; identity resolves on-chain, endpoint reachability is a separate routing concern. This separation is the correct architecture for multi-relay, intermittent-coverage environments, whether LEO or cislunar.</li>
       <li style="margin-bottom:0"><strong>Seeking partners across the stack:</strong> commercial satellite operators (Earth observation, SAR, RF intelligence), space station builders, ISAM providers (servicing, refueling, debris removal), lunar robotics teams, cislunar communications operators, and research teams working on autonomous operations in space.</li>
     </ul>
@@ -523,7 +528,7 @@ body > *:not(script) { position: relative; z-index: 1; }
 <section class="topic-section bg-orbit">
   <div class="container">
     <h2 id="earth-orbit">Earth Orbit</h2>
-    <p>The commercial space economy around Earth is the near-term proving ground for the same procurement layer the Moon Base will need. Three market segments map cleanly onto Yak&rsquo;s protocol: satellite task provisioning, in-space servicing, and commercial station logistics.</p>
+    <p>The commercial space economy around Earth is the near-term proving ground for the same full-stack infrastructure management protocol the Moon Base will need. Three market segments map cleanly onto Yak&rsquo;s protocol: satellite task provisioning, in-space servicing, and commercial station logistics.</p>
 
     <h3>1. Satellite Constellations as a Task Market</h3>
     <p>Earth observation (EO), synthetic aperture radar (SAR), radio frequency (RF) signal intelligence, and weather constellations already operate on a task-based commercial model. Customers submit AOI + date + sensor class + quality tier; providers fulfill against capacity. The missing layer is cross-provider aggregation: today a customer wanting guaranteed SAR imagery by a deadline must contract individually with Capella, ICEYE, or Umbra. Yak&rsquo;s auction engine is the natural clearing mechanism.</p>
@@ -540,7 +545,7 @@ body > *:not(script) { position: relative; z-index: 1; }
     </div>
 
     <h3>2. In-Space Servicing, Assembly, and Manufacturing (ISAM)</h3>
-    <p>ISAM is a service market in formation. The technical capability exists; the procurement layer does not. A satellite operator needing inspection, refueling, or relocation today negotiates bilateral contracts &mdash; often taking months. The operator pool is growing (Northrop, Astroscale, Starfish, Orbit Fab, D-Orbit, ClearSpace, Kall Morris), and the task types are stabilizing.</p>
+    <p>ISAM is a service market in formation. The technical capability exists; the shared infrastructure management and coordination layer does not. A satellite operator needing inspection, refueling, or relocation today negotiates bilateral contracts &mdash; often taking months. The operator pool is growing (Northrop, Astroscale, Starfish, Orbit Fab, D-Orbit, ClearSpace, Kall Morris), and the task types are stabilizing.</p>
 
     <table>
       <tr><th>Task Category</th><th>Executors</th><th>Typical Value</th><th>Yak Capability</th></tr>
@@ -551,7 +556,7 @@ body > *:not(script) { position: relative; z-index: 1; }
       <tr><td>In-space assembly</td><td>Maxar SPIDER, Redwire, Voyager</td><td>$20M&ndash;$100M per structure</td><td>Multi-robot coordination (analogous to aerial + ground survey on construction)</td></tr>
       <tr><td>On-orbit manufacturing</td><td>Varda Space, Redwire</td><td>Task-priced by mass returned</td><td>Throughput-based task schema; delivery verification via physical return</td></tr>
     </table>
-    <p class="footnote">Values are industry estimates; no liquid market yet exists. The protocol is the missing clearing layer.</p>
+    <p class="footnote">Values are industry estimates; no liquid market yet exists. The YakRover Protocol is the missing infrastructure management layer — yakrover-marketplace clears the task; yakrover-discovery, yakrover-identity, and yakrover-payments handle teleoperation, autonomous agent dispatch, authentication, and settlement for the duration of the operation.</p>
 
     <h3>3. Commercial Space Stations (Post-ISS)</h3>
     <p>By 2031, four or more crewed commercial stations will operate in LEO: Axiom Station (already attaching modules to ISS today, free-flying in late 2020s), Orbital Reef (Blue Origin + Sierra Space), Starlab (Voyager, Airbus, Palantir, Mitsubishi), and Vast Haven (Vast Space). Each will host research payloads, manufacturing experiments, and visiting crew from multiple national agencies and private customers. Coordination across stations is an explicit unsolved problem.</p>
@@ -563,7 +568,7 @@ body > *:not(script) { position: relative; z-index: 1; }
       </div>
       <div>
         <p><strong>Free-flyer coordination.</strong> Starlab and Orbital Reef will host external free-flyers &mdash; autonomous modules performing tasks in formation with the station. Dispatch, docking windows, and payload handoff are procurement-heavy. Each free-flyer is a robot endpoint in the Yak federation; the station is a logistics node with its own docking and power interfaces.</p>
-        <p><strong>Crew time as a task.</strong> Commercial station crew time is billable at ~$40K&ndash;$80K per astronaut-hour depending on station and task. Structured task procurement of crew labor &mdash; maintenance, experiment tending, EVAs &mdash; is in early design across operators. Yak&rsquo;s protocol supports human executors alongside robotic ones (the same delivery verification applies to human-produced work product).</p>
+        <p><strong>Crew time as a task.</strong> Commercial station crew time is billable at ~$40K&ndash;$80K per astronaut-hour depending on station and task. Structured task procurement of crew labor &mdash; maintenance, experiment tending, EVAs &mdash; is in early design across operators. The YakRover Protocol supports human executors alongside robotic ones (the same delivery verification applies to human-produced work product).</p>
       </div>
     </div>
   </div>
@@ -572,9 +577,9 @@ body > *:not(script) { position: relative; z-index: 1; }
 <section class="topic-section bg-moon">
   <div class="container">
     <h2 id="moon-base">Moon Base</h2>
-    <p>Yak&rsquo;s seven-module protocol was designed to be domain-agnostic. The same auction engine that runs construction survey and satellite tasking maps directly to NASA&rsquo;s Phase 1 functional gaps for lunar surface operations. Below is the gap-to-capability mapping from NASA&rsquo;s Architecture Definition Document.</p>
+    <p>The YakRover protocol&rsquo;s seven-module architecture was designed to be domain-agnostic. The same auction engine that runs construction survey and satellite tasking maps directly to NASA&rsquo;s Phase 1 functional gaps for lunar surface operations. Below is the gap-to-capability mapping from NASA&rsquo;s Architecture Definition Document.</p>
 
-    <h3>NASA Functional Gaps &rarr; Yak Protocol Capabilities</h3>
+    <h3>NASA Functional Gaps &rarr; YakRover Protocol Capabilities</h3>
     <table>
       <tr><th>NASA Gap ID</th><th>Functional Requirement</th><th>Yak Capability</th></tr>
       <tr><td>FN-A-104L</td><td>Robotic manipulation of payloads, logistics, and equipment on the lunar surface</td><td>Task execution schema + payload delivery verification</td></tr>
@@ -592,15 +597,34 @@ body > *:not(script) { position: relative; z-index: 1; }
       <tr><td>FN-M-501L</td><td>Reposition limited cargo (100s kg) in the South Pole region</td><td>Cargo repositioning task with GPS-equivalent coordinate delivery proof</td></tr>
       <tr><td>FN-U-103L</td><td>Resource identification and utilization payload operations</td><td>ISRU survey task schema; spectrometer / drill payload capability matching</td></tr>
     </table>
-    <p class="footnote">Gap IDs from NASA Moon Base Architecture Definition Document, Phase 01 Functional Gaps. Full gap list available at nasa.gov/architecture.</p>
+    <p class="footnote">Functional IDs from NASA Architecture Definition Document (ADD) Rev C, December 2025, lunar objective decomposition. Full gap list at <a href="https://www.nasa.gov/architecture" target="_blank">nasa.gov/architecture</a>.</p>
+
+    <h3>Architecture Technology Gaps &mdash; Top Priority (ESDMD Rev C, Dec 2025)</h3>
+    <p>NASA&rsquo;s Architecture Definition Document also catalogs 50+ technology gaps by priority bin. The gaps below are in Bin 1&ndash;3 and map directly to YakRover Protocol capabilities. Bin 1 is highest priority.</p>
+    <table>
+      <tr><th>Gap ID</th><th>Title</th><th>Priority Bin</th><th>Yak Relevance</th></tr>
+      <tr><td>ESDMD #0801</td><td>Lunar Dust-Tolerant Systems and Dust Mitigation</td><td style="color:#E8792B;font-weight:700">1 (Rating: 1)</td><td>All robot task schemas must carry dust-tolerance capability tags; scoring penalizes executors without verified dust-mitigation ratings</td></tr>
+      <tr><td>ESDMD #0103</td><td>High-bandwidth, High-reliability Surface-to-Surface Communications</td><td style="color:#E8792B;font-weight:700">1 (Rating: 5)</td><td>Multi-robot task coordination layer depends on surface mesh comms; MCP tool discovery requires reliable surface-to-surface links</td></tr>
+      <tr><td>ESDMD #0101</td><td>Positioning, Navigation, and Timing for Lunar Surface Extreme Environments</td><td style="color:#60A5FA;font-weight:700">3 (Rating: 20)</td><td>PNT service as a registered task category (FN-C-201L); delivery verification for surface tasks requires coordinate attestation</td></tr>
+      <tr><td>ESDMD #0805</td><td>Autonomous Surface Mobility and Navigation</td><td style="color:#60A5FA;font-weight:700">2 (Rating: 8)</td><td>Core executor capability; auction scoring ranks rovers by autonomous navigation range and PSR access without ground-in-the-loop</td></tr>
+      <tr><td>ESDMD #0806</td><td>Payload Offloading, Handling, and Manipulation for Surface Assets</td><td style="color:#60A5FA;font-weight:700">2 (Rating: 7)</td><td>Primary surface task category (FN-M-401L / FN-M-501L); 100s&ndash;1,000s kg robotic cargo handling is the Phase 1 wedge task</td></tr>
+      <tr><td>ESDMD #0504</td><td>Autonomous Lunar Surface Structure Assembly and Construction</td><td>3 (Rating: 30)</td><td>Phase 2+ task category; multi-robot coordination pattern identical to construction survey (aerial reconnaissance + ground manipulation)</td></tr>
+      <tr><td>ESDMD #1005</td><td>Safe Human-Robot Interaction and Teaming</td><td>3 (Rating: 28)</td><td>Protocol supports human executors alongside robotic ones; crew time and robot task dispatch share the same schema and delivery verification</td></tr>
+      <tr><td>ESDMD #0505</td><td>In-Situ Additive/Subtractive Construction on the Lunar Surface</td><td>3 (Rating: 29)</td><td>Phase 2+ task type; regolith processing task schema with spectrometry and excavation telemetry as delivery proof</td></tr>
+    </table>
+    <p class="footnote">Gap IDs and priority bins from NASA ESDMD Architecture-Driven Technology Gaps, Rev C (December 2025). Priority Rating is a composite score; lower = higher urgency. Bin 1 gaps must be closed for Foundational Exploration (Phase 1).</p>
 
     <h3>Protocol Stack for Lunar Operations</h3>
-    <div class="stack-row"><span class="stack-label">Protocol</span><span class="stack-value">Task posting, executor matching, delivery verification, and settlement for autonomous lunar robot operations</span></div>
+    <div class="stack-row"><span class="stack-label">Protocol</span><span class="stack-value">Full-stack infrastructure management &mdash; yakrover-identity, yakrover-security, yakrover-discovery (teleoperation and autonomous agents), yakrover-payments, and yakrover-marketplace &mdash; for any managed infrastructure endpoint on the lunar surface</span></div>
     <div class="stack-row"><span class="stack-label">Task class</span><span class="stack-value">Surface reconnaissance, cargo manipulation, regolith survey, resource mapping, mobility deployment</span></div>
     <div class="stack-row"><span class="stack-label">Domain</span><span class="stack-value">Lunar South Pole region &mdash; environmentally specified tolerances, PSR vs. sunlit area classification, NASA interoperability standards</span></div>
     <div class="stack-row"><span class="stack-label">Offering</span><span class="stack-value">Sensor data delivery, terrain models, cargo delivery confirmation, ISRU resource maps &mdash; schema-driven, verifiable</span></div>
     <div class="stack-row"><span class="stack-label">Scoring factors</span><span class="stack-value">PSR clearance rating, thermal tolerance range, comms relay availability window, proximity to task site, payload mass capacity</span></div>
     <div class="stack-row"><span class="stack-label">Settlement</span><span class="stack-value">USDC on Base mainnet for stateless settlement; Stripe ACH for fiat; escrow-locked on verified delivery proof</span></div>
+
+    <div class="callout-dark" style="margin-top:16px">
+      <strong>yakrover-marketplace is one module.</strong> After a task is awarded, the protocol keeps running: <strong>yakrover-discovery</strong> handles MCP-based teleoperation, autonomous agent dispatch, and remote control of the infrastructure endpoint; <strong>yakrover-identity</strong> and <strong>yakrover-security</strong> handle continuous authentication; <strong>yakrover-payments</strong> settles autonomously on verified delivery. Any managed infrastructure endpoint &mdash; rover, ISRU unit, relay node, sensor array, station subsystem &mdash; participates in the same protocol stack throughout the operation, not just at the procurement step.
+    </div>
 
     <h3>Open Challenges</h3>
     <div class="cols">
@@ -609,7 +633,7 @@ body > *:not(script) { position: relative; z-index: 1; }
         <p><strong>Relay windows:</strong> Orbital relay constellations provide intermittent coverage. Task scheduling must account for communications blackout periods and queue commands for relay window resumption. The auction engine&rsquo;s state machine must be extended to handle relay-gated execution states.</p>
       </div>
       <div>
-        <p><strong>Verification in permanent shadow:</strong> Delivery proof for tasks in PSRs requires sensors that operate at &minus;173&deg;C and cannot rely on visible-light imagery. LIDAR, radar, and spectrometry replace photogrammetry. The verification schema must be sensor-class-aware, not camera-first.</p>
+        <p><strong>Verification in permanent shadow:</strong> Delivery proof for tasks in PSRs requires sensors that operate at &minus;173&deg;C and cannot rely on visible-light imagery. LIDAR, radar, and spectrometry replace photogrammetry. NASA Data Gap DN-011L (plasma environment) and DN-012L (radiation) add sensor interference constraints that don&rsquo;t exist in sunlit areas. The verification schema must be sensor-class-aware, not camera-first; ESDMD #0804 (robotic systems in extreme cold) is an explicit architecture gap in this domain.</p>
         <p><strong>Liability and planetary protection:</strong> When an autonomously dispatched lunar rover damages adjacent infrastructure or contaminates a sample site, liability allocation is unsettled. NASA&rsquo;s planetary protection requirements (forward and backward contamination) add a regulatory layer not present in terrestrial operations. Proportional liability frameworks for deep-space autonomous systems do not yet exist.</p>
       </div>
     </div>
@@ -683,21 +707,21 @@ body > *:not(script) { position: relative; z-index: 1; }
       <tr><td>Experiment hosting</td><td>LEO station</td><td>Rack class + power + downlink + duration</td><td>Axiom, Orbital Reef, Starlab, Vast Haven</td><td>$50K&ndash;$2M per experiment-month</td></tr>
       <tr><td>Orbit transfer / last-mile</td><td>LEO&rarr;GEO/MEO</td><td>Source orbit + destination + payload mass</td><td>D-Orbit ION, Momentus, Impulse Space, Exolaunch</td><td>$1M&ndash;$10M per transfer</td></tr>
     </table>
-    <p class="footnote">Earth-orbit tasks are the near-term productive vertical: existing executors, existing customers, existing standards. The protocol&rsquo;s role is aggregation and cross-provider clearing, not market creation.</p>
+    <p class="footnote">Earth-orbit tasks are the near-term productive vertical: existing executors, existing customers, existing standards. The YakRover Protocol&rsquo;s role spans the full operations lifecycle &mdash; identity, discovery, teleoperation, autonomous agents, and settlement &mdash; with yakrover-marketplace as the procurement layer on top.</p>
 
     <h3>Lunar Surface Task Types</h3>
     <table>
       <tr><th>Task Type</th><th>Phase</th><th>Specification Source</th><th>Sensor Class</th><th>Typical Scope</th></tr>
-      <tr><td>Terrain reconnaissance survey</td><td>Phase 1</td><td>NASA DN-001 to DN-014 data gaps; surface topology requirements</td><td>LIDAR, stereo imaging, radar altimetry</td><td>1&ndash;50 km&sup2; South Pole region mapping</td></tr>
-      <tr><td>Resource identification (volatiles)</td><td>Phase 1&ndash;2</td><td>ISRU architecture; NASA gap FN-U-103L</td><td>Near-infrared spectrometer, neutron detector, ground-penetrating radar</td><td>PSR ice mapping, regolith composition profiling</td></tr>
-      <tr><td>Cargo unload &amp; repositioning</td><td>Phase 1+</td><td>CLPS payload manifest; gap FN-M-401L / FN-M-501L</td><td>Force-torque sensor, visual odometry, gripper telemetry</td><td>100s kg, CLPS lander vicinity</td></tr>
-      <tr><td>Landing site characterization</td><td>Phase 1</td><td>NASA precision landing requirements; DN-001 to DN-005</td><td>Plume-surface interaction (PSI) sensors, high-res imager</td><td>100m radius around candidate landing zones</td></tr>
-      <tr><td>Regolith manipulation &amp; site prep</td><td>Phase 2</td><td>NASA gap FN-M-302L; habitat foundation specs</td><td>Excavator telemetry, compaction sensor, LIDAR surface comparison</td><td>Habitat pad, power cable trenching, berms</td></tr>
-      <tr><td>Power cable deployment</td><td>Phase 2</td><td>NASA gap FN-P-301L; electrical connection standards</td><td>Spool telemetry, mating verification sensor (dust-tolerant)</td><td>Habitat to power source distance; 100m&ndash;2 km runs</td></tr>
-      <tr><td>Ongoing surface monitoring</td><td>Phase 3</td><td>Continuous operations; shadow &amp; dust accumulation tracking</td><td>Multispectral imager, LIDAR diff, dust accumulation sensor</td><td>Base perimeter, solar array health, settlement detection</td></tr>
-      <tr><td>Sample collection &amp; staging</td><td>Phase 2+</td><td>NASA gap DN-017L; planetary protection requirements</td><td>Core drill, gripper, sealed container verification</td><td>Science ROI targets; PSR and sunlit area both required</td></tr>
+      <tr><td>Terrain reconnaissance survey</td><td>Phase 1</td><td>NASA Data Gaps DN-001L (sub-meter imaging), DN-002L (high-res DEM &lt;1m), DN-003L (thermal mapping); ESDMD #0805</td><td>LIDAR, stereo imaging, radar altimetry</td><td>1&ndash;50 km&sup2; South Pole region mapping</td></tr>
+      <tr><td>Resource identification (volatiles)</td><td>Phase 1&ndash;2</td><td>ISRU architecture; NASA Data Gaps DN-006L (orbital water ice distribution), DN-007L (in situ water ice vertical profile), DN-013L (volatile composition); FN-U-103L</td><td>Near-infrared spectrometer, neutron detector, ground-penetrating radar</td><td>PSR ice mapping, regolith composition profiling</td></tr>
+      <tr><td>Cargo unload &amp; repositioning</td><td>Phase 1+</td><td>CLPS payload manifest; FN-M-401L / FN-M-501L; ESDMD #0806 (payload offloading, Bin 2, Rating 7)</td><td>Force-torque sensor, visual odometry, gripper telemetry</td><td>100s kg, CLPS lander vicinity</td></tr>
+      <tr><td>Landing site characterization</td><td>Phase 1</td><td>NASA Data Gaps DN-004L (orbital monitoring during missions), DN-005L (surface optical images), DN-017L (plume-surface particle velocity), DN-018L (landing site alteration); ESDMD #1101</td><td>Plume-surface interaction (PSI) sensors, high-res imager</td><td>100m radius around candidate landing zones</td></tr>
+      <tr><td>Regolith manipulation &amp; site prep</td><td>Phase 2</td><td>NASA Data Gaps DN-008L (geotechnical properties), DN-014L (rock size distribution); FN-M-302L; ESDMD #0605, #0504</td><td>Excavator telemetry, compaction sensor, LIDAR surface comparison</td><td>Habitat pad, power cable trenching, berms</td></tr>
+      <tr><td>Power cable deployment</td><td>Phase 2</td><td>FN-P-301L; electrical connection standards; ESDMD #0801 (dust-tolerant mating interfaces, Bin 1, Rating 1)</td><td>Spool telemetry, mating verification sensor (dust-tolerant)</td><td>Habitat to power source distance; 100m&ndash;2 km runs</td></tr>
+      <tr><td>Ongoing surface monitoring</td><td>Phase 3</td><td>NASA Data Gaps DN-003L (thermal mapping, &lt;30m resolution), DN-019L (dust particle flux and charge); ESDMD #1002 (autonomous monitoring)</td><td>Multispectral imager, LIDAR diff, dust accumulation sensor</td><td>Base perimeter, solar array health, settlement detection</td></tr>
+      <tr><td>Sample collection &amp; staging</td><td>Phase 2+</td><td>NASA Data Gaps DN-010L (regolith elemental and mineral composition), DN-016L (seismic monitoring); planetary protection requirements; ESDMD #0501</td><td>Core drill, gripper, sealed container verification</td><td>Science ROI targets; PSR and sunlit area both required</td></tr>
     </table>
-    <p class="footnote">Each task vertical adds a specification database and verification schema. The auction engine, robot identity system, and settlement layer are unchanged across task types. Sensor classes drive executor scoring, not the protocol itself.</p>
+    <p class="footnote">Task specifications derived from NASA Architecture-Driven Data Gaps (Rev C, Dec 2025) and ESDMD Architecture-Driven Technology Gaps (Rev C, Dec 2025). DN-xxx IDs are lunar data gaps; ESDMD #xxxx are architecture technology gap IDs. Each task vertical adds a specification database and verification schema; the auction engine, robot identity system, and settlement layer are unchanged across task types.</p>
 
     <h3>Payment Scale Reference (Lunar)</h3>
     <table>
@@ -717,7 +741,7 @@ body > *:not(script) { position: relative; z-index: 1; }
     <h2 id="roadmap">Roadmap</h2>
 
     <h3>Protocol Status and Phase Alignment</h3>
-    <p style="font-size:12px;color:#6B7280;margin-bottom:8px">The yakrover protocol is domain-agnostic. Construction is the first vertical — operational. Space is the second vertical — in design.</p>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:8px">The YakRover Protocol is domain-agnostic. Construction is the first vertical — operational. Space is the second vertical — in design.</p>
 
     <p style="font-size:11px;font-weight:700;color:#4bdabf;text-transform:uppercase;letter-spacing:0.08em;margin:12px 0 4px">Vertical 1 &mdash; Construction (Earth Robots)</p>
     <div class="stack-row"><span class="stack-label" style="color:#4bdabf">Alpha</span><span class="stack-value">Construction protocol layer operational &mdash; auction engine, on-chain robot identity (ERC-8004 on Base), settlement (card, ACH, USDC stablecoin), 100-robot test fleet, MCP interface, 37 tools. v1.4.1 alpha.</span></div>
@@ -754,11 +778,11 @@ body > *:not(script) { position: relative; z-index: 1; }
     <h3>Earth-Orbit Partners</h3>
     <div class="cols">
       <div>
-        <p><strong>Earth observation, SAR, and RF operators:</strong> Planet Labs, Maxar, BlackSky, Capella, ICEYE, Umbra, HawkEye 360, Spire, Synspective, and any operator exposing a tasking API. The protocol wraps your existing API as an MCP tool server and aggregates demand from cross-provider auctions. Revenue model: incremental capacity sold through the protocol, with zero changes to your internal scheduling.</p>
-        <p><strong>ISAM providers:</strong> Northrop Grumman (MEV, OSAM), Astroscale, Starfish Space, Orbit Fab, D-Orbit, ClearSpace, Kall Morris, Voyager, Redwire, Maxar SPIDER, Varda. Integration point: capability registration (RPO, refueling interface, debris capture, assembly), task schema for in-space servicing, milestone-based smart-contract settlement. Priority gap: the industry has capability without a clearing market &mdash; this is what the protocol solves.</p>
+        <p><strong>Earth observation, SAR, and RF operators:</strong> Planet Labs, Maxar, BlackSky, Capella, ICEYE, Umbra, HawkEye 360, Spire, Synspective, and any operator exposing a tasking API. The YakRover Protocol wraps your existing API as an MCP tool server and aggregates demand from cross-provider auctions. Revenue model: incremental capacity sold through the YakRover Protocol, with zero changes to your internal scheduling.</p>
+        <p><strong>ISAM providers:</strong> Northrop Grumman (MEV, OSAM), Astroscale, Starfish Space, Orbit Fab, D-Orbit, ClearSpace, Kall Morris, Voyager, Redwire, Maxar SPIDER, Varda. Integration point: capability registration (RPO, refueling interface, debris capture, assembly), task schema for in-space servicing, milestone-based smart-contract settlement. Priority gap: the industry has capability without a clearing market &mdash; this is what the YakRover Protocol solves.</p>
       </div>
       <div>
-        <p><strong>Commercial space station operators:</strong> Axiom Space, Orbital Reef (Blue Origin + Sierra Space), Starlab (Voyager + Airbus + Palantir + Mitsubishi), Vast Space. Integration point: cargo manifest auction schema, experiment hosting task category, crew-time task primitives. The protocol lets a customer post a station-agnostic experiment spec and receive bids across all operators &mdash; and lets stations fill capacity without per-customer sales cycles.</p>
+        <p><strong>Commercial space station operators:</strong> Axiom Space, Orbital Reef (Blue Origin + Sierra Space), Starlab (Voyager + Airbus + Palantir + Mitsubishi), Vast Space. Integration point: cargo manifest auction schema, experiment hosting task category, crew-time task primitives. The YakRover Protocol lets a customer post a station-agnostic experiment spec and receive bids across all operators &mdash; and lets stations fill capacity without per-customer sales cycles.</p>
         <p><strong>Launch providers and orbital transfer:</strong> SpaceX, Rocket Lab, Sierra Space Dream Chaser, Stoke Space, Blue Origin New Glenn, Impulse Space, Momentus, D-Orbit ION, Exolaunch. Manifest-level auctions across competing launch vehicles; last-mile orbital transfer as a dispatch layer. Station manifests and constellation deployments both benefit from cross-provider bidding.</p>
       </div>
     </div>
@@ -766,7 +790,7 @@ body > *:not(script) { position: relative; z-index: 1; }
     <h3>Lunar Surface Partners</h3>
     <div class="cols">
       <div>
-        <p><strong>Lunar robotics developers:</strong> Teams building lunar rovers, hoppers, drill systems, and cargo manipulation robots. The protocol integrates any robot that exposes bid, execute, and pricing tools via MCP. Phase 1 targets: small utility rovers (&lt;50 kg), hoppers for PSR access, wheeled platforms capable of 10 km/hr in sunlit areas. Yak provides the procurement layer; you provide the robot.</p>
+        <p><strong>Lunar robotics developers:</strong> Teams building lunar rovers, hoppers, drill systems, and cargo manipulation robots. The YakRover Protocol integrates any robot that exposes bid, execute, and pricing tools via MCP. Phase 1 targets: small utility rovers (&lt;50 kg), hoppers for PSR access, wheeled platforms capable of 10 km/hr in sunlit areas. Yak provides the full infrastructure management stack — discovery, teleoperation, autonomous agents, payments, and marketplace; you provide the robot.</p>
         <p><strong>CLPS landers:</strong> Astrobotic, Intuitive Machines, Firefly Aerospace, Draper, Lockheed Martin, and other CLPS program participants who deliver payloads to the lunar surface. Post-delivery, Yak provides the dispatch layer for surface assets: cargo robots that unload and reposition CLPS-delivered equipment are the first surface task category.</p>
       </div>
       <div>
@@ -781,25 +805,35 @@ body > *:not(script) { position: relative; z-index: 1; }
         <p><strong>Researchers:</strong> Autonomous rendezvous &amp; proximity operations. Multi-agent coordination across orbital regimes. Autonomous navigation in PSRs (no GPS, near-zero visibility, extreme slopes). Regolith mechanics for manipulation and site prep. Privacy-preserving task matching for government/ITAR-restricted contracts. Liability frameworks for autonomous systems in space. Economics of deep-space and orbital robot labor markets.</p>
       </div>
       <div>
-        <p><strong>Strategic investors and programs:</strong> NASA SBIR/STTR, DARPA (Blackjack, Orbital Prime), ESA Business Applications and &Delta;-Lab, Space Force SpaceWERX, Lunar Exploration Accelerator Program (LEAP), UK Space Agency, JAXA J-SPARC. Commercial investors focused on the cislunar and orbital economies: in-space manufacturing, servicing infrastructure, resource extraction, and logistics. The protocol layer is pre-competitive infrastructure &mdash; the equivalent of what TCP/IP is to the internet economy.</p>
+        <p><strong>Strategic investors and programs:</strong> NASA SBIR/STTR, DARPA (Blackjack, Orbital Prime), ESA Business Applications and &Delta;-Lab, Space Force SpaceWERX, Lunar Exploration Accelerator Program (LEAP), UK Space Agency, JAXA J-SPARC. Commercial investors focused on the cislunar and orbital economies: in-space manufacturing, servicing infrastructure, resource extraction, and logistics. The YakRover Protocol is pre-competitive infrastructure &mdash; the equivalent of what TCP/IP is to the internet economy.</p>
       </div>
     </div>
 
-    <div class="g3" style="margin-top:20px">
+    <div class="team-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:20px">
       <div class="callout" style="background:#111827;border-left-color:#E8792B;padding:14px 16px">
         <p style="margin-bottom:2px"><strong><a href="https://rafael.fyi/" target="_blank">Rafa</a></strong></p>
         <p style="margin-bottom:8px;font-size:12px;color:#9CA3AF">Protocol design, governance &mdash; Berlin</p>
         <p style="margin-bottom:0">Director of the <a href="https://zknation.io" target="_blank">ZKsync Association</a>. Architected ZKsync&rsquo;s governance smart-contract system, live since 2024. Core researcher in the <a href="https://summerofprotocols.com/wp-content/uploads/2024/06/17-e43-FERNANDEZ.pdf" target="_blank">Summer of Protocols</a>. Publishes on protocol design through <a href="https://npcmemo.substack.com/p/liquid-services-and-runtime-procurement" target="_blank">NPC Memo</a>.</p>
       </div>
       <div class="callout" style="background:#111827;border-left-color:#E8792B;padding:14px 16px">
-        <p style="margin-bottom:2px"><strong><a href="https://anurajrp.io/" target="_blank">Anuraj</a></strong></p>
+        <p style="margin-bottom:2px"><strong><a href="https://anurajrp.io/about/" target="_blank">Anuraj</a></strong></p>
         <p style="margin-bottom:8px;font-size:12px;color:#9CA3AF">Robotics, embedded systems &mdash; Finland</p>
-        <p style="margin-bottom:0">15 years across embedded systems, PCB design, and robotics. MSc Space Technology and Robotics (Erasmus Mundus SpaceMaster). Built the <a href="https://anurajrp.io/robotics/tumbller-cryptobot-architecture/" target="_blank">Tumbller Cryptobot</a> and voice-controlled robot fleet via MCP. Demonstrated at Devcon 7 Bangkok.</p>
+        <p style="margin-bottom:0">M.Sc.(Tech.) Space Robotics and Automation. 15 years building hardware and software across Automotive, Space, Consumer Electronics, and Telecom. Built the <a href="https://anurajrp.io/robotics/tumbller-cryptobot-architecture/" target="_blank">Tumbller Cryptobot</a> and voice-controlled robot fleet via MCP. Demonstrated at Devcon 7 Bangkok.</p>
       </div>
       <div class="callout" style="background:#111827;border-left-color:#E8792B;padding:14px 16px">
         <p style="margin-bottom:2px"><strong><a href="https://venkateshrao.com/" target="_blank">Venkat</a></strong></p>
         <p style="margin-bottom:8px;font-size:12px;color:#9CA3AF">Aerospace, strategy, command systems &mdash; Seattle</p>
         <p style="margin-bottom:0">PhD Aerospace Engineering, University of Michigan. Postdoctoral research in command and control systems at Cornell. Former senior researcher at Xerox. US Patent 8,086,501. Director of <a href="https://summerofprotocols.com/" target="_blank">Summer of Protocols</a>. Founder of Ribbonfarm. Author of <em>Tempo</em>.</p>
+      </div>
+      <div class="callout" style="background:#111827;border-left-color:#E8792B;padding:14px 16px">
+        <p style="margin-bottom:2px"><strong><a href="https://djinna.com/" target="_blank">Jenna</a></strong></p>
+        <p style="margin-bottom:8px;font-size:12px;color:#9CA3AF">Digital operations, book production &mdash; New England</p>
+        <p style="margin-bottom:0">MPA, MIIS; BA, Dartmouth. Studied in Mainz, taught in Kunming. Past exec. director, Vermont Book Professionals Association. Indie digital operations three decades and counting. Web strategy, editing, book design and composition. Yak Collective stalwart.</p>
+      </div>
+      <div class="callout" style="background:#111827;border-left-color:#E8792B;padding:14px 16px">
+        <p style="margin-bottom:2px"><strong style="color:#60A5FA">Maier</strong></p>
+        <p style="margin-bottom:8px;font-size:12px;color:#9CA3AF">Technology, intellectual property strategy &mdash; Israel</p>
+        <p style="margin-bottom:0">30+ years patent attorney in hi-tech &amp; medical devices. Inventor in over 40 patents across medical devices &amp; software. Dabbles in robotics. Interested in space since 3rd grade.</p>
       </div>
     </div>
 
@@ -811,11 +845,11 @@ body > *:not(script) { position: relative; z-index: 1; }
 
 <div class="container">
   <div class="footer-bar">
-    <span>Yak Robotics &mdash; Space Economy Brief</span>
+    <span>Yak Robotics Garage &mdash; Space Economy Brief</span>
     <span>Demo: <a href="https://yakrobot.bid/demo">yakrobot.bid/demo</a> &mdash; NASA: <a href="https://www.nasa.gov/architecture" target="_blank">nasa.gov/architecture</a> &mdash; Code: <a href="https://github.com/YakRoboticsGarage/yakrover-marketplace" target="_blank">github.com/YakRoboticsGarage/yakrover-marketplace</a></span>
   </div>
   <div style="text-align:center;padding-bottom:24px;font-size:11px;color:#6B7280">
-    Background images courtesy of <a href="https://images.nasa.gov" target="_blank" style="color:#6B7280;text-decoration:underline">NASA Image and Video Library</a>. Images are in the public domain.
+    Background images courtesy of <a href="https://images.nasa.gov" target="_blank" style="color:#6B7280;text-decoration:underline">NASA Image and Video Library</a>.
   </div>
 </div>
 
@@ -922,8 +956,8 @@ body > *:not(script) { position: relative; z-index: 1; }
 
 // --- Copy as Markdown ---
 window.getPageAsMarkdown = function() {
-  var md = '# Yak Robotics — Space Economy Brief\n\n';
-  md += '*Runtime procurement for satellites, space stations, and the Moon Base*\n\n';
+  var md = '# Yak Robotics Garage — Space Economy Brief\n\n';
+  md += '*Full-stack infrastructure management — identity, discovery, teleoperation, autonomous agents, and marketplace — for satellites, space stations, rovers, ISRU units, and the Moon Base*\n\n';
   var sections = document.querySelectorAll('h2[id], h3');
   sections.forEach(function(heading) {
     var level = heading.tagName === 'H2' ? '## ' : '### ';
