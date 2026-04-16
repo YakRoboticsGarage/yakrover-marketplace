@@ -647,10 +647,10 @@ proposals:
   evidence: Tasks lost on every flyctl deploy — confirmed 2026-04-06
   effort: medium
   priority: high
-  status: proposed
+  status: implemented
   proposed_date: '2026-04-07'
-  decision_date: null
-  decision_notes: null
+  decision_date: '2026-04-16'
+  decision_notes: Added 1GB Fly volume (yakrover_data) in ams, mounted at /data. Set AUCTION_DB_PATH=/data/auction.db in fly.toml. No code changes — SyncTaskStore already supports file-based SQLite.
 - id: IMP-039
   title: WalletConnect v2 for mobile USDC payments
   description: 'Mobile browsers lack window.ethereum. Add WalletConnect v2 SDK for mobile wallet connection.'
