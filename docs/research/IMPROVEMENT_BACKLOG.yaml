@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-16'
-  total_items: 89
+  last_updated: '2026-04-17'
+  total_items: 91
   implemented: 34
   deferred: 17
   rejected: 1
-  proposed: 37
+  proposed: 39
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
-  last_sync: "docs-sync 2026-04-16 — MCP tool count corrected to 41 in CLAUDE.md/README/ROADMAP/MODULE_MAP; tests 308, LOC ~19,297; ROADMAP v1.0 historical stats restored. Prior: R-028 added IMP-085/086/087 (Stripe payouts_enabled gate, check_stripe_account_status, account.updated webhook)"
+  last_sync: "docs-sync 2026-04-17 — research count corrected 75→45 in CLAUDE.md, 43→45 in README; DSL lines corrected 3600+→~3500; backlog total corrected 63→89. Added IMP-090 (mcp_tools.py split), IMP-091 (.env.example mainnet RPC). Prior: docs-sync 2026-04-16 — MCP tool count corrected to 41."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -1559,5 +1559,48 @@ proposals:
   priority: high
   status: proposed
   proposed_date: '2026-04-16'
+  decision_date: null
+  decision_notes: null
+- id: IMP-090
+  title: Split mcp_tools.py into domain-scoped modules
+  description: >
+    auction/mcp_tools.py is 2131 lines — the largest file in the codebase by a wide
+    margin and a maintenance bottleneck. Every MCP tool, regardless of domain, is
+    implemented in a single module. Proposed split into 4 files, each registering on the
+    same FastMCP instance: (1) mcp_auction_tools.py — task lifecycle tools (post, bid,
+    award, track, settle); (2) mcp_operator_tools.py — operator onboarding, registration,
+    compliance uploads; (3) mcp_fleet_tools.py — fleet discovery, EAS attestation, busy
+    state, geo filtering; (4) mcp_compliance_tools.py — RFP parsing, bond verification,
+    document verification. The main mcp_tools.py becomes a thin aggregator that imports
+    and wires the sub-modules. No functional change — only file organization. CI tests
+    confirm parity. This allows focused code review (e.g., "review only operator tools for
+    v1.5") and reduces the blast radius of merge conflicts in active development.
+  module: M00_mcp_server
+  research_source: daily-audit-2026-04-17
+  evidence: 'find auction/ -name "*.py" | xargs wc -l | sort -rn | head -5 — mcp_tools.py 2131 lines, next largest engine.py 1447'
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-17'
+  decision_date: null
+  decision_notes: null
+- id: IMP-091
+  title: Add BASE_MAINNET_RPC_URL to .env.example
+  description: >
+    .env.example documents BASE_SEPOLIA_RPC_URL (commented out) for integration tests
+    but omits BASE_MAINNET_RPC_URL entirely. Since v1.2 the platform settles USDC on Base
+    mainnet and ERC-8004 operator registration targets Base mainnet via agent0-sdk. New
+    contributors following the setup guide cannot determine what mainnet RPC endpoint to
+    configure from the example file alone. Add a commented BASE_MAINNET_RPC_URL entry
+    (e.g., https://mainnet.base.org as the public fallback) alongside the existing
+    BASE_SEPOLIA_RPC_URL, with a note that paid endpoints (Alchemy, QuickNode) are
+    recommended for production to avoid rate limits on the public RPC.
+  module: M00_infra
+  research_source: daily-audit-2026-04-17
+  evidence: '.env.example — BASE_SEPOLIA_RPC_URL present (commented), BASE_MAINNET_RPC_URL absent; v1.2+ settlement uses Base mainnet'
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-17'
   decision_date: null
   decision_notes: null

@@ -1,1 +1,1 @@
-{"name": "YAK Docs Sync", "message": "Daily sync 2026-04-16. MCP tool count corrected to 41 across CLAUDE.md/README/ROADMAP/MODULE_MAP. Tests: 308, LOC: ~19,297. Backlog at 89 items. No code changes, no commits in 24h."}
+{"name": "YAK Docs Sync", "message": "2026-04-17: No commits in 24h. Fixed 4 stat discrepancies (research 75→45, DSL 3600+→~3500, backlog 63→89 in CLAUDE.md; research 43→45 in README). Added IMP-090 (mcp_tools.py split) + IMP-091 (.env.example mainnet RPC). 308 tests, 41 tools, 19297 LOC."}
