@@ -119,9 +119,9 @@ yakrover-marketplace/
 │   ├── DECISIONS.md             # All product/technical decisions
 │   ├── SCOPE.md                 # Version boundaries
 │   ├── architecture/            # System design, tech assessments, diagrams
-│   ├── research/                # 45 research docs (see research/README.md)
+│   ├── research/                # 48 research docs (see research/README.md)
 │   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (~3,500 lines)
-│   │   ├── IMPROVEMENT_BACKLOG.yaml  # 91 tracked improvement items
+│   │   ├── IMPROVEMENT_BACKLOG.yaml  # 93 tracked improvement items
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   └── operator/            # Onboarding, equipment, sensors

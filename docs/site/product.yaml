@@ -54,7 +54,7 @@ meta:
   name: "Robot Task Auction Protocol"
   project: yakrover-auction-explorer
   schema_version: "2.7"
-  updated: "2026-04-18"
+  updated: "2026-04-19"
   provenance: "Generated from 19 research documents via 3-agent debate (architect, strategist, engineer). Revised by 5-agent competition (strategy, technical, UX, legal, ontology). Updated 2026-04-12 with v1.4.1 state + protocol separation assessment (AD-27). Authoritative for entity definitions, relationships, strategic bets, and architectural decisions."
   license: "Protocol: MIT. Vertical modules: MIT. Commercial application: source-available. See AD-27."
 
@@ -2850,7 +2850,7 @@ roadmap:
       date: "2026-04-09"
       tag: "v1.4-milestone-operator-registration"
       personas: [persona:alex, persona:controller]
-      stats: {mcp_tools: 36, code_review_findings: 100, code_review_resolved: 100}
+      stats: {mcp_tools: 41, code_review_findings: 100, code_review_resolved: 100}
       entry_gate: "v1.3 complete (278 tests passing, 3-method payment live)"
       capabilities_unlocked:
         - "Production operator registration flow — company name, contact, location, coverage area"

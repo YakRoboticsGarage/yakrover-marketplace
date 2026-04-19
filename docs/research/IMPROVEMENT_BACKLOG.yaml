@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-18'
-  total_items: 93
-  implemented: 46
+  last_updated: '2026-04-19'
+  total_items: 96
+  implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 28
+  proposed: 33
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
-  last_sync: "2026-04-18 — resolved IMP-082/020/018/070, status audit (8 items marked implemented), deferred IMP-056. Added IMP-090/091 from docs-sync. 46 implemented, 26 proposed, 18 deferred, 1 rejected. Added IMP-092/093 from daily audit 2026-04-18."
+  last_sync: "2026-04-19 — corrected meta counts (proposed 28→33, implemented 46→44, total 93→96). Added IMP-094/095/096 from daily audit 2026-04-19: datetime NameError bug in engine.py, unused import in store.py, missing ANTHROPIC_API_KEY in .env.example."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -1642,5 +1642,63 @@ proposals:
   priority: medium
   status: proposed
   proposed_date: '2026-04-18'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-094
+  title: "Fix NameError: datetime undefined in engine.py busy-state filter"
+  description: >
+    engine.py line 24 imports `from datetime import UTC` but lines 628-629 call
+    `datetime.now(UTC)`, referencing the `datetime` class which is not imported at
+    module scope. This causes a NameError at runtime whenever any robot has `_busy_until`
+    set (i.e., whenever the busy-state tracking feature is active). The busy-state filter
+    was added in v1.4.1 but was never exercised by tests — no test in auction/tests/
+    covers this code path. Fix: change line 24 to `from datetime import UTC, datetime`.
+    Companion fix: add a test asserting that a robot with _busy_until in the future is
+    excluded from auction bids.
+  module: M05_auction_engine
+  research_source: daily-audit-2026-04-19
+  evidence: 'auction/engine.py:24 (import) vs :628-629 (usage) — ruff F821 undefined-name; no test exercises this path'
+  effort: trivial
+  priority: critical
+  status: proposed
+  proposed_date: '2026-04-19'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-095
+  title: Remove unused `import json as _json` in store.py query_events()
+  description: >
+    auction/store.py line 762 has `import json as _json` inside the query_events()
+    method, but `_json` is never referenced in the function body. The module-level
+    JSON helpers (_dumps/_loads at lines 55-62) are used everywhere else — this
+    local import is dead code left from a refactor. Remove it. Ruff F401 flags it
+    as auto-fixable.
+  module: M22_sqlite_store
+  research_source: daily-audit-2026-04-19
+  evidence: 'auction/store.py:762 — ruff F401 [*] unused import'
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-19'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-096
+  title: Add ANTHROPIC_API_KEY to .env.example
+  description: >
+    auction/rfp_processor.py:25 reads `ANTHROPIC_API_KEY` from the environment to
+    enable LLM-powered RFP parsing (the default mode when the key is set). This
+    variable is documented in rfp_processor.py but absent from .env.example, so
+    developers setting up the project from scratch will get silent regex-only parsing
+    without understanding why. Add a commented entry with explanation to .env.example
+    alongside the existing Stripe and blockchain keys.
+  module: M39_rfp_processor
+  research_source: daily-audit-2026-04-19
+  evidence: 'auction/rfp_processor.py:25 os.environ.get("ANTHROPIC_API_KEY") — absent from .env.example'
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-19'
   decision_date: null
   decision_notes: null
