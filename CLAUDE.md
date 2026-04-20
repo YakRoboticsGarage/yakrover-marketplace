@@ -34,7 +34,7 @@ uv run pytest auction/tests/ -q --tb=short              # Unit tests (fast, no k
 uv run pytest auction/tests/integration/ -m stripe      # Stripe integration (needs STRIPE_SECRET_KEY)
 uv run pytest auction/tests/integration/ -m blockchain  # On-chain tests (needs BASE_SEPOLIA_RPC_URL)
 uv run pytest auction/tests/integration/ -m fleet       # Fleet e2e (needs running fleet server)
-uv run ruff check auction/ src/                         # Lint (includes security rules)
+uv run ruff check auction/                              # Lint (includes security rules)
 uv run mypy auction/                                    # Type check
 uv run pytest --cov=auction auction/tests/              # Coverage report
 ```
@@ -121,7 +121,7 @@ yakrover-marketplace/
 │   ├── architecture/            # System design, tech assessments, diagrams
 │   ├── research/                # 48 research docs (see research/README.md)
 │   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (~3,500 lines)
-│   │   ├── IMPROVEMENT_BACKLOG.yaml  # 93 tracked improvement items
+│   │   ├── IMPROVEMENT_BACKLOG.yaml  # 98 tracked improvement items
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   └── operator/            # Onboarding, equipment, sensors

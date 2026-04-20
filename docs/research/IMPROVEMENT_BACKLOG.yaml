@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-19'
-  total_items: 96
+  last_updated: '2026-04-20'
+  total_items: 98
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 33
+  proposed: 35
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
-  last_sync: "2026-04-19 — corrected meta counts (proposed 28→33, implemented 46→44, total 93→96). Added IMP-094/095/096 from daily audit 2026-04-19: datetime NameError bug in engine.py, unused import in store.py, missing ANTHROPIC_API_KEY in .env.example."
+  last_sync: "2026-04-20 — added IMP-097 (verify_commitment zero callers — FD-4 security coverage gap) and IMP-098 (check_stripe_account_status zero callers — suspended operator bypass risk). Fixed stale src/ path in CLAUDE.md ruff command. 44 implemented, 35 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -1700,5 +1700,48 @@ proposals:
   priority: low
   status: proposed
   proposed_date: '2026-04-19'
+  decision_date: null
+  decision_notes: null
+- id: IMP-097
+  title: verify_commitment() in core.py is defined but never called — add tests or remove
+  description: >
+    `verify_commitment(request_id, salt, commitment_hash)` at core.py:109 implements FD-4's
+    constant-time commitment hash comparison (hmac.compare_digest). It is defined but has zero
+    callers across the entire codebase (auction/, worker/, mcp_server.py). Because it is a
+    security-sensitive function — constant-time comparison prevents timing-oracle attacks on
+    commitment hashes — its absence from the test suite means no regression coverage. Either:
+    (a) add a unit test in test_core.py that exercises both the happy path and a tampered hash,
+    or (b) mark it with a comment referencing the FD-4 settlement path that will call it (v1.5)
+    to make the intent explicit. Do not remove it silently — the constant-time guarantee is
+    load-bearing for FD-4.
+  module: M01_core
+  research_source: daily-audit-2026-04-20
+  evidence: 'grep -rn verify_commitment auction/ worker/ mcp_server.py — only definition at core.py:109, zero callers'
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-20'
+  decision_date: null
+  decision_notes: null
+- id: IMP-098
+  title: check_stripe_account_status() in stripe_service.py is implemented but never called
+  description: >
+    `StripeService.check_stripe_account_status(account_id)` at stripe_service.py:132 checks
+    Connect account payout readiness (payouts_enabled, charges_enabled, currently_due). It
+    is fully implemented including stub-mode support, but has zero callers in production code
+    or tests. The operator registration flow (v1.4) writes Connect account IDs to the on-chain
+    agent card but never verifies payout readiness before accepting bids. This means an
+    operator with a suspended Connect account could win an auction and fail at settlement.
+    Integrate a call to check_stripe_account_status() in the bid validation path (engine.py
+    score_bids or the Stripe settlement adapter) so that bids from operators with disabled
+    payouts are filtered or flagged before award. Add a test that simulates a disabled
+    account (payouts_enabled: False) and asserts the bid is rejected.
+  module: M11_stripe
+  research_source: daily-audit-2026-04-20
+  evidence: 'grep -rn check_stripe_account_status auction/ worker/ mcp_server.py — only definition at stripe_service.py:132, zero callers'
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-20'
   decision_date: null
   decision_notes: null
