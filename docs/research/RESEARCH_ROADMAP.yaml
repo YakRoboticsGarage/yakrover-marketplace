@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-16"  # R-028 complete; IMP-085/086/087 added; R-050 spawned
+  last_updated: "2026-04-21"  # R-042 complete; IMP-099/100/101/102 added; R-054 spawned; R-051/R-053 orphan docs noted
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -607,13 +607,17 @@ topics:
     title: "ACH payment fraud patterns and risk controls for marketplace platforms"
     module: M15_stripe_service
     hypothesis: "ACH bank transfer (v1.3) has distinct fraud vectors vs card payments: return codes (R02 insufficient funds, R10 unauthorized, R29 corporate check), 2-3 day settlement delay, and no chargeback protection. Research should identify the fraud risk profile at $1K-$10K construction survey task prices and the appropriate Stripe-level controls."
-    status: queued
+    status: complete
     priority: high
     estimated_sessions: 1
+    completed_date: "2026-04-21"
     depends_on: []
     spawned_from: "git:5ceaa8e (v1.3 ACH milestone)"
     spawned_date: "2026-04-09"
-    notes: "Key questions: (1) What ACH return rates should we expect at $1K-$10K task prices? (2) Stripe ACH return handling — who bears R10 loss after delivery? (3) Should ACH be disabled for first-time buyers or tasks above a threshold? (4) What Nacha rules apply to marketplace platforms? (5) What velocity controls does Stripe apply automatically to ACH?"
+    output_file: "docs/research/automated/R-042_ach_payment_fraud_risk_controls.md"
+    improvement_proposals: [IMP-099, IMP-100, IMP-101, IMP-102]
+    spawned: [R-054]
+    notes: "Key findings: (1) PLATFORM bears all R10 loss — Stripe ACH disputes are final, non-contestable. Current code transfers to operator immediately on succeeded, exposing platform to full task value. (2) Nacha Phase 2 effective June 22 2026 — YAK is an Originator, compliance policy doc REQUIRED by then. (3) R29 (corporate unauthorized) = 2-business-day window vs R10 60-day — most construction buyers use business accounts, so shorter exposure window. (4) Financial Connections instant verification (already in use) is the strongest fraud control. (5) No first-payment cap or velocity controls in current code."
 
   - id: R-043
     title: "Zero-knowledge proofs for construction survey data privacy (v1.5 ZK track pre-research)"
@@ -752,3 +756,50 @@ topics:
     spawned_from: R-028
     spawned_date: "2026-04-16"
     notes: "Blocks IMP-087. Key questions: (1) Separate webhook secret for Connect events? (2) worker/src/index.js event routing pattern? (3) account.updated payload structure — does it include payouts_enabled directly? (4) Rate limiting / deduplication — same operator may get multiple status updates. (5) Can the auction API receive a PATCH /operators/:id/status from the worker, or does it need a dedicated endpoint?"
+
+  # ===== SPAWNED BY R-042 =====
+
+  - id: R-054
+    title: "Nacha SEC code for YAK ACH payments — WEB vs CCD/CTX for B2B construction buyers"
+    module: M15_stripe_service
+    hypothesis: "Stripe's us_bank_account payment method defaults to WEB (internet-originated ACH) SEC code. For B2B construction buyers paying from business accounts, the correct Nacha SEC code may be CCD (corporate credit/debit) or CTX. The distinction matters: (1) return windows differ (R29 corporate unauthorized = 2 business days vs R10 consumer = 60 days), (2) Nacha rules for WEB vs CCD have different authorization requirements, (3) CCD may be more defensible for platform in an unauthorized dispute scenario. Research: (1) what SEC code does Stripe assign for us_bank_account PaymentIntents, (2) can Stripe be instructed to use CCD for business account payments, (3) does the SEC code affect the applicable return code set, (4) does wrong SEC code create Nacha compliance exposure."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-042]
+    spawned_from: R-042
+    spawned_date: "2026-04-21"
+    notes: "Low urgency but affects which return codes apply and defense posture for disputes. WEB vs CCD distinction in Stripe Financial Connections context — does instant bank verification change SEC code assignment?"
+
+  # ===== ORPHANED RESEARCH DOCS (completed outside roadmap tracking) =====
+  # The following docs exist in docs/research/automated/ but have no corresponding roadmap entry.
+  # They were produced by a research agent session that did not update this file.
+  # Adding entries here to restore tracking integrity.
+
+  - id: R-051
+    title: "IMR and LLM multi-robot task planning"
+    module: M24_mcp_tools
+    hypothesis: "Unknown — doc produced outside roadmap tracking"
+    status: complete
+    priority: medium
+    estimated_sessions: 1
+    completed_date: "unknown"
+    depends_on: []
+    output_file: "docs/research/automated/R-051_imr_llm_multi_robot_task_planning.md"
+    improvement_proposals: []
+    spawned: []
+    notes: "Orphaned doc recovered 2026-04-21. Contents not re-read by this agent; review in next R-META run."
+
+  - id: R-053
+    title: "Stripe Machine Payments Protocol (MPP)"
+    module: M15_stripe_service
+    hypothesis: "Unknown — doc produced outside roadmap tracking. R-047 notes forward-reference 'R-053 (Stripe MPP analysis)' suggesting this is the Stripe MPP / agent-payments research that was forked from R-047."
+    status: complete
+    priority: medium
+    estimated_sessions: 1
+    completed_date: "unknown"
+    depends_on: []
+    output_file: "docs/research/automated/R-053_stripe_machine_payments_protocol.md"
+    improvement_proposals: []
+    spawned: []
+    notes: "Orphaned doc recovered 2026-04-21. Likely addresses R-047 questions about Stripe MPP. Review in next R-META run to extract proposals and close R-047 if answered."

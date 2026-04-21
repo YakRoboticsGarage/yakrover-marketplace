@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-20'
-  total_items: 98
+  last_updated: '2026-04-21'
+  total_items: 102
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 35
+  proposed: 39
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
-  last_sync: "2026-04-20 — added IMP-097 (verify_commitment zero callers — FD-4 security coverage gap) and IMP-098 (check_stripe_account_status zero callers — suspended operator bypass risk). Fixed stale src/ path in CLAUDE.md ruff command. 44 implemented, 35 proposed, 18 deferred, 1 rejected."
+  last_sync: "2026-04-21 — R-042 (ACH fraud patterns). Added IMP-099 (hold operator ACH transfer until delivery), IMP-100 (first-payment ACH cap $2,500), IMP-101 (Nacha Phase 2 compliance policy — CRITICAL, due June 22 2026), IMP-102 (balance sufficiency check). 44 implemented, 39 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -1743,5 +1743,99 @@ proposals:
   priority: medium
   status: proposed
   proposed_date: '2026-04-20'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-099
+  title: "Hold operator ACH transfer until delivery confirmation, not immediately on payment_intent.succeeded"
+  description: >
+    worker/src/index.js handleTransferToOperator (line 1373) fires the Stripe Transfer to the
+    operator Connect account immediately when PaymentIntent status == "succeeded". But ACH disputes
+    (R10 unauthorized — 60-day window; R29 corporate unauthorized — 2-business-day window) can
+    reverse the debit AFTER "succeeded". If the operator has already been paid, the platform absorbs
+    the full task value. Fix: in the ACH settlement flow, hold the Transfer until (a) delivery record
+    is confirmed in KV (auction delivery accepted) — preferred, aligns with commit-on-hire model —
+    OR (b) if delivery is not tracked, impose a minimum 3-business-day hold after "succeeded" to
+    absorb the R29 window. For consumer accounts (R10, 60-day window), delivery confirmation remains
+    the safeguard. Add a KV entry `ach_hold:{piId}` to track hold state; existing ACH lifecycle
+    webhook updates the KV when "succeeded"; the transfer step fires only when hold_until <= now
+    AND delivery status is "accepted".
+  module: M15_stripe_service
+  research_source: R-042
+  evidence: docs/research/automated/R-042_ach_payment_fraud_risk_controls.md
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-21'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-100
+  title: "First-payment ACH cap: $2,500 maximum for buyers with no prior ACH history"
+  description: >
+    67% of ACH fraud is linked to payments to newly added payees (Oscilar 2026). For YAK, a
+    first-time buyer placing a $10K ACH task is the highest-risk transaction pattern. Add a
+    check in handleCreateAchIntent (worker/src/index.js line ~1277): query RATE_LIMIT_KV for
+    any existing `ach:pi_*` entries associated with this buyer session/email. If none are found
+    (first-time ACH buyer), cap amount_cents at 250000 ($2,500) and return a 400 with a message
+    directing them to use Card for higher amounts or come back after completing one smaller ACH
+    payment successfully. After a successful ACH payment completes (payment_intent.succeeded
+    webhook), increment a KV counter `ach_trust:{buyer_hash}`. Cap lifts automatically after 1
+    successful prior payment.
+  module: M15_stripe_service
+  research_source: R-042
+  evidence: docs/research/automated/R-042_ach_payment_fraud_risk_controls.md
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-21'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-101
+  title: "Nacha Phase 2 compliance: write ACH fraud monitoring policy doc before June 22, 2026"
+  description: >
+    Nacha's 2026 fraud monitoring rule (Phase 2) becomes effective June 22, 2026 and applies to
+    ALL Originators regardless of volume — including YAK, which initiates ACH debits from buyer
+    accounts (Stripe is the TPSP/ODFI; YAK is the Originator). Non-compliance risk: Nacha network
+    suspension. Requirement: documented risk-based fraud monitoring processes covering (1) unauthorized
+    transactions (R10, R29 return monitoring), (2) false pretenses (BEC, account takeover — mitigated
+    by Financial Connections instant verification), and (3) annual review. Create
+    docs/legal/ACH_FRAUD_MONITORING_POLICY.md covering: scope and applicability, risk assessment
+    (construction B2B, $1K-$10K), monitoring approach (KV webhook tracking of return codes),
+    controls (instant verification, first-payment cap IMP-100, hold period IMP-099), false-pretenses
+    mitigations, escalation procedure when unauthorized returns approach 0.5%, and annual review date.
+    This is a documentation task. The technical controls (IMP-099, IMP-100) are companions but the
+    policy doc is the compliance deliverable.
+  module: docs
+  research_source: R-042
+  evidence: docs/research/automated/R-042_ach_payment_fraud_risk_controls.md
+  effort: small
+  priority: critical
+  status: proposed
+  proposed_date: '2026-04-21'
+  decision_date: null
+  decision_notes: "DEADLINE: June 22, 2026. 62 days from proposal date."
+
+- id: IMP-102
+  title: "Use Financial Connections balance data to block ACH when account balance < task amount"
+  description: >
+    worker/src/index.js handleCreateAchIntent already requests financial_connections.permissions
+    balances (line 1283). After the buyer completes the Stripe Financial Connections flow, the
+    frontend receives the payment method with balance data attached. Add a client-side check in
+    the demo/marketplace UI: after Financial Connections resolves, check
+    payment_method.us_bank_account.financial_connections_account.balance.available.usd against
+    the task amount_cents. If insufficient, surface: "Your account balance appears insufficient
+    for this task amount. Please use Card payment or verify your account balance." This prevents
+    R01 (insufficient funds) returns at $1K-$10K scale where cash flow timing can leave business
+    accounts temporarily underfunded. Note: balance data is a point-in-time snapshot; it does not
+    guarantee settlement success but reduces R01 returns materially.
+  module: M15_stripe_service
+  research_source: R-042
+  evidence: docs/research/automated/R-042_ach_payment_fraud_risk_controls.md
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-21'
   decision_date: null
   decision_notes: null
