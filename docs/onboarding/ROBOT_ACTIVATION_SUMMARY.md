@@ -1,6 +1,6 @@
-# From robot to marketplace operator — 1-page quickstart
+# Robot Activation — Process Summary
 
-You have a robot. You want it to accept paid tasks on yakrobot.bid. Here's the whole path.
+A 1-page path from "I have a robot" to "it's live on yakrobot.bid taking paid tasks." The longer, reference-level version lives in [`ROBOT_OPERATOR_ONBOARDING.md`](./ROBOT_OPERATOR_ONBOARDING.md).
 
 ## Prerequisites
 
