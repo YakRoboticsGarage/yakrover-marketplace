@@ -157,8 +157,33 @@ class MCPRobotAdapter:
             h["Authorization"] = f"Bearer {self.bearer_token}"
         return h
 
+    async def _mcp_init_session(self, client: httpx.AsyncClient) -> None:
+        """Open a fresh MCP session against the remote server. Sets _session_id."""
+        init_resp = await client.post(
+            self.mcp_endpoint,
+            headers=self._mcp_headers(),
+            json={
+                "jsonrpc": "2.0",
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2025-03-26",
+                    "capabilities": {},
+                    "clientInfo": {"name": "marketplace", "version": "1.0"},
+                },
+                "id": 0,
+            },
+        )
+        sid = init_resp.headers.get("mcp-session-id")
+        if sid:
+            self._session_id = sid
+
     async def _mcp_call(self, method: str, params: dict, call_id: int = 1) -> dict | None:
-        """Make an MCP JSON-RPC call and return the result."""
+        """Make an MCP JSON-RPC call and return the result.
+
+        If the remote MCP server restarts, our cached _session_id becomes stale
+        and the server returns 404 "session not found". Detect that (and 400
+        "missing session") and retry once with a fresh session before giving up.
+        """
         payload = {
             "jsonrpc": "2.0",
             "method": method,
@@ -167,32 +192,36 @@ class MCPRobotAdapter:
         }
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # Initialize session if needed
             if not self._session_id:
-                init_resp = await client.post(
-                    self.mcp_endpoint,
-                    headers=self._mcp_headers(),
-                    json={
-                        "jsonrpc": "2.0",
-                        "method": "initialize",
-                        "params": {
-                            "protocolVersion": "2025-03-26",
-                            "capabilities": {},
-                            "clientInfo": {"name": "marketplace", "version": "1.0"},
-                        },
-                        "id": 0,
-                    },
-                )
-                # Extract session ID from response header
-                sid = init_resp.headers.get("mcp-session-id")
-                if sid:
-                    self._session_id = sid
+                await self._mcp_init_session(client)
 
             resp = await client.post(
                 self.mcp_endpoint,
                 headers=self._mcp_headers(),
                 json=payload,
             )
+
+            # Session expired (server restart) or missing — re-init and retry once.
+            if resp.status_code in (400, 404) and self._session_id is not None:
+                log.info(
+                    "MCP %s returned %d — session likely stale after remote restart; re-initializing and retrying",
+                    self.robot_id,
+                    resp.status_code,
+                )
+                self._session_id = None
+                await self._mcp_init_session(client)
+                resp = await client.post(
+                    self.mcp_endpoint,
+                    headers=self._mcp_headers(),
+                    json=payload,
+                )
+
+            if resp.status_code >= 400:
+                log.warning(
+                    "MCP call %s to %s failed after retry: HTTP %d",
+                    method, self.robot_id, resp.status_code,
+                )
+                return None
 
         # Parse SSE response — look for data: lines
         for line in resp.text.split("\n"):
