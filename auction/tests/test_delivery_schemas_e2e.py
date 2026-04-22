@@ -17,6 +17,7 @@ from auction.delivery_schemas import (
     CONFINED_SCHEMA,
     CORRIDOR_SCHEMA,
     ENV_SENSING_SCHEMA,
+    GROUND_DELIVERY_SCHEMA,
     GROUND_GPR_SCHEMA,
     GROUND_LIDAR_SCHEMA,
     get_delivery_schema,
@@ -239,6 +240,27 @@ def make_env_sensing_delivery():
     }
 
 
+def make_ground_delivery():
+    start_ts = int(time.time() * 1000)
+    commands = ["forward", "left", "forward", "right", "stop"]
+    command_log = [
+        {
+            "command": cmd,
+            "timestamp_ms": start_ts + i * 1000,
+            "duration_ms": random.randint(200, 1500),
+        }
+        for i, cmd in enumerate(commands)
+    ]
+    return {
+        "task_id": f"task_{random.randint(1000, 9999)}",
+        "commands_executed": command_log,
+        "duration_s": round(sum(c["duration_ms"] for c in command_log) / 1000.0, 2),
+        "completion_status": "completed",
+        "robot_id": "8453:42",
+        "summary": f"Executed {len(commands)} motor commands.",
+    }
+
+
 # Corridor reuses aerial LiDAR structure with additions
 def make_corridor_delivery():
     base = make_aerial_lidar_delivery()
@@ -352,13 +374,39 @@ class TestCorridor:
         assert get_delivery_schema("corridor_survey") == CORRIDOR_SCHEMA
 
 
+class TestGroundDelivery:
+    def test_schema_passes(self):
+        data = make_ground_delivery()
+        issues = validate_delivery_schema(data, GROUND_DELIVERY_SCHEMA)
+        assert issues == [], f"Ground delivery schema failed: {issues}"
+
+    def test_category_mapping(self):
+        assert get_delivery_schema("delivery_ground") == GROUND_DELIVERY_SCHEMA
+
+    def test_missing_required_field_fails(self):
+        data = make_ground_delivery()
+        del data["commands_executed"]
+        issues = validate_delivery_schema(data, GROUND_DELIVERY_SCHEMA)
+        assert any("commands_executed" in i for i in issues), (
+            f"Expected missing-field issue for commands_executed, got: {issues}"
+        )
+
+    def test_empty_command_log_fails(self):
+        data = make_ground_delivery()
+        data["commands_executed"] = []
+        issues = validate_delivery_schema(data, GROUND_DELIVERY_SCHEMA)
+        assert any("minimum 1" in i for i in issues), (
+            f"Expected minItems violation for empty commands_executed, got: {issues}"
+        )
+
+
 class TestAllCategoriesCovered:
     """Verify every task category in the mapping has a test."""
 
-    def test_all_17_categories_mapped(self):
+    def test_all_categories_mapped(self):
         from auction.delivery_schemas import DELIVERY_SCHEMAS
 
-        assert len(DELIVERY_SCHEMAS) == 18
+        assert len(DELIVERY_SCHEMAS) == 19
         for cat in DELIVERY_SCHEMAS:
             schema = get_delivery_schema(cat)
             assert schema is not None, f"No schema for {cat}"

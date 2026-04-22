@@ -346,6 +346,35 @@ ENV_SENSING_SCHEMA = {
 }
 
 
+# ── Ground Delivery / Teleop (Tumbller and similar wheeled robots) ───
+# Deliverables: command log with timestamps, completion status
+
+GROUND_DELIVERY_SCHEMA = {
+    "description": "Ground robot delivery/teleop deliverable — executed command log and completion status",
+    "required": ["task_id", "commands_executed", "duration_s", "completion_status", "summary"],
+    "properties": {
+        "task_id": {"type": "string", "minLength": 1},
+        "commands_executed": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "required": ["command", "timestamp_ms", "duration_ms"],
+                "properties": {
+                    "command": {"type": "string"},  # "forward", "backward", "left", "right", "stop"
+                    "timestamp_ms": {"type": "integer", "minimum": 0},
+                    "duration_ms": {"type": "integer", "minimum": 0},
+                },
+            },
+        },
+        "duration_s": {"type": "number", "minimum": 0},
+        "completion_status": {"type": "string"},  # "completed", "partial", "aborted"
+        "robot_id": {"type": "string"},
+        "summary": {"type": "string", "minLength": 1},
+    },
+}
+
+
 # ── Category → Schema mapping ────────────────────────────────────
 
 DELIVERY_SCHEMAS = {
@@ -368,6 +397,7 @@ DELIVERY_SCHEMAS = {
     "environmental_survey": AERIAL_PHOTO_SCHEMA,
     "control_survey": AERIAL_LIDAR_SCHEMA,
     "mapping": AERIAL_LIDAR_SCHEMA,
+    "delivery_ground": GROUND_DELIVERY_SCHEMA,
 }
 
 

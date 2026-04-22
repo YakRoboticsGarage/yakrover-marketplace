@@ -118,6 +118,7 @@ COMMON_MODELS = {
     "gpr": "Boston Dynamics Spot + GSSI StructureScan Mini XT",
     "rtk_gps": "Trimble R12i",
     "robotic_total_station": "Leica TS16",
+    "ground_robot": "ELEGOO Tumbller (ESP32-S3)",
 }
 
 # Sensor type → default task category (used by register_robot_onchain)
@@ -129,6 +130,7 @@ SENSOR_TO_CATEGORY = {
     "rtk_gps": "env_sensing",
     "thermal_camera": "visual_inspection",
     "robotic_total_station": "env_sensing",
+    "ground_robot": "delivery_ground",
 }
 
 # Blockchain chain configs (used by register_robot_onchain and eas_attest)
