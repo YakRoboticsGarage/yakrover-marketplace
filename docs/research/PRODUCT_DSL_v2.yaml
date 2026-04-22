@@ -1843,7 +1843,7 @@ architecture:
       sources: [{path: docs/architecture/PLAN_STABLE_INFRASTRUCTURE.md}]
     mcp_server:
       path: mcp_server.py
-      description: "Standalone REST API exposing 41 MCP tools for web demo"
+      description: "Standalone REST API exposing 42 MCP tools for web demo"
       endpoints:
         - "GET /health — status, tool count, fleet size, wallet balance"
         - "GET /api/tools — list all available tools"
@@ -1864,9 +1864,9 @@ architecture:
       Fly.io (always-on, v1.1+)
         fakerover .................... Robot simulator (yakrover.online)
         robot-mcp .................... Robot MCP server (ERC-8004)
-        marketplace-mcp .............. Marketplace MCP server (41 tools)
+        marketplace-mcp .............. Marketplace MCP server (42 tools)
       mcp_server.py (local + Cloudflare Tunnel)
-        /api/tool/{name} ............. REST proxy to 41 MCP tools
+        /api/tool/{name} ............. REST proxy to 42 MCP tools
         /health ...................... Status endpoint
       SQLite (local, :memory: for demo)
     database:
@@ -1920,7 +1920,7 @@ architecture:
       consumes: [repo:yakrover-8004-mcp]
     - id: component:mcp_server
       path: mcp_server.py
-      description: "Standalone REST API exposing 41 MCP tools for web demo and tunnel access"
+      description: "Standalone REST API exposing 42 MCP tools for web demo and tunnel access"
       status: implemented
       phase: phase:v1.0
     - id: component:mock_fleet
@@ -1978,9 +1978,9 @@ architecture:
       note: "Whitepaper never referenced in v1.1 YAML — should be cited for vision section"
 
   mcp_tools:
-    # [v2.7] Updated: 41 tools implemented (was 36 in v2.5)
-    existing_count: 41
-    status_summary: "41 implemented, 3 planned from gap analysis"
+    # [v2.8] Updated: 42 tools implemented (was 41 in v2.7)
+    existing_count: 42
+    status_summary: "42 implemented, 3 planned from gap analysis"
     # [Entry 2] Full parameter/return/error schemas for each tool
     existing:
       - name: post_task

@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
   last_updated: '2026-04-22'
-  total_items: 115
+  total_items: 117
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 52
+  proposed: 54
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
-  last_sync: "2026-04-22 — NPC ROBOT E2E rollout findings. Added IMP-109 (wire USDC settlement through MCP — HIGH, production payment rail gap: payment_method on Task accepts 'usdc' but confirm_delivery hardcodes 'buyer' ledger debit and never dispatches on method), IMP-110 (firmware-level auth on public-exposed /motor/* — HIGH, Anuraj review pending for option A/B/C), IMP-111 (ERC-8004 token ownership transfer to operator), IMP-112 (automated IPFS metadata re-upload when operator profile changes), IMP-113 (expose plugin-side availability.json in auction_get_robot_status), IMP-114 (restore completed task counts from SyncTaskStore on marketplace restart), IMP-115 (MQTT reverse-connection architecture for operator→robot path). 44 implemented, 52 proposed, 18 deferred, 1 rejected."
+  last_sync: "2026-04-22 — Daily code audit. Added IMP-116 (remove deprecated MCP tool stubs), IMP-117 (split mcp_tools.py by domain). 44 implemented, 54 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -2122,3 +2122,49 @@ proposals:
   proposed_date: '2026-04-22'
   decision_date: null
   decision_notes: Revisit when adding a second physical robot or when Anuraj's security review (IMP-110) makes this attractive as a defensive posture.
+
+- id: IMP-116
+  title: "Remove deprecated MCP tool stubs (auction_onboard_operator, auction_register_operator)"
+  description: >
+    Two MCP tools — auction_onboard_operator (mcp_tools.py line 620) and
+    auction_register_operator (line 1110) — exist only to return a deprecation message
+    pointing callers at auction_onboard_operator_guided. They are counted in the tool
+    list (contributing to the 42 total), shown in /api/tools responses, and appear in
+    Claude's tool enumeration — all while doing nothing useful. Remove both stubs.
+    Any caller invoking a deprecated tool name should receive a standard MCP
+    "tool not found" error, which is equally informative. Gate removal on confirming
+    no external MCP clients still reference these names (check Cloudflare Worker logs
+    and any saved Claude Desktop configs).
+  module: auction/mcp_tools
+  research_source: Daily code audit (2026-04-22)
+  evidence: "auction/mcp_tools.py line 620 ('auction_onboard_operator is deprecated') and line 1110 ('auction_register_operator is deprecated')"
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-117
+  title: "Split mcp_tools.py into domain-specific modules"
+  description: >
+    auction/mcp_tools.py is 2,263 lines — the largest file in the repo — and contains
+    four distinct domains: auction lifecycle (post_task, place_bid, confirm_delivery, etc.),
+    fleet/robot management (get_robot_status, filter_robots, busy state), operator
+    registration (onboard_operator_guided, update_operator_profile, ERC-8004 registration),
+    and delivery QA + EAS attestation. All four are registered via a single
+    register_auction_tools() call. Proposed split: mcp_tools_auction.py,
+    mcp_tools_fleet.py, mcp_tools_registration.py, mcp_tools_qa.py — each ≤600 lines —
+    with register_auction_tools() in mcp_tools.py delegating to each. No public API
+    changes. This is not urgent but will become blocking when adding v1.5 settlement
+    tools (expected +8-12 tools). Do not split until IMP-116 is resolved so the two
+    deprecated stubs are not ported to the new structure.
+  module: auction/mcp_tools
+  research_source: Daily code audit (2026-04-22)
+  evidence: "find auction/ -name '*.py' | xargs wc -l | sort -rn: mcp_tools.py 2263 lines (largest file, 3× the next largest)"
+  effort: medium
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: Prerequisite IMP-116 (remove deprecated stubs). Trigger: when mcp_tools.py exceeds 2,500 lines or when adding v1.5 settlement tools.

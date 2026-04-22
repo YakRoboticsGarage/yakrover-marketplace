@@ -5,7 +5,7 @@
 A marketplace where AI agents post construction survey tasks, certified robot operators bid autonomously, and the best one delivers. Starting with construction site surveying ($1K-$200K tasks), scaling to mining, infrastructure, and lunar operations. Winners are paid via Stripe (fiat) or USDC on Base (crypto). This project handles real money — payment code requires extreme care.
 
 **Wedge market:** Construction site surveying (pre-bid topo, GPR subsurface, progress monitoring). Typical tasks: $1,000-$10,000. Full project lifecycle: $25,000-$72,000+.
-**v1.0 status:** Built. 284 tests, 35 MCP tools, ~17,042 LOC.
+**v1.0 status:** Built. 284 tests, 35 MCP tools, ~17,042 LOC. (stats at v1.0 milestone)
 **v1.1 status:** Complete (2026-04-06). Real Tumbller robot moves + reads sensors via MCP. Marketplace + fleet on Fly.io (always on). Stripe inline authorize/capture. USDC gasless on Base. Demo-3 self-sustaining. Tags: `v1.1-milestone-tumbller-live`.
 **v1.2 status:** Demo-5 stable (2026-04-07). Single-signature USDC on Base mainnet. No platform fee. Professional buyer-facing UI. Always-on infrastructure (Fly.io + yakrover.online).
 **v1.3 status:** ACH bank transfer + 3-method payment selector (2026-04-08). Buyer chooses Card / Bank Transfer / Stablecoin at checkout. US Stripe account. Structured deploy scripts. Tags: `v1.3-milestone-ach-payment`.
@@ -19,7 +19,7 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 - **Auction engine:** `auction/` — Task, Bid, AuctionResult, score_bids(), state machine, settlement abstraction
 - **Payment:** Stripe Connect (fiat) + USDC on Base via x402 (crypto, v1.5). Construction scale: $10K-$200K per project, not micro-payments.
 - **Escrow:** `RobotTaskEscrow.sol` on Base with 4-mode settlement abstraction (FD-1, v1.5)
-- **Fleet:** Robot/operator discovery via ERC-8004, 41 MCP tools for agent interaction
+- **Fleet:** Robot/operator discovery via ERC-8004, 42 MCP tools for agent interaction
 - **Persistence:** SQLite via `SyncTaskStore`
 - **Demo site:** `demo/landing/index.html` — interactive demo at [yakrobot.bid](https://yakrobot.bid)
 - **Live demo:** `demo/marketplace/index.html` — Claude orchestrates real auction at [yakrobot.bid/demo](https://yakrobot.bid/demo/)
@@ -80,7 +80,7 @@ yakrover-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 41 MCP tool handlers
+│   ├── mcp_tools.py             # 42 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
@@ -89,7 +89,7 @@ yakrover-marketplace/
 │   ├── discovery_bridge.py      # ERC-8004 robot discovery
 │   ├── mock_fleet.py            # Simulated robots for testing + RuntimeRegisteredRobot
 │   ├── demo.py                  # Demo script
-│   └── tests/                   # 309 tests + integration stubs
+│   └── tests/                   # 316 tests + integration stubs
 │
 ├── demo/                        # Live demo sites (published via here.now)
 │   ├── marketplace/index.html   # Live auction demo (yakrobot.bid/demo)
@@ -111,7 +111,7 @@ yakrover-marketplace/
 │   ├── register_fleet.py        # Batch robot registration
 │   └── eas_attest.py            # EAS attestation management
 │
-├── mcp_server.py                # Standalone REST API (41 MCP tools)
+├── mcp_server.py                # Standalone REST API (42 MCP tools)
 │
 ├── docs/                        # Technical documentation
 │   ├── ROADMAP_v4.md            # Construction → Mining → Infra → Lunar
@@ -119,9 +119,9 @@ yakrover-marketplace/
 │   ├── DECISIONS.md             # All product/technical decisions
 │   ├── SCOPE.md                 # Version boundaries
 │   ├── architecture/            # System design, tech assessments, diagrams
-│   ├── research/                # 48 research docs (see research/README.md)
+│   ├── research/                # 60 research docs (see research/README.md)
 │   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (~3,500 lines)
-│   │   ├── IMPROVEMENT_BACKLOG.yaml  # 98 tracked improvement items
+│   │   ├── IMPROVEMENT_BACKLOG.yaml  # 115 tracked improvement items
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   └── operator/            # Onboarding, equipment, sensors

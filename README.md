@@ -47,7 +47,7 @@ Task Registry ──→ Executor Registry ──→ Verification Engine ──�
 | **Executor Registry** | Credentials, equipment, coverage, performance history, insurance | `auction/operator_registry.py`, ERC-8004 on-chain identity |
 | **Verification Engine** | Spec + measurement → compliance judgment, confidence metric, audit trail | `auction/deliverable_qa.py`, `auction/delivery_schemas.py` |
 | **Settlement Layer** | Escrow on task initiation, release on verified completion, hold on dispute | `auction/settlement.py`, Stripe Connect, USDC on Base |
-| **Coordination Protocol** | Post → discover → match → execute → verify → settle → record | `auction/engine.py` (state machine), `auction/mcp_tools.py` (41 MCP tools) |
+| **Coordination Protocol** | Post → discover → match → execute → verify → settle → record | `auction/engine.py` (state machine), `auction/mcp_tools.py` (42 MCP tools) |
 
 ## Protocol vs. Product
 
@@ -101,7 +101,7 @@ yakrover-marketplace/
 ├── worker/                      # Cloudflare Worker — payment, demo proxy, balance monitor
 ├── docs/                        # Documentation
 │   ├── architecture/            # System design docs, protocol separation assessment
-│   ├── research/                # 45 research docs + PRODUCT_DSL ontology + backlog
+│   ├── research/                # 60 research docs + PRODUCT_DSL ontology + backlog
 │   ├── guides/                  # Getting started, operations runbook
 │   ├── onboarding/              # Operator onboarding guides
 │   ├── site/                    # Product brief site (yakrobot.bid/yaml)
@@ -150,7 +150,7 @@ See [Getting Started](docs/guides/GETTING_STARTED.md) for full setup including S
 
 The first domain implementation. 100 test robots, 18 Michigan operators, 14 real commercial models.
 
-- **41 MCP tools** — auction lifecycle, RFP parsing, operator registration, compliance, EAS attestation
+- **42 MCP tools** — auction lifecycle, RFP parsing, operator registration, compliance, EAS attestation
 - **9 category MCP servers** on Fly.io — aerial LiDAR, photo, thermal, GPR, bridge, corridor, tunnel, confined, env sensing
 - **101 EAS attestations** — 100 demo_fleet (Base Sepolia) + 1 live_production (Base mainnet)
 - **Geographic filtering** — haversine hard cutoff, robots only bid within service radius
