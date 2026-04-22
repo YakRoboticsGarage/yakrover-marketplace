@@ -471,6 +471,7 @@ input[type="range"]{width:100%;accent-color:var(--accent);cursor:pointer}
             <option value="corridor_fixedwing">Highway Corridor — MiSAIL Program</option>
             <option value="tunnel_lidar">Tunnel As-Built — I-94 Drainage</option>
             <option value="confined_tank">Confined Space — Water Tank Inspection</option>
+            <option value="teleop_npc_robot">Teleop — NPC ROBOT Berlin Tumbller</option>
           </select>
         </div>
         <textarea class="form-textarea" id="rfpText">ENVIRONMENTAL MONITORING REQUEST
@@ -1034,6 +1035,12 @@ var DELIVERY_SCHEMAS = {
     properties: {point_cloud: {type:'object', required:['format','point_count','positioning_method']},
       inspection_photos: {type:'object', required:['total_photos']}, obstacle_map: {type:'object'},
       summary: {type:'string',minLength:1}}},
+  delivery_ground: {description: 'Ground robot teleop command log', required: ['task_id', 'commands_executed', 'duration_s', 'completion_status', 'summary'],
+    properties: {task_id: {type:'string',minLength:1},
+      commands_executed: {type:'array', minItems:1, items: {required:['command','timestamp_ms','duration_ms'],
+        properties: {command: {type:'string'}, timestamp_ms: {type:'integer',minimum:0}, duration_ms: {type:'integer',minimum:0}}}},
+      duration_s: {type:'number',minimum:0}, completion_status: {type:'string'},
+      robot_id: {type:'string'}, summary: {type:'string',minLength:1}}},
 };
 var DELIVERY_SCHEMA = DELIVERY_SCHEMAS.env_sensing; // default, overridden per RFP
 
@@ -2636,6 +2643,15 @@ var RFP_PRESETS = {
     terrain: 'Underground tank, GPS-denied, wet',
     schema: 'confined_space',
     latitude: 42.2985, longitude: -83.1148,
+  },
+  teleop_npc_robot: {
+    rfp: 'TELEOPERATION DEMO — NPC ROBOT BERLIN TUMBLLER\nRemote Ground Robot Control — Paid Motor Sequence\n\nAgency: YAK Robotics (live production demo)\nOperator: NPC ROBOT (robot_id 8453:45452)\nLocation: Berlin, Germany — live Tumbller on yakrover.online tunnel\n\nSCOPE: Issue a short sequence of motor commands to the live Berlin\nTumbller and receive back a command log with timestamps and\ncompletion status. No sensor payload — this is pure teleoperation\nfor demo and real-money experience.\n\nRequirements:\n- Ground robot with remote HTTP motor control\n- Task category: delivery_ground\n- Commands accepted: forward, backward, left, right, stop\n  (each auto-bounded by firmware: 2s for fwd/back, 1s for left/right)\n- Up to 10 commands per task\n- Deliverable: GROUND_DELIVERY_SCHEMA (command log + completion status)\n- Budget: $0.60 (covers 10 commands at $0.50 + $0.01/extra)\n- Deadline: 60 seconds\n- Payment: USDC on Base mainnet',
+    project: 'NPC ROBOT Teleop — Live Demo',
+    location: 'Berlin, Germany',
+    agency: 'YAK Robotics',
+    terrain: 'Indoor, ground robot',
+    schema: 'delivery_ground',
+    latitude: 52.5200, longitude: 13.4050,
   },
 };
 
