@@ -25,3 +25,7 @@ eas_attestation_log.json
 worker/.wrangler/
 .wrangler/
 .notifications/
+
+# Design / research scratch dirs — not part of the shipped repo
+docs/experiments/
+docs/images/
