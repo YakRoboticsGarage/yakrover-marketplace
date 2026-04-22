@@ -767,3 +767,70 @@ class TestAutoAccept:
 
         # Timer should have auto-confirmed delivery -> SETTLED
         assert record.state == TaskState.SETTLED
+
+
+class TestBusyStateAndRobotStatus:
+    """PR: _busy_until cleared on DELIVERED + new get_robot_status engine method."""
+
+    @pytest.mark.asyncio
+    async def test_busy_cleared_on_deliver(self):
+        """Robot's busy state releases when execute completes (state = DELIVERED).
+
+        Previously the robot stayed "busy" for the full duration_map window (30 min
+        for most categories) even when execute took ~seconds. This blocked the
+        operator from bidding on the next task unnecessarily.
+        """
+        engine, _wallet, _rep = _build_engine_with_wallet()
+        post = engine.post_task(VALID_TASK_SPEC)
+        request_id = post["request_id"]
+        bids = engine.get_bids(request_id)
+        winner = bids["recommended_winner"]
+        engine.accept_bid(request_id, winner)
+
+        # Immediately after accept_bid, _busy_until should be set
+        robot = engine._robots_by_id[winner]
+        assert getattr(robot, "_busy_until", None) is not None
+
+        with _mock_httpx_patch():
+            await engine.execute(request_id)
+
+        # After execute → DELIVERED, busy state should be released
+        assert getattr(robot, "_busy_until", None) is None
+
+    def test_get_robot_status_unknown_id(self):
+        engine, _wallet, _rep = _build_engine_with_wallet()
+        result = engine.get_robot_status("does-not-exist")
+        assert result["found"] is False
+        assert result["robot_id"] == "does-not-exist"
+
+    @pytest.mark.asyncio
+    async def test_get_robot_status_reports_busy_then_released(self):
+        engine, _wallet, _rep = _build_engine_with_wallet()
+
+        # Before any task: not busy
+        robot_id = "fakerover-bay3"
+        pre = engine.get_robot_status(robot_id)
+        assert pre["found"] is True
+        assert pre["busy"] is False
+        assert pre["total_tasks_won"] == 0
+
+        post = engine.post_task(VALID_TASK_SPEC)
+        request_id = post["request_id"]
+        bids = engine.get_bids(request_id)
+        winner = bids["recommended_winner"]
+        engine.accept_bid(request_id, winner)
+
+        # After accept: winner reports busy with positive remaining seconds
+        mid = engine.get_robot_status(winner)
+        assert mid["busy"] is True
+        assert mid["busy_remaining_seconds"] > 0
+        assert mid["total_tasks_won"] == 1
+
+        with _mock_httpx_patch():
+            await engine.execute(request_id)
+
+        # After deliver: busy cleared, still counted as won
+        post_deliver = engine.get_robot_status(winner)
+        assert post_deliver["busy"] is False
+        assert post_deliver["busy_remaining_seconds"] == 0
+        assert post_deliver["total_tasks_won"] == 1

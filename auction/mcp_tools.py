@@ -493,6 +493,29 @@ def register_auction_tools(
         except KeyError as exc:
             return _error_response(exc)
 
+    @mcp.tool()
+    async def auction_get_robot_status(robot_id: str) -> dict:
+        """Get the current fleet-level state of a single robot.
+
+        Returns busy state (including ``busy_remaining_seconds`` if still
+        executing), counts of tasks won / active / completed, and the
+        operator's advertised config (accepted_task_types, min_bid_cents,
+        service_radius_km, mcp_endpoint, location).
+
+        Useful for:
+        - Checking whether a robot is available before posting a similar task
+        - Debugging why a robot isn't bidding (busy, wrong category, out of range)
+        - Operator health dashboards / runbooks
+
+        The ``found`` field is False when ``robot_id`` isn't in the in-memory
+        fleet (typo, never registered, or not yet discovered from on-chain).
+        """
+        try:
+            result = engine.get_robot_status(robot_id)
+            return _decimals_to_strings(result)
+        except Exception as exc:
+            return _error_response(exc)
+
     # ------------------------------------------------------------------
     # v1.0 tools: wallet + operator management
     # ------------------------------------------------------------------

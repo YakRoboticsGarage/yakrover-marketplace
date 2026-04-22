@@ -219,7 +219,9 @@ class MCPRobotAdapter:
             if resp.status_code >= 400:
                 log.warning(
                     "MCP call %s to %s failed after retry: HTTP %d",
-                    method, self.robot_id, resp.status_code,
+                    method,
+                    self.robot_id,
+                    resp.status_code,
                 )
                 return None
 

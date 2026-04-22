@@ -509,6 +509,7 @@ class TestMCPToolsRegistered:
                 "auction_get_wallet_balance",
                 "auction_onboard_operator",
                 "auction_get_operator_status",
+                "auction_get_robot_status",
                 # Convenience tools (REC-16b, REC-19)
                 "auction_accept_and_execute",
                 "auction_quick_hire",

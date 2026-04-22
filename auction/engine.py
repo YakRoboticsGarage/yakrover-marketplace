@@ -830,7 +830,7 @@ class AuctionEngine:
             "site_survey": 60 * 60,
             "environmental_survey": 45 * 60,
         }
-        busy_seconds = duration_map.get(task_cat, 30 * 60)  # default 30 min
+        busy_seconds = duration_map.get(task_cat, 30 * 60)  # default 30 min (upper bound)
         robot._busy_until = datetime.now(UTC) + timedelta(seconds=busy_seconds)
         log("BUSY", f"{robot_id} busy for {busy_seconds}s (task: {task_cat})")
 
@@ -856,6 +856,61 @@ class AuctionEngine:
             "payment": "on_delivery",
             "next_action": "Call auction_execute(request_id) to dispatch the task to the winning robot.",
             "next_tool": "auction_execute",
+        }
+
+    # ------------------------------------------------------------------
+    # Busy state (release on completion/abort) + robot status snapshot
+    # ------------------------------------------------------------------
+
+    def _clear_busy(self, robot_id: str) -> None:
+        """Release a robot's busy reservation. Called when execution ends."""
+        robot = self._robots_by_id.get(robot_id)
+        if robot is None:
+            return
+        prev = getattr(robot, "_busy_until", None)
+        if prev is None:
+            return
+        robot._busy_until = None
+        log("BUSY", f"{robot_id} released (previously held until {prev.isoformat()})")
+
+    def get_robot_status(self, robot_id: str) -> dict:
+        """Return a snapshot of a robot's current fleet-level state."""
+        robot = self._robots_by_id.get(robot_id)
+        if robot is None:
+            return {"robot_id": robot_id, "found": False}
+
+        now = datetime.now(UTC)
+        busy_until = getattr(robot, "_busy_until", None)
+        if busy_until is not None and busy_until > now:
+            busy = True
+            busy_remaining_s = int((busy_until - now).total_seconds())
+        else:
+            busy = False
+            busy_remaining_s = 0
+
+        won_tasks = [
+            r for r in self._tasks.values() if r.winning_bid is not None and r.winning_bid.robot_id == robot_id
+        ]
+        active_tasks = [r for r in won_tasks if r.state not in (TaskState.SETTLED, TaskState.WITHDRAWN)]
+        completed_tasks = [r for r in won_tasks if r.state == TaskState.SETTLED]
+
+        return {
+            "robot_id": robot_id,
+            "found": True,
+            "busy": busy,
+            "busy_until": busy_until.isoformat() if busy_until else None,
+            "busy_remaining_seconds": busy_remaining_s,
+            "total_tasks_won": len(won_tasks),
+            "active_tasks": len(active_tasks),
+            "completed_tasks": len(completed_tasks),
+            "accepted_task_types": list(getattr(robot, "_accepted_task_types", []) or []),
+            "min_bid_cents": getattr(robot, "_min_bid_cents", None),
+            "service_radius_km": getattr(robot, "_service_radius_km", None),
+            "mcp_endpoint": getattr(robot, "mcp_endpoint", None),
+            "location": {
+                "latitude": getattr(robot, "_latitude", None),
+                "longitude": getattr(robot, "_longitude", None),
+            },
         }
 
     # ------------------------------------------------------------------
@@ -897,6 +952,8 @@ class AuctionEngine:
 
             # IN_PROGRESS -> ABANDONED
             self._transition(record, TaskState.ABANDONED, f"SLA timeout ({record.task.sla_seconds}s)")
+            # Release busy state — robot is no longer executing this task.
+            self._clear_busy(winning_bid.robot_id)
 
             # No reservation to refund — payment only on delivery
 
@@ -933,6 +990,12 @@ class AuctionEngine:
             TaskState.DELIVERED,
             f"payload received, SLA {sla_label} ({elapsed:.0f}s < {sla}s)",
         )
+
+        # Release busy state — the robot is done executing and can bid again.
+        # Previously _busy_until stayed set for the full duration_map window
+        # even when execute took a fraction of it (e.g. a 1.4s teleop kept the
+        # robot blocked for 30 minutes), gating the operator from the next task.
+        self._clear_busy(winning_bid.robot_id)
 
         return {
             "request_id": request_id,
@@ -1142,6 +1205,7 @@ class AuctionEngine:
 
             # BID_ACCEPTED -> PROVIDER_CANCELLED
             self._transition(record, TaskState.PROVIDER_CANCELLED, f"provider cancelled ({cancelled_robot_id})")
+            self._clear_busy(cancelled_robot_id)
 
             # No reservation to refund — payment only on delivery
 
@@ -1172,6 +1236,7 @@ class AuctionEngine:
 
         # IN_PROGRESS -> ABANDONED
         self._transition(record, TaskState.ABANDONED, f"manually abandoned ({abandoned_robot_id} unresponsive)")
+        self._clear_busy(abandoned_robot_id)
 
         # No reservation to refund — payment only on delivery
 
