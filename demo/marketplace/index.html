@@ -3573,6 +3573,8 @@ function showRevealedData() {
   var revealSlot = document.getElementById('revealedDataSlot');
   if (!revealSlot || !window._lastDeliveryData) return;
 
+  var data = window._lastDeliveryData;
+
   var ipfsLinkHtml = '';
   if (window._ipfsCid) {
     var ipfsHref = window._ipfsUrl || 'https://ipfs.io/ipfs/' + window._ipfsCid;
@@ -3583,12 +3585,95 @@ function showRevealedData() {
         ' <a href="https://ipfs.io/ipfs/' + window._ipfsCid + '" target="_blank" style="color:var(--text-3);font-size:10px;text-decoration:none">[view]</a>' +
       '</div>';
   }
+
+  // Render a schema-aware summary on top of the raw JSON — each known payload
+  // shape gets a presentation-friendly block; unknown shapes still fall back
+  // to the JSON blob so nothing is hidden.
+  var summaryHtml = renderDeliverySummary(data);
+
   revealSlot.innerHTML =
     '<div class="card card-blue" style="margin-top:16px">' +
       '<h3>Delivery Payload</h3>' +
       ipfsLinkHtml +
-      '<div class="data-card"><pre>' + escapeHtml(JSON.stringify(window._lastDeliveryData, null, 2)) + '</pre></div>' +
+      summaryHtml +
+      '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;color:var(--text-3)">Raw JSON</summary>' +
+        '<div class="data-card" style="margin-top:8px"><pre>' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre></div>' +
+      '</details>' +
     '</div>';
+}
+
+function renderDeliverySummary(data) {
+  if (!data || typeof data !== 'object') return '';
+
+  // delivery_ground (ground-robot teleop): command log + timings
+  if (Array.isArray(data.commands_executed)) {
+    var status = data.completion_status || 'unknown';
+    var statusColor = status === 'completed' ? 'var(--green)' : status === 'aborted' ? 'var(--red)' : 'var(--amber)';
+    var durationMs = data.total_command_ms != null ? data.total_command_ms : null;
+    var durationLine = durationMs != null
+      ? 'Total command time: <b>' + durationMs + ' ms</b> (wall-clock ' + (data.duration_s || '?') + 's)'
+      : 'Wall-clock duration: <b>' + (data.duration_s || '?') + 's</b>';
+    var windowLine = (data.started_at && data.finished_at)
+      ? 'Started ' + escapeHtml(data.started_at) + ' → finished ' + escapeHtml(data.finished_at)
+      : '';
+    var rows = data.commands_executed.map(function (c, i) {
+      return '<tr>' +
+        '<td style="padding:2px 8px;color:var(--text-3)">#' + (i + 1) + '</td>' +
+        '<td style="padding:2px 8px"><code>' + escapeHtml(c.command || '?') + '</code></td>' +
+        '<td style="padding:2px 8px;color:var(--text-3);font-size:11px">' + (c.duration_ms != null ? c.duration_ms + ' ms' : '—') + '</td>' +
+        '<td style="padding:2px 8px;color:var(--text-3);font-size:11px">ts ' + (c.timestamp_ms || '—') + '</td>' +
+      '</tr>';
+    }).join('');
+    var errorsHtml = Array.isArray(data.errors) && data.errors.length > 0
+      ? '<div style="color:var(--red);font-size:12px;margin-top:8px">Errors: ' + escapeHtml(JSON.stringify(data.errors)) + '</div>'
+      : '';
+    var infoLine = (data.robot_info && data.robot_info.post_task && data.robot_info.post_task.hostname)
+      ? 'Robot /info: <code>' + escapeHtml(data.robot_info.post_task.hostname) + '</code> at <code>' + escapeHtml(data.robot_info.post_task.ip || '?') + '</code>'
+      : '';
+
+    return (
+      '<div style="display:grid;gap:6px;font-size:13px;margin-bottom:12px">' +
+        '<div>Status: <b style="color:' + statusColor + '">' + escapeHtml(status) + '</b></div>' +
+        '<div>' + durationLine + '</div>' +
+        (windowLine ? '<div style="font-size:11px;color:var(--text-3)">' + windowLine + '</div>' : '') +
+        (infoLine ? '<div style="font-size:11px;color:var(--text-3)">' + infoLine + '</div>' : '') +
+        '<div style="font-size:11px;color:var(--text-3)">Commands ' + (data.commands_executed_count != null ? data.commands_executed_count : data.commands_executed.length) + '/' + (data.commands_requested_count || data.commands_executed.length) + '</div>' +
+      '</div>' +
+      '<table style="width:100%;font-size:12px;border-collapse:collapse">' +
+        '<thead><tr style="color:var(--text-3);text-align:left;font-weight:normal;font-size:11px">' +
+          '<th style="padding:2px 8px">#</th><th style="padding:2px 8px">Command</th><th style="padding:2px 8px">Duration</th><th style="padding:2px 8px">Timestamp</th>' +
+        '</tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+      errorsHtml
+    );
+  }
+
+  // env_sensing / sensor_reading: waypoint readings with temp/humidity
+  if (Array.isArray(data.readings) && data.readings.length > 0 && data.readings[0].temperature_c != null) {
+    var readingRows = data.readings.map(function (r) {
+      return '<tr>' +
+        '<td style="padding:2px 8px">#' + (r.waypoint || '?') + '</td>' +
+        '<td style="padding:2px 8px">' + (r.temperature_c != null ? r.temperature_c.toFixed(1) + '°C' : '—') + '</td>' +
+        '<td style="padding:2px 8px">' + (r.humidity_pct != null ? r.humidity_pct.toFixed(1) + '%' : '—') + '</td>' +
+      '</tr>';
+    }).join('');
+    return (
+      '<table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:12px">' +
+        '<thead><tr style="color:var(--text-3);text-align:left;font-weight:normal;font-size:11px">' +
+          '<th style="padding:2px 8px">Waypoint</th><th style="padding:2px 8px">Temp</th><th style="padding:2px 8px">Humidity</th>' +
+        '</tr></thead>' +
+        '<tbody>' + readingRows + '</tbody>' +
+      '</table>' +
+      (data.summary ? '<div style="font-size:12px;color:var(--text-3)">' + escapeHtml(data.summary) + '</div>' : '')
+    );
+  }
+
+  // Fallback: just show the summary string if present (most schemas have one)
+  if (data.summary) {
+    return '<div style="font-size:13px;margin-bottom:12px">' + escapeHtml(data.summary) + '</div>';
+  }
+  return '';
 }
 
 
