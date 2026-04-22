@@ -2,6 +2,8 @@
 
 Register your robot on the marketplace so it can discover tasks, bid on them, execute work, and get paid. Takes about 5 minutes.
 
+> **Writing your own plugin?** Read [`ROBOT_ACTIVATION_SUMMARY.md`](./ROBOT_ACTIVATION_SUMMARY.md) first — it's a 1-page developer-facing summary of the full path from hardware to live operator, with concrete references to the framework, the reference plugin, and the admin workflow for new equipment types.
+
 ---
 
 ## How It Works
@@ -58,7 +60,7 @@ Click **Register & Activate**. Takes 30-60 seconds to register on-chain.
 | Information | Example | Why |
 |-------------|---------|-----|
 | Company name | "Acme Aerial Survey" | Displayed to buyers |
-| Equipment type | Aerial LiDAR, photogrammetry, GPR, etc. | Determines which tasks you're eligible for |
+| Equipment type | One of: `aerial_lidar`, `photogrammetry`, `thermal_camera`, `terrestrial_lidar`, `gpr`, `rtk_gps`, `robotic_total_station`, `ground_robot` | Determines which tasks you're eligible for. **Unknown types are rejected with `UNKNOWN_EQUIPMENT_TYPE`** — ask the platform admin to add a new type before registering (they update `SENSOR_TO_CATEGORY` + `COMMON_MODELS`). |
 | Location | "Detroit, MI" | Geographic matching — you only see tasks within your service area |
 
 Everything else has smart defaults:
@@ -102,10 +104,10 @@ If you provide just your company name, equipment type, and location, the platfor
 
 **Marketplace visibility and attestation:**
 - Registration alone does not make your robot visible in the marketplace
-- After registration, the **platform reviews your profile** and issues an EAS (Ethereum Attestation Service) attestation
-- The attestation classifies your robot as `demo_fleet` (test/demo) or `live_production` (real operator)
+- The **platform issues an EAS (Ethereum Attestation Service) attestation** classifying your robot as `demo_fleet` (test/demo) or `live_production` (real operator)
 - The marketplace filters robots by attestation — only attested robots appear in buyer search results
-- This is a manual review step. Allow 24-48 hours for the platform to attest your registration. You'll be notified when your robot is live.
+- For `demo_fleet`: the platform runs `auction_eas_attest` against your `agent_id`; typically same-day.
+- For `live_production`: the platform verifies the MCP endpoint is reachable, the wallet is real, and the operator identity is legitimate, then runs `auction_eas_attest` with `fleet_type="live_production"`. Can be same-day for known operators; allow up to 24–48h for first-time registrations while the reviewer checks the setup.
 
 **Bidding:**
 - Once attested, your robot starts bidding automatically using the default strategy (80% of buyer's budget, $0.50 floor)
@@ -124,7 +126,13 @@ Your robot is registered on-chain but needs platform attestation before it appea
 
 If you have a robot MCP server running, provide the URL during registration or update it later. Without it, your robot uses simulated execution — fine for testing, but won't produce real survey data.
 
-Your robot's MCP server needs three tools: `robot_submit_bid`, `robot_execute_task`, and `robot_get_pricing`. You don't need to write these from scratch — the [8004 robot framework](https://github.com/YakRoboticsGarage/yakrover-8004-mcp) includes working reference implementations for all three. Clone the repo, configure your sensor, and point your registration at the resulting MCP URL.
+Use the [8004 robot framework](https://github.com/YakRoboticsGarage/yakrover-8004-mcp): create a plugin package at `src/robots/<your_robot>/` with three files — `__init__.py` (subclass `RobotPlugin`, implement `bid()` and `execute()`), `client.py` (how you talk to your hardware — HTTP, SDK, serial, ROS, whatever), and `tools.py` (any robot-specific MCP tools). The framework **automatically** wires up `robot_submit_bid`, `robot_execute_task`, and `robot_get_pricing` for you — no need to implement them directly.
+
+**Host it somewhere public.** Fly.io (~$5/month for a single-robot deployment) or ngrok for testing. You need a stable HTTPS URL — that's what you paste into `mcp_endpoint_url` at registration.
+
+**Partial-hardware readiness.** If your robot has, say, a LiDAR working but the thermal camera isn't wired yet, use a simple `availability.json` file that your plugin's `bid()` method reads on each call. Advertise all your intended capabilities at registration, flip the offline ones to `{"available": false}` in the JSON, and your `bid()` returns `None` (declining) for tasks that need them. Flip them back on once the hardware lands — no redeploy needed. The `berlin_tumbller` plugin is a worked reference for this pattern.
+
+**Reference plugin.** [`src/robots/berlin_tumbller/`](https://github.com/YakRoboticsGarage/yakrover-8004-mcp/tree/main/src/robots/berlin_tumbller) is the simplest working example — ground teleop robot on Base mainnet, ~200 LOC including availability map, pricing formula, and rate limiter.
 
 ### Add Credentials (recommended)
 
@@ -183,15 +191,17 @@ When a buyer posts a task that matches your equipment:
 
 **Bid aggressiveness** controls how much of the buyer's budget you bid. At 80%, if the buyer's budget is $1,000, you bid $800. Lower = more competitive. Higher = more profit per task.
 
+**Custom pricing.** If the default aggressiveness model doesn't fit — e.g. you charge per motor command, per scanned square meter, or per photo — your plugin's `bid()` method can return any price it wants. The framework's `BiddingTerms` settings (min_price_cents, rate_per_minute_cents) are used by the default `robot_get_pricing` response, but your custom `bid()` can compute price from task parameters however it likes. See the `berlin_tumbller` plugin's pricing formula for a per-command example.
+
 ---
 
 ## Testing Your Setup
 
 1. Visit [yakrobot.bid/demo](https://yakrobot.bid/demo/)
-2. Your robot should appear in the sidebar fleet list
-3. Click **Hire Operator** → select an RFP preset matching your equipment
-4. Your robot should appear in the bid results
-5. Accept the bid → your robot executes → delivery data appears
+2. Your robot should appear in the sidebar fleet list (once attested)
+3. Select an RFP preset matching your equipment type from the dropdown — presets exist for each task category, including `delivery_ground` ("Teleop — NPC ROBOT Berlin Tumbller"), `env_sensing`, `subsurface_scan`, `topo_survey`, etc. If no preset matches your category, choose **"Other (specify below)"** and paste your own RFP text.
+4. Run the auction → your robot should appear in the bid results if the task matches your capabilities and availability map.
+5. Accept the bid → your robot executes → delivery data appears (validated against the category's delivery schema).
 
 ---
 
