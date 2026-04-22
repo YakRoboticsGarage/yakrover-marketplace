@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-21"  # R-042 complete; IMP-099/100/101/102 added; R-054 spawned; R-051/R-053 orphan docs noted
+  last_updated: "2026-04-22"  # R-008 complete; IMP-105/106/107/108 added; no feedback issues
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -143,10 +143,15 @@ topics:
     title: "ACORD 25 COI PDF field extraction methods"
     module: M10_compliance
     hypothesis: "Insurance COI PDFs follow ACORD 25 standard format — there may be libraries or services that parse them reliably"
-    status: queued
+    status: complete
     priority: high
     estimated_sessions: 1
+    completed_date: "2026-04-22"
     depends_on: []
+    output_file: "docs/research/automated/R-008_acord25_coi_pdf_extraction.md"
+    improvement_proposals: [IMP-105, IMP-106, IMP-107, IMP-108]
+    spawned: []
+    notes: "Hypothesis CONFIRMED. COI ParseAPI (coiparseapi.com, $0.10–$0.15/parse) is the best near-term integration: pdfplumber + Claude Vision fallback, returns structured JSON. Critical codebase gap: upload_document() marks every COI as VERIFIED with zero field extraction — no limit validation, no expiration auto-detection, no additional insured check. Tier 1 free path: pypdf form field extraction handles ~70% of real digital COIs. Drone-specific gap: if description_of_operations doesn't mention UAS/drone, GL policy may not cover drone ops. 4 proposals added."
 
   # ===== DELIVERABLE QA (M35) =====
 

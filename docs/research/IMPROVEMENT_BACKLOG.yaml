@@ -1886,3 +1886,82 @@ proposals:
   proposed_date: '2026-04-21'
   decision_date: null
   decision_notes: null
+
+- id: IMP-105
+  title: "Integrate COI ParseAPI for automated ACORD 25 field extraction"
+  description: >
+    Replace the stub upload_document() in compliance.py with actual field extraction when
+    doc_type == "insurance_coi". Attempt Tier 1 (pypdf form field extraction, zero cost) first;
+    fall back to COI ParseAPI (coiparseapi.com, $0.10–$0.15/parse) if form fields are absent.
+    Store full extracted coverage fields in ComplianceRecord.details (named_insured, cgl limits,
+    wc status, umbrella limits, expiration dates, additional_insured, description_of_operations).
+    Gate behind COI_PARSE_API_KEY env var — without it, COIs are accepted but flagged as
+    manually_verified=False. Use data/sample_certs/insurance_coi_acord25.pdf as test fixture.
+  module: M10_compliance
+  research_source: R-008
+  evidence: docs/research/automated/R-008_acord25_coi_pdf_extraction.md
+  effort: medium
+  priority: null
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-106
+  title: "COI coverage limit validation against task-type thresholds"
+  description: >
+    After IMP-105 extraction, validate cgl_each_occurrence and cgl_general_aggregate against
+    configurable per-task-type thresholds (standard: $1M/$2M; DOT/highway: $2M/$4M). Store
+    result in ComplianceRecord.details["coverage_check"] = {passed: bool, gaps: list}. Expose
+    coverage_check in verify_operator() output. Block assign_bid() if critical thresholds are
+    not met (gap severity: BLOCK vs WARN). Thresholds configurable in compliance.py module
+    constants, not hardcoded per task. Drone-specific: require description_of_operations to
+    reference UAS/drone operations for any aerial task type.
+  module: M10_compliance
+  research_source: R-008
+  evidence: docs/research/automated/R-008_acord25_coi_pdf_extraction.md
+  effort: medium
+  priority: null
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-107
+  title: "COI expiration date auto-detection from extracted fields"
+  description: >
+    After IMP-105 extraction, automatically set expires_at = min(cgl_expiration_date,
+    wc_expiration_date, umbrella_expiration_date) — overriding any manually provided value.
+    Fixes the current gap where operators can upload an expired COI without providing expires_at
+    and the system accepts it as VERIFIED. Additionally, add EXPIRING_SOON status to
+    verify_operator(): any COI expiring within 30 days returns EXPIRING_SOON rather than
+    VERIFIED. Requires IMP-105 to be implemented first.
+  module: M10_compliance
+  research_source: R-008
+  evidence: docs/research/automated/R-008_acord25_coi_pdf_extraction.md
+  effort: small
+  priority: null
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-108
+  title: "Additional insured and description-of-operations validation for drone operators"
+  description: >
+    After IMP-105 extraction, store additional_insured (bool) and subrogation_waived (bool)
+    from the COI certificate holder block. Add UAS scope check: if description_of_operations
+    does not contain any of {"drone", "uas", "unmanned", "aerial", "uav"}, add
+    coi_scope_warning to the verify_operator() output indicating the policy may not cover
+    UAS operations. Do not block — surface as a warning requiring operator acknowledgment
+    in the onboarding flow. For tasks requiring AI status (DOT/government projects), flag if
+    additional_insured is False. Requires IMP-105 to be implemented first.
+  module: M10_compliance
+  research_source: R-008
+  evidence: docs/research/automated/R-008_acord25_coi_pdf_extraction.md
+  effort: small
+  priority: null
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: null

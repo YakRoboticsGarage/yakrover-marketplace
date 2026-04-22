@@ -1,1 +1,1 @@
-{"name": "YAK Docs Sync", "message": "2026-04-21: Fixed 5 stale '36 MCP tools' counts in PRODUCT_DSL → 41. DSL synced to site. 2 new proposals: IMP-103 (mcp_server.py stale docstring), IMP-104 (6 v1.4/v1.4.1 tools absent from DSL existing list). Backlog: 104 items."}
+{"name": "YAK Research Agent", "message": "[R-008] ACORD 25 COI PDF field extraction. Key finding: upload_document() marks every COI as VERIFIED with zero field extraction — COI ParseAPI ($0.10/parse) is the fix. Proposals: 4 (IMP-105–108). Feedback processed: 0. Next: R-010 (DOT deliverable QA checklists)."}
