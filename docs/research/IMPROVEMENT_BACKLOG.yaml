@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-21'
-  total_items: 102
+  last_updated: '2026-04-22'
+  total_items: 115
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 39
-  source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
-  last_sync: "2026-04-21 — R-042 (ACH fraud patterns). Added IMP-099 (hold operator ACH transfer until delivery), IMP-100 (first-payment ACH cap $2,500), IMP-101 (Nacha Phase 2 compliance policy — CRITICAL, due June 22 2026), IMP-102 (balance sufficiency check). 44 implemented, 39 proposed, 18 deferred, 1 rejected."
+  proposed: 52
+  source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
+  last_sync: "2026-04-22 — NPC ROBOT E2E rollout findings. Added IMP-109 (wire USDC settlement through MCP — HIGH, production payment rail gap: payment_method on Task accepts 'usdc' but confirm_delivery hardcodes 'buyer' ledger debit and never dispatches on method), IMP-110 (firmware-level auth on public-exposed /motor/* — HIGH, Anuraj review pending for option A/B/C), IMP-111 (ERC-8004 token ownership transfer to operator), IMP-112 (automated IPFS metadata re-upload when operator profile changes), IMP-113 (expose plugin-side availability.json in auction_get_robot_status), IMP-114 (restore completed task counts from SyncTaskStore on marketplace restart), IMP-115 (MQTT reverse-connection architecture for operator→robot path). 44 implemented, 52 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -1965,3 +1965,160 @@ proposals:
   proposed_date: '2026-04-22'
   decision_date: null
   decision_notes: null
+
+- id: IMP-109
+  title: "Wire USDC-on-Base settlement through the marketplace MCP (production payments)"
+  description: >
+    Today any agent can call auction_post_task/get_bids/accept_and_execute/confirm_delivery
+    via the marketplace MCP and run a full auction, but the only real-money settlement path
+    wired is Stripe Connect (engine.py:1099). The payment_method field on Task accepts
+    "usdc" and the buyer wallet_id is hardcoded to the literal string "buyer" at
+    engine.py:1061 — there is no branch in confirm_delivery that dispatches on
+    payment_method, and no way through the MCP surface to specify which on-chain wallet
+    pays. Concrete subscope: (a) add buyer_wallet_address to the Task dataclass and pass
+    through auction_post_task; (b) switch on task.payment_method in
+    engine.confirm_delivery with a new USDC settlement adapter; (c) implement EIP-3009
+    transferWithAuthorization gasless flow — buyer signs an authorization off-chain,
+    marketplace relays on-chain and pays gas (critical because real buyer wallets often
+    have USDC but 0 ETH, e.g. BUYER_WALLET 0xb84165… during NPC ROBOT dogfooding had
+    12.77 USDC and 0 ETH); (d) expose either "pre-signed authorization in task_spec"
+    (protocol-pure) or "marketplace signs as BUYER_WALLET env holder" (dogfooding shortcut).
+    Without this, the marketplace's MCP is not actually a production payment rail —
+    only the yakrobot.bid/demo web form touches real USDC today.
+  module: auction/settlement
+  research_source: NPC ROBOT E2E rollout (2026-04-22)
+  evidence: docs/DECISIONS.md (FD-1 settlement abstraction); tumbller-esp32s3/docs/MARKETPLACE_REGISTRATION_PLAN.md step 9 notes
+  effort: large
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: Fits squarely in v1.5 FD-1. During NPC ROBOT E2E run, confirmed the gap — task settles in demo ledger only, no USDC moved from buyer 0xb84165… to operator 0x6af6….
+
+- id: IMP-110
+  title: "Firmware-level auth on public-exposed robot /motor/* endpoints"
+  description: >
+    NPC ROBOT ships v1 with no auth on the Tumbller's HTTP endpoints, matching Finland's
+    model. Finland is safe because its hostname is .local (LAN-only); NPC ROBOT is exposed
+    publicly via Cloudflare Tunnel at berlin-tumbller-01.yakrover.online, so anyone who
+    discovers the URL can issue /motor/forward etc. with zero cost to them. For real-money
+    teleop on Base mainnet this is a real risk — the marketplace paywall is upstream of the
+    attack vector. Options (per discussion with Anuraj, see
+    tumbller-esp32s3/docs/MARKETPLACE_REGISTRATION_PLAN.md deferred section):
+    (A) bake Authorization: Bearer check into firmware — rotate by reflash for v1, NVS-stored
+    for fleet ≥2; (B) Cloudflare Access policy scoped to the operator's Fly MCP egress —
+    no firmware change, auth at the edge; (C) network-layer isolation via WARP Connector
+    restricting the tunnel to the Fly app's IP. Decision factors: token rotation frequency,
+    defense-in-depth preference, Cloudflare Access cost.
+  module: firmware/operator-security
+  research_source: NPC ROBOT E2E rollout (2026-04-22)
+  evidence: tumbller-esp32s3/docs/MARKETPLACE_REGISTRATION_PLAN.md § "Pending review with Anuraj"
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: Blocking for responsible teleop pricing growth. Accepted risk at v1 because of low throughput + physical safety (robot on its back during tests). Revisit as soon as Anuraj weighs in on option A vs B vs C.
+
+- id: IMP-111
+  title: "Transfer ERC-8004 token ownership from platform wallet to operator wallet post-registration"
+  description: >
+    During auction_onboard_operator_guided (platform-signs mode), the ERC-8004 token is
+    minted with the platform as owner. The onboarding doc already mentions ownership
+    "can be transferred to your wallet later" but there is no MCP tool that does it.
+    For true sovereignty and live_production credibility, operators should hold their own
+    token. Add auction_transfer_robot_ownership(robot_id, new_owner_address) backed by
+    agent0-sdk's transfer flow on the ERC-8004 registry.
+  module: auction/registration
+  research_source: NPC ROBOT E2E rollout (2026-04-22)
+  evidence: docs/onboarding/ROBOT_OPERATOR_ONBOARDING.md "Minimal Registration" section
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-112
+  title: "Automate IPFS metadata re-upload when operator profile changes"
+  description: >
+    auction_update_operator_profile currently only updates in-memory fleet state — the
+    tool's own docstring flags this: "On-chain metadata updates (location, pricing, wallet)
+    require a separate IPFS re-upload which is not yet automated — note this to the operator
+    and log the change for manual sync." Means the IPFS agent card drifts out of sync with
+    the truth. Implement: on relevant field changes (location, sensors, mcp_endpoint,
+    min_bid_cents, service_radius_km, wallet addresses), build a new agent card, pin to
+    Pinata, call setAgentURI on the ERC-8004 registry.
+  module: auction/registration
+  research_source: NPC ROBOT E2E rollout (2026-04-22)
+  evidence: auction/mcp_tools.py auction_update_operator_profile docstring
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-113
+  title: "Expose plugin-side availability map in auction_get_robot_status"
+  description: >
+    auction_get_robot_status (shipped in PR #34) returns fleet-level busy state, task
+    counts, advertised config. But it says nothing about the operator's plugin-side
+    availability.json (e.g. movement online, thermal offline with reason "SHT30 not wired").
+    That live capability picture is what matters for "is this robot actually usable right
+    now" vs just "has it been busy recently". Extend the tool to fan out a
+    robot_get_pricing call to the operator's MCP endpoint and include the availability
+    payload (or a structured "unreachable" response). Bound by a short timeout so a dead
+    operator doesn't slow the caller.
+  module: auction/mcp_tools
+  research_source: NPC ROBOT E2E rollout (2026-04-22)
+  evidence: PR #34 (feat: busy-clear-and-robot-status)
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-114
+  title: "Restore completed task counts from SyncTaskStore on marketplace restart"
+  description: >
+    Observed during NPC ROBOT E2E after PR #34 deploy: auction_get_robot_status reported
+    total_tasks_won: 1, active_tasks: 1, completed_tasks: 0 — even though the prior task
+    had reached state "settled". _load_from_store in engine.py restores *active* tasks
+    but not the settled history, so total-tasks / completed-tasks counters look wrong after
+    any redeploy. Operator reputation/volume signals are less trustworthy as a result.
+    Fix: extend _load_from_store to also re-hydrate terminal-state (SETTLED) tasks so the
+    counts reflect real lifetime activity.
+  module: auction/engine
+  research_source: NPC ROBOT E2E rollout (2026-04-22)
+  evidence: auction/engine.py _load_from_store; auction_get_robot_status output after 2026-04-22 12:14 deploy
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-115
+  title: "Reverse-connection (MQTT) architecture for operator→robot path"
+  description: >
+    The default "operator Fly MCP → Cloudflare Tunnel → always-on cloudflared on home
+    machine → LAN HTTP → robot" chain requires something running at home 24/7. For
+    NPC ROBOT this is a launchd cloudflared daemon; it works but ties the robot to a
+    single physical location and a single always-on machine. Alternative: the ESP32 dials
+    out to an MQTT broker over TLS and subscribes to robots/{id}/commands; operator MCP
+    publishes commands. No inbound port, no tunnel, robot is portable to any WiFi with
+    outbound internet. Also eliminates the auth-at-the-edge problem (broker authenticates
+    the robot) — partially resolves IMP-110. Costs: firmware refactor (~1 day), broker
+    choice (HiveMQ Cloud free tier for 1 robot, or self-hosted Mosquitto on Fly ~$5/mo),
+    MCP-side pub/sub bridge.
+  module: operator-architecture
+  research_source: NPC ROBOT E2E rollout (2026-04-22)
+  evidence: tumbller-esp32s3/docs/MARKETPLACE_REGISTRATION_PLAN.md § "Other deferred items"
+  effort: medium
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-22'
+  decision_date: null
+  decision_notes: Revisit when adding a second physical robot or when Anuraj's security review (IMP-110) makes this attractive as a defensive posture.

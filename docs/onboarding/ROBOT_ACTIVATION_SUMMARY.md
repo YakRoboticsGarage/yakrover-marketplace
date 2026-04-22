@@ -76,6 +76,24 @@ The `berlin_tumbller` plugin (ground teleop) is the simplest working example:
 - USDC settles to your wallet after QA passes.
 - Update pricing, sensors, or MCP URL any time with `auction_update_operator_profile`.
 
+## What will bite you (lessons from the first live_production rollout)
+
+These are not in the happy-path, but each one cost real time during the NPC ROBOT rollout. Save yourself the debugging.
+
+- **Don't set `MCP_BEARER_TOKEN` on your operator MCP server** unless you know the marketplace's `FLEET_MCP_TOKEN` value. The marketplace uses a single shared token to call every operator; if yours doesn't match, the server returns 401 and bids silently fail. Match Finland's posture: leave it unset.
+
+- **`sudo cloudflared service install` writes an incomplete plist on macOS.** The generated `/Library/LaunchDaemons/com.cloudflare.cloudflared.plist` references only the binary with no subcommand — cloudflared keeps crashing with `Use cloudflared tunnel run …` and launchd respawns it in a 5 s loop. Fix: manually write the plist with explicit `ProgramArguments` `[binary, "tunnel", "--config", "/etc/cloudflared/config.yml", "run", "<tunnel-name>"]`, and copy your config + credentials into `/etc/cloudflared/`. Reload with `launchctl unload` then `load`.
+
+- **Use a raw IP in the cloudflared `service:` line, not an mDNS `.local` hostname.** `http://berlin-tumbller-01.local:80` works but every request pays ~5 s for mDNS resolution — enough to trip the plugin's default 5 s `httpx` timeout. Raw IP drops latency to ~200 ms. If your router changes IPs, update the config.
+
+- **Marketplace restarts invalidate MCP sessions.** The `MCPRobotAdapter` in the marketplace caches the session id on the adapter instance and (pre-PR #33) never reset it. After any operator-side restart (OOM, redeploy), the next bid call sent a stale session id → server 404 → silent None bid. Fixed in PR #33 — if you see inexplicable `bid_count: 0` after a restart, make sure the marketplace's deploy includes that commit.
+
+- **Unknown `equipment_type` is rejected, not silently normalized.** Post PR #28, `auction_onboard_operator_guided` returns `UNKNOWN_EQUIPMENT_TYPE` if your type isn't in `SENSOR_TO_CATEGORY` / `COMMON_MODELS`. See "Pick an equipment type" above — ask the admin to add your type first.
+
+- **Busy state used to over-hold the robot.** A 1 s execute left the robot "busy" for the full `duration_map` window (30 min for most categories). Fixed in PR #34 — `_busy_until` is now released when the task enters `DELIVERED` / `ABANDONED` / `PROVIDER_CANCELLED`.
+
+- **Real USDC settlement from the MCP is not wired yet (as of 2026-04-22).** An agent calling `auction_post_task` → `auction_confirm_delivery` triggers the in-memory demo ledger and (if configured) a Stripe Connect transfer. The `payment_method: "usdc"` field on Task is accepted but the settlement path doesn't branch on it. If you need real USDC-on-Base from a specific buyer wallet, that's [IMP-109](../research/IMPROVEMENT_BACKLOG.yaml) in the v1.5 roadmap. The `yakrobot.bid/demo/` web UI has a USDC path via a separate flow; the MCP surface does not.
+
 ## Help
 
 - Full onboarding reference: `[ROBOT_OPERATOR_ONBOARDING.md](./ROBOT_OPERATOR_ONBOARDING.md)`

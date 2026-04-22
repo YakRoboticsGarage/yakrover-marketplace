@@ -96,6 +96,9 @@ If you provide just your company name, equipment type, and location, the platfor
 - Without a USDC wallet, payments are **held by the platform** until you provide a destination
 - Without a Stripe Connect account, card/bank payments are unavailable — USDC only
 - You can add both at any time after registration
+- **What settles today, via which channel:**
+  - **Via the marketplace web UI (`yakrobot.bid/demo`)**: Card / Bank / USDC all wired. Real money moves.
+  - **Via the marketplace MCP tools (`auction_post_task` → `auction_confirm_delivery`)**: Internal ledger always; Stripe Connect transfer to your `acct_{robot_id}` if the platform has `STRIPE_SECRET_KEY` and you registered with a `stripe_connect_id`. **USDC-on-Base from a buyer's own wallet is not wired through MCP yet** (tracked as IMP-109 in `docs/research/IMPROVEMENT_BACKLOG.yaml` for v1.5). The `payment_method: "usdc"` field on a task spec is accepted and validated but the settlement code does not branch on it.
 
 **Test vs. production registration:**
 - If you register without a working MCP endpoint (i.e. no real hardware connected), your robot is flagged as `is_test = true` on-chain
@@ -129,6 +132,8 @@ If you have a robot MCP server running, provide the URL during registration or u
 Use the [8004 robot framework](https://github.com/YakRoboticsGarage/yakrover-8004-mcp): create a plugin package at `src/robots/<your_robot>/` with three files — `__init__.py` (subclass `RobotPlugin`, implement `bid()` and `execute()`), `client.py` (how you talk to your hardware — HTTP, SDK, serial, ROS, whatever), and `tools.py` (any robot-specific MCP tools). The framework **automatically** wires up `robot_submit_bid`, `robot_execute_task`, and `robot_get_pricing` for you — no need to implement them directly.
 
 **Host it somewhere public.** Fly.io (~$5/month for a single-robot deployment) or ngrok for testing. You need a stable HTTPS URL — that's what you paste into `mcp_endpoint_url` at registration.
+
+> **Do not set `MCP_BEARER_TOKEN` on your MCP server** unless you are coordinating with the platform operator. The marketplace uses a single shared `FLEET_MCP_TOKEN` when calling every operator; if your server enforces a different bearer, the marketplace's calls return 401 and your bids silently never reach the auction. Leave auth unset for v1 (matches Finland) — see `ROBOT_ACTIVATION_SUMMARY.md` "What will bite you" for context. Firmware-level auth for a public-internet-exposed teleop surface is tracked as IMP-110.
 
 **Partial-hardware readiness.** If your robot has, say, a LiDAR working but the thermal camera isn't wired yet, use a simple `availability.json` file that your plugin's `bid()` method reads on each call. Advertise all your intended capabilities at registration, flip the offline ones to `{"available": false}` in the JSON, and your `bid()` returns `None` (declining) for tasks that need them. Flip them back on once the hardware lands — no redeploy needed. The `berlin_tumbller` plugin is a worked reference for this pattern.
 
