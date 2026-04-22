@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Any
 
 import httpx
 
@@ -59,6 +60,7 @@ class MCPRobotAdapter:
         self._known_tools: list[str] = list(mcp_tools) if mcp_tools else []
 
         # Build sensor metadata from on-chain sensors list or fall back to defaults
+        sensor_list: list[dict[str, Any]]
         if sensors:
             sensor_list = [{"type": s.strip()} for s in sensors if s.strip()]
         else:
@@ -197,6 +199,7 @@ class MCPRobotAdapter:
             line = line.strip()
             if line.startswith("data: "):
                 import json
+
                 msg = json.loads(line[6:])
                 if "result" in msg:
                     return msg["result"]
@@ -221,6 +224,7 @@ class MCPRobotAdapter:
 
         if loop is not None and loop.is_running():
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                 result = pool.submit(asyncio.run, self._bid_async(task)).result(timeout=30)
         else:
@@ -249,20 +253,22 @@ class MCPRobotAdapter:
     async def _bid_async(self, task: Task) -> Bid | None:
         """Async implementation of bid request."""
         bid_tool = self._resolve_marketplace_tool("robot_submit_bid")
-        result = await self._mcp_call("tools/call", {
-            "name": bid_tool,
-            "arguments": {
-                "task_description": task.description,
-                "task_category": task.task_category,
-                "budget_ceiling": float(task.budget_ceiling),
-                "sla_seconds": task.sla_seconds,
-                "capability_requirements": task.capability_requirements,
+        result = await self._mcp_call(
+            "tools/call",
+            {
+                "name": bid_tool,
+                "arguments": {
+                    "task_description": task.description,
+                    "task_category": task.task_category,
+                    "budget_ceiling": float(task.budget_ceiling),
+                    "sla_seconds": task.sla_seconds,
+                    "capability_requirements": task.capability_requirements,
+                },
             },
-        })
+        )
 
         if not result:
             return None
-
 
         # Parse structured content or text content
         content = result
@@ -270,6 +276,7 @@ class MCPRobotAdapter:
             content = result["structuredContent"]
         elif "content" in result and isinstance(result["content"], list):
             import json
+
             for block in result["content"]:
                 if block.get("type") == "text":
                     try:
@@ -291,9 +298,7 @@ class MCPRobotAdapter:
         # Enrich capability metadata from bid response
         caps = content.get("capabilities_offered", [])
         if caps:
-            self.capability_metadata["sensors"] = [
-                {"type": s} if isinstance(s, str) else s for s in caps
-            ]
+            self.capability_metadata["sensors"] = [{"type": s} if isinstance(s, str) else s for s in caps]
 
         bid_hash = sign_bid(self.robot_id, task.request_id, price, self.signing_key)
 
@@ -334,8 +339,9 @@ class MCPRobotAdapter:
                 if tools_result and isinstance(tools_result, dict):
                     tool_entries = tools_result.get("tools", [])
                     self._known_tools = [t["name"] for t in tool_entries if isinstance(t, dict) and "name" in t]
-                    log.info("Discovered %d tools from %s: %s",
-                             len(self._known_tools), self.robot_id, self._known_tools[:5])
+                    log.info(
+                        "Discovered %d tools from %s: %s", len(self._known_tools), self.robot_id, self._known_tools[:5]
+                    )
             except Exception as e:
                 log.warning("Tool discovery failed for %s: %s", self.robot_id, e)
 
@@ -351,15 +357,18 @@ class MCPRobotAdapter:
 
         start = datetime.now(UTC)
         num_waypoints = 3
-        readings = []
+        readings: list[dict[str, Any]] = []
 
         # Waypoint-by-waypoint execution using resolved tools
         for wp in range(1, num_waypoints + 1):
             if move_tool:
-                move_result = await self._mcp_call("tools/call", {
-                    "name": move_tool,
-                    "arguments": {"direction": "forward"},
-                })
+                move_result = await self._mcp_call(
+                    "tools/call",
+                    {
+                        "name": move_tool,
+                        "arguments": {"direction": "forward"},
+                    },
+                )
                 move_ok = move_result and not move_result.get("isError")
                 if move_ok:
                     log.info("Waypoint %d: moved forward via %s", wp, move_tool)
@@ -370,15 +379,19 @@ class MCPRobotAdapter:
             await asyncio.sleep(1.0)
             if not sensor_tool:
                 break  # no sensor tool — skip to robot_execute_task fallback
-            sensor_result = await self._mcp_call("tools/call", {
-                "name": sensor_tool,
-                "arguments": {},
-            })
+            sensor_result = await self._mcp_call(
+                "tools/call",
+                {
+                    "name": sensor_tool,
+                    "arguments": {},
+                },
+            )
 
             if sensor_result and not sensor_result.get("isError"):
                 sensor_data = sensor_result.get("structuredContent") or {}
                 if not sensor_data and sensor_result.get("content"):
                     import json
+
                     for block in sensor_result["content"]:
                         if block.get("type") == "text":
                             try:
@@ -386,14 +399,15 @@ class MCPRobotAdapter:
                             except (json.JSONDecodeError, KeyError):
                                 pass
 
-                readings.append({
-                    "waypoint": wp,
-                    "temperature_c": round(float(sensor_data.get("temperature", 0)), 1),
-                    "humidity_pct": round(float(sensor_data.get("humidity", 0)), 1),
-                    "timestamp": datetime.now(UTC).isoformat(),
-                })
-                log.info("Waypoint %d: %.1f°C, %.1f%%",
-                         wp, readings[-1]["temperature_c"], readings[-1]["humidity_pct"])
+                readings.append(
+                    {
+                        "waypoint": wp,
+                        "temperature_c": round(float(sensor_data.get("temperature", 0)), 1),
+                        "humidity_pct": round(float(sensor_data.get("humidity", 0)), 1),
+                        "timestamp": datetime.now(UTC).isoformat(),
+                    }
+                )
+                log.info("Waypoint %d: %.1f°C, %.1f%%", wp, readings[-1]["temperature_c"], readings[-1]["humidity_pct"])
             else:
                 log.warning("Waypoint %d: sensor read failed", wp)
 
@@ -405,19 +419,23 @@ class MCPRobotAdapter:
         if not readings:
             log.warning("No waypoint readings — falling back to robot_execute_task")
             exec_tool = self._resolve_marketplace_tool("robot_execute_task")
-            fallback = await self._mcp_call("tools/call", {
-                "name": exec_tool,
-                "arguments": {
-                    "task_id": task.request_id,
-                    "task_description": task.description,
-                    "parameters": task.capability_requirements,
+            fallback = await self._mcp_call(
+                "tools/call",
+                {
+                    "name": exec_tool,
+                    "arguments": {
+                        "task_id": task.request_id,
+                        "task_description": task.description,
+                        "parameters": task.capability_requirements,
+                    },
                 },
-            })
-            content = {}
+            )
+            content: dict[str, Any] = {}
             if fallback:
                 content = fallback.get("structuredContent") or {}
                 if not content and fallback.get("content"):
                     import json
+
                     for block in fallback["content"]:
                         if block.get("type") == "text":
                             try:
@@ -440,23 +458,25 @@ class MCPRobotAdapter:
 
             # Legacy: parse into waypoint/temperature format
             for r in dd.get("readings", []):
-                readings.append({
-                    "waypoint": len(readings) + 1,
-                    "temperature_c": round(float(r.get("temperature_c", r.get("value", 0))), 1),
-                    "humidity_pct": round(float(r.get("humidity_pct", 0)), 1),
-                    "timestamp": r.get("timestamp", now.isoformat()),
-                })
+                readings.append(
+                    {
+                        "waypoint": len(readings) + 1,
+                        "temperature_c": round(float(r.get("temperature_c", r.get("value", 0))), 1),
+                        "humidity_pct": round(float(r.get("humidity_pct", 0)), 1),
+                        "timestamp": r.get("timestamp", now.isoformat()),
+                    }
+                )
 
         if not readings:
             # Final fallback — no data at all
             readings = [{"waypoint": 1, "temperature_c": 0, "humidity_pct": 0, "timestamp": now.isoformat()}]
 
-        temps = [r["temperature_c"] for r in readings if r.get("temperature_c")]
-        humids = [r["humidity_pct"] for r in readings if r.get("humidity_pct")]
+        temps: list[float] = [float(r["temperature_c"]) for r in readings if r.get("temperature_c")]
+        humids: list[float] = [float(r["humidity_pct"]) for r in readings if r.get("humidity_pct")]
         summary = (
             f"{len(readings)} waypoints measured by {self.robot_id}. "
-            f"Temp: {min(temps, default=0):.1f}-{max(temps, default=0):.1f}°C, "
-            f"Humidity: {min(humids, default=0):.1f}-{max(humids, default=0):.1f}%"
+            f"Temp: {min(temps, default=0.0):.1f}-{max(temps, default=0.0):.1f}°C, "
+            f"Humidity: {min(humids, default=0.0):.1f}-{max(humids, default=0.0):.1f}%"
         )
 
         data = {

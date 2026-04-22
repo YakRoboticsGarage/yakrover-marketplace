@@ -120,17 +120,36 @@ def process_rfp(
     survey_types = []
 
     # Environmental / sensor monitoring (non-survey tasks)
-    if any(kw in rfp_lower for kw in [
-        "temperature", "humidity", "environmental monitor", "climate assess",
-        "sensor reading", "env_sensing", "indoor climate", "server room",
-        "air quality", "thermal comfort", "data logging",
-    ]):
+    if any(
+        kw in rfp_lower
+        for kw in [
+            "temperature",
+            "humidity",
+            "environmental monitor",
+            "climate assess",
+            "sensor reading",
+            "env_sensing",
+            "indoor climate",
+            "server room",
+            "air quality",
+            "thermal comfort",
+            "data logging",
+        ]
+    ):
         survey_types.append("env_sensing")
     # Visual / camera inspection
-    if any(kw in rfp_lower for kw in [
-        "visual inspection", "camera inspect", "photo document", "crack detection",
-        "condition assess", "defect", "visual_inspection",
-    ]):
+    if any(
+        kw in rfp_lower
+        for kw in [
+            "visual inspection",
+            "camera inspect",
+            "photo document",
+            "crack detection",
+            "condition assess",
+            "defect",
+            "visual_inspection",
+        ]
+    ):
         survey_types.append("visual_inspection")
     # Construction survey types
     if any(kw in rfp_lower for kw in ["topographic", "topo survey", "surface survey", "corridor survey"]):
@@ -423,7 +442,7 @@ def _build_task_spec(
 # ---------------------------------------------------------------------------
 
 
-    # _load_reference() is defined at module level (line 26) — no redefinition needed
+# _load_reference() is defined at module level (line 26) — no redefinition needed
 
 
 def _process_rfp_with_llm(

@@ -149,19 +149,22 @@ def _generate_env_sensing_data(robot_id: str, task: Task) -> DeliveryPayload:
     has_delivery_schema = bool(task.capability_requirements.get("delivery_schema"))
     if task.task_category == "env_sensing" and has_delivery_schema:
         num_waypoints = 3
-        readings = []
+        readings: list[dict[str, Any]] = []
         for wp in range(1, num_waypoints + 1):
-            readings.append({
-                "waypoint": wp,
-                "temperature_c": round(21.0 + random.uniform(-2.0, 3.0), 1),
-                "humidity_pct": round(45.0 + random.uniform(-5.0, 10.0), 1),
-                "timestamp": now.isoformat(),
-            })
+            readings.append(
+                {
+                    "waypoint": wp,
+                    "temperature_c": round(21.0 + random.uniform(-2.0, 3.0), 1),
+                    "humidity_pct": round(45.0 + random.uniform(-5.0, 10.0), 1),
+                    "timestamp": now.isoformat(),
+                }
+            )
+        avg_temp = sum(float(r["temperature_c"]) for r in readings) / len(readings)
+        avg_humidity = sum(float(r["humidity_pct"]) for r in readings) / len(readings)
         data: dict[str, Any] = {
             "readings": readings,
             "summary": f"Environmental scan complete. {num_waypoints} waypoints measured. "
-                       f"Avg temp: {sum(r['temperature_c'] for r in readings)/len(readings):.1f}°C, "
-                       f"Avg humidity: {sum(r['humidity_pct'] for r in readings)/len(readings):.1f}%",
+            f"Avg temp: {avg_temp:.1f}°C, Avg humidity: {avg_humidity:.1f}%",
             "duration_seconds": round(elapsed, 1),
         }
     else:

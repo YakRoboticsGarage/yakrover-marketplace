@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio
 import threading
 from dataclasses import dataclass, field
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
@@ -224,8 +224,6 @@ class AuctionEngine:
             delivery = None
             dl = row.get("delivery")
             if dl is not None:
-                from datetime import datetime
-
                 delivered_at = dl.get("delivered_at")
                 if isinstance(delivered_at, str):
                     delivered_at = datetime.fromisoformat(delivered_at)
@@ -586,6 +584,7 @@ class AuctionEngine:
         if isinstance(cap_req, dict) and "delivery_schema" not in cap_req:
             try:
                 from auction.delivery_schemas import get_delivery_schema
+
                 schema = get_delivery_schema(task.task_category)
                 cap_req["delivery_schema"] = schema
             except ImportError:
@@ -615,16 +614,16 @@ class AuctionEngine:
 
             # Geographic hard cutoff — robot won't bid outside service radius
             if task.latitude is not None and task.longitude is not None:
-                robot_lat = getattr(robot, '_latitude', None)
-                robot_lng = getattr(robot, '_longitude', None)
-                robot_radius = getattr(robot, '_service_radius_km', None)
+                robot_lat = getattr(robot, "_latitude", None)
+                robot_lng = getattr(robot, "_longitude", None)
+                robot_radius = getattr(robot, "_service_radius_km", None)
                 if robot_lat is not None and robot_lng is not None and robot_radius is not None:
                     dist = haversine_km(robot_lat, robot_lng, task.latitude, task.longitude)
                     if dist > robot_radius:
                         reasons_list.append(f"out_of_range:{dist:.0f}km>{robot_radius}km")
 
             # Busy state — robot is executing another task
-            busy_until = getattr(robot, '_busy_until', None)
+            busy_until = getattr(robot, "_busy_until", None)
             if busy_until is not None and busy_until > datetime.now(UTC):
                 remaining = (busy_until - datetime.now(UTC)).total_seconds()
                 reasons_list.append(f"busy:{remaining:.0f}s_remaining")
@@ -811,20 +810,28 @@ class AuctionEngine:
 
         # Set robot busy — cannot bid on other tasks until this one completes
         # Duration based on task type (see PLAN_100_ROBOT_FLEET.md Section 10)
-        import datetime as _dt
         task_cat = record.task.task_category
         duration_map = {
-            "env_sensing": 15, "sensor_reading": 15,  # seconds (in-situ)
-            "topo_survey": 60 * 60, "aerial_survey": 45 * 60, "corridor_survey": 2 * 60 * 60,
-            "subsurface_scan": 90 * 60, "utility_detection": 90 * 60,
-            "visual_inspection": 30 * 60, "progress_monitoring": 45 * 60,
-            "bridge_inspection": 60 * 60, "thermal_inspection": 30 * 60,
-            "as_built": 2 * 60 * 60, "confined_space": 45 * 60,
-            "volumetric": 30 * 60, "control_survey": 60 * 60,
-            "site_survey": 60 * 60, "environmental_survey": 45 * 60,
+            "env_sensing": 15,
+            "sensor_reading": 15,  # seconds (in-situ)
+            "topo_survey": 60 * 60,
+            "aerial_survey": 45 * 60,
+            "corridor_survey": 2 * 60 * 60,
+            "subsurface_scan": 90 * 60,
+            "utility_detection": 90 * 60,
+            "visual_inspection": 30 * 60,
+            "progress_monitoring": 45 * 60,
+            "bridge_inspection": 60 * 60,
+            "thermal_inspection": 30 * 60,
+            "as_built": 2 * 60 * 60,
+            "confined_space": 45 * 60,
+            "volumetric": 30 * 60,
+            "control_survey": 60 * 60,
+            "site_survey": 60 * 60,
+            "environmental_survey": 45 * 60,
         }
         busy_seconds = duration_map.get(task_cat, 30 * 60)  # default 30 min
-        robot._busy_until = _dt.datetime.now(_dt.timezone.utc) + _dt.timedelta(seconds=busy_seconds)
+        robot._busy_until = datetime.now(UTC) + timedelta(seconds=busy_seconds)
         log("BUSY", f"{robot_id} busy for {busy_seconds}s (task: {task_cat})")
 
         # BIDDING -> BID_ACCEPTED
@@ -1297,8 +1304,6 @@ class AuctionEngine:
         # Auto-accept deadline as ISO timestamp (REC-20)
         auto_accept_deadline = None
         if timer_active:
-            from datetime import timedelta
-
             if record.delivery is not None:
                 auto_accept_deadline = (
                     record.delivery.delivered_at + timedelta(seconds=record.task.auto_accept_seconds)

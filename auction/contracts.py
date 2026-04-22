@@ -23,10 +23,10 @@ EAS_SCHEMA_UID = "0x70a6cca5fbf857df1196dbbf7b0e460ff38f83788e3338a2c96cbb6feb3d
 # USDC token addresses by chain ID
 # ---------------------------------------------------------------------------
 USDC_ADDRESSES = {
-    8453: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",      # Base mainnet
-    1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",          # Ethereum mainnet
-    84532: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",      # Base Sepolia
-    11155111: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",   # Eth Sepolia
+    8453: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",  # Base mainnet
+    1: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",  # Ethereum mainnet
+    84532: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",  # Base Sepolia
+    11155111: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",  # Eth Sepolia
 }
 
 # ---------------------------------------------------------------------------

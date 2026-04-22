@@ -7,8 +7,7 @@ would return, then validates it against the corresponding delivery schema.
 import random
 import time
 
-import pytest
-
+from auction.deliverable_qa import validate_delivery_schema
 from auction.delivery_schemas import (
     AERIAL_LIDAR_SCHEMA,
     AERIAL_PHOTO_SCHEMA,
@@ -22,8 +21,6 @@ from auction.delivery_schemas import (
     GROUND_LIDAR_SCHEMA,
     get_delivery_schema,
 )
-from auction.deliverable_qa import validate_delivery_schema
-
 
 # ── Simulated data generators (mirrors category_server.py) ────────
 
@@ -48,7 +45,14 @@ def make_aerial_lidar_delivery():
             "point_count": int(area * density),
             "density_pts_m2": density,
             "area_m2": area,
-            "classifications": ["ground", "low_vegetation", "medium_vegetation", "high_vegetation", "building", "noise"],
+            "classifications": [
+                "ground",
+                "low_vegetation",
+                "medium_vegetation",
+                "high_vegetation",
+                "building",
+                "noise",
+            ],
             "bounding_box": {"min": sim_gps(), "max": sim_gps()},
         },
         "quality_metrics": {
@@ -95,13 +99,15 @@ def make_aerial_photo_delivery():
 def make_ground_gpr_delivery():
     utilities = []
     for _ in range(random.randint(2, 8)):
-        utilities.append({
-            "type": random.choice(["water", "sewer", "electric", "gas", "telecom"]),
-            "depth_m": round(random.uniform(0.3, 2.5), 2),
-            "confidence": round(random.uniform(0.6, 0.98), 2),
-            "apwa_color": random.choice(["blue", "green", "red", "yellow", "orange"]),
-            "position": sim_gps(),
-        })
+        utilities.append(
+            {
+                "type": random.choice(["water", "sewer", "electric", "gas", "telecom"]),
+                "depth_m": round(random.uniform(0.3, 2.5), 2),
+                "confidence": round(random.uniform(0.6, 0.98), 2),
+                "apwa_color": random.choice(["blue", "green", "red", "yellow", "orange"]),
+                "position": sim_gps(),
+            }
+        )
     return {
         "scan_data": {
             "format": "DZT",
@@ -124,13 +130,15 @@ def make_ground_gpr_delivery():
 def make_aerial_thermal_delivery():
     anomalies = []
     for _ in range(random.randint(1, 5)):
-        anomalies.append({
-            "severity": random.choice(["low", "medium", "high", "critical"]),
-            "delta_t_c": round(random.uniform(2, 15), 1),
-            "area_m2": round(random.uniform(0.5, 20), 1),
-            "classification": random.choice(["moisture", "insulation_gap", "membrane_failure"]),
-            "position": sim_gps(),
-        })
+        anomalies.append(
+            {
+                "severity": random.choice(["low", "medium", "high", "critical"]),
+                "delta_t_c": round(random.uniform(2, 15), 1),
+                "area_m2": round(random.uniform(0.5, 20), 1),
+                "classification": random.choice(["moisture", "insulation_gap", "membrane_failure"]),
+                "position": sim_gps(),
+            }
+        )
     return {
         "thermal_mosaic": {
             "format": "RJPEG",
@@ -156,15 +164,17 @@ def make_aerial_thermal_delivery():
 def make_bridge_inspection_delivery():
     elements = []
     for elem in ["deck", "superstructure", "substructure", "bearings", "joints"]:
-        elements.append({
-            "element": elem,
-            "condition_state": random.randint(1, 4),
-            "quantity_pct": round(random.uniform(60, 100), 1),
-            "defects": random.sample(
-                ["spalling", "cracking", "corrosion", "delamination", "efflorescence"],
-                random.randint(0, 3),
-            ),
-        })
+        elements.append(
+            {
+                "element": elem,
+                "condition_state": random.randint(1, 4),
+                "quantity_pct": round(random.uniform(60, 100), 1),
+                "defects": random.sample(
+                    ["spalling", "cracking", "corrosion", "delamination", "efflorescence"],
+                    random.randint(0, 3),
+                ),
+            }
+        )
     return {
         "inspection_set": {
             "total_images": random.randint(100, 400),

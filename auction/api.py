@@ -226,6 +226,5 @@ def create_api_router(engine: AuctionEngine) -> APIRouter:
 
     return router
 
-
     # CORS is handled at the Cloudflare Worker and mcp_server.py levels.
     # Removed unused add_cors() — see IMP-032.

@@ -104,6 +104,16 @@ if not _INIT_PATH.exists():
         / "__init__.py"
     )
 
+# This test imports the fakerover plugin directly from the sibling yakrover-8004-mcp
+# repo. That's only available in a local dev setup with both repos checked out. CI
+# only has this repo checked out, so skip the module cleanly rather than error.
+if not _INIT_PATH.exists():
+    pytest.skip(
+        f"sibling repo not found at {_INIT_PATH} — these tests require a dev setup "
+        "with both yakrover-marketplace and yakrover-8004-mcp cloned side by side",
+        allow_module_level=True,
+    )
+
 spec = importlib.util.spec_from_file_location(_FAKEROVER_PKG, _INIT_PATH, submodule_search_locations=[])
 _mod = importlib.util.module_from_spec(spec)
 sys.modules[_FAKEROVER_PKG] = _mod

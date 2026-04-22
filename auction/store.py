@@ -730,8 +730,6 @@ class SyncTaskStore:
 
     def save_event(self, event: dict) -> None:
         """Persist a structured event to the events table."""
-        import json as _json
-
         db = self._conn()
         db.execute(
             """INSERT INTO events
@@ -743,7 +741,7 @@ class SyncTaskStore:
                 event.get("request_id"),
                 event.get("actor_id"),
                 event.get("actor_role", "system"),
-                _json.dumps(event.get("data", {})),
+                json.dumps(event.get("data", {})),
                 event["timestamp"],
             ),
         )
@@ -759,8 +757,6 @@ class SyncTaskStore:
         limit: int = 50,
     ) -> list[dict]:
         """Query events with optional filters."""
-        import json as _json
-
         db = self._conn()
         clauses: list[str] = []
         params: list[str] = []

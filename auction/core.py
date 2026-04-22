@@ -30,6 +30,7 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
+
 # ---------------------------------------------------------------------------
 # Optional eth_account import for Ed25519 signing (v1.0)
 # Falls back to HMAC-only mode if not installed.

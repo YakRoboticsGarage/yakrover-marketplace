@@ -65,7 +65,9 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"auction/tests/*" = ["S101", "S105", "S106", "E402"]  # allow assert, test passwords, conditional imports
+"auction/tests/*" = ["S101", "S105", "S106", "E402", "S311"]  # allow assert, test passwords, conditional imports, non-crypto random (test fixtures)
+"auction/mock_fleet.py" = ["S311"]  # seeded random for simulated survey data, not crypto
+"auction/operator_registry.py" = ["S311"]  # random operator_id suffix, not crypto
 "auction/api.py" = ["E402"]  # conditional FastAPI import
 "auction/mcp_tools.py" = ["E402", "E501"]  # conditional imports + long docstrings
 "auction/demo.py" = ["E402"]  # imports after dotenv.load_dotenv()

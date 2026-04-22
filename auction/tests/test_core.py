@@ -223,9 +223,7 @@ class TestHardConstraints:
 
     def test_check_hard_constraints_certifications(self):
         """certifications_required gates operators without required certs."""
-        task = make_task(capability_requirements={
-            "hard": {"certifications_required": ["licensed_surveyor"]}
-        })
+        task = make_task(capability_requirements={"hard": {"certifications_required": ["licensed_surveyor"]}})
         # Robot without certification
         robot_no_cert = {"sensors": [], "certifications": []}
         eligible, reasons = check_hard_constraints(task, robot_no_cert)

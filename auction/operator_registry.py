@@ -203,14 +203,18 @@ class OperatorRegistry:
             account_data = stripe_service.get_account(profile.stripe_account_id)
             if account_data.get("error"):
                 if use_test_account_fallback:
-                    stripe_warning = f"Stripe account lookup failed ({account_data['error']}). Using test account for demo."
+                    stripe_warning = (
+                        f"Stripe account lookup failed ({account_data['error']}). Using test account for demo."
+                    )
                     profile.stripe_account_id = self.TEST_STRIPE_ACCOUNT
                 else:
                     issues.append(f"Stripe account error: {account_data['error']}")
             elif not account_data.get("payouts_enabled", False):
                 disabled_reason = account_data.get("requirements", {}).get("disabled_reason", "unknown")
                 if use_test_account_fallback:
-                    stripe_warning = f"Stripe payouts not enabled (reason: {disabled_reason}). Using test account for demo."
+                    stripe_warning = (
+                        f"Stripe payouts not enabled (reason: {disabled_reason}). Using test account for demo."
+                    )
                     profile.stripe_account_id = self.TEST_STRIPE_ACCOUNT
                 else:
                     issues.append(
@@ -245,8 +249,13 @@ class OperatorRegistry:
         """Update an existing operator profile. Only provided fields are changed."""
         profile = self._get(operator_id)
         allowed = {
-            "company_name", "contact_name", "contact_email", "location",
-            "coverage_states", "max_range_miles", "stripe_account_id",
+            "company_name",
+            "contact_name",
+            "contact_email",
+            "location",
+            "coverage_states",
+            "max_range_miles",
+            "stripe_account_id",
         }
         updated = []
         for k, v in fields.items():

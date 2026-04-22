@@ -18,6 +18,7 @@ auction mode is enabled.
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from datetime import UTC
 from decimal import Decimal
@@ -27,6 +28,8 @@ from mcp.server.fastmcp import FastMCP
 
 from auction.core import VALID_TASK_CATEGORIES, TaskState
 from auction.engine import AuctionEngine
+
+log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -151,13 +154,31 @@ DEFAULT_CHAIN = "base-mainnet"
 # EAS (Ethereum Attestation Service) contract ABI — attest function only
 EAS_ABI = [
     {
-        "inputs": [{"components": [{"name": "schema", "type": "bytes32"},
-            {"components": [{"name": "recipient", "type": "address"}, {"name": "expirationTime", "type": "uint64"},
-             {"name": "revocable", "type": "bool"}, {"name": "refUID", "type": "bytes32"},
-             {"name": "data", "type": "bytes"}, {"name": "value", "type": "uint256"}],
-            "name": "data", "type": "tuple"}], "name": "request", "type": "tuple"}],
-        "name": "attest", "outputs": [{"name": "", "type": "bytes32"}],
-        "stateMutability": "payable", "type": "function",
+        "inputs": [
+            {
+                "components": [
+                    {"name": "schema", "type": "bytes32"},
+                    {
+                        "components": [
+                            {"name": "recipient", "type": "address"},
+                            {"name": "expirationTime", "type": "uint64"},
+                            {"name": "revocable", "type": "bool"},
+                            {"name": "refUID", "type": "bytes32"},
+                            {"name": "data", "type": "bytes"},
+                            {"name": "value", "type": "uint256"},
+                        ],
+                        "name": "data",
+                        "type": "tuple",
+                    },
+                ],
+                "name": "request",
+                "type": "tuple",
+            }
+        ],
+        "name": "attest",
+        "outputs": [{"name": "", "type": "bytes32"}],
+        "stateMutability": "payable",
+        "type": "function",
     },
 ]
 
@@ -750,9 +771,7 @@ def register_auction_tools(
         try:
             from auction.rfp_processor import process_rfp
 
-            specs = await asyncio.to_thread(
-                process_rfp, rfp_text, jurisdiction, site_info or None
-            )
+            specs = await asyncio.to_thread(process_rfp, rfp_text, jurisdiction, site_info or None)
 
             warnings = []
             if not site_info.get("coordinates"):
@@ -994,8 +1013,8 @@ def register_auction_tools(
                     "pki_providers": ["IdenTrust (AATL-listed)", "GlobalSign", "DigiCert"],
                     "estimated_cost": "$100-200/year per certificate",
                     "note": "Standard DocuSign or Adobe Sign e-signatures do NOT satisfy PKI requirements in these states. "
-                            "Operators delivering PLS-stamped work in OH, VA, NJ, or FL must obtain a PKI certificate from an "
-                            "AATL-listed Certificate Authority.",
+                    "Operators delivering PLS-stamped work in OH, VA, NJ, or FL must obtain a PKI certificate from an "
+                    "AATL-listed Certificate Authority.",
                 }
             return result
         except (ValueError, Exception) as exc:
@@ -1312,11 +1331,15 @@ def register_auction_tools(
                         if update_fields:
                             engine._operator_registry.update_profile(op.operator_id, **update_fields)
                         break
-            except Exception:
-                pass  # Registry update is best-effort
+            except Exception as exc:
+                log.warning("operator registry update (best-effort) failed for %s: %s", robot_id, exc)
 
         if not changes:
-            return {"robot_id": robot_id, "status": "no_changes", "message": "No fields to update. Provide at least one field with a new value."}
+            return {
+                "robot_id": robot_id,
+                "status": "no_changes",
+                "message": "No fields to update. Provide at least one field with a new value.",
+            }
 
         return {
             "robot_id": robot_id,
@@ -1371,7 +1394,9 @@ def register_auction_tools(
         if not name or not name.strip():
             return _error_response_structured("INVALID_NAME", "name is required.", "Provide a non-empty robot name.")
         if not company_name or not company_name.strip():
-            return _error_response_structured("INVALID_COMPANY", "company_name is required.", "Provide a company or operator name.")
+            return _error_response_structured(
+                "INVALID_COMPANY", "company_name is required.", "Provide a company or operator name."
+            )
         if not location or not location.strip():
             return _error_response_structured("INVALID_LOCATION", "location is required.", "e.g. Detroit, MI")
         # Validate equipment_type — must be registered in SENSOR_TO_CATEGORY.
@@ -1398,7 +1423,11 @@ def register_auction_tools(
                 ),
             )
         if not (0.0 < bid_pct <= 1.0):
-            return _error_response_structured("INVALID_BID_PCT", "bid_pct must be between 0 (exclusive) and 1 (inclusive).", "Typical values: 0.70–0.95")
+            return _error_response_structured(
+                "INVALID_BID_PCT",
+                "bid_pct must be between 0 (exclusive) and 1 (inclusive).",
+                "Typical values: 0.70–0.95",
+            )
         if min_bid_cents < 1:
             return _error_response_structured("INVALID_MIN_BID", "min_bid_cents must be >= 1.", "Use 50 or higher.")
 
@@ -1421,11 +1450,10 @@ def register_auction_tools(
         marketplace_endpoint = marketplace_base + "/mcp"
         # The robot's MCP endpoint — where it actually lives (not the marketplace)
         robot_mcp_url = mcp_endpoint_url or "https://fleet.yakrover.online/fakerover/mcp"
-        # Equipment (sensors AND platforms) drives task_category routing,
-        # but only actual measurement sensors belong in the sensors list.
+        # Equipment (sensors AND platforms) drives task_category routing.
         # All types here are known (validated above); no silent fallback.
+        # The sensor vs platform split happens inside _blocking_register below.
         all_equipment_list = equipment_types if equipment_types else [equipment_type]
-        all_sensor_list = [e for e in all_equipment_list if e not in PLATFORM_EQUIPMENT]
         task_categories = sorted({SENSOR_TO_CATEGORY[s] for s in all_equipment_list})
         task_category = ",".join(task_categories)
 
@@ -1433,6 +1461,7 @@ def register_auction_tools(
             # 1. Operator profile
             if not hasattr(engine, "_operator_registry") or engine._operator_registry is None:
                 from auction.operator_registry import OperatorRegistry
+
                 engine._operator_registry = OperatorRegistry()
 
             profile = engine._operator_registry.register(
@@ -1463,6 +1492,7 @@ def register_auction_tools(
             robot_tools = []
             try:
                 from agent0_sdk import SDK
+
                 sdk = SDK(
                     chainId=cfg["chain_id"],
                     rpcUrl=cfg["rpc"],
@@ -1475,8 +1505,11 @@ def register_auction_tools(
                 agent.setMCP(robot_mcp_url, auto_fetch=False)
 
                 mcp_ep = next(
-                    (ep for ep in agent.registration_file.endpoints
-                     if hasattr(ep, "type") and str(ep.type).lower().endswith("mcp")),
+                    (
+                        ep
+                        for ep in agent.registration_file.endpoints
+                        if hasattr(ep, "type") and str(ep.type).lower().endswith("mcp")
+                    ),
                     None,
                 )
                 if mcp_ep is None:
@@ -1486,23 +1519,36 @@ def register_auction_tools(
                 robot_tools = []
                 try:
                     import httpx
+
                     probe = httpx.post(
                         robot_mcp_url,
-                        json={"jsonrpc": "2.0", "method": "initialize",
-                              "params": {"protocolVersion": "2025-03-26", "capabilities": {},
-                                         "clientInfo": {"name": "registrar", "version": "1.0"}}, "id": 1},
-                        headers={"Accept": "text/event-stream",
-                                 "Authorization": f"Bearer {os.environ.get('FLEET_MCP_TOKEN', '')}"},
+                        json={
+                            "jsonrpc": "2.0",
+                            "method": "initialize",
+                            "params": {
+                                "protocolVersion": "2025-03-26",
+                                "capabilities": {},
+                                "clientInfo": {"name": "registrar", "version": "1.0"},
+                            },
+                            "id": 1,
+                        },
+                        headers={
+                            "Accept": "text/event-stream",
+                            "Authorization": f"Bearer {os.environ.get('FLEET_MCP_TOKEN', '')}",
+                        },
                         timeout=10.0,
                     )
                     if probe.status_code == 200:
                         import json as _json
+
                         tools_resp = httpx.post(
                             robot_mcp_url,
                             json={"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 2},
-                            headers={"Accept": "text/event-stream",
-                                     "Mcp-Session-Id": probe.headers.get("mcp-session-id", ""),
-                                     "Authorization": f"Bearer {os.environ.get('FLEET_MCP_TOKEN', '')}"},
+                            headers={
+                                "Accept": "text/event-stream",
+                                "Mcp-Session-Id": probe.headers.get("mcp-session-id", ""),
+                                "Authorization": f"Bearer {os.environ.get('FLEET_MCP_TOKEN', '')}",
+                            },
                             timeout=10.0,
                         )
                         for line in tools_resp.text.splitlines():
@@ -1512,10 +1558,10 @@ def register_auction_tools(
                                     for t in msg.get("result", {}).get("tools", []):
                                         if isinstance(t, dict) and "name" in t:
                                             robot_tools.append(t["name"])
-                                except Exception:
-                                    pass
-                except Exception:
-                    pass  # tool discovery failed — will use fallback defaults
+                                except Exception as exc:
+                                    log.debug("skipped malformed tools/list SSE line for %s: %s", robot_mcp_url, exc)
+                except Exception as exc:
+                    log.info("tool discovery probe failed for %s (falling back to defaults): %s", robot_mcp_url, exc)
 
                 mcp_ep.meta["mcpTools"] = robot_tools if robot_tools else ["robot_submit_bid", "robot_execute_task"]
                 mcp_ep.meta["fleetEndpoint"] = marketplace_endpoint
@@ -1561,6 +1607,7 @@ def register_auction_tools(
 
                 # Step 1: Mint token with on-chain metadata (no IPFS URI yet)
                 import time as _time
+
                 metadata_entries = agent._collectMetadataForRegistration()
                 tx1_hash = sdk.web3_client.transact_contract(
                     sdk.identity_registry,
@@ -1641,6 +1688,7 @@ def register_auction_tools(
                 # Always create MCPRobotAdapter — it handles unreachable endpoints
                 # gracefully (bid returns None, execution falls back to robot_execute_task)
                 from auction.mcp_robot_adapter import MCPRobotAdapter
+
                 bearer = os.environ.get("FLEET_MCP_TOKEN", "")
                 robot = MCPRobotAdapter(
                     robot_id=name,
@@ -1731,7 +1779,9 @@ def register_auction_tools(
                 break
         if chain_cfg is None:
             valid_ids = [c["chain_id"] for c in CHAIN_CONFIG.values()]
-            return _error_response_structured("INVALID_CHAIN", f"chain_id {chain_id} not in CHAIN_CONFIG. Valid: {valid_ids}", "")
+            return _error_response_structured(
+                "INVALID_CHAIN", f"chain_id {chain_id} not in CHAIN_CONFIG. Valid: {valid_ids}", ""
+            )
 
         # Pick explorer based on network
         explorer_base = "https://base-sepolia.easscan.org" if chain_id == 84532 else "https://base.easscan.org"
@@ -1741,9 +1791,7 @@ def register_auction_tools(
             from web3 import Web3 as _Web3
 
             w3 = _Web3(_Web3.HTTPProvider(chain_cfg["rpc"]))
-            eas = w3.eth.contract(
-                address=_Web3.to_checksum_address(EAS_ADDRESS), abi=EAS_ABI
-            )
+            eas = w3.eth.contract(address=_Web3.to_checksum_address(EAS_ADDRESS), abi=EAS_ABI)
             account = w3.eth.account.from_key(signer_key)
 
             encoded_data = _eth_abi.encode(
@@ -1755,17 +1803,27 @@ def register_auction_tools(
                 (
                     bytes.fromhex(EAS_SCHEMA_UID[2:]),
                     (
-                        _Web3.to_checksum_address(attester_address if attester_address.startswith("0x") else "0x0000000000000000000000000000000000000000"),
-                        0, True, b"\x00" * 32, encoded_data, 0,
+                        _Web3.to_checksum_address(
+                            attester_address
+                            if attester_address.startswith("0x")
+                            else "0x0000000000000000000000000000000000000000"
+                        ),
+                        0,
+                        True,
+                        b"\x00" * 32,
+                        encoded_data,
+                        0,
                     ),
                 )
-            ).build_transaction({
-                "from": account.address,
-                "nonce": w3.eth.get_transaction_count(account.address),
-                "gasPrice": w3.eth.gas_price,
-                "chainId": chain_id,
-                "value": 0,
-            })
+            ).build_transaction(
+                {
+                    "from": account.address,
+                    "nonce": w3.eth.get_transaction_count(account.address),
+                    "gasPrice": w3.eth.gas_price,
+                    "chainId": chain_id,
+                    "value": 0,
+                }
+            )
 
             signed = w3.eth.account.sign_transaction(tx, signer_key)
             tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
@@ -2107,7 +2165,11 @@ def register_auction_tools(
             request_id: Associated task request_id if one was posted (optional).
         """
         if engine.store is None:
-            return {"error": True, "error_code": "NO_STORE", "message": "SQLite persistence not configured. Set AUCTION_DB_PATH."}
+            return {
+                "error": True,
+                "error_code": "NO_STORE",
+                "message": "SQLite persistence not configured. Set AUCTION_DB_PATH.",
+            }
 
         row_id = engine.store.save_unmet_demand(
             task_category,
@@ -2150,7 +2212,11 @@ def register_auction_tools(
             limit: Maximum results to return (default 20).
         """
         if engine.store is None:
-            return {"error": True, "error_code": "NO_STORE", "message": "SQLite persistence not configured. Set AUCTION_DB_PATH."}
+            return {
+                "error": True,
+                "error_code": "NO_STORE",
+                "message": "SQLite persistence not configured. Set AUCTION_DB_PATH.",
+            }
 
         signals = engine.store.get_demand_signals(
             task_category=task_category or None,
@@ -2161,7 +2227,7 @@ def register_auction_tools(
         )
 
         # Aggregate summary
-        categories = {}
+        categories: dict[str, int] = {}
         for s in signals:
             cat = s["task_category"]
             categories[cat] = categories.get(cat, 0) + 1
