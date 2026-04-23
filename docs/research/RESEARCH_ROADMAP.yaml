@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-22"  # R-008 complete; IMP-105/106/107/108 added; no feedback issues
+  last_updated: "2026-04-23"  # R-010 complete; IMP-118/119/120/121 added; no feedback issues
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -172,10 +172,15 @@ topics:
     title: "Survey deliverable QA checklists from state DOTs"
     module: M35_deliverable_qa
     hypothesis: "State DOTs publish acceptance criteria for LiDAR deliverables — these can be encoded as automated checks"
-    status: queued
+    status: complete
     priority: high
     estimated_sessions: 1
+    completed_date: "2026-04-23"
     depends_on: [R-009]
+    output_file: "docs/research/automated/R-010_survey_deliverable_qa_checklists_dot.md"
+    improvement_proposals: [IMP-118, IMP-119, IMP-120, IMP-121]
+    spawned: [R-010a]
+    notes: "Hypothesis CONFIRMED. USGS LBS 2025 + ASPRS Ed.2 define the federal baseline. ODOT=40 pts/m², TxDOT=25 pts/m², MDOT=0.05 ft validation threshold. Four Level 2 QA gaps: (1) no Class 0 check, (2) DOT-specific density thresholds absent, (3) RMSE not validated against ASPRS class threshold (highest-impact gap), (4) swath Δz not checked. ASPRS Ed.2: min 30 checkpoints, VVA report-only (cannot fail). Four proposals + 1 new topic spawned."
 
   - id: R-011
     title: "Orthomosaic and DEM quality metrics"
@@ -808,3 +813,17 @@ topics:
     improvement_proposals: []
     spawned: []
     notes: "Orphaned doc recovered 2026-04-21. Likely addresses R-047 questions about Stripe MPP. Review in next R-META run to extract proposals and close R-047 if answered."
+
+  # ===== SPAWNED BY R-010 =====
+
+  - id: R-010a
+    title: ".dgn deliverable format enforcement — ODOT OpenRoads requirement and operator capability"
+    module: M35_deliverable_qa
+    hypothesis: "ODOT requires Bentley OpenRoads Designer .dgn terrain model deliverables. The current AERIAL_LIDAR_SCHEMA does not check deliverable format strings for DOT-specific requirements. Research: (1) should the platform enforce .dgn in the deliverables list when dot_state=OH? (2) Can drone survey operators output .dgn from common software (Pix4D, DJI Terra, DroneDeploy, Global Mapper)? (3) Is .dgn a buyer-side responsibility (client converts from LAS/DXF) or an operator-side hard requirement? This connects to R-029 (ODOT operator capability) and IMP-118 (dot_state routing)."
+    status: queued
+    priority: low
+    estimated_sessions: 1
+    depends_on: [R-010]
+    spawned_from: R-010
+    spawned_date: "2026-04-23"
+    notes: "Key questions: (1) Does ODOT require .dgn as the sole deliverable or alongside LAS/DXF? (2) Which software can convert LAS → .dgn without Bentley license? (3) If platform enforces .dgn check, what validation is possible on a metadata-only basis? (4) Operator impact: should .dgn capability be a required equipment attribute for ODOT tasks?"

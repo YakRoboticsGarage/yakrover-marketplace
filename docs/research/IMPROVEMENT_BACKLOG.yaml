@@ -2168,3 +2168,95 @@ proposals:
   proposed_date: '2026-04-22'
   decision_date: null
   decision_notes: Prerequisite IMP-116 (remove deprecated stubs). Trigger: when mcp_tools.py exceeds 2,500 lines or when adding v1.5 settlement tools.
+
+- id: IMP-118
+  title: "Add dot_state field to task spec and route DOT-specific density thresholds in Level 2 QA"
+  description: >
+    ODOT (Ohio) requires ≥40 pts/m² and TxDOT (Texas) requires ≥25 pts/m² for airborne LiDAR — neither
+    is enforced by the current Level 2 QA engine, which uses only USGS QL thresholds (QL0=20, QL1=8,
+    QL2=2, QL3=0.5). Add an optional dot_state field to capability_requirements. In _check_level_2
+    (deliverable_qa.py), if dot_state is set, look up a state-specific density override table before
+    falling back to USGS QL. Initial table: {OH: 40, TX: 25, MI: None (NCHRP 748 Category 1A, no fixed
+    pts/m² threshold)}. Caltrans and MDOT do not publish a fixed pts/m² for airborne work; they use
+    scale-based density. The dot_state field also enables future routing of other state-specific rules
+    (vertical datum, .dgn format enforcement for ODOT, GEOID18 for TxDOT).
+  module: auction/deliverable_qa, auction/core
+  research_source: R-010
+  evidence: "docs/research/automated/R-010_survey_deliverable_qa_checklists_dot.md"
+  effort: small
+  priority: null
+  status: proposed
+  proposed_date: '2026-04-23'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-119
+  title: "Add Class 0 check and ASPRS checkpoint count (≥30) to AERIAL_LIDAR_SCHEMA"
+  description: >
+    USGS LBS 2025 prohibits Class 0 (unclassified) points in the classified LAS deliverable. ASPRS
+    Positional Accuracy Standards Edition 2 (2024) requires a minimum of 30 checkpoints (raised from 20
+    in Edition 1). Neither requirement is currently checked. Add two fields to
+    AERIAL_LIDAR_SCHEMA.properties.quality_metrics in delivery_schemas.py:
+    (1) class_0_points: {type: integer, maximum: 0} — any Class 0 point is a FAIL.
+    (2) checkpoint_count: {type: integer, minimum: 30} — fewer than 30 checkpoints fails ASPRS Ed.2.
+    The Level 1 schema validator (validate_delivery_schema) will enforce these automatically since
+    max/min are already supported. Also raise control_points_used minimum from 0 to 30 to align with
+    ASPRS Ed.2 in existing check (or replace with checkpoint_count). Note: Class 0 check is metadata-
+    level — the operator's processing software (Pix4D, TerraSolid) should report this count; the
+    platform cannot compute it from raw LAS without PDAL integration (R-009a).
+  module: auction/delivery_schemas, auction/deliverable_qa
+  research_source: R-010
+  evidence: "docs/research/automated/R-010_survey_deliverable_qa_checklists_dot.md"
+  effort: small
+  priority: null
+  status: proposed
+  proposed_date: '2026-04-23'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-120
+  title: "Add ASPRS RMSEz threshold validation to Level 2 QA (NVA pass/fail vs VVA report-only)"
+  description: >
+    Current _check_level_2 in deliverable_qa.py checks that an accuracy report exists when
+    asprs_vertical_class is specified, but does NOT validate the RMSE value against the class threshold.
+    This means a delivery claiming ASPRS A-I with RMSEz=50 cm passes Level 2 QA. Fix:
+    (1) Add NVA RMSEz threshold table: {A-I: 1.0, A-II: 2.5, B-I: 5.0, B-II: 10.0, C-I: 20.0} (cm).
+    (2) In _check_level_2, look up asprs_vertical_class and compare data.get("nva_rmse_cm") against
+    threshold; if > threshold, FAIL.
+    (3) Rename vertical_accuracy_cm in AERIAL_LIDAR_SCHEMA to nva_rmse_cm (NVA, binding pass/fail) and
+    add vva_rmse_cm as optional (VVA, report-only per ASPRS Ed.2 — cannot cause a project to fail).
+    (4) Update Level 3 PLS check to also validate NVA explicitly before flagging for PLS stamp.
+    This is the highest-impact single change in the QA layer — converts "accuracy reported?" to
+    "accuracy meets spec?".
+  module: auction/deliverable_qa, auction/delivery_schemas
+  research_source: R-010
+  evidence: "docs/research/automated/R-010_survey_deliverable_qa_checklists_dot.md"
+  effort: small
+  priority: null
+  status: proposed
+  proposed_date: '2026-04-23'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-121
+  title: "Add max_swath_dz_cm field and swath alignment check to AERIAL_LIDAR_SCHEMA"
+  description: >
+    USGS LBS 2025 requires swath Δz ≤ 8 cm in overlap areas. Values > 8 cm are cause for rejection.
+    Swath Δz is a standard output of LiDAR processing software (Pix4D, DJI Terra, TerraSolid) and
+    should be a required field in aerial LiDAR deliveries. Add to
+    AERIAL_LIDAR_SCHEMA.properties.quality_metrics:
+      max_swath_dz_cm: {type: number, maximum: 8.0}
+    In _check_level_2, when max_swath_dz_cm is present and > 8.0, issue a FAIL with message
+    "Swath alignment Δz {value} cm exceeds USGS LBS maximum of 8.0 cm."
+    Make the field required for aerial_survey and topo_survey tasks but optional for mobile/terrestrial
+    LiDAR (no swath overlap in the same sense). Mark WARN if field is missing on aerial tasks (not FAIL)
+    since legacy deliveries may predate this requirement. Also applies to CORRIDOR_SCHEMA (fixed-wing).
+  module: auction/delivery_schemas, auction/deliverable_qa
+  research_source: R-010
+  evidence: "docs/research/automated/R-010_survey_deliverable_qa_checklists_dot.md"
+  effort: small
+  priority: null
+  status: proposed
+  proposed_date: '2026-04-23'
+  decision_date: null
+  decision_notes: null
