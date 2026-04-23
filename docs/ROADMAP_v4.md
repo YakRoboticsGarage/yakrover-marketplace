@@ -346,6 +346,15 @@ All 6 MCP tools for operator management are built and tested:
 - **Interface language mapping:** Added `gtm.interface_language` to PRODUCT_DSL_v2.yaml — 20+ technical-to-interface term mappings with context for when technical language is acceptable.
 - **Sample certification documents:** 4 realistic mockups matching real document formats — FAA Part 107 (credit-card PNG), ACORD 25 COI (letter PDF with grid layout), Michigan PLS (wall certificate PDF), OSHA 30-Hour (green DOL card PNG).
 
+### v1.4.3: First non-survey live_production operator (2026-04-22)
+
+**What shipped:** NPC ROBOT, a physical ELEGOO Tumbller in Berlin, registered as the second `live_production` EAS-attested operator on Base mainnet (robot_id `8453:45452`, attestation_uid `0x0a1caa…c4c1`). First non-survey equipment class: `ground_robot` → `delivery_ground`. Extends the marketplace from aerial/wheeled survey robots to paid teleoperation.
+
+**Why it matters for v1.5:** the rollout validated the end-to-end auction loop for a live operator (post → bid → dispatch → execute → deliver → QA → settle) and surfaced two HIGH-priority v1.5 gaps the original requirements hadn't named:
+
+- **MCP settlement gap (IMP-109 → updates F-4):** The marketplace's own MCP tooling is the intended production hiring interface for agents, but `confirm_delivery` hardcodes a ledger debit from the literal wallet_id `"buyer"` and never branches on `task.payment_method`. An agent calling `auction_post_task` with `payment_method: "usdc"` cannot currently pay from their own on-chain wallet. Fits squarely in FD-1 settlement abstraction (F-5).
+- **Teleop-surface auth gap (IMP-110 → new F-13):** Any `live_production` robot reachable via public Cloudflare Tunnel needs an auth layer beyond URL obscurity. NPC ROBOT ships without it (matches Finland's posture, but Finland is LAN-only). Three options documented (firmware bearer / Cloudflare Access / WARP Connector) for Anuraj review.
+
 ### Remaining cleanup (deferred to v1.5)
 
 - **Remove `RuntimeRegisteredRobot` dependency on `mock_fleet.py`.** Currently inherits `bid_engine()` and `execute()` from `ConstructionMockRobot`. Should implement its own ~30 lines each, or be replaced entirely by `MCPRobotAdapter` once operators run their own MCP servers. This decouples registration from the mock fleet — `mock_fleet.py` becomes a test-only utility.

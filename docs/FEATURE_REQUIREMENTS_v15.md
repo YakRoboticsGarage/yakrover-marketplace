@@ -115,8 +115,9 @@
 - Robot operators don't see or care about payment method — they receive payouts regardless
 
 **Acceptance criteria:**
-- [ ] Task can be posted with explicit `payment_method`
+- [x] Task can be posted with explicit `payment_method` — implemented pre-v1.5, validated on `Task.__post_init__` against `VALID_PAYMENT_METHODS`
 - [ ] `"auto"` correctly selects based on wallet state
+- [ ] **Payment method is passed through to settlement layer** — currently not: `confirm_delivery` hardcodes `wallet.debit("buyer", ...)` at `engine.py:1061` with no branch on `task.payment_method`. Any agent calling `auction_post_task` through the marketplace MCP always settles via the in-memory demo ledger (+ Stripe Connect transfer if configured). See **IMP-109** for the concrete scope of wiring `payment_method == "usdc"` through to an EIP-3009 gasless on-chain transfer from buyer to operator on Base mainnet. Surfaced during the NPC ROBOT live rollout (2026-04-22): task settled in demo credits despite a real buyer wallet with 12.77 USDC on Base mainnet; no on-chain transfer occurred.
 - [ ] Operator payout works regardless of buyer's payment method
 
 ---
@@ -286,6 +287,26 @@
 - [ ] USDC bridge transfer from Base → Horizen L3 completes (record latency)
 - [ ] Evaluation report covers: cost, latency, HCCE maturity, x402 compatibility
 - [ ] Go/no-go recommendation for Horizen L3 as Mode 2 settlement target
+
+---
+
+### F-13: Firmware-level auth for public-exposed teleop robots
+
+**Source:** NPC ROBOT live rollout (2026-04-22), tracked as **IMP-110**
+**What:** Any live_production robot whose HTTP surface is reachable from the public internet (e.g. via Cloudflare Tunnel) needs an auth layer beyond "URL obscurity" — otherwise anyone who discovers the tunnel subdomain can issue motor/sensor commands without paying. Current posture: NPC ROBOT ships with no `/motor/*` auth, matching Finland's model. Finland is safe because it's LAN-only; NPC ROBOT is not.
+
+**Options to evaluate:**
+
+| Option | Description | Tradeoff |
+|---|---|---|
+| **A** | Firmware checks `Authorization: Bearer <token>` on `/motor/*`. Token baked at build time (fleet-size-1) or NVS-stored (fleet-size ≥2). | Self-contained, defense-in-depth, rotation needs reflash or NVS write |
+| **B** | Cloudflare Access policy on the tunnel subdomain, service-token JWT signed by the operator's Fly MCP. | No firmware change; auth at the edge; cost of Cloudflare Access if a paid tier is required |
+| **C** | Network-layer isolation (Cloudflare WARP Connector or IP allowlist) restricting the tunnel to the operator's Fly app egress range. | Tightest surface; ops burden if operator deploys move |
+
+**Acceptance criteria:**
+- [ ] Decision recorded (A, B, or C) after review with Anuraj
+- [ ] Documented in ROBOT_OPERATOR_ONBOARDING / ACTIVATION_SUMMARY as a required step for `live_production` attestation when robot is publicly reachable
+- [ ] Retrofitted for NPC ROBOT as a worked example
 
 ---
 
