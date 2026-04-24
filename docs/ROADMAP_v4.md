@@ -2,8 +2,8 @@
 
 **Project:** yakrover-auction-explorer
 **Owner:** Product
-**Last updated:** 2026-04-23 (rev 5.8, v1.4.3 NPC ROBOT live-production rollout complete)
-**Status:** v1.0–v1.4.3 built. **v1.4.3 complete** (42 MCP tools, 100 test robots on Base Sepolia, 9 category MCP servers on Fly.io, EAS attestation, geographic filtering, busy state, 10 delivery schemas, 10 RFP presets, 294 tests in 3-tier architecture, 44/121 backlog items implemented). Demo at yakrobot.bid/demo. Partner memo at yakrobot.bid/memo.
+**Last updated:** 2026-04-24 (rev 5.7, stats sync: 42 MCP tools, 9 schemas, 323 tests, 46/91 backlog)
+**Status:** v1.0–v1.4.2 built. **v1.4.2 complete** (42 MCP tools, 100 test robots on Base Sepolia, 9 category MCP servers on Fly.io, EAS attestation, geographic filtering, busy state, 9 delivery schemas, 9 RFP presets, 323 tests, 46/91 backlog items implemented). Demo at yakrobot.bid/demo.
 
 > All product decisions and technical constraints referenced by ID live in `docs/DECISIONS.md`.
 > Feature requirements for the next build: `docs/FEATURE_REQUIREMENTS_v15.md`.
@@ -346,19 +346,10 @@ All 6 MCP tools for operator management are built and tested:
 - **Interface language mapping:** Added `gtm.interface_language` to PRODUCT_DSL_v2.yaml — 20+ technical-to-interface term mappings with context for when technical language is acceptable.
 - **Sample certification documents:** 4 realistic mockups matching real document formats — FAA Part 107 (credit-card PNG), ACORD 25 COI (letter PDF with grid layout), Michigan PLS (wall certificate PDF), OSHA 30-Hour (green DOL card PNG).
 
-### v1.4.3: First non-survey live_production operator (2026-04-22)
-
-**What shipped:** NPC ROBOT, a physical ELEGOO Tumbller in Berlin, registered as the second `live_production` EAS-attested operator on Base mainnet (robot_id `8453:45452`, attestation_uid `0x0a1caa…c4c1`). First non-survey equipment class: `ground_robot` → `delivery_ground`. Extends the marketplace from aerial/wheeled survey robots to paid teleoperation.
-
-**Why it matters for v1.5:** the rollout validated the end-to-end auction loop for a live operator (post → bid → dispatch → execute → deliver → QA → settle) and surfaced two HIGH-priority v1.5 gaps the original requirements hadn't named:
-
-- **MCP settlement gap (IMP-109 → updates F-4):** The marketplace's own MCP tooling is the intended production hiring interface for agents, but `confirm_delivery` hardcodes a ledger debit from the literal wallet_id `"buyer"` and never branches on `task.payment_method`. An agent calling `auction_post_task` with `payment_method: "usdc"` cannot currently pay from their own on-chain wallet. Fits squarely in FD-1 settlement abstraction (F-5).
-- **Teleop-surface auth gap (IMP-110 → new F-13):** Any `live_production` robot reachable via public Cloudflare Tunnel needs an auth layer beyond URL obscurity. NPC ROBOT ships without it (matches Finland's posture, but Finland is LAN-only). Three options documented (firmware bearer / Cloudflare Access / WARP Connector) for Anuraj review.
-
 ### Remaining cleanup (deferred to v1.5)
 
 - **Remove `RuntimeRegisteredRobot` dependency on `mock_fleet.py`.** Currently inherits `bid_engine()` and `execute()` from `ConstructionMockRobot`. Should implement its own ~30 lines each, or be replaced entirely by `MCPRobotAdapter` once operators run their own MCP servers. This decouples registration from the mock fleet — `mock_fleet.py` becomes a test-only utility.
-- **Refactor tests to use `RuntimeRegisteredRobot`.** ~30 test files currently import `create_demo_fleet()` / `create_construction_fleet()` directly (294 tests total). Not blocking but adds unnecessary coupling to archived mock fleet.
+- **Refactor tests to use `RuntimeRegisteredRobot`.** 274 tests currently import `create_demo_fleet()` / `create_construction_fleet()` directly. Not blocking but adds unnecessary coupling to archived mock fleet.
 - **Fix Berlin-04/05/06 agent cards.** Wrong MCP endpoint in IPFS metadata (marketplace instead of fleet). Need to rewrite agent cards with correct fleet MCP endpoint.
 - **Berlin-01/02/03 empty mcpTools in agent card.** IPFS cards have tools in `services[0].mcpTools` (correct per ERC-8004 spec) but subgraph doesn't index nested fields. Frontend now works around this via IPFS enrichment. Agent cards don't need re-uploading — the enrichment handles it.
 
@@ -384,7 +375,7 @@ The demo currently has ~10 registered robots. Before the marketplace can handle 
 
 | Target | What to verify | When |
 |--------|----------------|------|
-| **100 robots** | Sidebar rendering, subgraph query performance, bid scoring with large fleet, IPFS enrichment latency, discovery time | **v1.4.1 (done)** |
+| **100 robots** | Sidebar rendering, subgraph query performance, bid scoring with large fleet, IPFS enrichment latency, discovery time | v1.5 |
 | **1,000 robots** | Pagination/virtualization needed in sidebar, subgraph `first: 50` limit must increase, auction scoring performance under load, MCP server memory with 1K fleet objects | v2.0 |
 
 **4. Known scaling concerns:**

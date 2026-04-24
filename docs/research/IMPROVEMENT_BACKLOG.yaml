@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-23'
-  total_items: 123
-  implemented: 44
+  last_updated: '2026-04-24'
+  total_items: 94
+  implemented: 46
   deferred: 18
   rejected: 1
-  proposed: 60
-  source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
-  last_sync: "2026-04-23 — Daily code audit. Added IMP-118 (dot_state QA routing), IMP-119 (Class 0 + checkpoint schema), IMP-120 (ASPRS RMSEz validation), IMP-121 (swath dz check) from R-010. Added IMP-122 (remove redundant CI mypy flag), IMP-123 (YAML lint in CI). 44 implemented, 60 proposed, 18 deferred, 1 rejected."
+  proposed: 29
+  source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint
+  last_sync: "2026-04-24 — Daily code audit. Added IMP-092 (ruff format violations break CI lint), IMP-093 (ruff I001 import-sort violations break CI lint), IMP-094 (pyproject.toml version drift 1.4.1). 46 implemented, 29 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -363,7 +363,7 @@ proposals:
   status: implemented
   proposed_date: '2026-04-05'
   decision_date: '2026-04-07'
-  decision_notes: "Implemented in commit b76a4f1 (IMP-021/023: Fix EPSG codes + expand 4-state zone table). Status corrected by R-META-001 (2026-04-09) — was marked proposed despite being committed."
+  decision_notes: Implemented in commit b76a4f1 "IMP-021/023: Fix EPSG codes + expand 4-state zone table". Status corrected by R-META-001 (2026-04-09) — was marked proposed despite being committed.
 - id: IMP-022
   title: Add stateplane library + _infer_state_plane_epsg() helper to rfp_processor.py
   description: 'Add pip install stateplane (pyproj wrapper, no C++ deps) to pyproject.toml
@@ -398,7 +398,7 @@ proposals:
   status: implemented
   proposed_date: '2026-04-05'
   decision_date: '2026-04-07'
-  decision_notes: "Implemented in commit b76a4f1 (IMP-021/023: Fix EPSG codes + expand 4-state zone table). Status corrected by R-META-001 (2026-04-09) — was marked proposed despite being committed."
+  decision_notes: Implemented in commit b76a4f1 "IMP-021/023: Fix EPSG codes + expand 4-state zone table". Status corrected by R-META-001 (2026-04-09) — was marked proposed despite being committed.
 - id: IMP-024
   title: Remove duplicate _load_reference definition in rfp_processor.py
   description: 'auction/rfp_processor.py defines _load_reference(name: str) -> str twice:
@@ -473,7 +473,7 @@ proposals:
   status: implemented
   proposed_date: '2026-04-06'
   decision_date: '2026-04-07'
-  decision_notes: "Partially implemented in commit a58560f (IMP-027: EIP-3009 transferWithAuthorization, preferred path; ERC-2612 permit retained as fallback). Full rewrite tracked as IMP-035. Status corrected by R-META-001 (2026-04-09)."
+  decision_notes: Partially implemented in commit a58560f "IMP-027: EIP-3009 transferWithAuthorization (preferred, permit fallback)". EIP-3009 is now preferred path; ERC-2612 permit retained as fallback. Full rewrite (drop fallback, add Multicall3 batch) tracked as IMP-035. Status corrected by R-META-001 (2026-04-09).
 - id: IMP-028
   title: Add server-side permit signature pre-verification before on-chain submission
   description: 'Before calling usdc.permit() on-chain, verify the buyer''s signature server-side
@@ -1604,701 +1604,63 @@ proposals:
   proposed_date: '2026-04-17'
   decision_date: null
   decision_notes: null
+
 - id: IMP-092
-  title: Remove stale `src/` from ruff check command in CLAUDE.md
+  title: "Fix ruff format violations in 5 test files (CI lint broken)"
   description: >
-    CLAUDE.md "Key Commands" documents `uv run ruff check auction/ src/` but the `src/`
-    directory does not exist in the repo. CI (test.yml) correctly runs `ruff check auction/`
-    only. The stale path silently passes (ruff ignores missing paths) but misleads contributors
-    into thinking there is a separate `src/` module tree being linted. Fix: remove `src/` from
-    the documented command, and confirm CI covers the full production surface (mcp_server.py at
-    repo root is currently not linted).
-  module: M00_infra
-  research_source: daily-audit-2026-04-18
-  evidence: '`ls src/` → not found; test.yml lint step: `ruff check auction/`; CLAUDE.md Key Commands: `ruff check auction/ src/`'
-  effort: small
-  priority: low
+    `uv run ruff format --check auction/` reports 5 files that would be reformatted:
+    auction/tests/_fixtures.py, auction/tests/test_benchmarks.py,
+    auction/tests/test_delivery.py, auction/tests/test_invariants.py,
+    auction/tests/test_mcp_contracts.py.
+    The CI lint job runs `ruff format --check auction/` and exits non-zero on any
+    formatting violation, meaning the lint job is currently broken (red). Fix:
+    run `uv run ruff format auction/tests/` and commit the result. No logic changes —
+    pure whitespace/import formatting.
+  module: auction/tests/_fixtures.py, auction/tests/test_benchmarks.py, auction/tests/test_delivery.py, auction/tests/test_invariants.py, auction/tests/test_mcp_contracts.py
+  research_source: Daily code audit (2026-04-24)
+  evidence: "`uv run ruff format --check auction/` → '5 files would be reformatted'"
+  effort: trivial
+  priority: high
   status: proposed
-  proposed_date: '2026-04-18'
+  proposed_date: '2026-04-24'
   decision_date: null
   decision_notes: null
+
 - id: IMP-093
-  title: Replace silent-None optional-import fallback in engine.py with explicit ImportError
+  title: "Fix ruff I001 import-sort violations in 3 test files (CI lint broken)"
   description: >
-    engine.py lines 54-76 use a pattern where optional dependencies (WalletLedger,
-    ReputationTracker, SyncTaskStore, StripeService, qa_check) are assigned `None` with
-    `# type: ignore` comments inside bare `except ImportError` blocks. If a required
-    dependency is absent at startup, every call to a method that relies on it raises an
-    AttributeError on None at runtime instead of failing fast at import time with a clear
-    message. The pattern also defeats static analysis: mypy cannot verify call sites against
-    None. Fix: make all required dependencies explicit imports (let ImportError propagate);
-    move genuinely optional dependencies to a clearly documented optional extras group and
-    guard their use with `if dep is None: raise RuntimeError("install extras[x]")` at the
-    call site, not the module level.
-  module: M02_engine
-  research_source: daily-audit-2026-04-18
-  evidence: 'auction/engine.py:54-76 — 6 variables assigned None with type:ignore; AttributeError risk on missing optional extras'
-  effort: medium
-  priority: medium
+    `uv run ruff check auction/` reports I001 (import block un-sorted) violations in:
+    auction/tests/_fixtures.py, auction/tests/conftest.py, auction/tests/test_benchmarks.py.
+    The isort rule set `I` is selected in pyproject.toml, so CI lint fails on these.
+    Fix: run `uv run ruff check --fix auction/` to auto-sort imports in the affected
+    files, then commit. Should be done in the same commit as IMP-092.
+    Alternative: add I001 to per-file-ignores for `auction/tests/*` in pyproject.toml
+    if the team prefers to suppress rather than fix.
+  module: auction/tests/_fixtures.py, auction/tests/conftest.py, auction/tests/test_benchmarks.py
+  research_source: Daily code audit (2026-04-24)
+  evidence: "`uv run ruff check auction/` → I001 in _fixtures.py:3, conftest.py:3, test_benchmarks.py:10"
+  effort: trivial
+  priority: high
   status: proposed
-  proposed_date: '2026-04-18'
+  proposed_date: '2026-04-24'
   decision_date: null
   decision_notes: null
 
 - id: IMP-094
-  title: "Fix NameError: datetime undefined in engine.py busy-state filter"
+  title: "Update pyproject.toml version from 1.4.1 to 1.4.2"
   description: >
-    engine.py line 24 imports `from datetime import UTC` but lines 628-629 call
-    `datetime.now(UTC)`, referencing the `datetime` class which is not imported at
-    module scope. This causes a NameError at runtime whenever any robot has `_busy_until`
-    set (i.e., whenever the busy-state tracking feature is active). The busy-state filter
-    was added in v1.4.1 but was never exercised by tests — no test in auction/tests/
-    covers this code path. Fix: change line 24 to `from datetime import UTC, datetime`.
-    Companion fix: add a test asserting that a robot with _busy_until in the future is
-    excluded from auction bids.
-  module: M05_auction_engine
-  research_source: daily-audit-2026-04-19
-  evidence: 'auction/engine.py:24 (import) vs :628-629 (usage) — ruff F821 undefined-name; no test exercises this path'
-  effort: trivial
-  priority: critical
-  status: proposed
-  proposed_date: '2026-04-19'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-095
-  title: Remove unused `import json as _json` in store.py query_events()
-  description: >
-    auction/store.py line 762 has `import json as _json` inside the query_events()
-    method, but `_json` is never referenced in the function body. The module-level
-    JSON helpers (_dumps/_loads at lines 55-62) are used everywhere else — this
-    local import is dead code left from a refactor. Remove it. Ruff F401 flags it
-    as auto-fixable.
-  module: M22_sqlite_store
-  research_source: daily-audit-2026-04-19
-  evidence: 'auction/store.py:762 — ruff F401 [*] unused import'
+    pyproject.toml declares `version = "1.4.1"` but the codebase is at v1.4.2 per
+    the milestone feature set (42 MCP tools, 9 delivery schemas, sensor vocabulary,
+    demand signal, compliance hardening). Any tool that reads the package version
+    (uv, pip show, importlib.metadata) reports 1.4.1, which is misleading in CI logs
+    and during debugging. Fix: update version to "1.4.2" in pyproject.toml.
+    Going forward, bump the version field as part of each milestone completion.
+  module: pyproject.toml
+  research_source: Daily code audit (2026-04-24)
+  evidence: "pyproject.toml line 3: `version = \"1.4.1\"` vs feature set at v1.4.2 milestone"
   effort: trivial
   priority: low
   status: proposed
-  proposed_date: '2026-04-19'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-096
-  title: Add ANTHROPIC_API_KEY to .env.example
-  description: >
-    auction/rfp_processor.py:25 reads `ANTHROPIC_API_KEY` from the environment to
-    enable LLM-powered RFP parsing (the default mode when the key is set). This
-    variable is documented in rfp_processor.py but absent from .env.example, so
-    developers setting up the project from scratch will get silent regex-only parsing
-    without understanding why. Add a commented entry with explanation to .env.example
-    alongside the existing Stripe and blockchain keys.
-  module: M39_rfp_processor
-  research_source: daily-audit-2026-04-19
-  evidence: 'auction/rfp_processor.py:25 os.environ.get("ANTHROPIC_API_KEY") — absent from .env.example'
-  effort: trivial
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-19'
-  decision_date: null
-  decision_notes: null
-- id: IMP-097
-  title: verify_commitment() in core.py is defined but never called — add tests or remove
-  description: >
-    `verify_commitment(request_id, salt, commitment_hash)` at core.py:109 implements FD-4's
-    constant-time commitment hash comparison (hmac.compare_digest). It is defined but has zero
-    callers across the entire codebase (auction/, worker/, mcp_server.py). Because it is a
-    security-sensitive function — constant-time comparison prevents timing-oracle attacks on
-    commitment hashes — its absence from the test suite means no regression coverage. Either:
-    (a) add a unit test in test_core.py that exercises both the happy path and a tampered hash,
-    or (b) mark it with a comment referencing the FD-4 settlement path that will call it (v1.5)
-    to make the intent explicit. Do not remove it silently — the constant-time guarantee is
-    load-bearing for FD-4.
-  module: M01_core
-  research_source: daily-audit-2026-04-20
-  evidence: 'grep -rn verify_commitment auction/ worker/ mcp_server.py — only definition at core.py:109, zero callers'
-  effort: small
-  priority: medium
-  status: proposed
-  proposed_date: '2026-04-20'
-  decision_date: null
-  decision_notes: null
-- id: IMP-098
-  title: check_stripe_account_status() in stripe_service.py is implemented but never called
-  description: >
-    `StripeService.check_stripe_account_status(account_id)` at stripe_service.py:132 checks
-    Connect account payout readiness (payouts_enabled, charges_enabled, currently_due). It
-    is fully implemented including stub-mode support, but has zero callers in production code
-    or tests. The operator registration flow (v1.4) writes Connect account IDs to the on-chain
-    agent card but never verifies payout readiness before accepting bids. This means an
-    operator with a suspended Connect account could win an auction and fail at settlement.
-    Integrate a call to check_stripe_account_status() in the bid validation path (engine.py
-    score_bids or the Stripe settlement adapter) so that bids from operators with disabled
-    payouts are filtered or flagged before award. Add a test that simulates a disabled
-    account (payouts_enabled: False) and asserts the bid is rejected.
-  module: M11_stripe
-  research_source: daily-audit-2026-04-20
-  evidence: 'grep -rn check_stripe_account_status auction/ worker/ mcp_server.py — only definition at stripe_service.py:132, zero callers'
-  effort: medium
-  priority: medium
-  status: proposed
-  proposed_date: '2026-04-20'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-099
-  title: "Hold operator ACH transfer until delivery confirmation, not immediately on payment_intent.succeeded"
-  description: >
-    worker/src/index.js handleTransferToOperator (line 1373) fires the Stripe Transfer to the
-    operator Connect account immediately when PaymentIntent status == "succeeded". But ACH disputes
-    (R10 unauthorized — 60-day window; R29 corporate unauthorized — 2-business-day window) can
-    reverse the debit AFTER "succeeded". If the operator has already been paid, the platform absorbs
-    the full task value. Fix: in the ACH settlement flow, hold the Transfer until (a) delivery record
-    is confirmed in KV (auction delivery accepted) — preferred, aligns with commit-on-hire model —
-    OR (b) if delivery is not tracked, impose a minimum 3-business-day hold after "succeeded" to
-    absorb the R29 window. For consumer accounts (R10, 60-day window), delivery confirmation remains
-    the safeguard. Add a KV entry `ach_hold:{piId}` to track hold state; existing ACH lifecycle
-    webhook updates the KV when "succeeded"; the transfer step fires only when hold_until <= now
-    AND delivery status is "accepted".
-  module: M15_stripe_service
-  research_source: R-042
-  evidence: docs/research/automated/R-042_ach_payment_fraud_risk_controls.md
-  effort: medium
-  priority: high
-  status: proposed
-  proposed_date: '2026-04-21'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-100
-  title: "First-payment ACH cap: $2,500 maximum for buyers with no prior ACH history"
-  description: >
-    67% of ACH fraud is linked to payments to newly added payees (Oscilar 2026). For YAK, a
-    first-time buyer placing a $10K ACH task is the highest-risk transaction pattern. Add a
-    check in handleCreateAchIntent (worker/src/index.js line ~1277): query RATE_LIMIT_KV for
-    any existing `ach:pi_*` entries associated with this buyer session/email. If none are found
-    (first-time ACH buyer), cap amount_cents at 250000 ($2,500) and return a 400 with a message
-    directing them to use Card for higher amounts or come back after completing one smaller ACH
-    payment successfully. After a successful ACH payment completes (payment_intent.succeeded
-    webhook), increment a KV counter `ach_trust:{buyer_hash}`. Cap lifts automatically after 1
-    successful prior payment.
-  module: M15_stripe_service
-  research_source: R-042
-  evidence: docs/research/automated/R-042_ach_payment_fraud_risk_controls.md
-  effort: small
-  priority: medium
-  status: proposed
-  proposed_date: '2026-04-21'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-101
-  title: "Nacha Phase 2 compliance: write ACH fraud monitoring policy doc before June 22, 2026"
-  description: >
-    Nacha's 2026 fraud monitoring rule (Phase 2) becomes effective June 22, 2026 and applies to
-    ALL Originators regardless of volume — including YAK, which initiates ACH debits from buyer
-    accounts (Stripe is the TPSP/ODFI; YAK is the Originator). Non-compliance risk: Nacha network
-    suspension. Requirement: documented risk-based fraud monitoring processes covering (1) unauthorized
-    transactions (R10, R29 return monitoring), (2) false pretenses (BEC, account takeover — mitigated
-    by Financial Connections instant verification), and (3) annual review. Create
-    docs/legal/ACH_FRAUD_MONITORING_POLICY.md covering: scope and applicability, risk assessment
-    (construction B2B, $1K-$10K), monitoring approach (KV webhook tracking of return codes),
-    controls (instant verification, first-payment cap IMP-100, hold period IMP-099), false-pretenses
-    mitigations, escalation procedure when unauthorized returns approach 0.5%, and annual review date.
-    This is a documentation task. The technical controls (IMP-099, IMP-100) are companions but the
-    policy doc is the compliance deliverable.
-  module: docs
-  research_source: R-042
-  evidence: docs/research/automated/R-042_ach_payment_fraud_risk_controls.md
-  effort: small
-  priority: critical
-  status: proposed
-  proposed_date: '2026-04-21'
-  decision_date: null
-  decision_notes: "DEADLINE: June 22, 2026. 62 days from proposal date."
-
-- id: IMP-102
-  title: "Use Financial Connections balance data to block ACH when account balance < task amount"
-  description: >
-    worker/src/index.js handleCreateAchIntent already requests financial_connections.permissions
-    balances (line 1283). After the buyer completes the Stripe Financial Connections flow, the
-    frontend receives the payment method with balance data attached. Add a client-side check in
-    the demo/marketplace UI: after Financial Connections resolves, check
-    payment_method.us_bank_account.financial_connections_account.balance.available.usd against
-    the task amount_cents. If insufficient, surface: "Your account balance appears insufficient
-    for this task amount. Please use Card payment or verify your account balance." This prevents
-    R01 (insufficient funds) returns at $1K-$10K scale where cash flow timing can leave business
-    accounts temporarily underfunded. Note: balance data is a point-in-time snapshot; it does not
-    guarantee settlement success but reduces R01 returns materially.
-  module: M15_stripe_service
-  research_source: R-042
-  evidence: docs/research/automated/R-042_ach_payment_fraud_risk_controls.md
-  effort: small
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-21'
-  decision_date: null
-  decision_notes: null
-
-# ============================================================
-# 2026-04-21 code-review items
-# ============================================================
-
-- id: IMP-103
-  title: "mcp_server.py module docstring cites stale tool count and fleet size"
-  description: >
-    mcp_server.py line 3 reads: "Runs the full auction engine with 32 MCP tools and 7 Michigan
-    construction operators." Both figures are stale. The codebase now registers 41 MCP tools
-    (verified via `grep -c '@mcp.tool' auction/mcp_tools.py`) and the demo fleet has 100 robots
-    across 18 operators (v1.4.1). The docstring is the first thing a developer or contributor
-    sees when opening the file, so the stale figures mislead about the system's current scope.
-    Fix: update line 3 to "41 MCP tools" and "100 robots across 18 operators". No functional
-    change.
-  module: M35_mcp_server
-  research_source: code-audit-2026-04-21
-  evidence: 'mcp_server.py line 3 — "32 MCP tools and 7 Michigan construction operators"; actual: 41 tools (grep -c @mcp.tool auction/mcp_tools.py = 41), 100 robots / 18 operators (v1.4.1 fleet manifest)'
-  effort: trivial
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-21'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-104
-  title: "PRODUCT_DSL_v2.yaml mcp_tools.existing missing 6 tools from v1.4/v1.4.1"
-  description: >
-    The mcp_tools.existing list in PRODUCT_DSL_v2.yaml documents 39 tool entries; existing_count
-    has now been corrected to 41, but 6 tools registered in v1.4 and v1.4.1 lack entries in the
-    existing list: auction_onboard_operator_guided, auction_update_operator_profile,
-    auction_register_robot_onchain, auction_eas_attest, auction_log_unmet_demand, and
-    auction_get_demand_signals. These are all implemented and exposed via the live MCP endpoint.
-    The DSL is the authoritative tool reference for agents and new contributors; missing entries
-    mean these tools are undiscoverable from the spec. Add a stub entry (name + description +
-    status: implemented) for each of the 6 missing tools, consistent with the pattern used for
-    tools added in [v2.4] at lines 2166-2178. Full parameter/error schemas can be filled in
-    later as part of a separate schema-completeness pass.
-  module: M35_mcp_server
-  research_source: code-audit-2026-04-21
-  evidence: 'grep -A1 @mcp.tool auction/mcp_tools.py | grep def | cut -d( -f1 — 41 tools; grep "name: auction_" docs/research/PRODUCT_DSL_v2.yaml — 34 entries (39 total including non-prefixed aliases). Missing: auction_onboard_operator_guided, auction_update_operator_profile, auction_register_robot_onchain, auction_eas_attest, auction_log_unmet_demand, auction_get_demand_signals'
-  effort: small
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-21'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-105
-  title: "Integrate COI ParseAPI for automated ACORD 25 field extraction"
-  description: >
-    Replace the stub upload_document() in compliance.py with actual field extraction when
-    doc_type == "insurance_coi". Attempt Tier 1 (pypdf form field extraction, zero cost) first;
-    fall back to COI ParseAPI (coiparseapi.com, $0.10–$0.15/parse) if form fields are absent.
-    Store full extracted coverage fields in ComplianceRecord.details (named_insured, cgl limits,
-    wc status, umbrella limits, expiration dates, additional_insured, description_of_operations).
-    Gate behind COI_PARSE_API_KEY env var — without it, COIs are accepted but flagged as
-    manually_verified=False. Use data/sample_certs/insurance_coi_acord25.pdf as test fixture.
-  module: M10_compliance
-  research_source: R-008
-  evidence: docs/research/automated/R-008_acord25_coi_pdf_extraction.md
-  effort: medium
-  priority: null
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-106
-  title: "COI coverage limit validation against task-type thresholds"
-  description: >
-    After IMP-105 extraction, validate cgl_each_occurrence and cgl_general_aggregate against
-    configurable per-task-type thresholds (standard: $1M/$2M; DOT/highway: $2M/$4M). Store
-    result in ComplianceRecord.details["coverage_check"] = {passed: bool, gaps: list}. Expose
-    coverage_check in verify_operator() output. Block assign_bid() if critical thresholds are
-    not met (gap severity: BLOCK vs WARN). Thresholds configurable in compliance.py module
-    constants, not hardcoded per task. Drone-specific: require description_of_operations to
-    reference UAS/drone operations for any aerial task type.
-  module: M10_compliance
-  research_source: R-008
-  evidence: docs/research/automated/R-008_acord25_coi_pdf_extraction.md
-  effort: medium
-  priority: null
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-107
-  title: "COI expiration date auto-detection from extracted fields"
-  description: >
-    After IMP-105 extraction, automatically set expires_at = min(cgl_expiration_date,
-    wc_expiration_date, umbrella_expiration_date) — overriding any manually provided value.
-    Fixes the current gap where operators can upload an expired COI without providing expires_at
-    and the system accepts it as VERIFIED. Additionally, add EXPIRING_SOON status to
-    verify_operator(): any COI expiring within 30 days returns EXPIRING_SOON rather than
-    VERIFIED. Requires IMP-105 to be implemented first.
-  module: M10_compliance
-  research_source: R-008
-  evidence: docs/research/automated/R-008_acord25_coi_pdf_extraction.md
-  effort: small
-  priority: null
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-108
-  title: "Additional insured and description-of-operations validation for drone operators"
-  description: >
-    After IMP-105 extraction, store additional_insured (bool) and subrogation_waived (bool)
-    from the COI certificate holder block. Add UAS scope check: if description_of_operations
-    does not contain any of {"drone", "uas", "unmanned", "aerial", "uav"}, add
-    coi_scope_warning to the verify_operator() output indicating the policy may not cover
-    UAS operations. Do not block — surface as a warning requiring operator acknowledgment
-    in the onboarding flow. For tasks requiring AI status (DOT/government projects), flag if
-    additional_insured is False. Requires IMP-105 to be implemented first.
-  module: M10_compliance
-  research_source: R-008
-  evidence: docs/research/automated/R-008_acord25_coi_pdf_extraction.md
-  effort: small
-  priority: null
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-109
-  title: "Wire USDC-on-Base settlement through the marketplace MCP (production payments)"
-  description: >
-    Today any agent can call auction_post_task/get_bids/accept_and_execute/confirm_delivery
-    via the marketplace MCP and run a full auction, but the only real-money settlement path
-    wired is Stripe Connect (engine.py:1099). The payment_method field on Task accepts
-    "usdc" and the buyer wallet_id is hardcoded to the literal string "buyer" at
-    engine.py:1061 — there is no branch in confirm_delivery that dispatches on
-    payment_method, and no way through the MCP surface to specify which on-chain wallet
-    pays. Concrete subscope: (a) add buyer_wallet_address to the Task dataclass and pass
-    through auction_post_task; (b) switch on task.payment_method in
-    engine.confirm_delivery with a new USDC settlement adapter; (c) implement EIP-3009
-    transferWithAuthorization gasless flow — buyer signs an authorization off-chain,
-    marketplace relays on-chain and pays gas (critical because real buyer wallets often
-    have USDC but 0 ETH, e.g. BUYER_WALLET 0xb84165… during NPC ROBOT dogfooding had
-    12.77 USDC and 0 ETH); (d) expose either "pre-signed authorization in task_spec"
-    (protocol-pure) or "marketplace signs as BUYER_WALLET env holder" (dogfooding shortcut).
-    Without this, the marketplace's MCP is not actually a production payment rail —
-    only the yakrobot.bid/demo web form touches real USDC today.
-  module: auction/settlement
-  research_source: NPC ROBOT E2E rollout (2026-04-22)
-  evidence: docs/DECISIONS.md (FD-1 settlement abstraction); tumbller-esp32s3/docs/MARKETPLACE_REGISTRATION_PLAN.md step 9 notes
-  effort: large
-  priority: high
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: Fits squarely in v1.5 FD-1. During NPC ROBOT E2E run, confirmed the gap — task settles in demo ledger only, no USDC moved from buyer 0xb84165… to operator 0x6af6….
-
-- id: IMP-110
-  title: "Firmware-level auth on public-exposed robot /motor/* endpoints"
-  description: >
-    NPC ROBOT ships v1 with no auth on the Tumbller's HTTP endpoints, matching Finland's
-    model. Finland is safe because its hostname is .local (LAN-only); NPC ROBOT is exposed
-    publicly via Cloudflare Tunnel at berlin-tumbller-01.yakrover.online, so anyone who
-    discovers the URL can issue /motor/forward etc. with zero cost to them. For real-money
-    teleop on Base mainnet this is a real risk — the marketplace paywall is upstream of the
-    attack vector. Options (per discussion with Anuraj, see
-    tumbller-esp32s3/docs/MARKETPLACE_REGISTRATION_PLAN.md deferred section):
-    (A) bake Authorization: Bearer check into firmware — rotate by reflash for v1, NVS-stored
-    for fleet ≥2; (B) Cloudflare Access policy scoped to the operator's Fly MCP egress —
-    no firmware change, auth at the edge; (C) network-layer isolation via WARP Connector
-    restricting the tunnel to the Fly app's IP. Decision factors: token rotation frequency,
-    defense-in-depth preference, Cloudflare Access cost.
-  module: firmware/operator-security
-  research_source: NPC ROBOT E2E rollout (2026-04-22)
-  evidence: tumbller-esp32s3/docs/MARKETPLACE_REGISTRATION_PLAN.md § "Pending review with Anuraj"
-  effort: medium
-  priority: high
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: Blocking for responsible teleop pricing growth. Accepted risk at v1 because of low throughput + physical safety (robot on its back during tests). Revisit as soon as Anuraj weighs in on option A vs B vs C.
-
-- id: IMP-111
-  title: "Transfer ERC-8004 token ownership from platform wallet to operator wallet post-registration"
-  description: >
-    During auction_onboard_operator_guided (platform-signs mode), the ERC-8004 token is
-    minted with the platform as owner. The onboarding doc already mentions ownership
-    "can be transferred to your wallet later" but there is no MCP tool that does it.
-    For true sovereignty and live_production credibility, operators should hold their own
-    token. Add auction_transfer_robot_ownership(robot_id, new_owner_address) backed by
-    agent0-sdk's transfer flow on the ERC-8004 registry.
-  module: auction/registration
-  research_source: NPC ROBOT E2E rollout (2026-04-22)
-  evidence: docs/onboarding/ROBOT_OPERATOR_ONBOARDING.md "Minimal Registration" section
-  effort: small
-  priority: medium
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-112
-  title: "Automate IPFS metadata re-upload when operator profile changes"
-  description: >
-    auction_update_operator_profile currently only updates in-memory fleet state — the
-    tool's own docstring flags this: "On-chain metadata updates (location, pricing, wallet)
-    require a separate IPFS re-upload which is not yet automated — note this to the operator
-    and log the change for manual sync." Means the IPFS agent card drifts out of sync with
-    the truth. Implement: on relevant field changes (location, sensors, mcp_endpoint,
-    min_bid_cents, service_radius_km, wallet addresses), build a new agent card, pin to
-    Pinata, call setAgentURI on the ERC-8004 registry.
-  module: auction/registration
-  research_source: NPC ROBOT E2E rollout (2026-04-22)
-  evidence: auction/mcp_tools.py auction_update_operator_profile docstring
-  effort: medium
-  priority: medium
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-113
-  title: "Expose plugin-side availability map in auction_get_robot_status"
-  description: >
-    auction_get_robot_status (shipped in PR #34) returns fleet-level busy state, task
-    counts, advertised config. But it says nothing about the operator's plugin-side
-    availability.json (e.g. movement online, thermal offline with reason "SHT30 not wired").
-    That live capability picture is what matters for "is this robot actually usable right
-    now" vs just "has it been busy recently". Extend the tool to fan out a
-    robot_get_pricing call to the operator's MCP endpoint and include the availability
-    payload (or a structured "unreachable" response). Bound by a short timeout so a dead
-    operator doesn't slow the caller.
-  module: auction/mcp_tools
-  research_source: NPC ROBOT E2E rollout (2026-04-22)
-  evidence: PR #34 (feat: busy-clear-and-robot-status)
-  effort: small
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-114
-  title: "Restore completed task counts from SyncTaskStore on marketplace restart"
-  description: >
-    Observed during NPC ROBOT E2E after PR #34 deploy: auction_get_robot_status reported
-    total_tasks_won: 1, active_tasks: 1, completed_tasks: 0 — even though the prior task
-    had reached state "settled". _load_from_store in engine.py restores *active* tasks
-    but not the settled history, so total-tasks / completed-tasks counters look wrong after
-    any redeploy. Operator reputation/volume signals are less trustworthy as a result.
-    Fix: extend _load_from_store to also re-hydrate terminal-state (SETTLED) tasks so the
-    counts reflect real lifetime activity.
-  module: auction/engine
-  research_source: NPC ROBOT E2E rollout (2026-04-22)
-  evidence: auction/engine.py _load_from_store; auction_get_robot_status output after 2026-04-22 12:14 deploy
-  effort: small
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-115
-  title: "Reverse-connection (MQTT) architecture for operator→robot path"
-  description: >
-    The default "operator Fly MCP → Cloudflare Tunnel → always-on cloudflared on home
-    machine → LAN HTTP → robot" chain requires something running at home 24/7. For
-    NPC ROBOT this is a launchd cloudflared daemon; it works but ties the robot to a
-    single physical location and a single always-on machine. Alternative: the ESP32 dials
-    out to an MQTT broker over TLS and subscribes to robots/{id}/commands; operator MCP
-    publishes commands. No inbound port, no tunnel, robot is portable to any WiFi with
-    outbound internet. Also eliminates the auth-at-the-edge problem (broker authenticates
-    the robot) — partially resolves IMP-110. Costs: firmware refactor (~1 day), broker
-    choice (HiveMQ Cloud free tier for 1 robot, or self-hosted Mosquitto on Fly ~$5/mo),
-    MCP-side pub/sub bridge.
-  module: operator-architecture
-  research_source: NPC ROBOT E2E rollout (2026-04-22)
-  evidence: tumbller-esp32s3/docs/MARKETPLACE_REGISTRATION_PLAN.md § "Other deferred items"
-  effort: medium
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: Revisit when adding a second physical robot or when Anuraj's security review (IMP-110) makes this attractive as a defensive posture.
-
-- id: IMP-116
-  title: "Remove deprecated MCP tool stubs (auction_onboard_operator, auction_register_operator)"
-  description: >
-    Two MCP tools — auction_onboard_operator (mcp_tools.py line 620) and
-    auction_register_operator (line 1110) — exist only to return a deprecation message
-    pointing callers at auction_onboard_operator_guided. They are counted in the tool
-    list (contributing to the 42 total), shown in /api/tools responses, and appear in
-    Claude's tool enumeration — all while doing nothing useful. Remove both stubs.
-    Any caller invoking a deprecated tool name should receive a standard MCP
-    "tool not found" error, which is equally informative. Gate removal on confirming
-    no external MCP clients still reference these names (check Cloudflare Worker logs
-    and any saved Claude Desktop configs).
-  module: auction/mcp_tools
-  research_source: Daily code audit (2026-04-22)
-  evidence: "auction/mcp_tools.py line 620 ('auction_onboard_operator is deprecated') and line 1110 ('auction_register_operator is deprecated')"
-  effort: small
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-117
-  title: "Split mcp_tools.py into domain-specific modules"
-  description: >
-    auction/mcp_tools.py is 2,263 lines — the largest file in the repo — and contains
-    four distinct domains: auction lifecycle (post_task, place_bid, confirm_delivery, etc.),
-    fleet/robot management (get_robot_status, filter_robots, busy state), operator
-    registration (onboard_operator_guided, update_operator_profile, ERC-8004 registration),
-    and delivery QA + EAS attestation. All four are registered via a single
-    register_auction_tools() call. Proposed split: mcp_tools_auction.py,
-    mcp_tools_fleet.py, mcp_tools_registration.py, mcp_tools_qa.py — each ≤600 lines —
-    with register_auction_tools() in mcp_tools.py delegating to each. No public API
-    changes. This is not urgent but will become blocking when adding v1.5 settlement
-    tools (expected +8-12 tools). Do not split until IMP-116 is resolved so the two
-    deprecated stubs are not ported to the new structure.
-  module: auction/mcp_tools
-  research_source: Daily code audit (2026-04-22)
-  evidence: "find auction/ -name '*.py' | xargs wc -l | sort -rn: mcp_tools.py 2263 lines (largest file, 3× the next largest)"
-  effort: medium
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-22'
-  decision_date: null
-  decision_notes: "Prerequisite IMP-116 (remove deprecated stubs). Trigger when mcp_tools.py exceeds 2,500 lines or when adding v1.5 settlement tools."
-
-- id: IMP-118
-  title: "Add dot_state field to task spec and route DOT-specific density thresholds in Level 2 QA"
-  description: >
-    ODOT (Ohio) requires ≥40 pts/m² and TxDOT (Texas) requires ≥25 pts/m² for airborne LiDAR — neither
-    is enforced by the current Level 2 QA engine, which uses only USGS QL thresholds (QL0=20, QL1=8,
-    QL2=2, QL3=0.5). Add an optional dot_state field to capability_requirements. In _check_level_2
-    (deliverable_qa.py), if dot_state is set, look up a state-specific density override table before
-    falling back to USGS QL. Initial table: {OH: 40, TX: 25, MI: None (NCHRP 748 Category 1A, no fixed
-    pts/m² threshold)}. Caltrans and MDOT do not publish a fixed pts/m² for airborne work; they use
-    scale-based density. The dot_state field also enables future routing of other state-specific rules
-    (vertical datum, .dgn format enforcement for ODOT, GEOID18 for TxDOT).
-  module: auction/deliverable_qa, auction/core
-  research_source: R-010
-  evidence: "docs/research/automated/R-010_survey_deliverable_qa_checklists_dot.md"
-  effort: small
-  priority: null
-  status: proposed
-  proposed_date: '2026-04-23'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-119
-  title: "Add Class 0 check and ASPRS checkpoint count (≥30) to AERIAL_LIDAR_SCHEMA"
-  description: >
-    USGS LBS 2025 prohibits Class 0 (unclassified) points in the classified LAS deliverable. ASPRS
-    Positional Accuracy Standards Edition 2 (2024) requires a minimum of 30 checkpoints (raised from 20
-    in Edition 1). Neither requirement is currently checked. Add two fields to
-    AERIAL_LIDAR_SCHEMA.properties.quality_metrics in delivery_schemas.py:
-    (1) class_0_points: {type: integer, maximum: 0} — any Class 0 point is a FAIL.
-    (2) checkpoint_count: {type: integer, minimum: 30} — fewer than 30 checkpoints fails ASPRS Ed.2.
-    The Level 1 schema validator (validate_delivery_schema) will enforce these automatically since
-    max/min are already supported. Also raise control_points_used minimum from 0 to 30 to align with
-    ASPRS Ed.2 in existing check (or replace with checkpoint_count). Note: Class 0 check is metadata-
-    level — the operator's processing software (Pix4D, TerraSolid) should report this count; the
-    platform cannot compute it from raw LAS without PDAL integration (R-009a).
-  module: auction/delivery_schemas, auction/deliverable_qa
-  research_source: R-010
-  evidence: "docs/research/automated/R-010_survey_deliverable_qa_checklists_dot.md"
-  effort: small
-  priority: null
-  status: proposed
-  proposed_date: '2026-04-23'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-120
-  title: "Add ASPRS RMSEz threshold validation to Level 2 QA (NVA pass/fail vs VVA report-only)"
-  description: >
-    Current _check_level_2 in deliverable_qa.py checks that an accuracy report exists when
-    asprs_vertical_class is specified, but does NOT validate the RMSE value against the class threshold.
-    This means a delivery claiming ASPRS A-I with RMSEz=50 cm passes Level 2 QA. Fix:
-    (1) Add NVA RMSEz threshold table: {A-I: 1.0, A-II: 2.5, B-I: 5.0, B-II: 10.0, C-I: 20.0} (cm).
-    (2) In _check_level_2, look up asprs_vertical_class and compare data.get("nva_rmse_cm") against
-    threshold; if > threshold, FAIL.
-    (3) Rename vertical_accuracy_cm in AERIAL_LIDAR_SCHEMA to nva_rmse_cm (NVA, binding pass/fail) and
-    add vva_rmse_cm as optional (VVA, report-only per ASPRS Ed.2 — cannot cause a project to fail).
-    (4) Update Level 3 PLS check to also validate NVA explicitly before flagging for PLS stamp.
-    This is the highest-impact single change in the QA layer — converts "accuracy reported?" to
-    "accuracy meets spec?".
-  module: auction/deliverable_qa, auction/delivery_schemas
-  research_source: R-010
-  evidence: "docs/research/automated/R-010_survey_deliverable_qa_checklists_dot.md"
-  effort: small
-  priority: null
-  status: proposed
-  proposed_date: '2026-04-23'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-121
-  title: "Add max_swath_dz_cm field and swath alignment check to AERIAL_LIDAR_SCHEMA"
-  description: >
-    USGS LBS 2025 requires swath Δz ≤ 8 cm in overlap areas. Values > 8 cm are cause for rejection.
-    Swath Δz is a standard output of LiDAR processing software (Pix4D, DJI Terra, TerraSolid) and
-    should be a required field in aerial LiDAR deliveries. Add to
-    AERIAL_LIDAR_SCHEMA.properties.quality_metrics:
-      max_swath_dz_cm: {type: number, maximum: 8.0}
-    In _check_level_2, when max_swath_dz_cm is present and > 8.0, issue a FAIL with message
-    "Swath alignment Δz {value} cm exceeds USGS LBS maximum of 8.0 cm."
-    Make the field required for aerial_survey and topo_survey tasks but optional for mobile/terrestrial
-    LiDAR (no swath overlap in the same sense). Mark WARN if field is missing on aerial tasks (not FAIL)
-    since legacy deliveries may predate this requirement. Also applies to CORRIDOR_SCHEMA (fixed-wing).
-  module: auction/delivery_schemas, auction/deliverable_qa
-  research_source: R-010
-  evidence: "docs/research/automated/R-010_survey_deliverable_qa_checklists_dot.md"
-  effort: small
-  priority: null
-  status: proposed
-  proposed_date: '2026-04-23'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-122
-  title: "Remove redundant --ignore-missing-imports flag from CI mypy invocation"
-  description: >
-    The CI type-check job runs `uv run mypy auction/ --ignore-missing-imports`, but
-    pyproject.toml already has targeted [[tool.mypy.overrides]] entries for the four
-    known stub-less packages (stripe, fastmcp, eth_account, aiosqlite). The CLI flag
-    is therefore redundant AND too broad: it silently suppresses any new missing-import
-    error, including from packages that SHOULD have stubs or are misspelled. Fix: remove
-    --ignore-missing-imports from .github/workflows/test.yml and rely solely on the
-    per-module overrides in pyproject.toml. If the CI red-lights on a legitimate
-    third-party package, the developer adds an override entry rather than broadening
-    the suppression globally.
-  module: .github/workflows/test.yml, pyproject.toml
-  research_source: Daily code audit (2026-04-23)
-  evidence: "CI type-check job: `uv run mypy auction/ --ignore-missing-imports` vs pyproject.toml overrides for stripe.*, fastmcp.*, eth_account.*, aiosqlite.*"
-  effort: trivial
-  priority: low
-  status: proposed
-  proposed_date: '2026-04-23'
-  decision_date: null
-  decision_notes: null
-
-- id: IMP-123
-  title: "Add YAML validity check to CI to catch unquoted colons in backlog/DSL"
-  description: >
-    IMPROVEMENT_BACKLOG.yaml has had an unquoted colon-space inside decision_notes
-    fields (IMP-021 and IMP-023 at line 366/401) that makes the file unparseable by
-    yaml.safe_load — discovered only when a Python script attempted to load it. A
-    simple CI step (`python -c "import yaml; yaml.safe_load(open('docs/research/IMPROVEMENT_BACKLOG.yaml'))"`)
-    would catch this class of error on every push. Extend to PRODUCT_DSL_v2.yaml and
-    RESEARCH_ROADMAP.yaml. Can be a single 3-line step added to the lint job in
-    test.yml. No new dependencies required (PyYAML is already in the project).
-  module: .github/workflows/test.yml
-  research_source: Daily code audit (2026-04-23)
-  evidence: "yaml.safe_load(IMPROVEMENT_BACKLOG.yaml) → ScannerError at line 366 col 61 (unquoted colon in IMP-021 decision_notes)"
-  effort: trivial
-  priority: medium
-  status: proposed
-  proposed_date: '2026-04-23'
+  proposed_date: '2026-04-24'
   decision_date: null
   decision_notes: null

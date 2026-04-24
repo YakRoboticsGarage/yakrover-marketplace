@@ -5,15 +5,14 @@
 A marketplace where AI agents post construction survey tasks, certified robot operators bid autonomously, and the best one delivers. Starting with construction site surveying ($1K-$200K tasks), scaling to mining, infrastructure, and lunar operations. Winners are paid via Stripe (fiat) or USDC on Base (crypto). This project handles real money — payment code requires extreme care.
 
 **Wedge market:** Construction site surveying (pre-bid topo, GPR subsurface, progress monitoring). Typical tasks: $1,000-$10,000. Full project lifecycle: $25,000-$72,000+.
-**v1.0 status:** Built. 284 tests, 35 MCP tools, ~17,042 LOC. (stats at v1.0 milestone)
+**v1.0 status:** Built. 284 tests, 35 MCP tools, ~17,042 LOC.
 **v1.1 status:** Complete (2026-04-06). Real Tumbller robot moves + reads sensors via MCP. Marketplace + fleet on Fly.io (always on). Stripe inline authorize/capture. USDC gasless on Base. Demo-3 self-sustaining. Tags: `v1.1-milestone-tumbller-live`.
 **v1.2 status:** Demo-5 stable (2026-04-07). Single-signature USDC on Base mainnet. No platform fee. Professional buyer-facing UI. Always-on infrastructure (Fly.io + yakrover.online).
 **v1.3 status:** ACH bank transfer + 3-method payment selector (2026-04-08). Buyer chooses Card / Bank Transfer / Stablecoin at checkout. US Stripe account. Structured deploy scripts. Tags: `v1.3-milestone-ach-payment`.
 **v1.4 status:** Complete (2026-04-10). On-chain ERC-8004 registration on Base mainnet via agent0-sdk. 3-step UI (Profile > Equipment > Payment & Bidding). 3 registration modes (platform signs, operator wallet, Claude Code/MCP). Mock fleet archived — auction uses only on-chain discovered robots. 100-finding code review + re-review regressions fixed. Critique of operator registration and demo engine addressed. Dynamic MCP tool resolution (`_resolve_tools()` pattern matching). Registration writes robot's actual MCP endpoint + discovered tools to IPFS agent card. Privacy cleanup: bid_pct and email removed from IPFS. Buyer-friendly language audit (30+ UI strings). IPFS enrichment for ERC-8004 tool discovery. Discovery race condition fix. Operator profile popup redesign. Interface language mapping in ontology. Tags: `v1.4-milestone-operator-registration`.
-**v1.4.1 status:** 100-robot demo fleet (2026-04-11). 100 test robots registered on Base Sepolia across 18 operators, 14 real robot models, 9 MCP category servers on Fly.io. EAS attestation (100 demo_fleet + 1 live_production on Base mainnet). Geographic filtering (haversine hard cutoff). Busy state tracking. 10 RFP presets with lat/lng. EAS-based sidebar + server filtering. 41 MCP tools.
-**v1.4.2 status:** Quality + compliance hardening (2026-04-18). 9 delivery schemas per survey standard (ASPRS, USGS, ASCE 38, NBI, ASTM C1153). Sensor vocabulary normalization (10 canonical sensors, 40+ aliases). Demand signal system (unmet request logging). Stripe payouts_enabled enforcement. certifications_required gate in hard constraints. Test suite refactor: 3-tier architecture (contract + invariant + benchmark), 294 tests in 8s. Partner memo fact-checked (15 items). Fly.io fleet scaled to 512MB. 46/91 backlog items implemented.
-**v1.4.3 status:** NPC ROBOT live_production rollout (2026-04-22). Second live_production-attested robot on Base mainnet: the Berlin Tumbller (robot_id `8453:45452`), first non-survey operator (category `delivery_ground`, equipment `ground_robot`). Added `GROUND_DELIVERY_SCHEMA` (10th delivery schema), `PLATFORM_EQUIPMENT` separation (platforms vs sensors), `auction_get_robot_status` tool (42 MCP tools total). Stricter validation: `UNKNOWN_EQUIPMENT_TYPE` rejects custom types at registration (PR #28). Engine fixes: `_busy_until` released on task completion (PR #34), `MCPRobotAdapter` re-initializes MCP session on 4xx after operator restart (PR #33). Rollout surfaced two HIGH-priority v1.5 gaps: IMP-109 (settlement dispatch on `payment_method` + EIP-3009 gasless USDC for agent-driven production hiring — today `confirm_delivery` hardcodes a ledger debit from `"buyer"` and never branches on method) and IMP-110 (firmware-level auth for public-exposed teleop `/motor/*` — v1 ships without it matching Finland's LAN-only posture). Tags: `v1.4.3-milestone-npc-robot-live`. Backlog: 123 items total, 44 implemented, 60 proposed.
-**Next:** v1.5 (settlement abstraction + construction task specs). See `docs/FEATURE_REQUIREMENTS_v15.md`. Immediate next: IMP-109 (wire USDC settlement through MCP so agents can hire robots with real money, not just via the web UI — HIGH), IMP-110 (firmware auth for public-exposed teleop — HIGH, pending Anuraj review), IMP-089 (operator session identity), IMP-022 (state plane EPSG inference), IMP-055 (multi-task RFP decomposition).
+**v1.4.1 status:** 100-robot demo fleet (2026-04-11). 100 test robots registered on Base Sepolia across 18 operators, 14 real robot models, 9 MCP category servers on Fly.io. EAS attestation (100 demo_fleet + 1 live_production on Base mainnet). Geographic filtering (haversine hard cutoff). Busy state tracking. 9 MDOT RFP presets with lat/lng. EAS-based sidebar + server filtering. 41 MCP tools.
+**v1.4.2 status:** Quality + compliance hardening (2026-04-18). 9 delivery schemas per survey standard (ASPRS, USGS, ASCE 38, NBI, ASTM C1153). Sensor vocabulary registry with alias normalization (IMP-054). Demand signal system for unmet request logging (IMP-088). Stripe payouts_enabled enforcement (IMP-085/086). certifications_required gate in hard constraints (IMP-082). Operator digital certificate guidance with pls_seal_capability field (IMP-070). 42 MCP tools total. 323 tests. 46/91 backlog items implemented.
+**Next:** v1.5 (settlement abstraction + construction task specs). See `docs/FEATURE_REQUIREMENTS_v15.md`. Immediate next: IMP-109 (USDC settlement via MCP — agents hire robots with real money), IMP-110 (firmware auth for teleop), IMP-055 (multi-task RFP decomposition).
 **Live sites:** [yakrobot.bid/demo](https://yakrobot.bid/demo/) (current demo), [yakrobot.bid](https://yakrobot.bid), [yakrobot.bid/yaml](https://yakrobot.bid/yaml), [yakrobot.bid/pitch](https://yakrobot.bid/pitch). Older demos archived in `docs/archive/`.
 
 ## Architecture
@@ -21,7 +20,7 @@ A marketplace where AI agents post construction survey tasks, certified robot op
 - **Auction engine:** `auction/` — Task, Bid, AuctionResult, score_bids(), state machine, settlement abstraction
 - **Payment:** Stripe Connect (fiat) + USDC on Base via x402 (crypto, v1.5). Construction scale: $10K-$200K per project, not micro-payments.
 - **Escrow:** `RobotTaskEscrow.sol` on Base with 4-mode settlement abstraction (FD-1, v1.5)
-- **Fleet:** Robot/operator discovery via ERC-8004, 42 MCP tools for agent interaction
+- **Fleet:** Robot/operator discovery via ERC-8004, 41 MCP tools for agent interaction
 - **Persistence:** SQLite via `SyncTaskStore`
 - **Demo site:** `demo/landing/index.html` — interactive demo at [yakrobot.bid](https://yakrobot.bid)
 - **Live demo:** `demo/marketplace/index.html` — Claude orchestrates real auction at [yakrobot.bid/demo](https://yakrobot.bid/demo/)
@@ -36,7 +35,7 @@ uv run pytest auction/tests/ -q --tb=short              # Unit tests (fast, no k
 uv run pytest auction/tests/integration/ -m stripe      # Stripe integration (needs STRIPE_SECRET_KEY)
 uv run pytest auction/tests/integration/ -m blockchain  # On-chain tests (needs BASE_SEPOLIA_RPC_URL)
 uv run pytest auction/tests/integration/ -m fleet       # Fleet e2e (needs running fleet server)
-uv run ruff check auction/                              # Lint (includes security rules)
+uv run ruff check auction/ src/                         # Lint (includes security rules)
 uv run mypy auction/                                    # Type check
 uv run pytest --cov=auction auction/tests/              # Coverage report
 ```
@@ -82,7 +81,7 @@ yakrover-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, rate limits
 │   ├── api.py                   # HTTP API for web frontend
 │   ├── settlement.py            # 4-mode settlement abstraction (FD-1)
-│   ├── mcp_tools.py             # 42 MCP tool handlers
+│   ├── mcp_tools.py             # 41 MCP tool handlers
 │   ├── wallet.py                # WalletLedger with thread-safe mutations
 │   ├── stripe_service.py        # Stripe SDK with idempotency keys
 │   ├── store.py                 # SQLite persistence
@@ -91,7 +90,7 @@ yakrover-marketplace/
 │   ├── discovery_bridge.py      # ERC-8004 robot discovery
 │   ├── mock_fleet.py            # Simulated robots for testing + RuntimeRegisteredRobot
 │   ├── demo.py                  # Demo script
-│   └── tests/                   # 294 tests (3-tier: contract + invariant + benchmark) — plus 7 benchmarks (on-demand)
+│   └── tests/                   # 308 tests + integration stubs
 │
 ├── demo/                        # Live demo sites (published via here.now)
 │   ├── marketplace/index.html   # Live auction demo (yakrobot.bid/demo)
@@ -113,7 +112,7 @@ yakrover-marketplace/
 │   ├── register_fleet.py        # Batch robot registration
 │   └── eas_attest.py            # EAS attestation management
 │
-├── mcp_server.py                # Standalone REST API (42 MCP tools)
+├── mcp_server.py                # Standalone REST API (41 MCP tools)
 │
 ├── docs/                        # Technical documentation
 │   ├── ROADMAP_v4.md            # Construction → Mining → Infra → Lunar
@@ -121,9 +120,9 @@ yakrover-marketplace/
 │   ├── DECISIONS.md             # All product/technical decisions
 │   ├── SCOPE.md                 # Version boundaries
 │   ├── architecture/            # System design, tech assessments, diagrams
-│   ├── research/                # 57 research docs (see research/README.md)
+│   ├── research/                # 45 research docs (see research/README.md)
 │   │   ├── PRODUCT_DSL_v2.yaml  # THE product ontology (~3,500 lines)
-│   │   ├── IMPROVEMENT_BACKLOG.yaml  # 123 tracked improvement items
+│   │   ├── IMPROVEMENT_BACKLOG.yaml  # 89 tracked improvement items
 │   │   ├── market/              # Wedge analysis, competitive landscape
 │   │   ├── legal/               # Contracts, bonds, payment flows
 │   │   └── operator/            # Onboarding, equipment, sensors
