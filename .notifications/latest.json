@@ -1,1 +1,1 @@
-{"name": "YAK Docs Sync", "message": "2026-04-26 audit: CLAUDE.md + ROADMAP_v4.md fixed 44/126→44/128 backlog count. DSL synced. Proposed IMP-129 (R-053 duplicate ID collision) + IMP-130 (pyproject.toml version 1.4.1 stale). 130 total backlog items. No code changes."}
+{"name": "YAK Docs Sync", "message": "2026-04-27 daily sync: reconciled 4 unpushed sessions → 132 total backlog items. Fixed 44/126→44/132 in CLAUDE.md + ROADMAP_v4.md (rev 5.11). Proposed IMP-131 (orphaned intent API routes), IMP-132 (mcp_tools.py 2263-line God module). No code changes."}

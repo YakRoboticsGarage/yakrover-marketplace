@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-26'
-  total_items: 130
+  last_updated: '2026-04-27'
+  total_items: 132
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 67
+  proposed: 69
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
-  last_sync: "2026-04-26 — Daily code audit. Added IMP-129 (R-053 duplicate ID collision in docs/research/automated/), IMP-130 (pyproject.toml version 1.4.1 stale vs v1.4.2 release). Docs sync: CLAUDE.md + ROADMAP_v4.md fixed 44/126→44/128 backlog count. 44 implemented, 67 proposed, 18 deferred, 1 rejected."
+  last_sync: "2026-04-27 — Daily code audit. Added IMP-131 (capture_intent/get_intent stale scaffolding), IMP-132 (mcp_tools.py 2263-line God module split). IMP-127/128/129/130 carried forward from prior sessions (first on main). Docs sync: CLAUDE.md + ROADMAP_v4.md fixed 44/126→44/132 backlog count. 44 implemented, 69 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -2441,5 +2441,54 @@ proposals:
   priority: low
   status: proposed
   proposed_date: '2026-04-26'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-131
+  title: "Remove or complete orphaned capture_intent / get_intent API routes"
+  description: >
+    `auction/api.py` lines 55-96 define `POST /intent` and `GET /intent/{intent_id}` routes
+    backed by an in-memory dict `_intents`. These routes are not called from any frontend
+    (demo/marketplace/index.html), worker (worker/src/index.js), or MCP tool. The `_intents`
+    dict is non-persistent and would fail silently in a multi-process deployment. Either
+    (a) remove both routes and the `_intents` dict entirely — they add ~50 lines of dead
+    surface area — or (b) wire them to `SyncTaskStore` and implement the zero-friction
+    pre-auth flow they were scaffolded for. Option (a) is the right call unless v1.5 scoping
+    explicitly includes this flow.
+  module: auction/api.py
+  research_source: Daily code audit (2026-04-27)
+  evidence: "grep -rn 'capture_intent|get_intent|/intent' demo/ worker/ — zero results. api.py:52 declares module-level _intents: dict[str, dict] = {}"
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-27'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-132
+  title: "Split mcp_tools.py God module into domain sub-modules"
+  description: >
+    `auction/mcp_tools.py` has grown to 2,263 lines and registers 42 MCP tools covering at
+    least six distinct domains: auction lifecycle (post/bid/accept/execute/confirm), RFP
+    processing, operator registration & onboarding, compliance & bond verification, EAS
+    attestation, and demand signal / feedback. All 42 tools are nested inside a single
+    `register_auction_tools()` factory function, making the file hard to navigate, test in
+    isolation, or extend without merge conflicts. Proposed split:
+      - mcp_tools_auction.py      — post/bid/accept/execute/confirm/cancel/status (≈400 lines)
+      - mcp_tools_rfp.py          — process_rfp/validate/site_recon/quick_hire (≈300 lines)
+      - mcp_tools_operator.py     — register/onboard/equipment/activate/update (≈400 lines)
+      - mcp_tools_compliance.py   — verify_bond/compare_terms/sam_exclusion/upload_doc (≈250 lines)
+      - mcp_tools_attest.py       — eas_attest/register_robot_onchain (≈300 lines)
+      - mcp_tools_signals.py      — log_unmet_demand/get_demand_signals/feedback/feed (≈150 lines)
+      - mcp_tools.py (dispatcher) — imports all sub-modules, calls their register_*() (≈60 lines)
+    Constraint: the public API of `register_auction_tools(mcp, engine)` must remain unchanged
+    so mcp_server.py and all tests continue to work without modification.
+  module: auction/mcp_tools.py
+  research_source: Daily code audit (2026-04-27)
+  evidence: "wc -l auction/mcp_tools.py → 2263 lines; grep -c '@mcp.tool' auction/mcp_tools.py → 42"
+  effort: medium
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-27'
   decision_date: null
   decision_notes: null
