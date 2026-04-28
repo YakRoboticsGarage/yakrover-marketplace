@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-27'
-  total_items: 132
+  last_updated: '2026-04-28'
+  total_items: 134
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 69
+  proposed: 71
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
-  last_sync: "2026-04-27 — Daily code audit. Added IMP-131 (capture_intent/get_intent stale scaffolding), IMP-132 (mcp_tools.py 2263-line God module split). IMP-127/128/129/130 carried forward from prior sessions (first on main). Docs sync: CLAUDE.md + ROADMAP_v4.md fixed 44/126→44/132 backlog count. 44 implemented, 69 proposed, 18 deferred, 1 rejected."
+  last_sync: "2026-04-28 — Daily code audit. Added IMP-133 (FLEET_MCP_TOKEN/MCP_PUBLIC_URL/SAM_GOV_API_KEY missing from .env.example), IMP-134 (compliance.py + bond_verifier.py have no CI-run tests). No doc stat changes needed — all counts accurate. 44 implemented, 71 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -2490,5 +2490,75 @@ proposals:
   priority: low
   status: proposed
   proposed_date: '2026-04-27'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-133
+  title: "Add FLEET_MCP_TOKEN, MCP_PUBLIC_URL, and SAM_GOV_API_KEY to .env.example"
+  description: >
+    Three production environment variables are read from the environment but absent from
+    `.env.example`, leaving operators without documented configuration guidance:
+
+    1. `FLEET_MCP_TOKEN` — `auction/mcp_tools.py` lines 1560 and 1715 send this as a
+       Bearer token when calling the Fly.io fleet MCP server. Without it, live fleet
+       discovery and operator registration calls will silently authenticate as anonymous
+       (returning 401 errors in production).
+
+    2. `MCP_PUBLIC_URL` — `auction/mcp_tools.py` line 1472 uses this to build the
+       marketplace MCP endpoint written into IPFS agent cards during robot registration.
+       Defaults to `https://mcp.yakrover.online` if absent, which is correct for
+       production but incorrect for local dev or staging.
+
+    3. `SAM_GOV_API_KEY` — `auction/compliance.py` line 27 reads this for SAM.gov
+       contractor exclusion checks. Without a key, all SAM.gov lookups silently skip
+       (returning empty string, treated as no-key by the caller). An operator running
+       local compliance checks would not know this variable exists.
+
+    Note: `ANTHROPIC_API_KEY` (rfp_processor.py) is already tracked in IMP-096.
+    Fix: add three commented entries to `.env.example` with brief explanations of each.
+  module: .env.example
+  research_source: Daily code audit (2026-04-28)
+  evidence: >
+    grep -oP "os\\.environ\\.get\\(['\"](\\w+)" auction/mcp_tools.py auction/compliance.py →
+    FLEET_MCP_TOKEN (x2), MCP_PUBLIC_URL, SAM_GOV_API_KEY all absent from .env.example.
+    IMP-096 already tracks ANTHROPIC_API_KEY.
+  effort: trivial
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-28'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-134
+  title: "Add CI-run unit tests for compliance.py and bond_verifier.py"
+  description: >
+    `auction/compliance.py` (ComplianceChecker, SAM.gov exclusion, document upload
+    gating) and `auction/bond_verifier.py` (PDF bond extraction, Treasury Circular 570
+    validation, ACORD 25 parsing) have no test files in `auction/tests/` that run under CI.
+
+    Coverage today:
+    - `auction/tests/_archive/test_construction_tasks.py` — archived, skipped by CI
+      (test.yml passes `--ignore=auction/tests/_archive`)
+    - `auction/tests/scenarios/gc_profiles/` — scenario scripts, not pytest-discoverable
+
+    Both modules are v1.4.2 deliverables (compliance gating, delivery schemas, bond
+    verification skill). Lack of CI tests means regressions introduced by future edits
+    are invisible until manual scenario runs.
+
+    Proposed: add `auction/tests/test_compliance.py` and `auction/tests/test_bond_verifier.py`
+    with offline-only tests (no external API calls) using mocked HTTP responses for SAM.gov,
+    Treasury Circular 570, and ACORD PDF parsing. Happy-path + failure-path per module.
+    The archived tests and scenario scripts provide a reference for realistic inputs.
+  module: auction/compliance.py, auction/bond_verifier.py
+  research_source: Daily code audit (2026-04-28)
+  evidence: >
+    ls auction/tests/ — no test_compliance.py or test_bond_verifier.py.
+    grep -rn 'from auction.compliance|from auction.bond_verifier' auction/tests/ →
+    only in _archive/ and scenarios/ (both excluded from CI).
+    .github/workflows/test.yml: --ignore=auction/tests/integration --ignore=auction/tests/_archive
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-28'
   decision_date: null
   decision_notes: null
