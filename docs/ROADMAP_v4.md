@@ -251,7 +251,7 @@ Everything built through v1.0 is the shared foundation. Marco, Kenji, and Diane 
 **Infrastructure:**
 - US Stripe account (USD-native, no EUR conversion issues)
 - `stripe_connect_id` read from robot's on-chain ERC-8004 metadata (hex-decoded)
-- Structured deploy scripts: `scripts/deploy-worker.sh`, `scripts/deploy-demo.sh`, `scripts/deploy-all.sh`
+- Structured deploy scripts: `scripts/deploy-worker.sh`, `scripts/deploy-site.sh`, `scripts/deploy-all.sh`
 - Pre-flight checks block rogue wrangler configs, verify secrets, smoke-test endpoints
 - Demo URL moved to yakrobot.bid/demo (from yakrobot.bid/mcp-demo)
 

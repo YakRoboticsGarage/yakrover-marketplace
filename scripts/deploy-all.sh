@@ -19,7 +19,7 @@ echo ""
 echo ""
 echo "=========================================="
 
-"$SCRIPT_DIR/deploy-demo.sh"
+"$SCRIPT_DIR/deploy-site.sh" demo
 
 echo ""
 echo "=========================================="
