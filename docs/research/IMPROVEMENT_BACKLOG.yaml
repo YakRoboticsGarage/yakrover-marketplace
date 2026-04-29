@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-28'
-  total_items: 134
+  last_updated: '2026-04-29'
+  total_items: 135
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 71
+  proposed: 72
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
-  last_sync: "2026-04-28 — Daily code audit. Added IMP-133 (FLEET_MCP_TOKEN/MCP_PUBLIC_URL/SAM_GOV_API_KEY missing from .env.example), IMP-134 (compliance.py + bond_verifier.py have no CI-run tests). No doc stat changes needed — all counts accurate. 44 implemented, 71 proposed, 18 deferred, 1 rejected."
+  last_sync: "2026-04-29 — Daily code audit. Commits reviewed: 4f4dd5f PR #38 (deploy-site.sh replaces deploy-demo.sh) + 223d947 (IMP-133/134). Added IMP-135 (sed -i '' in deploy-site.sh fails on Linux/CI — latent D13 bug reintroduced). Fixed CLAUDE.md stale stats from origin/main: 44/132→44/135 backlog, 51→57 research docs, 132→135 tracked items. Fixed ROADMAP_v4.md: 44/132→44/135, date 2026-04-27→2026-04-29. 44 implemented, 72 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -2560,5 +2560,37 @@ proposals:
   priority: medium
   status: proposed
   proposed_date: '2026-04-28'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-135
+  title: "sed -i '' in deploy-site.sh fails on Linux/CI"
+  description: >
+    scripts/deploy-site.sh uses `sed -i '' "s|__BUILD_TIMESTAMP__|...|"` to substitute
+    a build timestamp placeholder in the staged output. On macOS (BSD sed), `sed -i ''`
+    means in-place edit with no backup suffix. On GNU sed (Linux, CI ubuntu-latest),
+    `sed -i ''` fails: "sed: option requires an argument -- 'i'". This is the same bug
+    flagged as D13 in docs/archive/review/REVIEW_SYNTHESIS.md for the old deploy-demo.sh
+    — it was not fixed before the pattern was re-authored into the replacement script.
+
+    The code path is guarded by `if grep -q "__BUILD_TIMESTAMP__" ...` so it only fires
+    when the placeholder is present in an index.html. No current demo site uses this
+    placeholder, making the bug latent. But __BUILD_TIMESTAMP__ is a documented feature
+    of the script (described in comments), so any operator who adds it will hit a silent
+    CI failure. No CI job tests the deploy scripts at all.
+
+    Fix: replace `sed -i ''` with `sed -i` on Linux, or use cross-platform Python one-liner.
+    Add a CI step that calls deploy-site.sh with a stub index.html containing the placeholder.
+  module: scripts/deploy-site.sh
+  research_source: Daily code audit (2026-04-29)
+  evidence: >
+    scripts/deploy-site.sh: `sed -i '' "s|__BUILD_TIMESTAMP__|...|g"`.
+    docs/archive/review/REVIEW_SYNTHESIS.md item D13: identical bug in removed deploy-demo.sh.
+    .github/workflows/test.yml: no job exercises deploy scripts.
+    CI runs ubuntu-latest (GNU sed). Current demo index.html files have no placeholder.
+  effort: low
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-29'
   decision_date: null
   decision_notes: null

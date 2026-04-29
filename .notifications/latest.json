@@ -1,1 +1,1 @@
-{"name": "YAK Docs Sync", "message": "2026-04-28 daily sync: all doc stats accurate (323 tests, 42 tools, 44/132 backlog). Proposed IMP-133 (FLEET_MCP_TOKEN/MCP_PUBLIC_URL/SAM_GOV_API_KEY missing from .env.example) + IMP-134 (no CI tests for compliance.py/bond_verifier.py). Backlog: 134 items, 71 proposed."}
+{"name": "YAK Docs Sync", "message": "2026-04-29: Proposed IMP-135 (sed -i'' Linux bug in deploy-site.sh). Fixed CLAUDE.md stale stats vs origin/main: 44/132→44/135 backlog, 51→57 research docs, 132→135 tracked items. ROADMAP_v4 date+backlog synced."}
