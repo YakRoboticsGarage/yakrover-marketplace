@@ -23,8 +23,9 @@ How to manage secrets, deploy services, fund wallets, and respond to alerts.
 | **yakrobot-api** (Worker) | yakrobot-api.rafaeldf2.workers.dev | `cd worker && npx wrangler deploy` (requires Node 20+) |
 | **yakrover-marketplace** (MCP) | yakrover-marketplace.fly.dev | `fly deploy -a yakrover-marketplace` |
 | **9 category simulators** | yakrover-{category}.fly.dev | `infra/fleet-sim/deploy-category.sh {category}` |
-| **yakrobot.bid** (landing) | yakrobot.bid | `./scripts/publish.sh demo/landing --slug ...` (here.now) |
-| **yakrobot.bid/demo** (marketplace) | yakrobot.bid/demo | `./scripts/publish.sh demo/marketplace --slug ...` (here.now) |
+| **yakrobot.bid** (landing) | yakrobot.bid | `./scripts/deploy-site.sh landing` (here.now) |
+| **yakrobot.bid/demo** (marketplace) | yakrobot.bid/demo | `./scripts/deploy-site.sh demo` (here.now) |
+| **yakrobot.bid/yaml** (product brief) | yakrobot.bid/yaml | `./scripts/deploy-site.sh yaml` (here.now) |
 
 ---
 
@@ -181,8 +182,12 @@ fly deploy -a yakrover-marketplace
 
 ### Demo site (yakrobot.bid)
 ```bash
-# Landing page
-./scripts/publish.sh demo/landing --slug <slug>
-# Marketplace demo
-./scripts/publish.sh demo/marketplace --slug <slug>
+./scripts/deploy-site.sh landing   # demo/landing/     → yakrobot.bid/
+./scripts/deploy-site.sh demo      # demo/marketplace/ → yakrobot.bid/demo/
+./scripts/deploy-site.sh yaml      # demo/explorer/    → yakrobot.bid/yaml/
 ```
+
+Slug + source dir are read from `docs/SLUG_REGISTRY.yaml`. The script
+runs a post-publish smoke test that compares the live `<title>` against
+the source `<title>` and fails if they don't match (catches the case
+where the wrong source dir gets uploaded to a slug).
