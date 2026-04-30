@@ -4,7 +4,7 @@ An open protocol for agent-mediated procurement of physical-world tasks. AI agen
 
 The first vertical is **construction site surveying**. The protocol is domain-agnostic.
 
-**Live demo:** [yakrobot.bid/demo](https://yakrobot.bid/demo/) — 100 robots across 18 Michigan operators, 9 RFP presets, EAS attestation, geographic filtering
+**Live demo:** [yakrobot.bid/demo](https://yakrobot.bid/demo/) — 100 robots across 18 Michigan operators, 10 RFP presets, EAS attestation, geographic filtering
 
 ## Why This Exists
 
@@ -71,7 +71,7 @@ yakrover-marketplace/
 │   ├── engine.py                # AuctionEngine — state machine, geo + busy filtering
 │   ├── contracts.py             # On-chain addresses (single source of truth)
 │   ├── mcp_tools.py             # 42 MCP tool handlers
-│   ├── delivery_schemas.py      # 8 category-specific QA schemas [vertical: construction]
+│   ├── delivery_schemas.py      # 9 category-specific QA schemas [vertical: construction]
 │   ├── compliance.py            # Part 107, PLS, COI verification [vertical: construction]
 │   ├── rfp_processor.py         # Construction RFP parsing [vertical: construction]
 │   ├── bond_verifier.py         # Treasury Circular 570 [vertical: construction]
@@ -101,7 +101,7 @@ yakrover-marketplace/
 ├── worker/                      # Cloudflare Worker — payment, demo proxy, balance monitor
 ├── docs/                        # Documentation
 │   ├── architecture/            # System design docs, protocol separation assessment
-│   ├── research/                # 51 research docs + PRODUCT_DSL ontology + backlog
+│   ├── research/                # 57 research docs + PRODUCT_DSL ontology + backlog
 │   ├── guides/                  # Getting started, operations runbook
 │   ├── onboarding/              # Operator onboarding guides
 │   ├── site/                    # Product brief site (yakrobot.bid/yaml)
@@ -154,15 +154,15 @@ The first domain implementation. 100 test robots, 18 Michigan operators, 14 real
 - **9 category MCP servers** on Fly.io — aerial LiDAR, photo, thermal, GPR, bridge, corridor, tunnel, confined, env sensing
 - **101 EAS attestations** — 100 demo_fleet (Base Sepolia) + 1 live_production (Base mainnet)
 - **Geographic filtering** — haversine hard cutoff, robots only bid within service radius
-- **9 RFP presets** — real Michigan projects (MDOT I-94, MSU Farm Lane, US-31 bridge)
+- **10 RFP presets** — Michigan construction (MDOT I-94, MSU Farm Lane, US-31 bridge, DWSD) + NPC ROBOT teleoperation demo
 - **3-method payment** — Card, Bank Transfer (ACH), Stablecoin (USDC on Base)
-- **Delivery QA** — 8 category-specific schemas (ASPRS, USGS, ASCE 38, ASTM, NBI standards)
+- **Delivery QA** — 9 category-specific schemas (ASPRS, USGS, ASCE 38, ASTM, NBI standards)
 
 ## Live Sites
 
 | URL | What it is |
 |-----|-----------|
-| **[yakrobot.bid/demo](https://yakrobot.bid/demo/)** | Live auction — 100 robots, 9 RFP presets, EAS attestation, 3-method payment |
+| **[yakrobot.bid/demo](https://yakrobot.bid/demo/)** | Live auction — 100 robots, 10 RFP presets, EAS attestation, 3-method payment |
 | **[yakrobot.bid](https://yakrobot.bid)** | Landing page — MDOT I-94 RFQ walkthrough |
 | **[yakrobot.bid/yaml](https://yakrobot.bid/yaml)** | YAML ontology explorer |
 

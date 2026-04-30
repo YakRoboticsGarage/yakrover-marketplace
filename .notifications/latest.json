@@ -1,1 +1,1 @@
-{"name": "YAK Docs Sync", "message": "2026-04-29: Proposed IMP-135 (sed -i'' Linux bug in deploy-site.sh). Fixed CLAUDE.md stale stats vs origin/main: 44/132→44/135 backlog, 51→57 research docs, 132→135 tracked items. ROADMAP_v4 date+backlog synced."}
+{"name": "YAK Docs Sync", "message": "2026-04-30: README fixed (9→10 RFP presets ×3, 8→9 delivery schemas ×2, 51→57 research docs). Added IMP-136 (dead api.py module), IMP-137 (create_failure_fleet v0.5 artifact), IMP-138 (check_stripe_account_status unwired). Backlog: 138 items, 75 proposed."}

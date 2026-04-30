@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-29'
-  total_items: 135
+  last_updated: '2026-04-30'
+  total_items: 138
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 72
+  proposed: 75
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
-  last_sync: "2026-04-29 — Daily code audit. Commits reviewed: 4f4dd5f PR #38 (deploy-site.sh replaces deploy-demo.sh) + 223d947 (IMP-133/134). Added IMP-135 (sed -i '' in deploy-site.sh fails on Linux/CI — latent D13 bug reintroduced). Fixed CLAUDE.md stale stats from origin/main: 44/132→44/135 backlog, 51→57 research docs, 132→135 tracked items. Fixed ROADMAP_v4.md: 44/132→44/135, date 2026-04-27→2026-04-29. 44 implemented, 72 proposed, 18 deferred, 1 rejected."
+  last_sync: "2026-04-30 — Daily code audit. No commits in last 24h. README stats fixed: 9→10 RFP presets (3 occurrences), 8→9 delivery schemas (2 occurrences), 51→57 research docs. Dead code audit: added IMP-136 (auction/api.py dead module), IMP-137 (create_failure_fleet v0.5 artifact), IMP-138 (check_stripe_account_status unused method). 44 implemented, 75 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -2592,5 +2592,82 @@ proposals:
   priority: medium
   status: proposed
   proposed_date: '2026-04-29'
+  decision_date: null
+  decision_notes: null
+- id: IMP-136
+  title: Delete auction/api.py — dead FastAPI router module with no callers
+  description: >
+    auction/api.py (230 LOC) implements a FastAPI router factory (create_api_router) that
+    is never imported by any file in the repository. The module docstring contains a usage
+    example that imports from itself, but the actual entry point (mcp_server.py) builds its
+    own REST layer using Starlette directly (Routes at lines 661-664). auction/api.py has
+    no test coverage, no import from any other module, and is flagged only in pyproject.toml
+    with an E402 ruff exception. Keeping it creates a false impression that there are two
+    HTTP API layers and makes security review harder (payment-adjacent code in an unreachable
+    module). Archive to docs/archive/ or delete. If FastAPI is ever preferred over Starlette,
+    rewrite from the mcp_server.py contract, not this abandoned scaffold.
+  module: M24_mcp_tool_layer
+  research_source: daily-audit-2026-04-30
+  evidence: >
+    auction/api.py:34 defines create_api_router(). grep create_api_router returns only
+    auction/api.py:9-10 (self-referential docstring example) and auction/api.py:34 (definition).
+    mcp_server.py:661-664 defines its own Route() handlers with no import of auction.api.
+    pyproject.toml:73 exempts auction/api.py from E402 — the only external reference.
+    No test file imports auction.api.
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-30'
+  decision_date: null
+  decision_notes: null
+- id: IMP-137
+  title: Remove create_failure_fleet() — v0.5 test artifact with no callers
+  description: >
+    auction/mock_fleet.py:412 defines create_failure_fleet() returning
+    [TimeoutRobot(), BadPayloadRobot(), FakeRoverBay3()]. The only references are
+    its own definition and a mention in the module docstring ("v0.5 additions").
+    No test, no MCP tool, no demo script calls this function. TimeoutRobot and
+    BadPayloadRobot still exist and are legitimate failure-mode fixtures — only the
+    factory function is dead. Remove create_failure_fleet() and the docstring reference.
+    The two robot classes can remain as they may be useful directly in future tests.
+  module: M9_mock_fleet
+  research_source: daily-audit-2026-04-30
+  evidence: >
+    auction/mock_fleet.py:412 — grep create_failure_fleet returns only the definition
+    line and the module docstring. No test file, no production file references it.
+    Introduced in v0.5 (per module docstring). Current test suite (323 tests) has zero
+    imports of create_failure_fleet.
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-04-30'
+  decision_date: null
+  decision_notes: null
+- id: IMP-138
+  title: Wire or remove check_stripe_account_status() in stripe_service.py
+  description: >
+    StripeService.check_stripe_account_status() (stripe_service.py:132) is a complete,
+    well-implemented method that returns a structured dict with status, payouts_enabled,
+    charges_enabled, currently_due, and disabled_reason. It handles stub mode correctly
+    and wraps get_account() with a clean interface. However, it has zero callers anywhere
+    in the codebase. The payouts_enabled enforcement added in v1.4.2 (IMP-085/086) is
+    implemented directly in operator_registry.py via raw get_account() calls — it does not
+    use this wrapper. Two options: (A) Replace the raw get_account() pattern in
+    operator_registry.py:200-212 with a call to check_stripe_account_status(), which would
+    centralise the payouts enforcement logic and make the stub-mode path consistent.
+    (B) Delete the method if the operator_registry implementation is considered complete.
+    Option A is preferred — the method has better error handling than the inline pattern.
+  module: M11_stripe_payment
+  research_source: daily-audit-2026-04-30
+  evidence: >
+    auction/stripe_service.py:132 — grep check_stripe_account_status returns only the
+    definition. operator_registry.py:200-212 calls self.stripe_service.get_account()
+    directly and then checks account_data.get("payouts_enabled"). No test exercises
+    check_stripe_account_status() directly (test_operator_registry.py tests the registry
+    method, not the service method).
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-04-30'
   decision_date: null
   decision_notes: null
