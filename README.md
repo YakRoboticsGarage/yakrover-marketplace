@@ -101,7 +101,7 @@ yakrover-marketplace/
 ├── worker/                      # Cloudflare Worker — payment, demo proxy, balance monitor
 ├── docs/                        # Documentation
 │   ├── architecture/            # System design docs, protocol separation assessment
-│   ├── research/                # 57 research docs + PRODUCT_DSL ontology + backlog
+│   ├── research/                # 58 research docs + PRODUCT_DSL ontology + backlog
 │   ├── guides/                  # Getting started, operations runbook
 │   ├── onboarding/              # Operator onboarding guides
 │   ├── site/                    # Product brief site (yakrobot.bid/yaml)

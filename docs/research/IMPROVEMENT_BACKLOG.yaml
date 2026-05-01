@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
   last_updated: '2026-05-01'
-  total_items: 139
+  total_items: 141
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 76
+  proposed: 78
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
-  last_sync: "2026-05-01 — R-META-002 synthesis. Added IMP-139 (multi-robot compound task architecture, from R-051). Priority re-ranking: R-040/R-019 elevated to critical, R-049/R-054 elevated to high. R-047 marked stale. New topics R-055/R-056/R-057/R-META-003 added. 44 implemented, 76 proposed, 18 deferred, 1 rejected."
+  last_sync: "2026-05-01 — Daily maintenance review. Added IMP-140 (inline imports in rfp_processor.py), IMP-141 (archived test count discrepancy). 44 implemented, 78 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -2697,3 +2697,41 @@ proposals:
   proposed_date: '2026-05-01'
   decision_date: null
   decision_notes: "v2.0 planning item only. Do not implement until compound task use case is validated with real buyers."
+
+- id: IMP-140
+  title: Hoist inline imports to module level in rfp_processor.py
+  description: >
+    auction/rfp_processor.py has six imports inside function bodies: `import re` at lines ~183 and ~235,
+    `import hashlib` at lines ~286 and ~529, `import httpx` at line ~459, and
+    `from auction.core import validate_task_spec` at line ~568. These should be at module level.
+    Inline imports on hot paths incur repeated overhead, hide the module's dependency surface,
+    and can mask circular import errors. `re` and `hashlib` are stdlib; `httpx` is already a
+    declared dependency; `validate_task_spec` is an intra-package import with no circular risk.
+    Move all six to the top of the file. Run `uv run ruff check auction/` to confirm no lint regressions.
+  module: M4_rfp_intake
+  research_source: daily-maintenance-2026-05-01
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-05-01'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-141
+  title: Align reported test count to active (non-archived) test functions
+  description: >
+    CLAUDE.md, README.md, and ROADMAP_v4.md all report "323 tests", but the CI workflow
+    explicitly ignores auction/tests/_archive/ (--ignore=auction/tests/_archive).
+    That directory contains 40 test functions in a 590-LOC file, leaving 283 active tests
+    that actually run in CI. The mismatch misleads developers comparing docs to CI output.
+    Fix: update all stats references from "323 tests" to "283 tests" (or annotate as
+    "323 total (283 active, 40 archived)" if the total count is considered useful signal).
+    Also update PRODUCT_DSL_v2.yaml stats entries for affected milestones.
+  module: M_devex
+  research_source: daily-maintenance-2026-05-01
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-05-01'
+  decision_date: null
+  decision_notes: null
