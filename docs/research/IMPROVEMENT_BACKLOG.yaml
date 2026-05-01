@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-30'
-  total_items: 138
+  last_updated: '2026-05-01'
+  total_items: 139
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 75
+  proposed: 76
   source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
-  last_sync: "2026-04-30 — Daily code audit. No commits in last 24h. README stats fixed: 9→10 RFP presets (3 occurrences), 8→9 delivery schemas (2 occurrences), 51→57 research docs. Dead code audit: added IMP-136 (auction/api.py dead module), IMP-137 (create_failure_fleet v0.5 artifact), IMP-138 (check_stripe_account_status unused method). 44 implemented, 75 proposed, 18 deferred, 1 rejected."
+  last_sync: "2026-05-01 — R-META-002 synthesis. Added IMP-139 (multi-robot compound task architecture, from R-051). Priority re-ranking: R-040/R-019 elevated to critical, R-049/R-054 elevated to high. R-047 marked stale. New topics R-055/R-056/R-057/R-META-003 added. 44 implemented, 76 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -2671,3 +2671,29 @@ proposals:
   proposed_date: '2026-04-30'
   decision_date: null
   decision_notes: null
+
+# ============================================================
+# 2026-05-01 R-META-002 synthesis items
+# ============================================================
+
+- id: IMP-139
+  title: "Prototype disjunctive graph + LLM task decomposition for compound survey tasks (v2.0)"
+  description: >
+    R-051 (IMR-LLM, ICRA 2026) demonstrated that LLMs fail at direct multi-robot scheduling
+    for >3 robots (conflicts, deadlocks) but succeed at formalizing the task as a disjunctive
+    graph, which a deterministic FIFO solver then schedules. For YAK v2.0 compound tasks
+    (aerial LiDAR + GPR + progress monitoring on a single project), this pattern replaces
+    direct score_bids() calls with a graph-based scheduler. Investigation item: prototype the
+    LLM decomposition step for a 3-operation compound task using the existing rfp_processor.py
+    as the first stage. Output: operation set (type, area, equipment, precedence) → disjunctive
+    graph → feasible schedule → separate auction per operation. This is architectural R&D, not
+    a v1.x feature.
+  module: M5_auction_engine
+  research_source: R-051
+  evidence: docs/research/automated/R-051_imr_llm_multi_robot_task_planning.md
+  effort: large
+  priority: null
+  status: proposed
+  proposed_date: '2026-05-01'
+  decision_date: null
+  decision_notes: "v2.0 planning item only. Do not implement until compound task use case is validated with real buyers."

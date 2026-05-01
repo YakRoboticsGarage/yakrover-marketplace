@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-04-23"  # R-010 complete; IMP-118/119/120/121 added; no feedback issues
+  last_updated: "2026-05-01"  # R-META-002 complete; R-047 stale; R-040/R-019 elevated to critical; R-055/056/057/R-META-003 added
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -267,7 +267,7 @@ topics:
     module: system
     hypothesis: "Competitors may have launched new features or pricing since our last analysis — need current positioning"
     status: queued
-    priority: high
+    priority: critical
     estimated_sessions: 1
     depends_on: []
 
@@ -424,12 +424,16 @@ topics:
     title: "Weekly research synthesis and pipeline review (run 2)"
     module: system
     hypothesis: "After 7 more completed topics, review all findings to date for contradictions, cross-module patterns, coverage gaps, and re-prioritize remaining queue"
-    status: queued
+    status: complete
     priority: high
     estimated_sessions: 1
+    completed_date: "2026-05-01"
     depends_on: []
     recurrence: "Re-queue every 7 completed topics"
-    notes: "Re-queued by R-META-001 run 1 (2026-04-09). Schedule after ~7 more completed topics. Run same process as R-META-001."
+    output_file: "docs/research/automated/R-META-002_synthesis_2026-05-01.md"
+    improvement_proposals: [IMP-139]
+    spawned: [R-055, R-056, R-057, R-META-003]
+    notes: "Run 2 complete. 8 completed topics reviewed (R-027, R-007, R-007b, R-045, R-028, R-042, R-008, R-010) + 2 orphaned docs (R-051, R-053 MCP). Key findings: (1) Nacha Phase 2 deadline June 22 2026 — IMP-101 critical. (2) IMP-085 (payouts_enabled check) is highest-impact/lowest-effort open fix. (3) Market intelligence gap — R-019/R-020/R-021 all still unexecuted. (4) R-047 stale (answered by R-053 MPP doc). (5) R-040 date embargo lifted 2026-05-01. Priority re-ranking: R-019 and R-040 elevated to critical."
 
   # ===== SPAWNED BY DEVELOPMENT =====
   # (New topics added here when code changes raise new questions)
@@ -453,12 +457,12 @@ topics:
     module: M37_splits_distribution
     hypothesis: "PayRam launched 2026-03-30 with architecture that matches our card-in/USDC-to-Splits use case. A 30-60 day follow-up should assess uptime, API documentation quality, fee transparency, and whether contract addresses (0xSplits) are supported as USDC destinations."
     status: queued
-    priority: high
+    priority: critical
     estimated_sessions: 1
     depends_on: [R-024]
     spawned_from: R-024
     spawned_date: "2026-04-03"
-    notes: "Renamed from R-027 (duplicate ID) by R-META-001 (2026-04-09). Do not conduct before 2026-05-01 — give service time to stabilize. Check: fee structure at $1K-$10K, Splits contract address support, production uptime report, API documentation depth."
+    notes: "Renamed from R-027 (duplicate ID) by R-META-001 (2026-04-09). Date embargo lifted 2026-05-01 — now unblocked. Elevated to critical by R-META-002. Check: fee structure at $1K-$10K, Splits contract address support, production uptime report, API documentation depth."
 
   - id: R-041
     title: "Operator entity-type distribution — sole proprietors vs. LLCs in drone survey market"
@@ -719,13 +723,13 @@ topics:
     title: "x402 protocol + Cloudflare Workers Agents SDK — agent payment evaluation"
     module: M16_settlement
     hypothesis: "Coinbase's x402 protocol (HTTP 402 Payment Required for pay-per-request stablecoin micropayments) launched April 2026 with native Cloudflare Workers support via the Agents SDK. 119M+ transactions on Base, $600M annualized volume, zero protocol fees. IMP-071 proposed evaluating x402 as a complement or replacement for the current settlement flow for agent-initiated payments. Key question: x402 is pay-per-request (no hold/escrow), but YAK needs commit-on-hire hold-and-release. Could x402 handle payment initiation while Stripe Connect or smart contract handles escrow? Also evaluate Stripe MPP (Managed Payment Platform) which may address similar agent-to-agent payment needs."
-    status: queued
+    status: stale
     priority: medium
     estimated_sessions: 1
     depends_on: []
     spawned_from: "git:7836a9b (IMP-071 added 2026-04-14)"
     spawned_date: "2026-04-14"
-    notes: "IMP-071 forward-references 'R-053 (Stripe MPP analysis)' — use R-047 for this topic. Key questions: (1) Does x402 support hold-and-release/escrow, or only instant settlement? (2) How does Cloudflare Workers Agents SDK x402 integration work with our existing Worker (worker/src/index.js)? (3) What is Stripe MPP and how does it compare to x402 for agent-initiated payments? (4) Does the zero-fee model apply to construction-scale ($10K+) payments or is it micro-payment-only? (5) Security: x402 signatures — are they replay-protected?"
+    notes: "STALE (2026-05-01, by R-META-002): Fully answered by two existing orphaned docs — R-053_stripe_machine_payments_protocol.md (x402, MPP, ACP, verdict: MPP good for v2.0 agent payment front-end, not for v1.x escrow) and R-053_mcp_skills_plugins_agent_integration.md (Cloudflare Workers MCP/SDK). Verdict: don't adopt MPP/x402 now; design SPT integration for v2.0. No further research needed. IMP-071 forward-references 'R-053 (Stripe MPP analysis)' — use R-047 for this topic. Key questions: (1) Does x402 support hold-and-release/escrow, or only instant settlement? (2) How does Cloudflare Workers Agents SDK x402 integration work with our existing Worker (worker/src/index.js)? (3) What is Stripe MPP and how does it compare to x402 for agent-initiated payments? (4) Does the zero-fee model apply to construction-scale ($10K+) payments or is it micro-payment-only? (5) Security: x402 signatures — are they replay-protected?"
 
   # ===== SPAWNED BY R-045 =====
 
@@ -746,7 +750,7 @@ topics:
     module: M36_pls_review
     hypothesis: "The 'data collector subcontractor operates under a PLS in responsible charge' model is legally valid (confirmed by R-007b and R-045). But the contract must explicitly establish responsible charge. Research: (1) What contract language establishes PLS responsible charge for a drone subcontractor? (2) How do Aerotas and FlyGuys structure their subcontractor agreements? (3) Is there a NSPS or ASPRS model subcontract template? (4) What obligations does the 'responsible charge' PLS actually have (site visits, GCP checks, seal review)? (5) Could YAK's platform generate a standard subcontract addendum that establishes this relationship at task award time?"
     status: queued
-    priority: medium
+    priority: high
     estimated_sessions: 1
     depends_on: [R-045]
     spawned_from: R-045
@@ -774,7 +778,7 @@ topics:
     module: M15_stripe_service
     hypothesis: "Stripe's us_bank_account payment method defaults to WEB (internet-originated ACH) SEC code. For B2B construction buyers paying from business accounts, the correct Nacha SEC code may be CCD (corporate credit/debit) or CTX. The distinction matters: (1) return windows differ (R29 corporate unauthorized = 2 business days vs R10 consumer = 60 days), (2) Nacha rules for WEB vs CCD have different authorization requirements, (3) CCD may be more defensible for platform in an unauthorized dispute scenario. Research: (1) what SEC code does Stripe assign for us_bank_account PaymentIntents, (2) can Stripe be instructed to use CCD for business account payments, (3) does the SEC code affect the applicable return code set, (4) does wrong SEC code create Nacha compliance exposure."
     status: queued
-    priority: medium
+    priority: high
     estimated_sessions: 1
     depends_on: [R-042]
     spawned_from: R-042
@@ -796,9 +800,9 @@ topics:
     completed_date: "unknown"
     depends_on: []
     output_file: "docs/research/automated/R-051_imr_llm_multi_robot_task_planning.md"
-    improvement_proposals: []
-    spawned: []
-    notes: "Orphaned doc recovered 2026-04-21. Contents not re-read by this agent; review in next R-META run."
+    improvement_proposals: [IMP-139]
+    spawned: [R-057]
+    notes: "Orphaned doc recovered 2026-04-21. Reviewed in R-META-002 (2026-05-01). Key finding: LLMs fail at direct multi-robot scheduling for >3 robots; disjunctive graph + FIFO solver is the right pattern for v2.0 compound tasks (aerial LiDAR + GPR + progress monitoring). IMP-139 added for v2.0 planning item."
 
   - id: R-053
     title: "Stripe Machine Payments Protocol (MPP)"
@@ -811,8 +815,8 @@ topics:
     depends_on: []
     output_file: "docs/research/automated/R-053_stripe_machine_payments_protocol.md"
     improvement_proposals: []
-    spawned: []
-    notes: "Orphaned doc recovered 2026-04-21. Likely addresses R-047 questions about Stripe MPP. Review in next R-META run to extract proposals and close R-047 if answered."
+    spawned: [R-055]
+    notes: "Orphaned doc recovered 2026-04-21. Reviewed in R-META-002 (2026-05-01). Key findings: x402/MPP do not provide escrow — wrong for current marketplace settlement. MPP SPT is the right v2.0 agent payment front-end (buyer pre-authorizes spending limit, agent pays without human checkout). Don't adopt now; design SPT integration for v2.0. Also: a duplicate R-053 MCP skills/plugins doc exists — renamed to R-055."
 
   # ===== SPAWNED BY R-010 =====
 
@@ -827,3 +831,58 @@ topics:
     spawned_from: R-010
     spawned_date: "2026-04-23"
     notes: "Key questions: (1) Does ODOT require .dgn as the sole deliverable or alongside LAS/DXF? (2) Which software can convert LAS → .dgn without Bentley license? (3) If platform enforces .dgn check, what validation is possible on a metadata-only basis? (4) Operator impact: should .dgn capability be a required equipment attribute for ODOT tasks?"
+
+  # ===== SPAWNED BY R-META-002 (2026-05-01) =====
+
+  - id: R-055
+    title: "MCP Skills, Plugins, and Agent Integration for YAK (renamed from duplicate R-053)"
+    module: M26_mcp_server
+    hypothesis: "The MCP protocol (2025-03-26), Skills in Claude Code, and the Plugin distribution system together form the distribution strategy for YAK's 42-tool marketplace server. A hosted HTTP MCP endpoint + Claude Code plugin bundle is the right architecture for broad agent adoption."
+    status: complete
+    priority: medium
+    estimated_sessions: 1
+    completed_date: "2026-04-16"
+    depends_on: []
+    output_file: "docs/research/automated/R-053_mcp_skills_plugins_agent_integration.md"
+    improvement_proposals: []
+    spawned: []
+    spawned_from: "R-META-002 (ID collision fix — was R-053 duplicate)"
+    spawned_date: "2026-05-01"
+    notes: "Previously stored under duplicate ID R-053. Reviewed in R-META-002. Key finding: Deferred tool loading (ToolSearch, Jan 2026) cuts 42-tool MCP context from ~77K to ~8.7K tokens. Hosted HTTP MCP + Claude Code plugin is the right distribution strategy. Official marketplace has 100+ plugins as of early 2026. IMP-129 tracks the file rename task."
+
+  - id: R-056
+    title: "Ground robot survey deliverable standards — terrestrial and mobile LiDAR QA"
+    module: M35_deliverable_qa
+    hypothesis: "Commit 97ce983 added GROUND_DELIVERY_SCHEMA and ground_robot equipment type to the platform. The QA system was designed around aerial LiDAR (USGS LBS, ASPRS). Ground-based survey robots (terrestrial LiDAR, mobile laser scanning, ground-penetrating radar with positioning) use different accuracy standards. Research whether ASPRS, RICS, DOT, or ASCE 38 apply, and what fields GROUND_DELIVERY_SCHEMA should enforce."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-009, R-010]
+    spawned_from: "R-META-002 + git:97ce983 (GROUND_DELIVERY_SCHEMA)"
+    spawned_date: "2026-05-01"
+    notes: "Key questions: (1) What accuracy standards apply to mobile LiDAR scanning (RICS UKIM, ISO 17123)? (2) Is swath Δz applicable to single-pass mobile scans? (3) Does ASPRS Ed.2 distinguish aerial vs terrestrial? (4) What are the minimum GSD and point density requirements for ground robot photogrammetry vs aerial? (5) Does ASCE 38 (subsurface utility) apply to GPR deliverables from ground robots? (6) What fields should GROUND_DELIVERY_SCHEMA add beyond the current set?"
+
+  - id: R-057
+    title: "Multi-robot compound task architecture — LLM + disjunctive graph scheduling for YAK v2.0"
+    module: M5_auction_engine
+    hypothesis: "R-051 (IMR-LLM, ICRA 2026) showed that LLMs fail at direct multi-robot scheduling for >3 robots. The correct pattern is: LLM decomposes task into operation set with precedence constraints → disjunctive graph construction → deterministic FIFO solver. For YAK v2.0 compound tasks (aerial LiDAR + GPR + progress monitoring in one project), this architecture replaces direct score_bids() calls with a graph-based scheduler."
+    status: queued
+    priority: low
+    estimated_sessions: 2
+    depends_on: [R-051]
+    spawned_from: "R-META-002 + R-051"
+    spawned_date: "2026-05-01"
+    notes: "Key questions: (1) How does score_bids() extend to compound tasks — separate auction per operation type? (2) What precedence constraints apply to a combined aerial LiDAR + GPR + progress monitoring project (which must come first)? (3) Is the FIFO heuristic sufficient for ≤5 robots or does a proper solver improve on it? (4) Can the RFP processor extract operation sets from multi-deliverable RFPs? (5) Should compound task scheduling be a new MCP tool or an extension of auction_post_task? Do not schedule before v1.5 shipping."
+
+  # ===== R-META-002 RE-QUEUE =====
+
+  - id: R-META-003
+    title: "Weekly research synthesis and pipeline review (run 3)"
+    module: system
+    hypothesis: "After 7 more completed topics, review all findings to date for contradictions, cross-module patterns, coverage gaps, and re-prioritize remaining queue"
+    status: queued
+    priority: high
+    estimated_sessions: 1
+    depends_on: []
+    recurrence: "Re-queue every 7 completed topics"
+    notes: "Re-queued by R-META-002 (2026-05-01). Schedule after ~7 more completed topics. Run same process as R-META-002."
