@@ -2,8 +2,8 @@
 
 **Project:** yakrover-auction-explorer
 **Owner:** Product
-**Last updated:** 2026-05-01 (rev 5.13, stats sync: 42 MCP tools, 9 schemas, 323 tests, 44/139 backlog)
-**Status:** v1.0–v1.4.2 built. **v1.4.2 complete** (42 MCP tools, 100 test robots on Base Sepolia, 9 category MCP servers on Fly.io, EAS attestation, geographic filtering, busy state, 9 delivery schemas, 10 RFP presets, 323 tests, 44/139 backlog items implemented). Demo at yakrobot.bid/demo.
+**Last updated:** 2026-05-02 (rev 5.14, stats sync: 42 MCP tools, 9 schemas, 323 tests, 45/145 backlog)
+**Status:** v1.0–v1.4.2 built. **v1.4.2 complete** (42 MCP tools, 100 test robots on Base Sepolia, 9 category MCP servers on Fly.io, EAS attestation, geographic filtering, busy state, 9 delivery schemas, 10 RFP presets, 323 tests, 45/145 backlog items implemented). Demo at yakrobot.bid/demo.
 
 > All product decisions and technical constraints referenced by ID live in `docs/DECISIONS.md`.
 > Feature requirements for the next build: `docs/FEATURE_REQUIREMENTS_v15.md`.

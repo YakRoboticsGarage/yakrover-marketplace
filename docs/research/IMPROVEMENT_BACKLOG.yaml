@@ -2776,3 +2776,40 @@ proposals:
   proposed_date: '2026-05-01'
   decision_date: null
   decision_notes: null
+
+- id: IMP-144
+  title: Remove dead create_failure_fleet() factory from mock_fleet.py
+  description: >
+    `auction/mock_fleet.py` defines `create_failure_fleet()` at line 412 which returns
+    `[TimeoutRobot(), BadPayloadRobot(), FakeRoverBay3()]`. The function is never imported
+    or called outside the module — only referenced in the module-level docstring (line 6).
+    `TimeoutRobot` and `BadPayloadRobot` are used directly by callers (`demo.py`,
+    `test_engine.py`) without going through this factory. The function is dead code that
+    adds noise to the public API of mock_fleet and misleads future engineers about how
+    failure-mode testing works. Remove the function and update the module docstring.
+    No callers to update.
+  module: M_devex
+  research_source: daily-maintenance-2026-05-02
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-05-02'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-145
+  title: Bump pyproject.toml version from "1.4.1" to "1.4.2"
+  description: >
+    `pyproject.toml` line 3 declares `version = "1.4.1"` but the codebase shipped v1.4.2
+    (tagged 2026-04-18). Any tooling that reads `importlib.metadata.version("yakrover-marketplace")`
+    — including the PyPI display name, pip show output, and Dependabot checks — will report
+    the wrong version. Fix: update the version field to "1.4.2". Low risk; no API surface
+    change. Should be done before any v1.5 development begins to avoid a 2-version gap.
+  module: M_devex
+  research_source: daily-maintenance-2026-05-02
+  effort: trivial
+  priority: low
+  status: proposed
+  proposed_date: '2026-05-02'
+  decision_date: null
+  decision_notes: null
