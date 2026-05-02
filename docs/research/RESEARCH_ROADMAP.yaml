@@ -5,7 +5,7 @@
 
 meta:
   created: "2026-04-01"
-  last_updated: "2026-05-01"  # R-META-002 complete; R-047 stale; R-040/R-019 elevated to critical; R-055/056/057/R-META-003 added
+  last_updated: "2026-05-02"  # R-040 complete; IMP-142/143 added; R-040b spawned
   schedule: "Daily at 09:00 Berlin (07:00 UTC)"
   synthesis_cadence: "Every 7 completed topics, R-META-001 re-queues for pipeline self-critique"
   output_dir: "docs/research/automated/"
@@ -456,13 +456,29 @@ topics:
     title: "PayRam production reliability audit and fee structure confirmation"
     module: M37_splits_distribution
     hypothesis: "PayRam launched 2026-03-30 with architecture that matches our card-in/USDC-to-Splits use case. A 30-60 day follow-up should assess uptime, API documentation quality, fee transparency, and whether contract addresses (0xSplits) are supported as USDC destinations."
-    status: queued
+    status: complete
     priority: critical
     estimated_sessions: 1
+    completed_date: "2026-05-02"
     depends_on: [R-024]
     spawned_from: R-024
     spawned_date: "2026-04-03"
-    notes: "Renamed from R-027 (duplicate ID) by R-META-001 (2026-04-09). Date embargo lifted 2026-05-01 — now unblocked. Elevated to critical by R-META-002. Check: fee structure at $1K-$10K, Splits contract address support, production uptime report, API documentation depth."
+    output_file: "docs/research/automated/R-040_payram_production_reliability_audit.md"
+    improvement_proposals: [IMP-142, IMP-143]
+    spawned: [R-040b]
+    notes: "Renamed from R-027 (duplicate ID) by R-META-001 (2026-04-09). Date embargo lifted 2026-05-01. Hypothesis PARTIALLY CONFIRMED with critical caveats. PayRam is self-hosted (Docker/VPS), NOT SaaS — adds ops burden. Card onramp fees are ~3.5-5% from underlying partner (more expensive than Stripe 1.5%). 0xSplits as cold wallet technically possible but requires separate distribute() call — marketplace wallet routing is better. Zero production track record at 33 days post-launch. MCP server (mcp.payram.com) is agent-native and interesting for v2.0 IMP-109. Decision: do NOT adopt for v1.x. Re-evaluate at 90 days (R-040b, June 2026). 2 proposals added."
+
+  - id: R-040b
+    title: "PayRam 90-day reliability follow-up — production audit and v2.0 pilot gate"
+    module: M37_splits_distribution
+    hypothesis: "By late June 2026 (90 days post-launch), PayRam will have accumulated user reviews, a public status page, and potentially a security audit. If all three exist and no critical incidents are reported, PayRam becomes a viable v2.0 pilot for agent-initiated construction payments (IMP-109)."
+    status: queued
+    priority: medium
+    estimated_sessions: 1
+    depends_on: [R-040]
+    spawned_from: R-040
+    spawned_date: "2026-05-02"
+    notes: "Date gate: do NOT run before 2026-06-22 (Nacha Phase 2 deadline + 90 days post-PayRam launch). Checklist: (1) user reviews on Capterra/G2, (2) public uptime data published, (3) security audit commissioned/released, (4) docs.payram.com 403 resolved, (5) no transaction failure reports. If all pass: propose v2.0 agent-payments pilot using PayRam MCP + send-payment tool for IMP-109."
 
   - id: R-041
     title: "Operator entity-type distribution — sole proprietors vs. LLCs in drone survey market"

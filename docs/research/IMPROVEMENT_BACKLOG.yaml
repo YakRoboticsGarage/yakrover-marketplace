@@ -1,7 +1,7 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-05-01'
-  total_items: 141
+  last_updated: '2026-05-02'
+  total_items: 143
   implemented: 44
   deferred: 18
   rejected: 1
@@ -2714,6 +2714,47 @@ proposals:
   priority: low
   status: proposed
   proposed_date: '2026-05-01'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-142
+  title: Add PayRam to payment rails comparison documentation
+  description: >
+    Document PayRam alongside Stripe Connect and Coinbase Onramp in a payment rails
+    comparison table. Include: fee structure (0% PayRam markup + ~3.5-5% from card
+    onramp partner vs Stripe 1.5%), self-hosted ops burden vs SaaS, settlement
+    destination flexibility (marketplace wallet routing, NOT 0xSplits as cold wallet),
+    MCP server tools, and explicit "do not adopt before 90-day reliability window"
+    recommendation. Target: docs/architecture/ or a new docs/research/payment_rails.md.
+    This prevents future engineers from re-researching PayRam from scratch.
+  module: M37_splits_distribution
+  research_source: R-040
+  evidence: docs/research/automated/R-040_payram_production_reliability_audit.md
+  effort: small
+  priority: low
+  status: proposed
+  proposed_date: '2026-05-02'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-143
+  title: Schedule PayRam 90-day reliability re-evaluation (June 2026)
+  description: >
+    PayRam launched March 30, 2026 and has zero user reviews, no public status page,
+    and no security audit at time of R-040 research (May 2, 2026). A 90-day follow-up
+    audit is needed before PayRam can be considered for any production payment flow.
+    Checklist: (1) user reviews on Capterra/G2, (2) public uptime history published,
+    (3) security audit commissioned or released, (4) docs.payram.com accessible
+    (currently 403 — UX signal), (5) any transaction failure reports. If all pass,
+    proceed with v2.0 pilot for agent-initiated payments (IMP-109 path). Add R-040b
+    topic to research roadmap with a "not before 2026-06-22" date gate.
+  module: M37_splits_distribution
+  research_source: R-040
+  evidence: docs/research/automated/R-040_payram_production_reliability_audit.md
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-05-02'
   decision_date: null
   decision_notes: null
 
