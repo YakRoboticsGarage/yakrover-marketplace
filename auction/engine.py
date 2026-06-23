@@ -108,6 +108,36 @@ VALID_TRANSITIONS: dict[TaskState | None, list[TaskState]] = {
 
 
 # ---------------------------------------------------------------------------
+# QADeliveryError — raised by confirm_delivery when delivery QA fails
+# ---------------------------------------------------------------------------
+
+
+class QADeliveryError(ValueError):
+    """Raised by :meth:`AuctionEngine.confirm_delivery` when QA fails.
+
+    Subclasses ``ValueError`` so existing callers that ``except ValueError``
+    keep working unchanged. Carries the QA result and the delivered payload so
+    the buyer can review the deliverable and choose to accept it anyway (the
+    delivery is not settled when this is raised).
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        qa: dict | None = None,
+        delivery: dict | None = None,
+        request_id: str | None = None,
+        robot_id: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.qa = qa
+        self.delivery = delivery
+        self.request_id = request_id
+        self.robot_id = robot_id
+
+
+# ---------------------------------------------------------------------------
 # TaskRecord — in-memory task store entry
 # ---------------------------------------------------------------------------
 
@@ -1069,7 +1099,22 @@ class AuctionEngine:
 
         if qa_result.status == "FAIL":
             log("VERIFY", f"{request_id} | QA FAILED (level {qa_result.level}): {qa_result.issues}")
-            raise ValueError(f"Delivery QA failed (level {qa_result.level}): {qa_result.issues}")
+            # Store the QA result so it is available to callers, and carry the
+            # delivered payload on the exception so the buyer can review it and
+            # choose to accept anyway. The task stays DELIVERED (not settled).
+            record.qa_result = qa_result.to_dict()
+            raise QADeliveryError(
+                f"Delivery QA failed (level {qa_result.level}): {qa_result.issues}",
+                qa=record.qa_result,
+                delivery={
+                    "robot_id": delivery.robot_id,
+                    "data": delivery.data,
+                    "sla_met": delivery.sla_met,
+                    "delivered_at": delivery.delivered_at.isoformat(),
+                },
+                request_id=request_id,
+                robot_id=record.winner.robot_id,
+            )
 
         if qa_result.status == "WARN":
             log("VERIFY", f"{request_id} | QA WARN (level {qa_result.level}): {qa_result.issues}")
