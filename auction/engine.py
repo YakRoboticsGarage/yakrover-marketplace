@@ -976,6 +976,37 @@ class AuctionEngine:
                 "sla_seconds": record.task.sla_seconds,
                 "re_pool": re_pool_result,
             }
+        except Exception as exc:
+            # The robot raised during execution (e.g. rejected the task or returned
+            # no usable delivery). Surface the real error and leave no dangling state.
+            # Payment only happens at settlement, which this path never reaches — so
+            # no funds move.
+            log(
+                "EXECFAIL",
+                f"{record.request_id} | {winning_bid.robot_id} execution failed: {exc}",
+            )
+
+            # IN_PROGRESS -> ABANDONED
+            self._transition(record, TaskState.ABANDONED, f"execution error: {exc}")
+            # Release busy state — robot is no longer executing this task.
+            self._clear_busy(winning_bid.robot_id)
+
+            # Record reputation
+            if self.reputation is not None:
+                self.reputation.record_outcome(
+                    robot_id=winning_bid.robot_id,
+                    request_id=request_id,
+                    outcome="abandoned",
+                    sla_met=False,
+                )
+
+            return {
+                "request_id": request_id,
+                "state": record.state.value,
+                "robot_id": winning_bid.robot_id,
+                "failed": True,
+                "error": str(exc),
+            }
 
         record.delivery = delivery
 

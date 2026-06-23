@@ -24,6 +24,20 @@ from auction.core import Bid, DeliveryPayload, Task, sign_bid
 
 log = logging.getLogger(__name__)
 
+# Default motor-command sequence for teleop / ground-delivery robots when the task
+# spec doesn't carry an explicit parameters["commands"] list. Every entry must be a
+# valid robot command (forward, backward, left, right, stop).
+DEFAULT_TELEOP_COMMANDS = ["forward", "left", "forward", "right", "stop"]
+
+
+class RobotExecutionError(RuntimeError):
+    """Raised when a robot returns no usable delivery for a task.
+
+    Surfaces the robot's own error (e.g. "parameters.commands missing") instead of
+    fabricating a deliverable that would later fail QA with an opaque
+    "missing required field" message.
+    """
+
 
 class MCPRobotAdapter:
     """Calls a remote robot's MCP endpoint for bidding and execution.
@@ -450,6 +464,17 @@ class MCPRobotAdapter:
         if not readings:
             log.warning("No waypoint readings — falling back to robot_execute_task")
             exec_tool = self._resolve_marketplace_tool("robot_execute_task")
+
+            # Build execution parameters. Teleop / ground-delivery robots expect a
+            # motor-command sequence under parameters["commands"]; the task pipeline
+            # doesn't currently carry one, so supply a safe default when absent.
+            # Copy (don't mutate) the task's capability_requirements.
+            exec_params: dict[str, Any] = (
+                dict(task.capability_requirements) if isinstance(task.capability_requirements, dict) else {}
+            )
+            if not exec_params.get("commands") and (task.task_category or "") == "delivery_ground":
+                exec_params["commands"] = list(DEFAULT_TELEOP_COMMANDS)
+
             fallback = await self._mcp_call(
                 "tools/call",
                 {
@@ -457,7 +482,7 @@ class MCPRobotAdapter:
                     "arguments": {
                         "task_id": task.request_id,
                         "task_description": task.description,
-                        "parameters": task.capability_requirements,
+                        "parameters": exec_params,
                     },
                 },
             )
@@ -476,8 +501,8 @@ class MCPRobotAdapter:
             dd = content.get("delivery_data", content)
             # If delivery_data has category-specific structure (not just readings),
             # use it directly — the QA schema will validate it.
-            if dd.get("summary") and not dd.get("readings"):
-                # Category-specific delivery (GPR, LiDAR, thermal, etc.)
+            if isinstance(dd, dict) and dd.get("summary") and not dd.get("readings"):
+                # Category-specific delivery (GPR, LiDAR, thermal, ground teleop, etc.)
                 data = dd
                 return DeliveryPayload(
                     request_id=task.request_id,
@@ -488,7 +513,7 @@ class MCPRobotAdapter:
                 )
 
             # Legacy: parse into waypoint/temperature format
-            for r in dd.get("readings", []):
+            for r in dd.get("readings", []) if isinstance(dd, dict) else []:
                 readings.append(
                     {
                         "waypoint": len(readings) + 1,
@@ -498,9 +523,22 @@ class MCPRobotAdapter:
                     }
                 )
 
+            # No category-specific delivery and no readings — the robot rejected or
+            # failed the task. Surface its error instead of fabricating a deliverable
+            # that would fail QA with an opaque "missing required field" message.
+            if not readings:
+                robot_error = content.get("error") if isinstance(content, dict) else None
+                if not robot_error and isinstance(content, dict) and content.get("success") is False:
+                    robot_error = "robot reported success=false with no delivery_data"
+                raise RobotExecutionError(
+                    f"{self.robot_id} returned no usable delivery for task {task.request_id}: "
+                    f"{robot_error or 'no delivery_data in response'}"
+                )
+
         if not readings:
-            # Final fallback — no data at all
-            readings = [{"waypoint": 1, "temperature_c": 0, "humidity_pct": 0, "timestamp": now.isoformat()}]
+            # Defensive: the fallback above raises when it yields no readings, so this
+            # is unreachable in practice. Never fabricate a zero-value deliverable.
+            raise RobotExecutionError(f"{self.robot_id} produced no delivery data for task {task.request_id}")
 
         temps: list[float] = [float(r["temperature_c"]) for r in readings if r.get("temperature_c")]
         humids: list[float] = [float(r["humidity_pct"]) for r in readings if r.get("humidity_pct")]
