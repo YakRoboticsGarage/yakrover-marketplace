@@ -1,13 +1,13 @@
 meta:
   created: '2026-04-01'
-  last_updated: '2026-04-28'
-  total_items: 134
+  last_updated: '2026-06-28'
+  total_items: 139
   implemented: 44
   deferred: 18
   rejected: 1
-  proposed: 71
-  source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout
-  last_sync: "2026-04-28 — Daily code audit. Added IMP-133 (FLEET_MCP_TOKEN/MCP_PUBLIC_URL/SAM_GOV_API_KEY missing from .env.example), IMP-134 (compliance.py + bond_verifier.py have no CI-run tests). No doc stat changes needed — all counts accurate. 44 implemented, 71 proposed, 18 deferred, 1 rejected."
+  proposed: 76
+  source: Automated daily research agent + weekly synthesis + 100-robot fleet sprint + NPC ROBOT live-production rollout + 2026-06 live debugging session
+  last_sync: "2026-06-28 — Live debugging session (teleop demo end-to-end). Shipped (not backlog-tracked, see docs/SESSION_HANDOFF_2026-06.md): teleop ground-delivery execution fix + QA-failure payload surfacing + monocular_camera sensor support. Added IMP-135 (filter-before-probe in discovery), IMP-136 (discovery off request path + memory/health), IMP-137 (fail-fast on zero eligible robots), IMP-138 (robot reachability indicator), IMP-139 (scope demo SLA override per preset). 44 implemented, 76 proposed, 18 deferred, 1 rejected."
 proposals:
 - id: IMP-001
   title: Integrate external PLS license verification API (Checkr or MeshVerify)
@@ -2560,5 +2560,126 @@ proposals:
   priority: medium
   status: proposed
   proposed_date: '2026-04-28'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-135
+  title: "Apply EAS/fleet-type filter BEFORE probing robots in discovery"
+  description: >
+    `mcp_server.py` `discover_and_swap_fleet()` probes every discovered robot (15s timeout
+    each, ~120 robots) and only AFTER probing applies the EAS attestation filter and the
+    simulator_only / hide_fakerovers fleet-type filter (lines ~321-354). In "Production only"
+    mode (hide_fakerovers=true) the auction therefore probes 100+ robots just to keep the
+    handful of live_production ones — many candidates are dead ngrok tunnels (404) or
+    disconnected, so the probe phase takes minutes and starves /health.
+
+    Fix: resolve attestations first, filter the candidate list to the requested fleet type,
+    THEN probe only that subset. Production-only would probe ~3 robots instead of ~120.
+    This directly removes the "Running" hang observed when running Server Room Climate Check
+    in production-only mode.
+  module: mcp_server.py
+  research_source: Live debugging session (2026-06)
+  evidence: >
+    Reproduced: POST /api/fleet-mode {hide_fakerovers:true} then auction_post_task for an
+    env_sensing task → HTTP 000 after 120s. Fly logs show PROBE of OKI94/OKMCD/OKGLAS/etc.
+    (all robots) before any fleet-type filtering. See docs/SESSION_HANDOFF_2026-06.md.
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-06-28'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-136
+  title: "Move fleet discovery off the request path (cache + TTL) and stop it blocking /health"
+  description: >
+    Fleet re-discovery is forced synchronously on every auction_post_task / auction_process_rfp
+    (`engine._discovery_done = False; engine._discover()` in mcp_server.py handle_tool_call).
+    The probe storm blocks the event loop long enough that the Fly health check on :8001 goes
+    critical ("context deadline exceeded"), Fly stops routing, and the whole demo goes dark.
+    Compounded by the machine being shared-cpu-1x / 512 MB, which has been OOM-killed
+    (exit_code=137). This recurred multiple times during the 2026-06 session; each time the
+    fix was `fly machine restart 48e43def153638 -a yakrover-marketplace`.
+
+    Fix: run discovery in a background task with a cached result + TTL (serve auctions from the
+    cache, refresh asynchronously); give /health a cheap liveness path independent of discovery;
+    bump machine memory (>=1 GB) and set auto_stop_machines='off' / min_machines_running>=1 in
+    fly.toml. Pairs with IMP-135 (filter-before-probe) to bound the work.
+  module: mcp_server.py, fly.toml
+  research_source: Live debugging session (2026-06)
+  evidence: >
+    fly machine status showed exit_code=137,oom_killed=true and health 'critical: context
+    deadline exceeded'. Health recovered only after restart. See docs/SESSION_HANDOFF_2026-06.md.
+  effort: medium
+  priority: high
+  status: proposed
+  proposed_date: '2026-06-28'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-137
+  title: "Fail fast (clear message) when zero robots are eligible/reachable"
+  description: >
+    When no robot satisfies a task's hard constraints (or all eligible ones are offline),
+    auction_post_task does not short-circuit with an actionable result — the demo sits on
+    "Running" until something times out. Example: Server Room Climate Check (env_sensing,
+    temperature+humidity) in production-only mode, where the only sensing production robot
+    (Tumbller-Finland-01) is offline.
+
+    Fix: when the eligible/reachable set is empty, return a structured result
+    (e.g. {state: 'no_eligible_robots', reason, required_sensors, candidates_considered}) and
+    have the demo render a clear "no operator available for this task right now" message
+    instead of spinning.
+  module: auction/engine.py, mcp_server.py, demo/marketplace/index.html
+  research_source: Live debugging session (2026-06)
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-06-28'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-138
+  title: "Surface robot reachability / last-seen in the demo sidebar"
+  description: >
+    Robots whose MCP endpoint is unreachable (e.g. ngrok tunnels returning ERR_NGROK_3200 /
+    404) are silently dropped during the auction probe phase, with no buyer-visible signal.
+    During the 2026-06 session the only live_production sensing robot (Tumbller-Finland-01,
+    agent_id 38947) and PiZero-Robot-01 were on offline ngrok tunnels, making production-only
+    sensing auctions unwinnable with no indication why.
+
+    Fix: probe reachability when rendering the sidebar and show an online/offline (or
+    last-seen) badge per operator; optionally exclude offline operators from the "available"
+    count so the displayed fleet matches what can actually bid.
+  module: demo/marketplace/index.html, mcp_server.py
+  research_source: Live debugging session (2026-06)
+  effort: medium
+  priority: medium
+  status: proposed
+  proposed_date: '2026-06-28'
+  decision_date: null
+  decision_notes: null
+
+- id: IMP-139
+  title: "Scope the demo 'Override deadline' (sla_seconds=5) per preset — it breaks live-robot tasks"
+  description: >
+    The demo's "Demo Overrides → Override deadline" checkbox (checked by default) injects
+    "Set sla_seconds to 5" into every task (demo/marketplace/index.html ~line 2752). That is
+    fine for instant simulated deliveries but too short for real robots: the live Berlin
+    Tumbller teleop takes ~15-20s, so the engine's asyncio.wait_for(timeout=sla_seconds)
+    aborts execution and the task is marked abandoned (SLA timeout). Worked around in-session
+    by unchecking the box; needs a durable fix.
+
+    Fix: skip the SLA override (or use a realistic value, e.g. 90s) for live-robot presets
+    such as teleop_npc_robot, or derive the override from the preset's stated deadline.
+  module: demo/marketplace/index.html
+  research_source: Live debugging session (2026-06)
+  evidence: >
+    Fly log: "[TIMEOUT] req_... NPC ROBOT timed out after 5s SLA; in_progress -> abandoned".
+    Unchecking "Override deadline" (uses RFP's 60s) → QA PASS. See docs/SESSION_HANDOFF_2026-06.md.
+  effort: small
+  priority: medium
+  status: proposed
+  proposed_date: '2026-06-28'
   decision_date: null
   decision_notes: null
