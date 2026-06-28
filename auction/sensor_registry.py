@@ -29,6 +29,7 @@ CANONICAL_SENSORS = frozenset(
         "temperature",
         "humidity",
         "rgb_camera",
+        "monocular_camera",
     ]
 )
 
@@ -89,6 +90,13 @@ _ALIASES: dict[str, str] = {
     "temp": "temperature",
     "humidity_sensor": "humidity",
     "camera": "rgb_camera",
+    "rgb camera": "rgb_camera",
+    "rgb-camera": "rgb_camera",
+    "monocular": "monocular_camera",
+    "mono_camera": "monocular_camera",
+    "mono camera": "monocular_camera",
+    "monocular camera": "monocular_camera",
+    "monocular-camera": "monocular_camera",
 }
 
 
