@@ -207,6 +207,50 @@ class TestLifecycleContracts:
 
 
 # ---------------------------------------------------------------------------
+# QA-failure contract: confirm_delivery surfaces the payload for buyer review
+# ---------------------------------------------------------------------------
+
+def _build_mcp_tools_bad_payload():
+    """Tools + engine whose only capable robot delivers QA-failing data."""
+    from auction.mock_fleet import BadPayloadRobot, FakeRoverBay3
+
+    fleet = [BadPayloadRobot(), FakeRoverBay3()]
+    wallet = WalletLedger()
+    wallet.create_wallet("buyer")
+    wallet.fund_wallet("buyer", Decimal("100.00"), "test")
+    engine = AuctionEngine(fleet, wallet=wallet, reputation=ReputationTracker())
+    mcp = MockFastMCP()
+    register_auction_tools(mcp, engine)
+    return mcp.tools, engine
+
+
+class TestConfirmDeliveryQAFail:
+    def test_qa_fail_returns_payload_not_bare_error(self):
+        """On QA fail the tool returns the delivery payload + QA detail (settled=False).
+
+        This is what lets the demo show the delivery card and offer "Release
+        Anyway" instead of a dead error.
+        """
+        tools, _ = _build_mcp_tools_bad_payload()
+
+        post = asyncio.run(tools["auction_post_task"](task_spec=VALID_TASK_SPEC))
+        rid = post["request_id"]
+        asyncio.run(tools["auction_get_bids"](request_id=rid))
+        asyncio.run(tools["auction_accept_and_execute"](request_id=rid, robot_id="badpayload-robot"))
+
+        confirm = asyncio.run(tools["auction_confirm_delivery"](request_id=rid))
+
+        assert confirm.get("qa_failed") is True
+        assert confirm.get("settled") is False
+        assert confirm.get("state") == "delivered"
+        # The payload and QA detail are present for buyer review...
+        assert confirm.get("delivery", {}).get("data") is not None
+        assert confirm.get("qa", {}).get("status") == "FAIL"
+        # ...and it is NOT a bare error response.
+        assert "error" not in confirm
+
+
+# ---------------------------------------------------------------------------
 # Query tool contracts
 # ---------------------------------------------------------------------------
 

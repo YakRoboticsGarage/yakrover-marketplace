@@ -27,7 +27,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from auction.core import VALID_TASK_CATEGORIES, TaskState
-from auction.engine import AuctionEngine
+from auction.engine import AuctionEngine, QADeliveryError
 
 log = logging.getLogger(__name__)
 
@@ -122,6 +122,8 @@ COMMON_MODELS = {
     "rtk_gps": "Trimble R12i",
     "robotic_total_station": "Leica TS16",
     "ground_robot": "ELEGOO Tumbller (ESP32-S3)",
+    "rgb_camera": "Generic RGB camera",
+    "monocular_camera": "Generic monocular camera",
 }
 
 # Sensor type → default task category (used by register_robot_onchain)
@@ -134,6 +136,8 @@ SENSOR_TO_CATEGORY = {
     "thermal_camera": "visual_inspection",
     "robotic_total_station": "env_sensing",
     "ground_robot": "delivery_ground",
+    "rgb_camera": "visual_inspection",
+    "monocular_camera": "visual_inspection",
 }
 
 # Equipment types that describe the robot's platform/form factor rather than a
@@ -351,6 +355,22 @@ def register_auction_tools(
         try:
             result = engine.confirm_delivery(request_id)
             return _decimals_to_strings(result)
+        except QADeliveryError as exc:
+            # QA failed. Return the delivered payload + QA detail (rather than a
+            # bare error) so the buyer can review the deliverable and choose to
+            # accept it anyway. Payment is NOT settled here.
+            return _decimals_to_strings(
+                {
+                    "request_id": exc.request_id or request_id,
+                    "robot_id": exc.robot_id,
+                    "state": "delivered",
+                    "qa_failed": True,
+                    "settled": False,
+                    "qa": exc.qa,
+                    "delivery": exc.delivery,
+                    "message": str(exc),
+                }
+            )
         except ValueError as exc:
             return _error_response(exc)
 

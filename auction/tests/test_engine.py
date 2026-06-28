@@ -667,6 +667,34 @@ class TestBadPayload:
             engine.confirm_delivery(request_id)
 
     @pytest.mark.asyncio
+    async def test_qa_fail_raises_qadeliveryerror_with_payload(self):
+        """QA failure raises QADeliveryError carrying the QA result + delivered payload.
+
+        The error stays a ValueError (backward compatible) but lets the buyer
+        review the deliverable and choose to accept it anyway.
+        """
+        from auction.engine import QADeliveryError
+
+        fleet = [BadPayloadRobot(), FakeRoverBay3()]
+        engine, wallet, reputation = _build_engine_with_wallet(fleet=fleet)
+
+        post_result = engine.post_task(VALID_TASK_SPEC)
+        request_id = post_result["request_id"]
+        engine.get_bids(request_id)
+        engine.accept_bid(request_id, "badpayload-robot")
+        await engine.execute(request_id)
+
+        with pytest.raises(QADeliveryError) as exc_info:
+            engine.confirm_delivery(request_id)
+
+        err = exc_info.value
+        assert isinstance(err, ValueError)  # existing `except ValueError` still catches it
+        assert err.qa is not None and err.qa.get("status") == "FAIL"
+        assert err.delivery is not None and err.delivery.get("data") is not None
+        # Task is not settled — it stays DELIVERED for the buyer to decide.
+        assert engine._get_record(request_id).state.value == "delivered"
+
+    @pytest.mark.asyncio
     async def test_reject_then_repool_succeeds(self):
         """Reject bad payload, repool, good robot wins and settles."""
         fleet = [BadPayloadRobot(), FakeRoverBay3()]

@@ -10,6 +10,10 @@ worker/.dev.vars
 .herenow/
 .DS_Store
 
+# agent/session artifacts
+.playwright-mcp/
+.claude/worktrees/
+
 # wrangler files (only worker/wrangler.toml should exist — root-level configs break deploys)
 .wrangler
 /wrangler.json
