@@ -3,47 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Yak Robotics Garage — Space Economy Brief</title>
-<meta name="description" content="Full-stack infrastructure management protocol — yakrover-identity, yakrover-discovery (teleoperation and autonomous agents), yakrover-payments, and yakrover-marketplace — for any managed infrastructure in space operations.">
+<title>YakRobot Protocols — Space Economy Brief</title>
+<meta name="description" content="Open protocols for robot coordination and infrastructure — yakrobot-identity, yakrobot-discovery (teleoperation and autonomous agents), yakrobot-payments, and yakrobot-marketplace — for any managed infrastructure in space operations.">
 
 <!-- Open Graph -->
-<meta property="og:title" content="Yak Robotics Garage — Space Economy Brief">
-<meta property="og:description" content="Full-stack infrastructure management protocol — yakrover-identity, yakrover-discovery (teleoperation and autonomous agents), yakrover-payments, and yakrover-marketplace — for any managed infrastructure in space operations.">
+<meta property="og:title" content="YakRobot Protocols — Space Economy Brief">
+<meta property="og:description" content="Open protocols for robot coordination and infrastructure — yakrobot-identity, yakrobot-discovery (teleoperation and autonomous agents), yakrobot-payments, and yakrobot-marketplace — for any managed infrastructure in space operations.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://yakrobot.bid/memo-space/">
-<meta property="og:image" content="https://yakrobot.bid/memo/og-image.png">
+<meta property="og:image" content="https://yakrobot.bid/memo-space/og-image.png">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Yak Robotics Garage — Space Economy Brief">
-<meta name="twitter:description" content="Full-stack infrastructure management protocol — yakrover-identity, yakrover-discovery (teleoperation and autonomous agents), yakrover-payments, and yakrover-marketplace — for any managed infrastructure in space operations.">
-<meta name="twitter:image" content="https://yakrobot.bid/memo/og-image.png">
+<meta name="twitter:title" content="YakRobot Protocols — Space Economy Brief">
+<meta name="twitter:description" content="Open protocols for robot coordination and infrastructure — yakrobot-identity, yakrobot-discovery (teleoperation and autonomous agents), yakrobot-payments, and yakrobot-marketplace — for any managed infrastructure in space operations.">
+<meta name="twitter:image" content="https://yakrobot.bid/memo-space/og-image.png">
 
-<link rel="icon" href="yak-icon.png" type="image/png">
+<link rel="icon" href="favicon-64.png" type="image/png">
+<link rel="apple-touch-icon" href="favicon-64.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ---- DESIGN TOKENS ---- */
 :root {
-  /* Colors */
-  --color-brand: #E8792B;
-  --color-brand-dark: #d06a22;
-  --color-brand-ring: rgba(232,121,43,0.1);
+  /* Fonts — Protocol Institute brand stack */
+  --font-display: "Instrument Serif", Georgia, serif;   /* headings, weight 400 */
+  --font-body:    "Lora", Georgia, serif;               /* prose, dek */
+  --font-ui:      "Outfit", system-ui, sans-serif;      /* labels, buttons, meta */
+
+  /* Colors — dark mode of the Protocol Institute identity.
+     Cobalt = network / nodes / CTA. Forest = live / status.
+     Rust = "Featured" only, very sparing. */
+  --color-cobalt: #0064FF;          /* brand primary — fills, CTAs, decorative borders */
+  --color-cobalt-pressed: #004FCC;  /* pressed / hover */
+  --color-cobalt-bright: #5B9DFF;   /* accent text + links on dark, for legibility */
+  --color-forest: #34C79B;          /* live-site / status accent (brightened forest) */
+  --color-rust: #E07A45;            /* "Featured" only — brightened rust */
+
+  --color-brand: var(--color-cobalt);
+  --color-brand-dark: var(--color-cobalt-pressed);
+  --color-brand-ring: rgba(0,100,255,0.22);
   --color-heading: #F9FAFB;
-  --color-body: #A0AEC0;
+  --color-body: #A8B3C4;
   --color-muted: #9CA3AF;
   --color-hint: #6B7280;
-  --color-blue: #60A5FA;
-  --color-blue-hover: #93C5FD;
-  --color-blue-border: #3B5275;
+  --color-blue: var(--color-cobalt-bright);
+  --color-blue-hover: #8FBDFF;
+  --color-blue-border: #2A4D7A;
   --color-border: #1F2937;
   --color-border-mid: #374151;
-  --color-bg: #0B0F1A;
-  --color-bg-panel: #111827;
-  --color-bg-surface: #1F2937;
-  --color-bg-callout: #2A1A0F;
+  --color-border-hairline: #E5E7EB; /* brand hairline — used inside light keyline tiles */
+  --color-bg: #0A0F1E;
+  --color-bg-panel: #111A2E;
+  --color-bg-surface: #1B2742;
+  --color-bg-callout: #0F1E38;
   --color-bg-callout-dark: #0F1B2E;
-  --color-popover: #1A1F26;
+  --color-popover: #1A2238;
   --color-popover-text: #f0f2f5;
   --color-overlay: rgba(0,0,0,0.6);
   --color-handle: #374151;
@@ -92,7 +108,7 @@ a:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visib
 
 /* ---- BASE ---- */
 body {
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: var(--font-body);
   font-size: var(--text-lg);
   line-height: 1.7;
   color: var(--color-body);
@@ -111,28 +127,38 @@ body {
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   border-bottom: 2px solid var(--color-brand);
   padding-bottom: var(--sp-3);
   margin-top: 28px;
   margin-bottom: 28px;
 }
-.header h1 { font-family: 'JetBrains Mono', monospace; font-size: var(--text-3xl); font-weight: 700; color: var(--color-heading); }
-.header .meta { font-family: 'JetBrains Mono', monospace; font-size: var(--text-base); color: var(--color-muted); }
+.brand-lockup { display: flex; align-items: center; gap: var(--sp-3); }
+/* Symbol sits on a light keyline tile on dark/busy surfaces, per brand guidance */
+.brand-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 52px; height: 52px; flex-shrink: 0;
+  background: #fff; border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-hairline, #E5E7EB);
+  box-shadow: var(--shadow-sm);
+}
+.brand-mark img { display: block; }
+.header h1 { font-family: var(--font-display); font-size: 34px; font-weight: 400; letter-spacing: 0.01em; color: var(--color-heading); }
+.header .meta { font-family: var(--font-ui); font-size: var(--text-base); color: var(--color-muted); }
 
 /* ---- SUBTITLE ROW ---- */
 .subtitle-row {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: var(--sp-6);
 }
-.subtitle { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: var(--text-xl); color: var(--color-heading); font-weight: 500; margin: 0; }
+.subtitle { font-family: var(--font-body); font-size: var(--text-xl); color: var(--color-heading); font-weight: 500; margin: 0; }
 .header-actions { display: flex; gap: var(--sp-4); align-items: center; }
 .header-link {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-ui);
   font-size: var(--text-sm); color: var(--color-muted); text-decoration: none;
   cursor: pointer; transition: all var(--ease-fast);
 }
-.header-link:hover { color: var(--color-brand); font-weight: 700; text-decoration: underline; }
+.header-link:hover { color: var(--color-cobalt-bright); font-weight: 600; text-decoration: underline; }
 
 /* ---- DRAFT BANNER ---- */
 .draft-banner {
@@ -143,7 +169,7 @@ body {
   position: sticky;
   top: 41px;
   z-index: 99;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-ui);
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -153,10 +179,10 @@ body {
 
 /* ---- TYPOGRAPHY ---- */
 h2 {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-ui);
   font-size: var(--text-base);
-  font-weight: 700;
-  color: var(--color-brand);
+  font-weight: 600;
+  color: var(--color-cobalt-bright);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-top: 28px;
@@ -164,7 +190,7 @@ h2 {
   border-bottom: 1px solid var(--color-border);
   padding-bottom: 5px;
 }
-h3 { font-family: 'JetBrains Mono', monospace; font-size: var(--text-xl); font-weight: 600; color: var(--color-heading); margin-top: var(--sp-6); margin-bottom: var(--sp-2); }
+h3 { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 400; color: var(--color-heading); margin-top: var(--sp-6); margin-bottom: var(--sp-2); }
 p { margin-bottom: 10px; color: var(--color-body); }
 li { color: var(--color-body); }
 strong { color: var(--color-heading); }
@@ -198,7 +224,7 @@ a.cta-touch::after { content: none; }
 .cta-center { text-align: center; margin: var(--sp-5) 0 var(--sp-4); }
 
 .btn {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-ui);
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 5px; padding: 10px 22px;
   font-size: var(--text-base); font-weight: 600; text-decoration: none;
@@ -212,7 +238,7 @@ a.cta-touch::after { content: none; }
 
 .cta-touch {
   display: inline-block; background: var(--color-brand); color: #fff; border: none;
-  border-radius: 5px; padding: 10px 22px; font-family: 'JetBrains Mono', monospace;
+  border-radius: 5px; padding: 10px 22px; font-family: var(--font-ui);
   font-size: var(--text-base); font-weight: 600; cursor: pointer; text-decoration: none;
   letter-spacing: 0.02em; transition: background var(--ease-fast);
 }
@@ -231,13 +257,13 @@ a.cta-touch::after { content: none; }
   border-left: 3px solid var(--color-brand);
   padding: var(--sp-3) var(--sp-4);
 }
-.team-name { font-family: 'JetBrains Mono', monospace; margin-bottom: 2px; }
+.team-name { font-family: var(--font-display); font-size: var(--text-xl); margin-bottom: 2px; }
 .team-role { margin-bottom: var(--sp-2); font-size: var(--text-sm); color: var(--color-muted); }
 .team-bio { margin-bottom: 0; }
 
 /* ---- TABLE ---- */
 table { width: 100%; border-collapse: collapse; margin: 10px 0 var(--sp-4); }
-th { font-family: 'JetBrains Mono', monospace; text-align: left; font-size: var(--text-base); font-weight: 600; color: var(--color-blue); padding: var(--sp-2) 10px; border-bottom: 1px solid var(--color-blue-border); }
+th { font-family: var(--font-ui); text-align: left; font-size: var(--text-base); font-weight: 600; color: var(--color-forest); padding: var(--sp-2) 10px; border-bottom: 1px solid rgba(52,199,155,0.35); }
 td { font-size: var(--text-md); padding: 7px 10px; border-bottom: 1px solid var(--color-border); color: var(--color-body); }
 
 /* ---- STACK ---- */
@@ -246,7 +272,7 @@ td { font-size: var(--text-md); padding: 7px 10px; border-bottom: 1px solid var(
   padding: 5px 0; border-left: 2px solid var(--color-brand); padding-left: var(--sp-3);
   margin-bottom: 3px;
 }
-.stack-label { font-family: 'JetBrains Mono', monospace; font-size: var(--text-sm); font-weight: 600; color: var(--color-brand); text-transform: uppercase; width: 100px; flex-shrink: 0; }
+.stack-label { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 600; color: var(--color-cobalt-bright); text-transform: uppercase; width: 100px; flex-shrink: 0; }
 .stack-value { font-size: var(--text-md); color: var(--color-heading); }
 
 /* ---- FLOW ---- */
@@ -254,7 +280,7 @@ td { font-size: var(--text-md); padding: 7px 10px; border-bottom: 1px solid var(
 .flow-box { flex: 1; border: 1px solid var(--color-border-mid); padding: var(--sp-2) var(--sp-2); text-align: center; background: var(--color-bg-surface); }
 .flow-box strong { font-size: var(--text-base); display: block; color: var(--color-heading); }
 .flow-box span { font-size: var(--text-xs); color: var(--color-muted); }
-.flow-sep { color: var(--color-brand); padding: 0 var(--sp-1); font-size: var(--text-xl); }
+.flow-sep { color: var(--color-cobalt-bright); padding: 0 var(--sp-1); font-size: var(--text-xl); }
 
 /* ---- CALLOUT ---- */
 .callout {
@@ -267,7 +293,7 @@ td { font-size: var(--text-md); padding: 7px 10px; border-bottom: 1px solid var(
 }
 .callout-dark {
   background: var(--color-bg-callout-dark);
-  border-left: 3px solid var(--color-blue);
+  border-left: 3px solid var(--color-forest);
   padding: 10px 14px;
   margin: var(--sp-3) 0;
   font-size: var(--text-md);
@@ -276,21 +302,21 @@ td { font-size: var(--text-md); padding: 7px 10px; border-bottom: 1px solid var(
 .callout strong, .callout-dark strong { color: var(--color-heading); }
 
 /* ---- TABLE PRIORITY CELLS ---- */
-td.priority-1 { color: var(--color-brand); font-weight: 700; }
-td.priority-2 { color: var(--color-blue); font-weight: 700; }
+td.priority-1 { color: var(--color-rust); font-weight: 700; }
+td.priority-2 { color: var(--color-cobalt-bright); font-weight: 700; }
 
 /* ---- ROADMAP LABELS ---- */
 .roadmap-label {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-ui);
   font-size: var(--text-xs); font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.08em;
   margin: var(--sp-3) 0 var(--sp-1);
 }
-.roadmap-label-green { color: #4bdabf; }
-.roadmap-label-blue { color: var(--color-blue); }
+.roadmap-label-green { color: var(--color-forest); }
+.roadmap-label-blue { color: var(--color-cobalt-bright); }
 .roadmap-label-muted { font-weight: 400; color: var(--color-hint); text-transform: none; letter-spacing: normal; }
-.stack-row-green { border-left-color: #4bdabf; }
-.stack-row-green .stack-label { color: #4bdabf; }
+.stack-row-green { border-left-color: var(--color-forest); }
+.stack-row-green .stack-label { color: var(--color-forest); }
 
 /* ---- FOOTNOTE ---- */
 .footnote { font-size: var(--text-sm); color: var(--color-muted); margin-top: var(--sp-2); }
@@ -300,7 +326,7 @@ td.priority-2 { color: var(--color-blue); font-weight: 700; }
 
 /* ---- FOOTER ---- */
 .footer-bar {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-ui);
   margin-top: var(--sp-6);
   padding: var(--sp-6) 0 var(--sp-12);
   border-top: 1px solid var(--color-border);
@@ -320,7 +346,7 @@ td.priority-2 { color: var(--color-blue); font-weight: 700; }
 .fab-btn {
   display: flex; align-items: center; gap: 5px;
   background: var(--color-bg-surface); border: 1px solid var(--color-border-mid); border-radius: var(--radius-md);
-  padding: var(--sp-2) 10px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+  padding: var(--sp-2) 10px; cursor: pointer; font-family: var(--font-ui);
   font-size: var(--text-sm); color: #D1D5DB; box-shadow: var(--shadow-sm);
   transition: all var(--ease-fast);
 }
@@ -370,7 +396,7 @@ td.priority-2 { color: var(--color-blue); font-weight: 700; }
   position: absolute; z-index: 300;
   background: var(--color-popover); border-radius: var(--radius-md);
   box-shadow: var(--shadow-md); padding: var(--sp-1) var(--sp-2);
-  display: none; font-family: 'JetBrains Mono', monospace;
+  display: none; font-family: var(--font-ui);
 }
 .sel-bar.visible { display: flex; align-items: center; gap: var(--sp-1); }
 .sel-bar-btn {
@@ -390,7 +416,7 @@ td.priority-2 { color: var(--color-blue); font-weight: 700; }
   position: absolute; z-index: 300;
   background: var(--color-bg-panel); border: 1px solid var(--color-border); border-radius: var(--radius-md);
   box-shadow: var(--shadow-md); padding: var(--sp-3); width: 280px;
-  display: none; font-family: 'JetBrains Mono', monospace;
+  display: none; font-family: var(--font-ui);
 }
 .sel-popover.visible { display: block; }
 .sel-highlight { font-size: 11px; color: var(--color-brand); font-style: italic; margin-bottom: var(--sp-2); max-height: var(--sp-10); overflow: hidden; }
@@ -416,7 +442,7 @@ td.priority-2 { color: var(--color-blue); font-weight: 700; }
 .contact-overlay.visible { display: flex; }
 .contact-box {
   background: var(--color-bg-panel); border-radius: var(--radius-lg); padding: var(--sp-6); width: 380px;
-  max-width: 90vw; box-shadow: var(--shadow-lg); font-family: 'JetBrains Mono', monospace;
+  max-width: 90vw; box-shadow: var(--shadow-lg); font-family: var(--font-ui);
 }
 .contact-box h3 { font-size: var(--text-xl); margin-bottom: var(--sp-3); color: var(--color-heading); }
 .contact-field { width: 100%; border: 1px solid var(--color-border-mid); background: var(--color-bg-surface); color: #E5E7EB; border-radius: var(--radius-sm); padding: var(--sp-2) 10px; font: inherit; font-size: var(--text-base); margin-bottom: 10px; outline: none; }
@@ -444,7 +470,7 @@ td.priority-2 { color: var(--color-blue); font-weight: 700; }
   transform: translateY(100%);
   transition: transform var(--ease-drawer);
   will-change: transform; z-index: 401;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-ui);
 }
 .feedback-drawer-overlay.visible .feedback-drawer { transform: translateY(0); }
 .fd-handle { display: flex; align-items: center; justify-content: center; padding: var(--sp-3) 0 var(--sp-1); cursor: grab; user-select: none; }
@@ -477,7 +503,7 @@ td.priority-2 { color: var(--color-blue); font-weight: 700; }
 }
 .breadcrumb-list li { flex-shrink: 0; }
 .breadcrumb-list a {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-ui);
   display: block; padding: 10px 14px;
   font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
   text-transform: uppercase; color: var(--color-muted);
@@ -546,8 +572,8 @@ body.panel-open { margin-right: 320px; }
   body::before { display: none !important; }
   p, li, td { color: #4A5568 !important; }
   strong, h3 { color: #1A1F26 !important; }
-  .callout, .callout-dark { background: #FEF0E3 !important; color: #1A1F26 !important; }
-  a, .footer-bar a { color: #2D5F8A !important; }
+  .callout, .callout-dark { background: #E6EFFF !important; color: #1A1F26 !important; border-left-color: #0064FF !important; }
+  a, .footer-bar a { color: #0064FF !important; }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 11px; color: #6B7280; }
   .feedback-panel, .fab, .sel-popover, .sel-bar, .contact-overlay, .breadcrumb-nav,
   .feedback-drawer-overlay, .cta-row, .cta-center, .draft-banner { display: none !important; }
@@ -613,7 +639,7 @@ body.panel-open { margin-right: 320px; }
 }
 .breadcrumb-list li { flex-shrink: 0; }
 .breadcrumb-list a {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-ui);
   display: block; padding: 10px 14px;
   font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
   text-transform: uppercase; color: #9CA3AF;
@@ -621,7 +647,7 @@ body.panel-open { margin-right: 320px; }
   transition: color 0.15s, border-color 0.15s;
 }
 .breadcrumb-list a:hover { color: #F9FAFB; }
-.breadcrumb-list a.active { color: #E8792B; border-bottom-color: #E8792B; }
+.breadcrumb-list a.active { color: var(--color-cobalt-bright); border-bottom-color: var(--color-cobalt-bright); }
 
 /* ============================================
    FULL-BLEED SECTION STYLING
@@ -728,8 +754,8 @@ body > *:not(script) { position: relative; z-index: 1; }
   body::before { display: none !important; }
   p, li, td { color: #4A5568 !important; }
   strong, h3 { color: #1A1F26 !important; }
-  .callout, .callout-dark { background: #FEF0E3 !important; color: #1A1F26 !important; }
-  a, .footer-bar a { color: #2D5F8A !important; }
+  .callout, .callout-dark { background: #E6EFFF !important; color: #1A1F26 !important; border-left-color: #0064FF !important; }
+  a, .footer-bar a { color: #0064FF !important; }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 11px; color: #6B7280; }
   .feedback-panel, .fab, .sel-popover, .sel-bar, .contact-overlay, .breadcrumb-nav { display: none !important; }
   body.panel-open { margin-right: 0; }
@@ -750,7 +776,7 @@ body > *:not(script) { position: relative; z-index: 1; }
       <li><a href="#why-now">Why Now</a></li>
       <li><a href="#protocol">Protocol</a></li>
       <li><a href="#verticals">Verticals</a></li>
-      <li><a href="#action-plan">Action Plan</a></li>
+      <li><a href="#vision">Vision</a></li>
       <li><a href="#join">Join Us</a></li>
       <li class="breadcrumb-notes"><a href="javascript:void(0)" onclick="togglePanel()">Feedback</a></li>
     </ul>
@@ -761,12 +787,15 @@ body > *:not(script) { position: relative; z-index: 1; }
 
 <div class="container">
   <header class="header">
-    <h1>Yak Robotics Garage</h1>
+    <div class="brand-lockup">
+      <span class="brand-mark"><img src="yakrobot-symbol.png" alt="YakRobot Protocols" width="40" height="40"></span>
+      <h1>YakRobot Protocols</h1>
+    </div>
     <div class="meta">Space Economy Brief &mdash; April 2026</div>
   </header>
 
   <div class="subtitle-row">
-    <p class="subtitle">Open-source public good infrastructure for the space economy &mdash; identity, discovery, teleoperation, autonomous agents, and marketplace &mdash; for satellites, space stations, rovers, ISRU units, and the Moon Base. Built in public, available to all.</p>
+    <p class="subtitle">Open protocols for robot coordination and infrastructure in the space economy &mdash; identity, discovery, teleoperation, autonomous agents, and marketplace &mdash; for satellites, space stations, rovers, ISRU units, and the Moon Base. Built in public, available to all.</p>
     <div class="header-actions cta-touch-desktop">
       <a href="javascript:void(0)" onclick="copyAsMarkdown()" id="copyMdBtn" class="header-link">Copy as Markdown</a>
       <a href="javascript:void(0)" onclick="showContact()" class="header-link">Get in Touch</a>
@@ -778,13 +807,13 @@ body > *:not(script) { position: relative; z-index: 1; }
   <div class="container">
     <h2 id="summary">Executive Summary</h2>
     <div class="callout">
-      <strong>Mars/Moon Rovers for Everyone.</strong> Open-source rovers from your backyard to the surface of Mars &mdash; built in public, available to all. Rovers are one application. The deeper goal is a protocol that lets anyone &mdash; a startup, a university lab, a national agency, an individual builder &mdash; participate in the space economy.
+      <strong>Open protocols, so everyone can participate.</strong> Open protocols for robot coordination and infrastructure &mdash; built in public, available to all &mdash; that let anyone, a startup, a university lab, a national agency, an individual builder, participate in the space economy. Rovers are one application; the protocols are the point.
     </div>
     <ul class="summary-list">
       <li><strong>The space economy has become a multi-operator market.</strong> Over 10,000 active satellites orbit Earth as of 2026. Commercial stations (Axiom, Orbital Reef, Starlab, Vast Haven) replace the ISS by 2031. On March 24, 2026, NASA announced a permanent Moon Base at the lunar South Pole. No single vendor serves any tier alone.</li>
       <li><strong>Each tier converges on the same structural problem.</strong> Task posting, executor matching, credential verification, delivery verification, and settlement &mdash; unsolved across Earth observation tasking, in-space servicing (ISAM), commercial station logistics, and lunar surface operations. Bilateral contracts dominate where a protocol layer should exist.</li>
       <li><strong>Physics forces autonomous dispatch.</strong> LEO satellite passes are 10 minutes; Earth&ndash;Moon round-trip latency is 2.6 seconds. Execution decisions must happen at the edge. Autonomous dispatch with on-chain settlement is a property of the environment, not a feature.</li>
-      <li><strong>Yak Robotics Garage built the YakRover Protocol.</strong> Five modules &mdash; identity, security, discovery (teleoperation + autonomous agents), payments, marketplace. Marketplace is one layer; the rest of the stack runs continuously after a task is awarded. Being prototyped starting with construction surveying; same architecture extends to satellites, ISAM, stations, and lunar rovers.</li>
+      <li><strong>YakRobot Protocols is a suite of open protocols for robot coordination and infrastructure.</strong> Five protocols &mdash; identity, security, discovery (teleoperation + autonomous agents), payments, marketplace. Marketplace is one layer; the rest of the stack runs continuously after a task is awarded. Being prototyped starting with construction surveying; same architecture extends to satellites, ISAM, stations, and lunar rovers.</li>
       <li><strong>Relay constellations are the MCP gateway.</strong> Starlink in LEO, LunaNet in cislunar space, commercial relay networks coming. ERC-8004 on-chain identity is relay-agnostic &mdash; identity resolves on-chain, endpoint reachability is a separate routing concern. Correct architecture for multi-relay, intermittent-coverage environments.</li>
       <li><strong>Seeking partners across the stack:</strong> EO/SAR/RF satellite operators, space station builders, ISAM providers, lunar robotics teams, cislunar relay operators, and researchers in autonomous space operations.</li>
     </ul>
@@ -796,7 +825,7 @@ body > *:not(script) { position: relative; z-index: 1; }
     </div>
 
     <h2 id="team">Team</h2>
-    <p><a href="https://www.yakroboticsgarage.com/" target="_blank">Yak Robotics Garage</a> is a distributed study group building open-source robotics infrastructure &mdash; all code, all hardware designs, all protocols open to all. Rovers are the most tangible application: hardware under $150, assemblable at home, running the same identity and marketplace stack that will coordinate lunar surface operations. The mission is broader: a protocol that lets anyone participate in the space economy. Part of the <a href="https://www.yakcollective.org/" target="_blank">Yak Collective</a>, building in public since 2021.</p>
+    <p><a href="https://yakrobot.com" target="_blank">YakRobot Protocols</a> is the work of the <a href="https://protocol-institute.org/sigs/drg/" target="_blank">Distributed Robotics Group</a>, a Special Interest Group at the <a href="https://protocol-institute.org/" target="_blank">Protocol Institute</a> &mdash; building open protocols for robot coordination and infrastructure: all code, all hardware designs, all protocols open to all. Rovers are the most tangible application: hardware under $150, assemblable at home, running the same identity and marketplace stack that will coordinate lunar surface operations. The mission is broader: a protocol that lets anyone participate in the space economy. The group originated at Yak Robotics Garage, part of the <a href="https://www.yakcollective.org/" target="_blank">Yak Collective</a>, building in public since 2021, and now continues under the Protocol Institute as a SIG.</p>
     <div class="team-grid">
       <article class="team-card">
         <p class="team-name"><strong><a href="https://rafael.fyi/" target="_blank">Rafa</a></strong></p>
@@ -806,7 +835,7 @@ body > *:not(script) { position: relative; z-index: 1; }
       <article class="team-card">
         <p class="team-name"><strong><a href="https://anurajrp.io/about/" target="_blank">Anuraj</a></strong></p>
         <p class="team-role">Robotics, embedded systems &mdash; Finland</p>
-        <p class="team-bio">M.Sc.(Tech.) Space Robotics and Automation. 15 years building hardware and software across Automotive, Space, Consumer Electronics, and Telecom. Built the <a href="https://anurajrp.io/robotics/tumbller-cryptobot-architecture/" target="_blank">Tumbller Cryptobot</a> and voice-controlled robot fleet via MCP. Demonstrated at Devcon 7 Bangkok.</p>
+        <p class="team-bio">M.Sc.(Tech.) Space Robotics and Automation. 15 years building hardware and software across Automotive, Space, Consumer Electronics, and Telecom. Built the <a href="https://anurajrp.io/robotics/tumbller-cryptobot-architecture/" target="_blank">first blockchain-authenticated robot on Ethereum</a> and a voice-controlled robot fleet via MCP. Demonstrated at Devcon 7 Bangkok.</p>
       </article>
       <article class="team-card">
         <p class="team-name"><strong><a href="https://venkateshrao.com/" target="_blank">Venkat</a></strong></p>
@@ -830,19 +859,19 @@ body > *:not(script) { position: relative; z-index: 1; }
 <section class="topic-section bg-orbit">
   <div class="container">
     <h2 id="why-now">Why Now</h2>
-    <p>The space economy is no longer a research program. Earth orbit is the most active commercial environment it has ever been, and NASA has committed to a permanent lunar presence. Two market shifts converge: commercial demand at scale, and a regulatory window where protocol layers still have room to form.</p>
+    <p>The space economy is no longer a research program. Earth orbit is the most active commercial environment it has ever been, and NASA has committed to a permanent lunar presence. Two shifts converge: commercial demand at scale, and a regulatory window where protocol layers can still form.</p>
 
     <div class="callout">
-      <strong>NASA &ldquo;Ignition&rdquo; &mdash; March 24, 2026.</strong> Permanent Moon Base at the lunar South Pole, phased iterative approach, end goal of continuous human presence. Architecture Definition Document released publicly.
+      <strong>NASA &ldquo;Ignition&rdquo; &mdash; March 24, 2026.</strong> Permanent Moon Base at the lunar South Pole, phased toward continuous human presence. Architecture Definition Document released publicly.
     </div>
 
     <ul class="summary-list">
-      <li><strong>Constellation inflation.</strong> Starlink ~7,000 satellites (~30,000 planned); Kuiper ~3,200 deploying; OneWeb, SES mPOWER, Telesat Lightspeed add thousands more. EO constellations (Planet, Maxar, BlackSky, Capella, ICEYE) generate thousands of tasking requests per day. Unit of commerce shifted from &ldquo;the satellite&rdquo; to &ldquo;the task.&rdquo;</li>
-      <li><strong>ISAM goes from demo to routine.</strong> Northrop MEV-1/2 (life extension), Astroscale ELSA-d (debris capture), Orbit Fab (RAFTI refueling), Starfish Otter contracts multiplying. Repeatable service market &mdash; markets need clearing mechanisms.</li>
-      <li><strong>ISS transition by 2031.</strong> NASA&rsquo;s Commercial LEO Destinations program funds Axiom, Orbital Reef, Starlab, and Vast Haven. NASA shifts from station operator to anchor tenant. Logistics coordination across operators is an explicit unsolved problem.</li>
-      <li><strong>Orbital compute infrastructure is emerging as a new asset class.</strong> Google&rsquo;s <a href="https://research.google/blog/exploring-a-space-based-scalable-ai-infrastructure-system-design/" target="_blank">Project Suncatcher</a> proposes solar-powered TPU satellites at 650 km sun-synchronous orbit, connected via free-space optical links at 1.6 Tbps &mdash; two prototype satellites launching by early 2027 with Planet Labs. Solar panels in orbit deliver up to 8&times; the power of Earth-based panels. Thales Alenia Space&rsquo;s <a href="https://www.thalesaleniaspace.com/en/press-releases/thales-alenia-space-reveals-results-ascend-feasibility-study-space-data-centers-0" target="_blank">ASCEND feasibility study</a> targets 1 GW of orbital data center capacity by 2050, assembled robotically. <a href="https://starcloudinc.github.io/wp.pdf" target="_blank">StarCloud</a> makes the case for training AI models in space. These nodes need inspection, maintenance, repair, and physical servicing &mdash; every one is a robot endpoint in the YakRover registry, with the same task schema as any other managed infrastructure in orbit.</li>
-      <li><strong>Regulatory pressure on debris.</strong> FCC five-year deorbit rule (2024). ESA Zero Debris Charter (2023). JAXA and ESA Active Debris Removal contracts now funded. Every operator becomes responsible for end-of-life management; most will outsource it. New task category, emerging today.</li>
-      <li><strong>Physics forces autonomy.</strong> 10-minute LEO ground passes; sub-second orbit-to-orbit rendezvous windows; 2.6-second Earth&ndash;Moon latency. Human coordination across continents or planets is not fast enough.</li>
+      <li><strong>Constellation inflation.</strong> Starlink ~7,000 satellites (~30,000 planned), Kuiper ~3,200 deploying, plus OneWeb, SES mPOWER, and Telesat Lightspeed. EO constellations (Planet, Maxar, BlackSky, Capella, ICEYE) generate thousands of tasking requests a day. The unit of commerce shifted from &ldquo;the satellite&rdquo; to &ldquo;the task.&rdquo;</li>
+      <li><strong>ISAM goes from demo to routine.</strong> Northrop MEV (life extension), Astroscale ELSA-d (debris capture), Orbit Fab (refueling), Starfish Otter &mdash; a repeatable service market, and markets need clearing mechanisms.</li>
+      <li><strong>ISS transition by 2031.</strong> NASA&rsquo;s Commercial LEO Destinations program funds Axiom, Orbital Reef, Starlab, and Vast Haven, shifting NASA from operator to anchor tenant. Cross-operator logistics is an explicit unsolved problem.</li>
+      <li><strong>Orbital compute is emerging as a new asset class.</strong> Google&rsquo;s <a href="https://research.google/blog/exploring-a-space-based-scalable-ai-infrastructure-system-design/" target="_blank">Project Suncatcher</a> proposes solar-powered TPU satellites linked optically at 1.6 Tbps, with two prototypes launching by early 2027 with Planet Labs. Thales Alenia Space&rsquo;s <a href="https://www.thalesaleniaspace.com/en/press-releases/thales-alenia-space-reveals-results-ascend-feasibility-study-space-data-centers-0" target="_blank">ASCEND study</a> targets 1 GW of orbital data center capacity by 2050, assembled robotically; <a href="https://starcloudinc.github.io/wp.pdf" target="_blank">StarCloud</a> makes the case for training AI in space. Every node needs inspection, maintenance, and servicing &mdash; a robot endpoint in the YakRobot registry with the same task schema as any other orbital infrastructure.</li>
+      <li><strong>Regulatory pressure on debris.</strong> The FCC five-year deorbit rule (2024), ESA Zero Debris Charter (2023), and funded JAXA/ESA removal contracts make every operator responsible for end-of-life &mdash; and most will outsource it. A new task category, emerging today.</li>
+      <li><strong>Physics forces autonomy.</strong> 10-minute LEO ground passes, sub-second orbit-to-orbit rendezvous windows, 2.6-second Earth&ndash;Moon latency. Human coordination across continents or planets is not fast enough.</li>
     </ul>
   </div>
 </section>
@@ -852,17 +881,17 @@ body > *:not(script) { position: relative; z-index: 1; }
     <h2 id="protocol">Protocol</h2>
 
     <h3>Components and Status</h3>
-    <p>Five modules &mdash; domain-agnostic across construction, Earth orbit, and lunar. The verification engine is the only domain-specific layer.</p>
+    <p>Five protocols &mdash; domain-agnostic across construction, Earth orbit, and lunar. The verification engine is the only domain-specific layer.</p>
     <ul class="summary-list">
-      <li><strong>yakrover-identity:</strong> Hardware-anchored authentication. ERC-8004 on-chain robot identity on Base mainnet. 100 test registrations on Sepolia + 1 live production attestation.</li>
-      <li><strong>yakrover-discovery:</strong> On-chain registry, MCP teleoperation, autonomous agent dispatch. 9 category MCP servers on Fly.io. Relay-agnostic by design &mdash; identity resolves on-chain, endpoint reachability is a separate routing concern.</li>
-      <li><strong>yakrover-payments:</strong> Stripe (card, ACH), USDC stablecoin on Base (gasless). Settlement abstraction designed for timing &times; privacy dimensions as the protocol scales.</li>
-      <li><strong>yakrover-marketplace:</strong> Reverse auction engine, 11-state lifecycle, 4-factor scoring, geographic filtering. Prototyped for construction surveying; 18 task categories defined, 8 delivery schemas, 37 MCP tools.</li>
+      <li><strong>yakrobot-identity:</strong> Hardware-anchored authentication. ERC-8004 on-chain robot identity on Base mainnet. 100 test registrations on Sepolia + 1 live production attestation.</li>
+      <li><strong>yakrobot-discovery:</strong> On-chain registry, MCP teleoperation, autonomous agent dispatch. 9 category MCP servers on Fly.io. Relay-agnostic by design &mdash; identity resolves on-chain, endpoint reachability is a separate routing concern.</li>
+      <li><strong>yakrobot-payments:</strong> Stripe (card, ACH), USDC stablecoin on Base (gasless). Settlement abstraction designed for timing &times; privacy dimensions as the protocol scales.</li>
+      <li><strong>yakrobot-marketplace:</strong> Reverse auction engine, 11-state lifecycle, 4-factor scoring, geographic filtering. Prototyped for construction surveying; 18 task categories defined, 8 delivery schemas, 37 MCP tools.</li>
     </ul>
 
     <h3>NASA Lunar Gap Mapping</h3>
     <table>
-      <tr><th>NASA Gap</th><th>Requirement</th><th>YakRover Capability</th></tr>
+      <tr><th>NASA Gap</th><th>Requirement</th><th>YakRobot Capability</th></tr>
       <tr><td>FN-A-104L / 105L</td><td>Robotic manipulation of payloads and logistics on the lunar surface</td><td>Task execution schema + payload delivery verification; MCP adapter to logistics carriers</td></tr>
       <tr><td>FN-A-201L / 401L</td><td>Earth-controlled and uncrewed-period command and control</td><td>MCP-native robot control; autonomous auction dispatch, no human-in-loop required</td></tr>
       <tr><td>FN-C-101L / 105L</td><td>High-bandwidth surface&mdash;Earth comms (&gt;500 Mbps)</td><td>Relay-aware task routing; LunaNet / Starlink-lunar as MCP discovery substrate</td></tr>
@@ -920,32 +949,21 @@ body > *:not(script) { position: relative; z-index: 1; }
 
 <section class="topic-section bg-eclipse">
   <div class="container">
-    <h2 id="action-plan">Action Plan</h2>
-    <h3>Project Overview</h3>
-    <p>The space economy now spans 10,000+ satellites, four commercial stations replacing the ISS by 2031, and a permanent NASA Moon Base announced March 24, 2026. Every tier is a multi-operator market with the same unsolved problem: there is no standard way for a customer (human or software agent) to post a task, receive bids from qualified operators, verify the delivery, and pay. Today this happens through bilateral contracts that take months. The YakRover Protocol is the missing layer &mdash; identity, security, discovery, payments, and marketplace &mdash; being prototyped starting with construction surveying, designed to extend directly to satellites, in-space servicing, commercial stations, and lunar rovers. The 12-month plan demonstrates the protocol on Earth &mdash; Mojave and Arctic Lapland &mdash; before extending toward orbit and the lunar surface.</p>
+    <h2 id="vision">Vision</h2>
+    <p>Every tier &mdash; terrestrial and orbital &mdash; is a multi-operator market with the same unsolved problem: there is no standard way for a customer (human or software agent) to post a task, receive bids from qualified operators, verify the delivery, and pay. Today this runs on bilateral contracts that take months. YakRobot Protocols is the missing layer &mdash; identity, security, discovery, payments, and marketplace &mdash; open and identical across domains. We earn the right to coordinate robots in orbit and on the Moon by first coordinating them where the market already exists: on Earth. The protocol stays constant; only the verification engine and credential extensions change per environment.</p>
 
-    <h3>One-Year Milestones</h3>
+    <h3>Expanding Outward, One Environment at a Time</h3>
     <table>
-      <tr><th>Quarter</th><th>Milestone</th></tr>
-      <tr><td>Q1 (months 1&ndash;3)</td><td>Open-source rover hardware finalised (&lt;$150 bill of materials). Protocol stack (identity, discovery, payments, marketplace) running on a physical rover. First task posted and settled end-to-end in a controlled environment.</td></tr>
-      <tr><td>Q2&ndash;Q3 (months 4&ndash;9)</td><td>Simultaneous field deployments &mdash; Mojave Desert (dust, heat, uneven terrain) and Arctic Lapland (cold, low-light conditions analogous to lunar PSR constraints). Two rovers, same protocol stack. Task dispatch, delivery verification, and on-chain settlement demonstrated at both sites. Relay-gated execution tested over intermittent connectivity.</td></tr>
-      <tr><td>Q4 (months 10&ndash;12)</td><td>Protocol learnings documented. Rover hardware and protocol stack published open source. Outreach to lunar rover OEMs and space agency partners. First external operator onboarded to the registry.</td></tr>
+      <tr><th>Stage</th><th>Environment</th><th>Initial segments</th></tr>
+      <tr><td>1 &mdash; Earth, today</td><td>Backyards, job sites, field operations</td><td>Home and hobby robots (sub-$150 open hardware); construction site surveying &mdash; aerial LiDAR, GPR, progress monitoring &mdash; at $1K&ndash;$200K per task</td></tr>
+      <tr><td>2 &mdash; Low Earth orbit</td><td>LEO constellations and commercial stations</td><td>EO/SAR/RF tasking, in-space servicing (ISAM), debris removal, station cargo and experiment logistics</td></tr>
+      <tr><td>3 &mdash; The Moon</td><td>Lunar surface and cislunar relay</td><td>Terrain survey, cargo unload and reposition, ISRU and resource identification, PNT &mdash; coordinating the NASA Moon Base supply chain</td></tr>
+      <tr><td>4 &mdash; Beyond</td><td>Mars-forward and deep-space operations</td><td>The same identity, discovery, and settlement layer wherever robots operate too far away for human coordination to keep up</td></tr>
     </table>
-
-    <h3>Budget &mdash; $100,000</h3>
-    <table>
-      <tr><th>Category</th><th>Amount</th><th>Use</th></tr>
-      <tr><td>Engineering</td><td>$55,000</td><td>Space delivery verification schemas, relay-gated execution states, credential module extensions, lunar registry on Base mainnet</td></tr>
-      <tr><td>Partner integration</td><td>$25,000</td><td>MCP adapters for one EO/SAR operator, one ISAM provider, and one lunar rover OEM. Reference integration documentation.</td></tr>
-      <tr><td>Research &amp; regulatory</td><td>$15,000</td><td>ITAR/EAR mapping, planetary protection attestation framework, autonomous-dispatch liability framework v1</td></tr>
-      <tr><td>Infrastructure</td><td>$5,000</td><td>Hosting (Fly.io always-on), Base mainnet gas, test deployments, domain and certificates</td></tr>
-    </table>
-
-    <h3>One-Year Outcome</h3>
-    <p>By month 12, the YakRover Protocol clears at least one Earth-orbit task category (EO/SAR imagery) and one ISAM category (inspection or refueling) through real operators. The lunar registry exists on-chain with a relay-routing design, the first lunar rover OEM is integrated, and the protocol&rsquo;s credential, scoring, and settlement layers handle space-specific constraints. The project transitions from &ldquo;design stage&rdquo; to &ldquo;orbit-operational + lunar-instrumented.&rdquo;</p>
+    <p class="footnote">Home/hobby robots and construction survey are the entry segments: a real market with machine-readable specs that exercises the full protocol end-to-end. Each later stage reuses the same architecture &mdash; physics (latency, intermittent relay windows, sensor-class constraints) only sharpens the case for autonomous, on-chain coordination.</p>
 
     <h3>Long-Term Impact</h3>
-    <p>The protocol becomes pre-competitive infrastructure for the multi-operator space economy &mdash; the equivalent of what TCP/IP was for the internet. Customers post tasks once and receive bids across operators; new operators (national agencies, startups, lunar OEMs) onboard once and access global demand; settlement clears in USDC without bilateral currency agreements. The same architecture serves Earth orbit, commercial stations, the Moon Base, and Mars-forward operations. This is the procurement infrastructure NASA, ESA, JAXA, and the next generation of commercial lunar customers will rely on, regardless of who builds the rovers and stations.</p>
+    <p>The protocol becomes pre-competitive infrastructure for the multi-operator robot economy &mdash; the equivalent of what TCP/IP was for the internet. Customers post tasks once and receive bids across operators; new operators &mdash; a backyard builder, a startup, a national agency, a lunar OEM &mdash; onboard once and reach global demand; settlement clears in USDC without bilateral agreements. The same architecture serves Earth, orbit, the Moon, and Mars-forward operations, regardless of who builds the rovers and stations.</p>
   </div>
 </section>
 
@@ -953,7 +971,7 @@ body > *:not(script) { position: relative; z-index: 1; }
   <div class="container">
     <h2 id="join">Join Us</h2>
     <ul class="summary-list">
-      <li><strong>Satellite operators (EO, SAR, RF):</strong> Planet, Maxar, BlackSky, Capella, ICEYE, Umbra, HawkEye 360, Spire, Synspective, and any operator with a tasking API. The YakRover Protocol wraps your existing API as an MCP tool server and aggregates demand through cross-provider auctions &mdash; incremental capacity sold without changes to your internal scheduling.</li>
+      <li><strong>Satellite operators (EO, SAR, RF):</strong> Planet, Maxar, BlackSky, Capella, ICEYE, Umbra, HawkEye 360, Spire, Synspective, and any operator with a tasking API. YakRobot Protocols wraps your existing API as an MCP tool server and aggregates demand through cross-provider auctions &mdash; incremental capacity sold without changes to your internal scheduling.</li>
       <li><strong>ISAM providers and station operators:</strong> Northrop, Astroscale, Starfish, Orbit Fab, D-Orbit, ClearSpace, Maxar SPIDER, Redwire, Varda &mdash; plus Axiom, Orbital Reef, Starlab, and Vast Haven. Integration point: capability registration, milestone-based smart-contract settlement, station-agnostic experiment and cargo schemas.</li>
       <li><strong>Lunar robotics teams and CLPS partners:</strong> Lunar rover, hopper, drill, and cargo-manipulation builders, plus CLPS landers (Astrobotic, Intuitive Machines, Firefly, Draper, Lockheed). The protocol provides the full stack &mdash; discovery, teleoperation, autonomous agents, payments, marketplace; you provide the robot or the lander.</li>
       <li><strong>Researchers and capital partners:</strong> Autonomous RPO, multi-agent coordination, PSR navigation, regolith mechanics, privacy-preserving task matching, autonomous-systems liability. Strategic programs: NASA SBIR/STTR, DARPA Orbital Prime, ESA Business Applications, SpaceWERX, LEAP, JAXA J-SPARC. Open to NASA, ESA, JAXA, CSA, UAE, ISRO, and KASA partnership conversations.</li>
@@ -967,7 +985,7 @@ body > *:not(script) { position: relative; z-index: 1; }
 
 <div class="container">
   <div class="footer-bar">
-    <span><a href="https://www.yakroboticsgarage.com/" target="_blank">Yak Robotics Garage</a> &mdash; Space Economy Brief</span>
+    <span><a href="https://yakrobot.com" target="_blank">YakRobot Protocols</a> &mdash; Space Economy Brief</span>
     <span>Demo: <a href="https://yakrobot.bid/demo" target="_blank">yakrobot.bid/demo</a> &mdash; NASA: <a href="https://www.nasa.gov/architecture" target="_blank">nasa.gov/architecture</a> &mdash; Code: <a href="https://github.com/YakRoboticsGarage/" target="_blank">github.com/YakRoboticsGarage</a></span>
   </div>
   <p class="footnote" style="text-align:center;padding-bottom:24px">Background images courtesy of <a href="https://images.nasa.gov" target="_blank">NASA Image and Video Library</a>.</p>
@@ -1089,7 +1107,7 @@ body > *:not(script) { position: relative; z-index: 1; }
 
 // --- Copy as Markdown ---
 window.getPageAsMarkdown = function() {
-  var md = '# Yak Robotics Garage — Space Economy Brief\n\n';
+  var md = '# YakRobot Protocols — Space Economy Brief\n\n';
   md += '*Full-stack infrastructure management — identity, discovery, teleoperation, autonomous agents, and marketplace — for satellites, space stations, rovers, ISRU units, and the Moon Base*\n\n';
   var sections = document.querySelectorAll('h2[id], h3');
   sections.forEach(function(heading) {
